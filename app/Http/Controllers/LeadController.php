@@ -5,8 +5,12 @@ namespace App\Http\Controllers;
 use App\Jobs\SyncLeadToGoHighLevel;
 use App\Models\Lead;
 use App\Models\Package;
+use App\Models\User;
+use App\Notifications\NewLeadAssignedNotification;
+use App\Notifications\NewLeadCreatedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 
 class LeadController extends Controller
 {
@@ -60,6 +64,21 @@ class LeadController extends Controller
             'lead_score' => $request->filled('timeline') && $request->filled('budget') ? 82 : 68,
             'is_priority' => in_array($request->input('timeline'), ['ASAP', '0-30 days'], true),
         ]);
+
+        // Auto-assign to an available agent in the network for immediate follow-up.
+        $agent = User::where('role', 'agent')->inRandomOrder()->first();
+        if ($agent) {
+            $lead->assigned_agent_id = $agent->id;
+            $lead->status = 'assigned';
+            $lead->assigned_at = now();
+            $lead->save();
+
+            $agent->notify(new NewLeadAssignedNotification($lead));
+        }
+
+        // Notify admin/staff operations throughput.
+        $watchers = User::whereIn('role', ['admin', 'staff'])->get();
+        Notification::send($watchers, new NewLeadCreatedNotification($lead));
 
         SyncLeadToGoHighLevel::dispatch($lead->id);
 

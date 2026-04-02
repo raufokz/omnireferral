@@ -2,39 +2,31 @@
 
 @section('content')
 <div class="homepage-shell homepage-shell--refined">
-    <section class="hero hero--premium homepage-hero" aria-labelledby="hero-headline" style="background-image: linear-gradient(rgba(11, 54, 104, 0.8), rgba(11, 54, 104, 0.8)), url('{{ asset('images/auth/gateway-hero.png') }}'); background-size: cover; background-position: center;">
-        <div class="hero__backdrop" style="background: radial-gradient(circle at top right, rgba(254, 132, 14, 0.1), transparent 40%);"></div>
+    <section class="hero hero--premium homepage-hero homepage-hero--minimal" aria-labelledby="hero-headline" style="background-image: linear-gradient(120deg, rgba(0, 28, 72, 0.86), rgba(0, 28, 72, 0.78)), url('{{ asset('images/hero/bg.jpg') }}'); background-size: cover; background-position: center;">
+        <div class="hero__backdrop"></div>
         <div class="container hero__content hero__content--premium homepage-hero__layout">
-            <div class="hero__copy hero__copy--premium homepage-hero__copy" data-animate="left">
+            <div class="hero__copy hero__copy--premium homepage-hero__copy" data-reveal="left">
                 <span class="eyebrow">Premium Real Estate Lead Engine</span>
-                <div class="hero__headline-group">
-                    <h1 id="hero-headline">Scale your real estate business with verified buyer and seller opportunities.</h1>
-                    <p>OmniReferral combines ISA qualification, smarter routing, and agent-ready delivery so your team spends less time sorting leads and more time closing the right conversations.</p>
-                </div>
-
-                <div class="hero-chip-row" data-stagger>
-                    <span>ISA-screened</span>
-                    <span>ZIP-based routing</span>
-                    <span>Dashboard delivery</span>
-                </div>
+                <h1 id="hero-headline">Find serious buyers & sellers faster.</h1>
+                <p>ISA-qualified intake, smarter routing, and dashboards that feel like a modern marketplace.</p>
 
                 <div class="hero__actions hero__actions--spacious">
                     <a href="#lead-forms" class="button button--orange">Get Started</a>
-                    <a href="{{ route('pricing') }}" class="button button--ghost-blue">View Packages</a>
+                    <a href="{{ route('pricing') }}" class="button button--ghost-light">View Leads</a>
                 </div>
 
-                <div class="hero-proof-grid" data-stagger>
-                    <div class="hero-proof-card">
-                        <strong>Qualified first</strong>
-                        <span>Every lead passes through human review before it reaches an agent.</span>
+                <div class="hero__trust-row" data-stagger>
+                    <div class="hero-trust-chip">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 5v6c0 5 3.5 9.74 8 11 4.5-1.26 8-6 8-11V5l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+                        <span>Verified intake</span>
                     </div>
-                    <div class="hero-proof-card">
-                        <strong>Built for conversion</strong>
-                        <span>Quick, Power, and Prime routes keep the next step obvious.</span>
+                    <div class="hero-trust-chip">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h4l2 5 5-10 2 5h7"/></svg>
+                        <span>ZIP-based routing</span>
                     </div>
-                    <div class="hero-proof-card">
-                        <strong>Ready to work</strong>
-                        <span>Lead details, package status, and onboarding all live in one system.</span>
+                    <div class="hero-trust-chip">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18"/><path d="M6 12h12"/><path d="M9 19h6"/></svg>
+                        <span>Dashboard delivery</span>
                     </div>
                 </div>
             </div>
@@ -81,20 +73,29 @@
                                 <p>We use your location, budget, and timing to route you intelligently.</p>
                             </div>
 
-                            <div class="map-placeholder">
-                                <div class="map-placeholder__ui"></div>
-                                <div class="map-placeholder__zip-overlay">
-                                    <span>Selected Area</span>
-                                    <strong id="buyer-zip-display">Enter ZIP</strong>
-                                </div>
-                                <div class="map-placeholder__pin">
-                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                            <div class="hero-map-card">
+                                <div class="hero-map" id="hero-map" aria-label="Lead search map"></div>
+                                <div class="hero-map-overlay">
+                                    <div class="hero-map-overlay__item">
+                                        <strong>ZIP</strong>
+                                        <span id="buyer-zip-display">Enter ZIP</span>
+                                    </div>
+                                    <div class="hero-map-overlay__item">
+                                        <strong>Result</strong>
+                                        <span id="buyer-zip-status">Awaiting input</span>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="hero-form__grid">
                                 <input type="hidden" name="package_slug" value="quick-leads">
-                                <label><span>ZIP code</span><input type="text" name="zip_code" placeholder="75201" required maxlength="10" inputmode="numeric" oninput="document.getElementById('buyer-zip-display').textContent = this.value || 'Enter ZIP'"></label>
+                                <label class="floating-field zip-tags" data-zip-tags>
+                                    <input type="hidden" name="zip_code" value="">
+                                    <input type="text" placeholder="Enter ZIP code" data-zip-entry inputmode="numeric" maxlength="10">
+                                    <span>ZIP code</span>
+                                    <div class="zip-tag-list" aria-live="polite"></div>
+                                    <button type="button" class="zip-add-btn" data-zip-add>Add another ZIP</button>
+                                </label>
                                 <label><span>Property type</span><select name="property_type"><option value="">Select type</option><option>House</option><option>Apartment</option><option>Condo</option><option>Commercial</option></select></label>
                                 <label><span>Budget range</span><input type="number" name="budget" placeholder="450000" min="0" inputmode="numeric"></label>
                                 <label><span>Timeline</span><select name="timeline"><option value="">Select timing</option><option>ASAP</option><option>0-30 days</option><option>1-3 months</option><option>3-6 months</option><option>Exploring</option></select></label>
@@ -141,7 +142,13 @@
                             </div>
                             <div class="hero-form__grid">
                                 <input type="hidden" name="package_slug" value="power-leads">
-                                <label><span>Property ZIP code</span><input type="text" name="zip_code" placeholder="33101" required maxlength="10" inputmode="numeric"></label>
+                                    <label class="floating-field zip-tags" data-zip-tags>
+                                        <input type="hidden" name="zip_code" value="">
+                                        <input type="text" placeholder="Enter ZIP code" data-zip-entry inputmode="numeric" maxlength="10">
+                                        <span>Property ZIP code</span>
+                                        <div class="zip-tag-list" aria-live="polite"></div>
+                                        <button type="button" class="zip-add-btn" data-zip-add>Add another ZIP</button>
+                                    </label>
                                 <label><span>Property type</span><select name="property_type"><option value="">Select type</option><option>House</option><option>Apartment</option><option>Condo</option><option>Commercial</option></select></label>
                                 <label><span>Asking price</span><input type="number" name="asking_price" placeholder="625000" min="0" inputmode="numeric"></label>
                                 <label><span>Timeline</span><select name="timeline"><option value="">Select timing</option><option>ASAP</option><option>0-30 days</option><option>1-3 months</option><option>3-6 months</option><option>Exploring options</option></select></label>
@@ -353,7 +360,7 @@
                             <span class="listing-card__type">{{ $property->property_type ?? 'Property' }}</span>
                             <h3>{{ $property->title }}</h3>
                             <p class="listing-location">{{ $property->location }}</p>
-                            
+
                             <div class="listing-card__meta-grid">
                                 <div class="listing-meta-chip">
                                     <strong>{{ $property->beds ?? '3' }}</strong>

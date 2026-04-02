@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Webhooks;
 use App\Http\Controllers\Controller;
 use App\Models\Package;
 use App\Models\User;
+use App\Notifications\PackagePurchasedNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Stripe\Exception\SignatureVerificationException;
@@ -43,6 +44,10 @@ class StripeWebhookController extends Controller
                     'current_plan_id' => $package?->id ?? $user->current_plan_id,
                     'status' => 'active',
                 ])->save();
+
+                if ($package) {
+                    $user->notify(new PackagePurchasedNotification($package, route('onboarding', 'agent')));
+                }
             }
         }
 

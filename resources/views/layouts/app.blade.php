@@ -39,7 +39,7 @@
         request()->routeIs('login', 'register', 'password.*') ? 'page-auth' : null,
     ])->filter()->implode(' ');
 @endphp
-<body class="antialiased {{ $bodyClass }}">
+<body class="antialiased {{ $bodyClass }}" data-google-maps-api-key="{{ config('services.google_maps.key') }}">
 
 
     @include('partials.header')

@@ -77,6 +77,26 @@ class Lead extends Model
         return $this->hasMany(LeadMatch::class);
     }
 
+    public function activities(): HasMany
+    {
+        return $this->hasMany(LeadActivity::class);
+    }
+
+    public function scopeDueForFollowUp($query)
+    {
+        return $query
+            ->whereNotIn('status', ['won', 'lost', 'closed'])
+            ->whereNotNull('assigned_agent_id')
+            ->where(function ($q) {
+                $q->whereNull('contacted_at')
+                  ->orWhere('contacted_at', '<=', now()->subDays(3));
+            })
+            ->where(function ($q) {
+                $q->where('updated_at', '<=', now()->subDays(2))
+                  ->orWhere('created_at', '<=', now()->subDays(4));
+            });
+    }
+
     public function getPropertyImageUrlAttribute(): ?string
     {
         if (! $this->property_image) {

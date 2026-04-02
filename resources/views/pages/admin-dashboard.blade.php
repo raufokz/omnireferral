@@ -94,6 +94,7 @@
                     <span role="columnheader">Package</span>
                     <span role="columnheader">Status</span>
                     <span role="columnheader">Routing</span>
+                    <span role="columnheader">Actions</span>
                 </div>
                 @forelse($recentLeads as $lead)
                     <div class="admin-table-row" role="row">
@@ -109,25 +110,125 @@
                             <strong>{{ strtoupper($lead->package_type ?? 'FREE') }}</strong>
                             <small>ID: {{ $lead->id }}</small>
                         </span>
-                        <span role="cell">
-                            <span class="badge badge--status">{{ ucfirst($lead->status ?? 'new') }}</span>
-                            <small>Updated today</small>
+                        <span role="cell" class="admin-cell--status">
+                            <form action="{{ route('admin.leads.status', $lead) }}" method="POST" class="admin-inline-form">
+                                @csrf
+                                <select name="status" onchange="this.form.submit()" aria-label="Change lead status">
+                                    @foreach(['new','qualified','assigned','contacted','closed'] as $status)
+                                        <option value="{{ $status }}" {{ $lead->status === $status ? 'selected' : '' }}>{{ ucfirst($status) }}</option>
+                                    @endforeach
+                                </select>
+                            </form>
+                            <small>Last updated: {{ $lead->updated_at->diffForHumans() }}</small>
                         </span>
-                        <span role="cell">
+                        <span role="cell" class="admin-cell--route">
                             @if(!$lead->assigned_agent_id)
                                 <form action="{{ route('admin.leads.route', $lead) }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="button button--ghost-blue button--compact">Assign</button>
+                                    <button type="submit" class="button button--ghost-blue button--compact">Auto-assign</button>
                                 </form>
                             @else
-                                <span class="badge badge--success">Routed</span>
+                                <span class="badge badge--success">{{ $lead->assignedAgent?->name ?? 'Routed' }}</span>
+                                <small>Agent assigned</small>
                             @endif
+                        </span>
+                        <span role="cell" class="admin-cell--actions">
+                            <form action="{{ route('admin.leads.assign', $lead) }}" method="POST" class="admin-inline-form">
+                                @csrf
+                                <select name="agent_id" onchange="this.form.submit()" aria-label="Assign specific agent">
+                                    <option value="">Assign to agent</option>
+                                    @foreach(\App\Models\User::where('role','agent')->limit(12)->get() as $agent)
+                                        <option value="{{ $agent->id }}" {{ optional($lead->assignedAgent)->id === $agent->id ? 'selected' : '' }}>{{ $agent->name }}</option>
+                                    @endforeach
+                                </select>
+                            </form>
                         </span>
                     </div>
                 @empty
                     <div class="admin-table-row empty" role="row">No recent leads found.</div>
                 @endforelse
             </div>
+        </section>
+
+        <section id="lead-activities" class="admin-panel" aria-labelledby="lead-activities-heading">
+            <div class="panel-header">
+                <div>
+                    <span class="eyebrow">Lead Activities</span>
+                    <h2 id="lead-activities-heading">Notes, tags, and reminders</h2>
+                </div>
+            </div>
+
+            <div class="card-panel">
+                <form id="leadActivityForm" action="{{ $recentLeads->first() ? route('admin.leads.activity', $recentLeads->first()) : '#' }}" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    @csrf
+                    <label>
+                        <span>Lead</span>
+                        <select name="lead_id" id="leadActivityLead" required>
+                            @foreach($recentLeads as $l)
+                                <option value="{{ $l->id }}" data-url="{{ route('admin.leads.activity', $l) }}">{{ $l->lead_number }} - {{ $l->name }} ({{ $l->zip_code }})</option>
+                            @endforeach
+                        </select>
+                    </label>
+
+                    <label>
+                        <span>Type</span>
+                        <select name="type" required>
+                            <option value="note">Note</option>
+                            <option value="tag">Tag</option>
+                            <option value="reminder">Reminder</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        <span>Tag / Short value</span>
+                        <input type="text" name="value" placeholder="e.g. hot, follow-up, high-priority">
+                    </label>
+
+                    <label>
+                        <span>Due at (reminder)</span>
+                        <input type="datetime-local" name="due_at">
+                    </label>
+
+                    <label class="md:col-span-4">
+                        <span>Content</span>
+                        <textarea name="content" rows="2" placeholder="Add a quick note about next action" class="w-full"></textarea>
+                    </label>
+
+                    <div class="md:col-span-4">
+                        <button type="submit" class="button button--orange">Add activity</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card-panel mt-4">
+                <h3>Recent activity feed</h3>
+                <ul class="follow-list">
+                    @foreach($recentLeads->flatMap(fn($lead) => $lead->activities->take(3)) as $activity)
+                        <li>
+                            <strong>{{ ucfirst($activity->type) }}</strong> on <em>{{ $activity->lead->lead_number }}</em> by {{ $activity->user?->name ?? 'System' }}
+                            @if($activity->value) (<span>{{ $activity->value }}</span>) @endif
+                            <p>{{ $activity->content }}</p>
+                            @if($activity->due_at)
+                                <small>Due {{ $activity->due_at->diffForHumans() }}</small>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+
+            <script>
+                const leadActivityLead = document.getElementById('leadActivityLead');
+                const leadActivityForm = document.getElementById('leadActivityForm');
+
+                if (leadActivityLead && leadActivityForm) {
+                    leadActivityLead.addEventListener('change', () => {
+                        const selected = leadActivityLead.options[leadActivityLead.selectedIndex];
+                        if (selected && selected.dataset.url) {
+                            leadActivityForm.action = selected.dataset.url;
+                        }
+                    });
+                }
+            </script>
         </section>
 
         <section id="agent-review" class="admin-panel admin-panel--dual" aria-labelledby="agent-review-heading">

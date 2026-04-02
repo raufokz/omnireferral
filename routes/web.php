@@ -108,10 +108,10 @@ Route::middleware(['auth'])->group(function () {
             'destroy' => 'admin.blog.destroy',
         ]);
 
-        Route::post('admin/leads/{lead}/route', function (\App\Models\Lead $lead) {
-            \App\Jobs\RouteLeadToAgent::dispatchSync($lead->id);
-            return back()->with('success', 'Lead routing algorithm triggered successfully.');
-        })->name('admin.leads.route');
+        Route::post('admin/leads/{lead}/route', [\App\Http\Controllers\Admin\LeadController::class, 'route'])->name('admin.leads.route');
+        Route::post('admin/leads/{lead}/status', [\App\Http\Controllers\Admin\LeadController::class, 'status'])->name('admin.leads.status');
+        Route::post('admin/leads/{lead}/assign', [\App\Http\Controllers\Admin\LeadController::class, 'assign'])->name('admin.leads.assign');
+        Route::post('admin/leads/{lead}/activity', [\App\Http\Controllers\Admin\LeadController::class, 'activity'])->name('admin.leads.activity');
     });
 });
 
