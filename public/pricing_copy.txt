@@ -1,0 +1,118 @@
+@extends('layouts.app')
+
+@section('content')
+<section class="page-hero">
+    <div class="container">
+        <span class="eyebrow">Pricing</span>
+        <h1>Choose the lead package that fits how you grow</h1>
+        <p>Compare flexible plans for Cold Calling, Quick, Power, Prime, and Social Media support with a seamless path into payment and onboarding.</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="section-heading">
+            <span class="eyebrow">Packages</span>
+            <h2>Select the package that matches your growth plan</h2>
+            <p>Each package opens its own secure GoHighLevel form without leaving the page, so the flow stays simple and conversion-focused.</p>
+        </div>
+        <div class="pricing-grid pricing-grid--page pricing-grid--spotlight">
+            @foreach($leadPackages as $package)
+                @php($embed = $packageEmbeds[$package->slug] ?? null)
+                <article class="pricing-card pricing-card--interactive {{ $package->is_featured ? 'pricing-card--featured' : '' }}">
+                    <span class="pricing-label">{{ $package->is_featured ? 'Most Popular' : 'Lead Package' }}</span>
+                    <h2>{{ $embed['title'] ?? $package->name }}</h2>
+                    <div class="price-row">
+                        <strong>${{ number_format($package->one_time_price ?? 0) }}</strong>
+                        <span>one-time</span>
+                    </div>
+                    <div class="price-row muted">
+                        <strong>${{ number_format($package->monthly_price ?? 0) }}</strong>
+                        <span>monthly</span>
+                    </div>
+                    <p class="pricing-card__summary">{{ $embed['description'] ?? 'Complete the package form to move into onboarding.' }}</p>
+                    <ul class="feature-list compact">
+                        @foreach($package->features as $feature)
+                            <li>{{ $feature }}</li>
+                        @endforeach
+                    </ul>
+                    <a
+                        href="{{ route('packages.checkout', $package) }}"
+                        class="button"
+                        data-package-modal-open
+                        data-package-title="{{ $embed['title'] ?? $package->name }}"
+                        data-package-src="{{ $embed['src'] ?? '' }}"
+                        data-package-description="{{ $embed['description'] ?? 'Complete the package form to move into onboarding.' }}"
+                        data-package-onboarding="{{ $onboardingUrl }}?role=agent"
+                    >
+                        Select Package
+                    </a>
+                </article>
+            @endforeach
+
+            @foreach($assistantPackages as $package)
+                @php($embed = $packageEmbeds[$package->slug] ?? null)
+                <article class="pricing-card pricing-card--interactive">
+                    <span class="pricing-label">Monthly Support</span>
+                    <h2>{{ $embed['title'] ?? $package->name }}</h2>
+                    <div class="price-row">
+                        <strong>${{ number_format($package->monthly_price ?? 0) }}</strong>
+                        <span>monthly</span>
+                    </div>
+                    <p class="pricing-card__summary">{{ $embed['description'] ?? 'Complete the package form to move into onboarding.' }}</p>
+                    <ul class="feature-list compact">
+                        @foreach($package->features as $feature)
+                            <li>{{ $feature }}</li>
+                        @endforeach
+                    </ul>
+                    <a
+                        href="{{ route('packages.checkout', $package) }}"
+                        class="button"
+                        data-package-modal-open
+                        data-package-title="{{ $embed['title'] ?? $package->name }}"
+                        data-package-src="{{ $embed['src'] ?? '' }}"
+                        data-package-description="{{ $embed['description'] ?? 'Complete the package form to move into onboarding.' }}"
+                        data-package-onboarding="{{ $onboardingUrl }}?role=agent"
+                    >
+                        Select Package
+                    </a>
+                </article>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+<div class="modal-overlay" id="packageModal" hidden aria-hidden="true">
+    <div class="modal-card package-modal-card" role="dialog" aria-modal="true" aria-labelledby="packageModalTitle">
+        <button class="modal-close" type="button" id="packageModalClose" aria-label="Close package form">×</button>
+        <div class="package-modal-card__intro">
+            <span class="eyebrow">Package Form</span>
+            <h2 id="packageModalTitle">Complete your package selection</h2>
+            <p id="packageModalDescription">Finish the GoHighLevel form to confirm your package and continue to onboarding.</p>
+        </div>
+        <div class="embed-card">
+            <iframe id="packageModalFrame" src="about:blank" title="Package form" loading="lazy"></iframe>
+        </div>
+        <p class="package-modal-card__status" id="packageModalStatus" aria-live="polite">
+            Complete the package form and payment to unlock onboarding.
+        </p>
+        <div class="package-modal-card__actions">
+            <a
+                id="packageModalOnboarding"
+                href="{{ $onboardingUrl }}?role=agent"
+                class="button"
+                hidden
+                aria-hidden="true"
+                aria-disabled="true"
+                tabindex="-1"
+            >
+                Complete Onboarding
+            </a>
+            <button class="button button--ghost nav-button-dark" type="button" id="packageModalCancel">Close</button>
+        </div>
+    </div>
+</div>
+<script src="https://link.msgsndr.com/js/form_embed.js"></script>
+@endsection
+
+

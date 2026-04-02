@@ -1,0 +1,13 @@
+User-agent: *
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /buyer/
+Disallow: /seller/
+Disallow: /agent/
+Disallow: /affiliate/
+Disallow: /client-form-submission7
+
+Allow: /
+Allow: /sitemap.xml
+
+Sitemap: https://omnireferral.us/sitemap.xml
