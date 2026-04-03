@@ -6,7 +6,7 @@
         <div class="hero__backdrop"></div>
         <div class="container hero__content hero__content--premium homepage-hero__layout">
             <div class="hero__copy hero__copy--premium homepage-hero__copy" data-reveal="left">
-                <span class="eyebrow">Premium Real Estate Lead Engine</span>
+                <span class="eyebrow">Premium Real Estate Lead Engine cheeeeeeeeeeeeek</span>
                 <h1 id="hero-headline">Find serious buyers & sellers faster.</h1>
                 <p>ISA-qualified intake, smarter routing, and dashboards that feel like a modern marketplace.</p>
 
