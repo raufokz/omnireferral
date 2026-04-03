@@ -60,19 +60,20 @@ jobs:
             --exclude ".git" \
             --exclude "node_modules" \
             --exclude "storage/logs/*.log" \
+            --rsync-path="mkdir -p $DEPLOY_PATH && rsync" \
             -e "ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT" \
             ./ $SSH_USER@$SSH_HOST:$DEPLOY_PATH
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
-          DEPLOY_PATH: /home/u60320363/domains/omnireferral.us/public_html
+          DEPLOY_PATH: /home/u867057961/domains/omnireferral.us/public_html
 
       # 7️⃣ Post-deploy Artisan commands
       - name: Post-deploy Artisan commands
         run: |
           ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT $SSH_USER@$SSH_HOST <<'EOF'
-            cd /home/u60320361/domains/omnireferral.us/public_html
+            cd /home/u867057961/domains/omnireferral.us/public_html
             php artisan migrate --force
             php artisan config:cache
             php artisan route:cache
