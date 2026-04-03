@@ -9,12 +9,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      DEPLOY_PATH: /home/u867057961/omnireferral
+
     steps:
-      # 1️⃣ Checkout code
+      # 1️⃣ Checkout
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup PHP environment
+      # 2️⃣ Setup PHP
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -22,7 +25,7 @@ jobs:
           extensions: mbstring, intl, gd, pdo_mysql
           tools: composer
 
-      # 3️⃣ Install dependencies and build assets
+      # 3️⃣ Install dependencies & build
       - name: Install dependencies & build
         run: |
           composer install --no-dev --prefer-dist --no-interaction --no-progress
@@ -38,22 +41,35 @@ jobs:
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H -p $SSH_PORT $SSH_HOST >> ~/.ssh/known_hosts
+          ssh-keyscan -H -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
 
-      # 5️⃣ Test SSH connection
-      - name: Test SSH connection
+      # 5️⃣ Ensure webroot symlink points to Laravel public
+      - name: Ensure public_html -> public symlink
         run: |
-          ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT $SSH_USER@$SSH_HOST "echo SSH connection successful!"
+          ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" <<'EOF'
+            set -e
+            TARGET=/home/u867057961/omnireferral/public
+            LINK=/home/u867057961/domains/omnireferral.us/public_html
+            if [ -L "$LINK" ]; then
+              echo "Symlink already present."
+            else
+              if [ -e "$LINK" ] && [ ! -L "$LINK" ]; then
+                mv "$LINK" "${LINK}_backup_$(date +%s)"
+              fi
+              ln -s "$TARGET" "$LINK"
+              echo "Symlink created: $LINK -> $TARGET"
+            fi
+          EOF
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
 
-      # 6️⃣ Rsync project files to Hostinger
+      # 6️⃣ Rsync project files to server (outside webroot)
       - name: Deploy via Rsync
         run: |
           rsync -az --delete \
@@ -62,19 +78,21 @@ jobs:
             --exclude "storage/logs/*.log" \
             --rsync-path="mkdir -p $DEPLOY_PATH && rsync" \
             -e "ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT" \
-            ./ $SSH_USER@$SSH_HOST:$DEPLOY_PATH
+            ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH"
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
-          DEPLOY_PATH: /home/u867057961/domains/omnireferral.us/public_html
+          DEPLOY_PATH: ${{ env.DEPLOY_PATH }}
 
       # 7️⃣ Post-deploy Artisan commands
       - name: Post-deploy Artisan commands
         run: |
-          ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT $SSH_USER@$SSH_HOST <<'EOF'
-            cd /home/u867057961/domains/omnireferral.us/public_html
+          ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" <<'EOF'
+            set -e
+            cd /home/u867057961/omnireferral
             php artisan migrate --force
+            php artisan storage:link
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
