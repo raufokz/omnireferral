@@ -9,9 +9,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # Step 1: Checkout repo
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Step 2: Set up PHP
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -19,6 +21,7 @@ jobs:
           extensions: mbstring, intl, gd, pdo_mysql
           tools: composer
 
+      # Step 3: Install dependencies
       - name: Install deps
         run: |
           composer install --no-dev --prefer-dist --no-interaction --no-progress
@@ -28,6 +31,7 @@ jobs:
           php artisan route:cache
           php artisan view:cache
 
+      # Step 4: Add SSH key and known_hosts
       - name: Add SSH key
         run: |
           mkdir -p ~/.ssh
@@ -39,13 +43,14 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
 
+      # Step 5: Rsync to server using SSH key
       - name: Rsync to server
         run: |
           rsync -az --delete \
             --exclude ".git" \
             --exclude "node_modules" \
             --exclude "storage/logs/*.log" \
-            -e "ssh -p $SSH_PORT" \
+            -e "ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT" \
             ./ $SSH_USER@$SSH_HOST:$DEPLOY_PATH
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
@@ -53,9 +58,10 @@ jobs:
           SSH_PORT: ${{ secrets.SSH_PORT }}
           DEPLOY_PATH: /home/u60320363/domains/omnireferral.us/public_html
 
+      # Step 6: Post-deploy artisan commands
       - name: Post-deploy commands
         run: |
-          ssh -p $SSH_PORT $SSH_USER@$SSH_HOST <<'EOF'
+          ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT $SSH_USER@$SSH_HOST <<'EOF'
             cd /home/u60320363/domains/omnireferral.us/public_html
             php artisan migrate --force
             php artisan config:cache
