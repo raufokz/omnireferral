@@ -1,230 +1,67 @@
-name: Deploy OmniReferral
+name: Deploy to Hostinger
 
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
-concurrency:
-  group: deploy-production
-  cancel-in-progress: false
-
 jobs:
-  # ─────────────────────────────────────────
-  # JOB 1 — Build assets
-  # ─────────────────────────────────────────
-  build:
-    name: Build Assets
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install Node dependencies
-        run: npm ci
-
-      - name: Build production assets
-        run: npm run build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: built-assets
-          path: public/build/
-          retention-days: 1
-
-  # ─────────────────────────────────────────
-  # JOB 2 — Test (optional but recommended)
-  # ─────────────────────────────────────────
-  test:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    needs: build
-
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_DATABASE: omnireferral_test
-          MYSQL_ROOT_PASSWORD: secret
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup PHP 8.2
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: mbstring, pdo, pdo_mysql, bcmath, gd, exif, zip
-          coverage: none
-
-      - name: Copy .env for testing
-        run: cp .env.example .env.testing
-
-      - name: Configure test environment
-        run: |
-          echo "APP_ENV=testing" >> .env.testing
-          echo "APP_KEY=" >> .env.testing
-          echo "DB_CONNECTION=mysql" >> .env.testing
-          echo "DB_HOST=127.0.0.1" >> .env.testing
-          echo "DB_PORT=3306" >> .env.testing
-          echo "DB_DATABASE=omnireferral_test" >> .env.testing
-          echo "DB_USERNAME=root" >> .env.testing
-          echo "DB_PASSWORD=secret" >> .env.testing
-
-      - name: Cache Composer packages
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
-          restore-keys: composer-
-
-      - name: Install PHP dependencies
-        run: composer install --no-interaction --no-audit --prefer-dist --optimize-autoloader
-
-      - name: Generate application key
-        run: php artisan key:generate --env=testing
-
-      - name: Run database migrations
-        run: php artisan migrate --env=testing --force
-
-      - name: Run PHPUnit tests
-        run: php artisan test --env=testing
-        continue-on-error: false
-
-  # ─────────────────────────────────────────
-  # JOB 3 — Deploy to production
-  # ─────────────────────────────────────────
   deploy:
-    name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [ build, test ]
-    environment: production
-
-    env:
-      COMPOSER_PROCESS_TIMEOUT: 0
-      COMPOSER_NO_INTERACTION: 1
-      COMPOSER_NO_AUDIT: 1
-
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download built assets
-        uses: actions/download-artifact@v4
-        with:
-          name: built-assets
-          path: public/build/
-
-      - name: Setup PHP 8.2
+      - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, pdo, pdo_mysql, bcmath, gd, exif, zip
-          coverage: none
+          extensions: mbstring, intl, gd, pdo_mysql
+          tools: composer
 
-      - name: Cache Composer packages
-        uses: actions/cache@v4
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
-          restore-keys: composer-
-
-      - name: Install PHP dependencies (production)
+      - name: Install deps
         run: |
-          composer install \
-            --no-interaction \
-            --no-audit \
-            --no-dev \
-            --prefer-dist \
-            --optimize-autoloader
+          composer install --no-dev --prefer-dist --no-interaction --no-progress
+          npm ci
+          npm run build
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
 
-      - name: Setup SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Add server to known hosts
+      - name: Add SSH key
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p $SSH_PORT $SSH_HOST >> ~/.ssh/known_hosts
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
 
-      - name: Verify SSH connection
-        run: |
-          ssh -p ${{ secrets.SSH_PORT }} \
-              -o StrictHostKeyChecking=no \
-              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-              "echo 'SSH connection successful' && php -v | head -1"
-
-      - name: Put site into maintenance mode
-        run: |
-          ssh -p ${{ secrets.SSH_PORT }} \
-              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-              "cd ${{ secrets.DEPLOY_PATH }} && php artisan down --secret='deploy-bypass-token' --render='errors::503' || true"
-        continue-on-error: true
-
-      - name: Sync files via rsync
+      - name: Rsync to server
         run: |
           rsync -az --delete \
             --exclude ".git" \
-            --exclude ".github" \
             --exclude "node_modules" \
-            --exclude ".env" \
             --exclude "storage/logs/*.log" \
-            --exclude "storage/framework/cache" \
-            --exclude "storage/framework/sessions" \
-            --exclude "storage/framework/views" \
-            --exclude "storage/app/public" \
-            --exclude "bootstrap/cache/*.php" \
-            --checksum \
-            -e "ssh -p ${{ secrets.SSH_PORT }} -o StrictHostKeyChecking=no" \
-            ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}
+            -e "ssh -p $SSH_PORT" \
+            ./ $SSH_USER@$SSH_HOST:$DEPLOY_PATH
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          DEPLOY_PATH: /home/u60320363/domains/omnireferral.us/public_html
 
-      - name: Run post-deploy commands
+      - name: Post-deploy commands
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} \
-              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-              "cd ${{ secrets.DEPLOY_PATH }} && \
-               php artisan migrate --force && \
-               php artisan config:cache && \
-               php artisan route:cache && \
-               php artisan view:cache && \
-               php artisan event:cache && \
-               php artisan storage:link || true && \
-               php artisan queue:restart || true && \
-               php artisan up"
-
-      - name: Confirm site is live
-        run: |
-          sleep 5
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://omnireferral.us)
-          echo "HTTP Status: $STATUS"
-          if [ "$STATUS" != "200" ] && [ "$STATUS" != "302" ]; then
-            echo "WARNING: Site returned status $STATUS — check manually."
-          else
-            echo "Site is live and healthy."
-          fi
-        continue-on-error: true
-
-      - name: Bring site back up (failsafe)
-        if: failure()
-        run: |
-          ssh -p ${{ secrets.SSH_PORT }} \
-              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-              "cd ${{ secrets.DEPLOY_PATH }} && php artisan up" || true
+          ssh -p $SSH_PORT $SSH_USER@$SSH_HOST <<'EOF'
+            cd /home/u60320363/domains/omnireferral.us/public_html
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+          EOF
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
