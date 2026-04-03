@@ -17,7 +17,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup PHP environment
+      # 2️⃣ Setup PHP
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -25,7 +25,7 @@ jobs:
           extensions: mbstring, intl, gd, pdo_mysql
           tools: composer
 
-      # 3️⃣ Install dependencies & build assets
+      # 3️⃣ Install dependencies & build
       - name: Install dependencies & build
         run: |
           composer install --no-dev --prefer-dist --no-interaction --no-progress
@@ -47,24 +47,15 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
 
-      # 5️⃣ Test SSH connection
-      - name: Test SSH connection
-        run: |
-          ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "echo SSH connection successful!"
-        env:
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-
-      # 6️⃣ Ensure public_html symlink points to Laravel public folder
-      - name: Ensure public_html -> public symlink
+      # 5️⃣ Ensure public_html -> public symlink
+      - name: Ensure public_html symlink
         run: |
           ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" <<'EOF'
             set -e
             TARGET=/home/u867057961/omnireferral/public
             LINK=/home/u867057961/domains/omnireferral.us/public_html
             if [ -L "$LINK" ]; then
-              echo "Symlink already present: $LINK -> $(readlink $LINK)"
+              echo "Symlink already present."
             else
               if [ -e "$LINK" ] && [ ! -L "$LINK" ]; then
                 mv "$LINK" "${LINK}_backup_$(date +%s)"
@@ -78,7 +69,22 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
 
-      # 7️⃣ Rsync project files to server (outside webroot)
+      # 6️⃣ Create storage & cache folders with correct permissions
+      - name: Setup storage & cache folders
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" <<'EOF'
+            set -e
+            mkdir -p /home/u867057961/omnireferral/storage
+            mkdir -p /home/u867057961/omnireferral/bootstrap/cache
+            chmod -R 775 /home/u867057961/omnireferral/storage
+            chmod -R 775 /home/u867057961/omnireferral/bootstrap/cache
+          EOF
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+
+      # 7️⃣ Rsync project files to server
       - name: Deploy via Rsync
         run: |
           rsync -az --delete \
