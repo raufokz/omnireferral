@@ -8,21 +8,22 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      # Step 1: Checkout repo
-      - name: Checkout
+      # 1️⃣ Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up PHP
-      - name: Set up PHP
+      # 2️⃣ Setup PHP environment
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           extensions: mbstring, intl, gd, pdo_mysql
           tools: composer
 
-      # Step 3: Install dependencies
-      - name: Install deps
+      # 3️⃣ Install dependencies and build assets
+      - name: Install dependencies & build
         run: |
           composer install --no-dev --prefer-dist --no-interaction --no-progress
           npm ci
@@ -31,20 +32,29 @@ jobs:
           php artisan route:cache
           php artisan view:cache
 
-      # Step 4: Add SSH key and known_hosts
-      - name: Add SSH key
+      # 4️⃣ Setup SSH key
+      - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p $SSH_PORT $SSH_HOST >> ~/.ssh/known_hosts
+          ssh-keyscan -H -p $SSH_PORT $SSH_HOST >> ~/.ssh/known_hosts
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
 
-      # Step 5: Rsync to server using SSH key
-      - name: Rsync to server
+      # 5️⃣ Test SSH connection
+      - name: Test SSH connection
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT $SSH_USER@$SSH_HOST "echo SSH connection successful!"
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+
+      # 6️⃣ Rsync project files to Hostinger
+      - name: Deploy via Rsync
         run: |
           rsync -az --delete \
             --exclude ".git" \
@@ -58,14 +68,15 @@ jobs:
           SSH_PORT: ${{ secrets.SSH_PORT }}
           DEPLOY_PATH: /home/u60320363/domains/omnireferral.us/public_html
 
-      # Step 6: Post-deploy artisan commands
-      - name: Post-deploy commands
+      # 7️⃣ Post-deploy Artisan commands
+      - name: Post-deploy Artisan commands
         run: |
           ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT $SSH_USER@$SSH_HOST <<'EOF'
             cd /home/u60320363/domains/omnireferral.us/public_html
             php artisan migrate --force
             php artisan config:cache
             php artisan route:cache
+            php artisan view:cache
           EOF
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
