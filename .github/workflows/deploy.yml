@@ -62,14 +62,16 @@ jobs:
             set -e
             cd /home/u867057961/omnireferral
 
-            # create storage structure (rsync deleted it)
+            # Create Laravel storage & cache folders (rsync deletes them)
             mkdir -p storage/app/public
             mkdir -p storage/framework/{cache,sessions,views}
             mkdir -p storage/logs
             mkdir -p bootstrap/cache
+
+            # Set correct permissions
             chmod -R 775 storage bootstrap/cache
 
-            # symlink public_html to public
+            # Symlink public_html to public
             LINK=/home/u867057961/domains/omnireferral.us/public_html
             TARGET=/home/u867057961/omnireferral/public
             if [ ! -L "$LINK" ]; then
@@ -77,6 +79,7 @@ jobs:
               ln -s "$TARGET" "$LINK"
             fi
 
+            # Laravel post-deploy commands
             php artisan storage:link || true
             php artisan migrate --force
             php artisan optimize:clear
