@@ -39,7 +39,7 @@
 
         <div class="agent-directory agent-directory--grid" id="agentDirectoryGrid" data-stagger>
             @foreach($agents as $agent)
-                <article class="agent-card agent-card--profile" data-agent-card data-city="{{ strtolower($agent->city ?? '') }}" data-specialty="{{ strtolower($agent->specialty ?? 'buyer\'s agent') }}">
+                <article class="agent-card agent-card--profile" data-agent-card data-city="{{ strtolower($agent->city ?? '') }}" data-specialty="{{ strtolower($agent->specialty ?? 'buyers agent') }}">
                     <img src="{{ asset($agent->headshot ?? 'images/realtors/1.png') }}" alt="{{ $agent->user->name }} profile image" loading="lazy">
                     <div class="agent-card__body">
                         <h2>{{ $agent->user->name }}</h2>
@@ -47,7 +47,7 @@
                         <div class="agent-card__stats">
                             <span class="agent-card__rating">{{ str_repeat('★', max(0, min(5, (int) $agent->rating))) }}{{ str_repeat('☆', max(0, 5 - min(5, (int) $agent->rating))) }}</span>
                             <span>{{ $agent->rating ? number_format($agent->rating, 1) : '4.7' }} rating</span>
-                            <span>{{ $agent->specialty ?? 'Buyer's Agent' }}</span>
+                            <span>{{ $agent->specialty ?? 'Buyers Agent' }}</span>
                         </div>
                         <p class="agent-card__location">{{ $agent->city }}, {{ $agent->state }}</p>
                         <div class="agent-card__actions">
@@ -63,3 +63,6 @@
     </div>
 </section>
 @endsection
+
+
+

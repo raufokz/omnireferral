@@ -1,115 +1,202 @@
 @extends('layouts.app')
 @section('content')
-<section class="page-hero dashboard-page-hero--agent" style="background-image: linear-gradient(rgba(11, 54, 104, 0.8), rgba(11, 54, 104, 0.8)), url('{{ asset('images/auth/gateway-hero.png') }}'); background-size: cover; background-position: center;">
-    <div class="container page-hero__content" data-animate="up">
-        <span class="eyebrow" style="color: var(--color-gateway-accent);">Get in Touch</span>
-        <h1 style="color: white; font-size: 3.5rem; line-height: 1.1; margin-bottom: 1.5rem;">Let's talk about your next lead, listing, or partnership</h1>
-        <p style="color: rgba(255,255,255,0.8); max-width: 700px;">We keep conversations simple, helpful, and fast. Expect a response within one business day.</p>
+
+{{-- ============================
+     CONTACT HERO
+============================ --}}
+<section class="contact-hero-v2">
+    <div class="contact-hero-v2__overlay" aria-hidden="true"></div>
+    <div class="container contact-hero-v2__inner" data-animate="up">
+        <span class="eyebrow chv2-eyebrow">Get in Touch</span>
+        <h1 class="chv2-headline">Let's talk about your next<br>lead, listing, or partnership</h1>
+        <p class="chv2-sub">We keep conversations simple, helpful, and fast. Expect a response within one business day.</p>
+        <div class="chv2-trust-row">
+            <span class="chv2-trust-chip">&#10003; 24-hr avg. response</span>
+            <span class="chv2-trust-chip">&#10003; Real team, no bots</span>
+            <span class="chv2-trust-chip">&#10003; Encrypted messages</span>
+        </div>
     </div>
 </section>
 
-<section class="section">
-    <div class="container grid grid-cols-12 gap-12">
-        <!-- Contact Form Column -->
-        <div class="col-span-7">
-            <div class="cockpit-table-card p-12">
-                <div class="mb-10">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-4">Send us a message</h2>
-                    <p class="text-gray-500">Tell us what you need and we will guide you to the right next step.</p>
+{{-- ============================
+     MAIN CONTACT LAYOUT
+============================ --}}
+<section class="section contact-body-section">
+    <div class="container contact-body-grid">
+
+        {{-- LEFT: Contact Form --}}
+        <div class="contact-form-col">
+            <div class="contact-form-card">
+                <div class="contact-form-card__header">
+                    <h2>Send us a message</h2>
+                    <p>Tell us what you need and we will guide you to the right next step.</p>
                 </div>
 
-                <div id="contactSuccess" style="display:none;padding:1.5rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:16px;margin-bottom:2rem;">
-                    <strong style="color:#16a34a;display:block;margin-bottom:.35rem;">&#10003; Message sent successfully!</strong>
-                    <span style="color:#166534;font-size:.93rem;">Thank you for reaching out. Our team will get back to you within one business day.</span>
+                @if(session('success'))
+                <div class="contact-success-alert" role="alert">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    <div>
+                        <strong>Message sent successfully!</strong>
+                        <span>Our team will respond within one business day.</span>
+                    </div>
+                </div>
+                @endif
+
+                <div id="contactSuccessInline" style="display:none;" class="contact-success-alert" role="alert">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    <div>
+                        <strong>Message sent successfully!</strong>
+                        <span>Our team will respond within one business day.</span>
+                    </div>
                 </div>
 
-                <form class="space-y-6" id="contactForm" method="POST" action="{{ route('contact.submit') }}" novalidate>
+                <form class="contact-form-v2" id="contactForm" method="POST" action="{{ route('contact.submit') }}" novalidate>
                     @csrf
-                    <div class="grid grid-cols-2 gap-6">
-                        <div class="floating-group">
-                            <input type="text" name="name" id="contactName" placeholder=" " required autocomplete="name">
-                            <label>Full name *</label>
-                            <span class="field-error" id="nameError">Please enter your full name.</span>
+
+                    <div class="cf-row cf-row--2">
+                        <div class="cf-field">
+                            <label class="cf-label" for="contactName">Full name <span class="cf-req">*</span></label>
+                            <input class="cf-input" type="text" name="name" id="contactName" placeholder="Taylor Morgan" required autocomplete="name" value="{{ old('name') }}">
+                            @error('name')<span class="cf-error">{{ $message }}</span>@enderror
                         </div>
-                        <div class="floating-group">
-                            <input type="email" name="email" id="contactEmail" placeholder=" " required autocomplete="email">
-                            <label>Email address *</label>
-                            <span class="field-error" id="emailError">Please enter a valid email.</span>
+                        <div class="cf-field">
+                            <label class="cf-label" for="contactEmail">Email address <span class="cf-req">*</span></label>
+                            <input class="cf-input" type="email" name="email" id="contactEmail" placeholder="you@example.com" required autocomplete="email" value="{{ old('email') }}">
+                            @error('email')<span class="cf-error">{{ $message }}</span>@enderror
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-6">
-                        <div class="floating-group">
-                            <input type="tel" name="phone" placeholder=" " autocomplete="tel">
-                            <label>Phone number</label>
+                    <div class="cf-row cf-row--2">
+                        <div class="cf-field">
+                            <label class="cf-label" for="contactPhone">Phone number</label>
+                            <input class="cf-input" type="tel" name="phone" id="contactPhone" placeholder="(555) 123-4567" autocomplete="tel" value="{{ old('phone') }}">
                         </div>
-                        <div class="floating-group">
-                            <select name="role">
-                                <option value="" disabled selected></option>
-                                <option>Buyer</option>
-                                <option>Seller</option>
-                                <option>Agent / Realtor</option>
-                                <option>Partner</option>
+                        <div class="cf-field">
+                            <label class="cf-label" for="contactRole">I am a...</label>
+                            <select class="cf-input cf-select" name="role" id="contactRole">
+                                <option value="" disabled {{ old('role') ? '' : 'selected' }}>Select role</option>
+                                <option value="buyer" {{ old('role') === 'buyer' ? 'selected' : '' }}>Buyer</option>
+                                <option value="seller" {{ old('role') === 'seller' ? 'selected' : '' }}>Seller</option>
+                                <option value="agent" {{ old('role') === 'agent' ? 'selected' : '' }}>Agent / Realtor</option>
+                                <option value="partner" {{ old('role') === 'partner' ? 'selected' : '' }}>Partner</option>
                             </select>
-                            <label>I am a...</label>
                         </div>
                     </div>
 
-                    <div class="floating-group">
-                        <textarea name="message" id="contactMessage" rows="5" placeholder=" " required></textarea>
-                        <label>Message *</label>
-                        <span class="field-error" id="messageError">Please enter your message.</span>
+                    <div class="cf-field">
+                        <label class="cf-label" for="contactSubject">Subject</label>
+                        <input class="cf-input" type="text" name="subject" id="contactSubject" placeholder="How can we help you?" value="{{ old('subject') }}">
                     </div>
 
-                    <button class="button w-full py-4 text-lg font-bold" style="background: var(--color-gateway-brand-bg); color: white;" type="submit">Send Message</button>
-                    <p class="text-center text-[10px] text-gray-400 uppercase tracking-widest mt-4">Safe & Encrypted Communication</p>
+                    <div class="cf-field">
+                        <label class="cf-label" for="contactMessage">Message <span class="cf-req">*</span></label>
+                        <textarea class="cf-input cf-textarea" name="message" id="contactMessage" rows="5" placeholder="Tell us about your goals, timeline, or any specific questions..." required>{{ old('message') }}</textarea>
+                        @error('message')<span class="cf-error">{{ $message }}</span>@enderror
+                    </div>
+
+                    <button class="button button--orange cf-submit-btn" type="submit" id="cfSubmitBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        Send Message
+                    </button>
+                    <p class="cf-security-note">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                        Safe and encrypted communication
+                    </p>
                 </form>
             </div>
         </div>
 
-        <!-- Info Column -->
-        <div class="col-span-5 space-y-8">
-            <div class="cockpit-table-card p-10">
-                <span class="eyebrow">Connect</span>
-                <h3 class="text-2xl font-bold mb-8">Reach OmniReferral</h3>
-                
-                <div class="space-y-8">
-                    <div class="flex gap-6">
-                        <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-900 flex-shrink-0">
-                            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        {{-- RIGHT: Info Panel --}}
+        <div class="contact-info-col">
+
+            {{-- Contact details --}}
+            <div class="contact-info-card">
+                <span class="eyebrow">Contact Details</span>
+                <h3 class="contact-info-card__title">Reach OmniReferral</h3>
+
+                <div class="contact-info-items">
+                    <div class="ci-item">
+                        <div class="ci-item__icon ci-item__icon--blue">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                         </div>
-                        <div>
-                            <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Email Support</div>
-                            <div class="text-lg font-bold text-gray-900">hello@omnireferral.us</div>
+                        <div class="ci-item__body">
+                            <span class="ci-item__label">Email Support</span>
+                            <a href="mailto:hello@omnireferral.us" class="ci-item__value">hello@omnireferral.us</a>
                         </div>
                     </div>
-
-                    <div class="flex gap-6">
-                        <div class="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-900 flex-shrink-0">
-                            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                    <div class="ci-item">
+                        <div class="ci-item__icon ci-item__icon--orange">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 01.22 1.18 2 2 0 012.18 0H5.18a2 2 0 012 1.72c.128.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.14 7.94a16 16 0 006.29 6.29l1.3-1.3a2 2 0 012.11-.45c.907.339 1.85.572 2.81.7A2 2 0 0122 16.92z"/></svg>
                         </div>
-                        <div>
-                            <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Direct Line</div>
-                            <div class="text-lg font-bold text-gray-900">(800) 555-0147</div>
+                        <div class="ci-item__body">
+                            <span class="ci-item__label">Direct Line</span>
+                            <a href="tel:+18005550147" class="ci-item__value">(800) 555-0147</a>
                         </div>
                     </div>
-
-                    <div class="flex gap-6">
-                        <div class="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center text-green-900 flex-shrink-0">
-                            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <div class="ci-item">
+                        <div class="ci-item__icon ci-item__icon--green">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         </div>
-                        <div>
-                            <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Office Hours</div>
-                            <div class="text-lg font-bold text-gray-900">Mon–Fri, 9am–6pm ET</div>
+                        <div class="ci-item__body">
+                            <span class="ci-item__label">Office Hours</span>
+                            <span class="ci-item__value">Mon-Fri, 9am-6pm ET</span>
+                        </div>
+                    </div>
+                    <div class="ci-item">
+                        <div class="ci-item__icon ci-item__icon--purple">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        </div>
+                        <div class="ci-item__body">
+                            <span class="ci-item__label">Headquarters</span>
+                            <span class="ci-item__value">omnireferral.us</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="cockpit-table-card overflow-hidden">
-                <iframe title="OmniReferral location map" src="https://www.google.com/maps?q=New+York,+NY&output=embed" loading="lazy" style="width:100%;min-height:300px;border:0;"></iframe>
+            {{-- Response time card --}}
+            <div class="contact-response-card">
+                <div class="crc-inner">
+                    <div class="crc-stat">
+                        <strong>&#60; 24h</strong>
+                        <span>Average response time</span>
+                    </div>
+                    <div class="crc-divider"></div>
+                    <div class="crc-stat">
+                        <strong>Real Team</strong>
+                        <span>No automated bots</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Map --}}
+            <div class="contact-map-card">
+                <iframe
+                    title="OmniReferral location map"
+                    src="https://www.google.com/maps?q=New+York,+NY&output=embed"
+                    loading="lazy"
+                ></iframe>
             </div>
         </div>
+
     </div>
 </section>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('contactForm');
+    if (!form) return;
+
+    form.addEventListener('submit', function(e) {
+        var btn = document.getElementById('cfSubmitBtn');
+        if (btn) {
+            btn.textContent = 'Sending...';
+            btn.disabled = true;
+        }
+    });
+});
+</script>
+@endpush
+
 @endsection
