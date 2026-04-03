@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -17,64 +17,75 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, intl, gd, pdo_mysql, zip, bcmath
-          tools: composer
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+          extensions: mbstring, intl, gd, pdo_mysql, zip
+          tools: composer:v2
 
       - name: Install dependencies & build
         run: |
-          composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+          composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
           npm ci
           npm run build
+          rm -rf node_modules  # Clean up to save space
 
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H -p $SSH_PORT $SSH_HOST >> ~/.ssh/known_hosts
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
 
-      - name: Deploy via Rsync
+      # Test connection first
+      - name: Test SSH
         run: |
-          rsync -az --delete \
-            --exclude ".git" \
-            --exclude ".github" \
-            --exclude "node_modules" \
-            --exclude ".env" \
-            --exclude "storage" \
-            --exclude "tests" \
-            -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.SSH_PORT }}" \
-            ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/u867057961/domains/omnireferral.us/
+          ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT $SSH_USER@$SSH_HOST "echo 'Connected successfully'"
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
 
+      # Deploy files (without deleting storage)
+      - name: Deploy via Rsync
+        run: |
+          rsync -avz --delete \
+            --exclude ".git" \
+            --exclude "node_modules" \
+            --exclude ".env" \
+            --exclude "storage" \
+            --exclude "bootstrap/cache/*.php" \
+            --exclude "*.log" \
+            -e "ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT -o StrictHostKeyChecking=no" \
+            ./ $SSH_USER@$SSH_HOST:$DEPLOY_PATH
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          DEPLOY_PATH: /home/u867057961/domains/omnireferral.us/public_html
+
+      # Post-deployment (run on server)
       - name: Post-deploy commands
         run: |
-          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'EOF'
-            cd /home/u867057961/domains/omnireferral.us
-
-            # Make public the document root
-            rm -rf public_html
-            ln -sfn public public_html
-
-            # Laravel maintenance
-            php artisan down || true
-            php artisan migrate --force
+          ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT $SSH_USER@$SSH_HOST <<'EOF'
+            cd /home/u867057961/domains/omnireferral.us/public_html
+            
+            # Ensure storage link exists (important!)
             php artisan storage:link || true
+            
+            # Clear and rebuild caches
             php artisan optimize:clear
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
-            php artisan up
-
-            # Permissions (Hostinger needs this)
+            
+            # Run migrations (optional: remove if you do manually)
+            php artisan migrate --force
+            
+            # Fix permissions for Hostinger (important!)
+            find . -type f -exec chmod 644 {} \;
+            find . -type d -exec chmod 755 {} \;
             chmod -R 775 storage bootstrap/cache
           EOF
         env:
