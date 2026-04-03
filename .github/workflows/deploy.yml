@@ -1,16 +1,23 @@
 name: Deploy to Hostinger
+
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      DEPLOY_PATH: /home/u867057961/omnireferral
+
     steps:
-      - name: Checkout
+      # 1️⃣ Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2️⃣ Setup PHP
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -18,72 +25,92 @@ jobs:
           extensions: mbstring, intl, gd, pdo_mysql
           tools: composer
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install & build
+      # 3️⃣ Install dependencies & build
+      - name: Install dependencies & build
         run: |
           composer install --no-dev --prefer-dist --no-interaction --no-progress
           npm ci
           npm run build
-          # DO NOT run artisan cache here!
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
 
+      # 4️⃣ Setup SSH key
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan -H -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
 
-      - name: Deploy via Rsync
+      # 5️⃣ Ensure public_html -> public symlink
+      - name: Ensure public_html symlink
         run: |
-          rsync -az --delete \
-            --exclude ".git" \
-            --exclude "node_modules" \
-            --exclude "storage" \
-            --exclude "bootstrap/cache" \
-            --exclude ".env" \
-            -e "ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT" \
-            ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/home/u867057961/omnireferral/
+          ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" <<'EOF'
+            set -e
+            TARGET=/home/u867057961/omnireferral/public
+            LINK=/home/u867057961/domains/omnireferral.us/public_html
+            if [ -L "$LINK" ]; then
+              echo "Symlink already present."
+            else
+              if [ -e "$LINK" ] && [ ! -L "$LINK" ]; then
+                mv "$LINK" "${LINK}_backup_$(date +%s)"
+              fi
+              ln -s "$TARGET" "$LINK"
+              echo "Symlink created: $LINK -> $TARGET"
+            fi
+          EOF
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
 
-      - name: Post-deploy setup
+      # 6️⃣ Create storage & cache folders with correct permissions
+      - name: Setup storage & cache folders
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" <<'EOF'
+            set -e
+            mkdir -p /home/u867057961/omnireferral/storage
+            mkdir -p /home/u867057961/omnireferral/bootstrap/cache
+            chmod -R 775 /home/u867057961/omnireferral/storage
+            chmod -R 775 /home/u867057961/omnireferral/bootstrap/cache
+          EOF
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+
+      # 7️⃣ Rsync project files to server
+      - name: Deploy via Rsync
+        run: |
+          rsync -az --delete \
+            --exclude ".git" \
+            --exclude "node_modules" \
+            --exclude "storage/logs/*.log" \
+            --rsync-path="mkdir -p $DEPLOY_PATH && rsync" \
+            -e "ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT" \
+            ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH"
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          DEPLOY_PATH: ${{ env.DEPLOY_PATH }}
+
+      # 8️⃣ Post-deploy Artisan commands
+      - name: Post-deploy Artisan commands
         run: |
           ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" <<'EOF'
             set -e
             cd /home/u867057961/omnireferral
-
-            # Create Laravel storage & cache folders (rsync deletes them)
-            mkdir -p storage/app/public
-            mkdir -p storage/framework/{cache,sessions,views}
-            mkdir -p storage/logs
-            mkdir -p bootstrap/cache
-
-            # Set correct permissions
-            chmod -R 775 storage bootstrap/cache
-
-            # Symlink public_html to public
-            LINK=/home/u867057961/domains/omnireferral.us/public_html
-            TARGET=/home/u867057961/omnireferral/public
-            if [ ! -L "$LINK" ]; then
-              [ -e "$LINK" ] && mv "$LINK" "${LINK}_backup_$(date +%s)"
-              ln -s "$TARGET" "$LINK"
-            fi
-
-            # Laravel post-deploy commands
-            php artisan storage:link || true
             php artisan migrate --force
-            php artisan optimize:clear
-            php artisan optimize
+            php artisan storage:link
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
           EOF
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
