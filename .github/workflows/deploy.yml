@@ -8,7 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,73 +20,97 @@ jobs:
           extensions: mbstring, intl, gd, pdo_mysql, zip
           tools: composer:v2
 
-      - name: Install dependencies & build
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies and build
         run: |
           composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
           npm ci
           npm run build
-          rm -rf node_modules  # Clean up to save space
+          rm -rf node_modules
 
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H -p $SSH_PORT $SSH_HOST >> ~/.ssh/known_hosts
+          ssh-keyscan -H -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
 
-      # Test connection first
       - name: Test SSH
         run: |
-          ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT $SSH_USER@$SSH_HOST "echo 'Connected successfully'"
+          ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "echo Connected successfully"
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
 
-      # Deploy files (without deleting storage)
+      - name: Ensure target directories exist
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
+            mkdir -p /home/u867057961/omnireferral &&
+            mkdir -p /home/u867057961/omnireferral/storage/app/public &&
+            mkdir -p /home/u867057961/omnireferral/storage/framework/cache &&
+            mkdir -p /home/u867057961/omnireferral/storage/framework/sessions &&
+            mkdir -p /home/u867057961/omnireferral/storage/framework/views &&
+            mkdir -p /home/u867057961/omnireferral/storage/logs &&
+            mkdir -p /home/u867057961/omnireferral/bootstrap/cache
+          "
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+
       - name: Deploy via Rsync
         run: |
           rsync -avz --delete \
             --exclude ".git" \
+            --exclude ".github" \
             --exclude "node_modules" \
             --exclude ".env" \
             --exclude "storage" \
             --exclude "bootstrap/cache/*.php" \
             --exclude "*.log" \
             -e "ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT -o StrictHostKeyChecking=no" \
-            ./ $SSH_USER@$SSH_HOST:$DEPLOY_PATH
+            ./ "$SSH_USER@$SSH_HOST:/home/u867057961/omnireferral/"
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
-          DEPLOY_PATH: /home/u867057961/domains/omnireferral.us/public_html
 
-      # Post-deployment (run on server)
       - name: Post-deploy commands
         run: |
-          ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT $SSH_USER@$SSH_HOST <<'EOF'
-            cd /home/u867057961/domains/omnireferral.us/public_html
-            
-            # Ensure storage link exists (important!)
-            php artisan storage:link || true
-            
-            # Clear and rebuild caches
+          ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" <<'EOF'
+            set -e
+
+            cd /home/u867057961/omnireferral
+
+            mkdir -p storage/app/public
+            mkdir -p storage/framework/cache
+            mkdir -p storage/framework/sessions
+            mkdir -p storage/framework/views
+            mkdir -p storage/logs
+            mkdir -p bootstrap/cache
+
+            rm -rf public/storage
+            ln -s /home/u867057961/omnireferral/storage/app/public /home/u867057961/omnireferral/public/storage || true
+
+            find . -type f -exec chmod 644 {} \;
+            find . -type d -exec chmod 755 {} \;
+            chmod -R 775 storage bootstrap/cache
+
             php artisan optimize:clear
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
-            
-            # Run migrations (optional: remove if you do manually)
             php artisan migrate --force
-            
-            # Fix permissions for Hostinger (important!)
-            find . -type f -exec chmod 644 {} \;
-            find . -type d -exec chmod 755 {} \;
-            chmod -R 775 storage bootstrap/cache
           EOF
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
