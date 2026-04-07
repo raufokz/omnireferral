@@ -1,16 +1,16 @@
-<header class="site-header" data-animate id="siteHeader">
+<header class="site-header" data-animate >
     <div class="container nav-shell">
         <a href="{{ route('home') }}" class="brand-mark" aria-label="OmniReferral home">
-            <span class="brand-mark__omni">Omni</span><span class="brand-mark__referral">Referral</span>
+            <img src="{{ asset('images/omnireferral-logo.png') }}" alt="OmniReferral Logo" class="brand-logo">
         </a>
         <nav class="main-nav" id="mainNav" aria-label="Primary navigation">
             @guest
-                <a class="{{ request()->routeIs('home') ? 'is-active' : '' }}" href="{{ route('home') }}#how-it-works" data-nav-section="how-it-works" aria-current="{{ request()->routeIs('home') ? 'page' : 'false' }}">How It Works</a>
-                <a class="{{ request()->routeIs('listings') || request()->routeIs('properties.show') ? 'is-active' : '' }}" href="{{ route('listings') }}" data-nav-section="listings" aria-current="{{ request()->routeIs('listings') || request()->routeIs('properties.show') ? 'page' : 'false' }}">Listings</a>
-                <a class="{{ request()->routeIs('pricing') || request()->routeIs('packages.*') ? 'is-active' : '' }}" href="{{ route('pricing') }}" data-nav-section="pricing-preview" aria-current="{{ request()->routeIs('pricing') ? 'page' : 'false' }}">Pricing</a>
-                <a class="{{ request()->routeIs('agents.*') ? 'is-active' : '' }}" href="{{ route('agents.index') }}" data-nav-section="partners" aria-current="{{ request()->routeIs('agents.*') ? 'page' : 'false' }}">Agents</a>
-                <a class="{{ request()->routeIs('blog.*') ? 'is-active' : '' }}" href="{{ route('blog.index') }}" data-nav-section="blog" aria-current="{{ request()->routeIs('blog.*') ? 'page' : 'false' }}">Blog</a>
-                <a class="{{ request()->routeIs('contact') ? 'is-active' : '' }}" href="{{ route('contact') }}" aria-current="{{ request()->routeIs('contact') ? 'page' : 'false' }}">Contact</a>
+                <a class="{{ request()->routeIs('home') ? 'is-active' : '' }}" href="{{ route('home') }}#how-it-works" data-nav-section="how-it-works">How It Works</a>
+                <a class="{{ request()->routeIs('listings') || request()->routeIs('properties.show') ? 'is-active' : '' }}" href="{{ route('listings') }}">Listings</a>
+                <a class="{{ request()->routeIs('pricing') || request()->routeIs('packages.*') ? 'is-active' : '' }}" href="{{ route('pricing') }}">Pricing</a>
+                <a class="{{ request()->routeIs('agents.*') ? 'is-active' : '' }}" href="{{ route('agents.index') }}">Agents</a>
+                <a class="{{ request()->routeIs('blog.*') ? 'is-active' : '' }}" href="{{ route('blog.index') }}">Blog</a>
+                <a class="{{ request()->routeIs('contact') ? 'is-active' : '' }}" href="{{ route('contact') }}">Contact</a>
             @else
                 <a class="{{ request()->routeIs('dashboard') || request()->routeIs('dashboard.*') || request()->routeIs('admin.dashboard') ? 'is-active' : '' }}" href="{{ route('dashboard') }}">Workspace</a>
                 <a href="{{ route('dashboard') }}#leads">Leads</a>
