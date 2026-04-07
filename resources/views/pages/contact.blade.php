@@ -22,6 +22,53 @@
      MAIN CONTACT LAYOUT
 ============================ --}}
 <section class="section contact-body-section">
+    <style>
+        .contact-info-card {
+            display: block !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        .contact-info-card__title, .eyebrow {
+            display: block !important;
+            width: 100% !important;
+            text-align: left !important;
+        }
+        .contact-info-items {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+        }
+        .ci-item {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: flex-start !important;
+            width: 100% !important;
+        }
+        .ci-item__body {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            word-break: normal !important;
+            overflow-wrap: break-word !important;
+        }
+        .ci-item__label, .ci-item__value {
+            display: block !important;
+            white-space: normal !important;
+        }
+        .contact-body-grid {
+            display: grid !important;
+            grid-template-columns: 1fr 380px !important;
+            align-items: start !important;
+            width: 100% !important;
+            max-width: 1200px !important;
+            margin: 0 auto !important;
+        }
+        @media (max-width: 900px) {
+            .contact-body-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
     <div class="container contact-body-grid">
 
         {{-- LEFT: Contact Form --}}

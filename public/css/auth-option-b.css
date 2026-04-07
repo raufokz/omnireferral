@@ -1,0 +1,117 @@
+/* Option B: Vibrant Minimal Action Zone (Overrides) */
+
+/* General Container */
+.gateway-shell {
+    background-color: #FAFAFA !important;
+}
+
+/* Lighten the Brand Column Overlay */
+.gateway-brand-col {
+    background: #FFF;
+}
+.gateway-brand-col::before {
+    /* If the previous session used ::before for the overlay */
+    background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.2) 100%) !important;
+}
+.gateway-brand-image {
+    opacity: 0.8;
+}
+
+/* Darken text in the brand column so it's readable over a light image */
+.gateway-brand-content h1, 
+.gateway-brand-content p, 
+.brand-mark__omni {
+    color: #102A43 !important;
+    text-shadow: 0 2px 10px rgba(255,255,255,0.8);
+}
+.brand-mark__referral {
+    color: #C86B2A !important;
+    text-shadow: 0 2px 10px rgba(255,255,255,0.8);
+}
+
+/* The Action Zone */
+.gateway-action-col {
+    background: #FFFFFF !important;
+    color: #102A43 !important;
+    box-shadow: -10px 0 30px rgba(16, 42, 67, 0.05); /* Soft premium shadow */
+    border-left: 1px solid rgba(16, 42, 67, 0.05);
+}
+
+/* Make headers and text dark in the action zone */
+.gateway-action-col h2 {
+    color: #102A43 !important;
+    font-weight: 800;
+}
+.gateway-action-col p,
+.gateway-action-col .eyebrow {
+    color: #5E6B7A !important;
+}
+
+/* Refine the Form Container */
+.gateway-form-container {
+    background: #FFFFFF;
+    border-radius: 24px;
+    padding: 2.5rem;
+    box-shadow: 0 16px 50px rgba(16, 42, 67, 0.06);
+    border: 1px solid rgba(16, 42, 67, 0.05);
+}
+
+/* Update default floating labels to darker theme */
+.floating-group input,
+.floating-group select {
+    background: #F8FAFC !important;
+    border-color: #E2E8F0 !important;
+    color: #102A43 !important;
+}
+.floating-group input:focus,
+.floating-group select:focus {
+    background: #FFFFFF !important;
+    border-color: #C86B2A !important;
+    box-shadow: 0 0 0 4px rgba(200, 107, 42, 0.15) !important;
+}
+.floating-group label {
+    color: #64748B !important;
+}
+
+/* Checkbox text */
+.gateway-action-col .text-gray-500,
+.gateway-action-col .text-gray-600 {
+    color: #64748B !important;
+}
+
+/* Divider */
+.gateway-divider::before, 
+.gateway-divider::after {
+    background-color: #E2E8F0 !important;
+}
+.gateway-divider span {
+    color: #94A3B8 !important;
+}
+
+/* Social Buttons */
+.gateway-social-btn {
+    background: #FFFFFF !important;
+    border: 1px solid #E2E8F0 !important;
+    color: #334155 !important;
+    box-shadow: 0 2px 4px rgba(16,42,67,0.02) !important;
+}
+.gateway-social-btn:hover {
+    background: #F8FAFC !important;
+    border-color: #CBD5E1 !important;
+    box-shadow: 0 4px 6px rgba(16,42,67,0.04) !important;
+}
+
+/* Change Buttons back to Vibrant Orange */
+.gateway-form button[type="submit"] {
+    background: #C86B2A !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 8px 20px rgba(200, 107, 42, 0.25) !important;
+    border: none !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+}
+.gateway-form button[type="submit"]:hover {
+    background: #b55f24 !important;
+    box-shadow: 0 10px 25px rgba(200, 107, 42, 0.35) !important;
+    transform: translateY(-2px);
+}

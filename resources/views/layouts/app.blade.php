@@ -16,6 +16,9 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    @if(request()->routeIs('login', 'register', 'password.*'))
+        <link rel="stylesheet" href="{{ asset('css/auth-custom.css') }}">
+    @endif
     @php
         $organizationSchema = [
             '@context' => 'https://schema.org',

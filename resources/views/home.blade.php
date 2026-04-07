@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="homepage-shell homepage-shell--refined">
+    {{-- Hero Section --}}
     <section class="hero hero--premium homepage-hero homepage-hero--minimal" aria-labelledby="hero-headline" style="background-image: linear-gradient(120deg, rgba(0, 28, 72, 0.86), rgba(0, 28, 72, 0.78)), url('{{ asset('images/hero/bg.jpg') }}'); background-size: cover; background-position: center;">
         <div class="hero__backdrop"></div>
         <div class="container hero__content hero__content--premium homepage-hero__layout">
@@ -43,6 +44,7 @@
                     <button class="tab-switcher__button" type="button" role="tab" aria-selected="false" data-tab-trigger="seller">Seller</button>
                 </div>
 
+                {{-- Buyer Panel --}}
                 <div class="tab-panel is-active" data-tab-panel="buyer">
                     <form class="hero-form" method="POST" action="{{ route('leads.store') }}" data-multi-step novalidate>
                         @csrf
@@ -74,7 +76,7 @@
                             </div>
 
                             <div class="hero-map-card">
-                                <div class="hero-map" id="hero-map" aria-label="Lead search map"></div>
+                                <div class="hero-map" id="hero-map" aria-label="Lead search map">Map placeholder – integrate Leaflet/Google Maps</div>
                                 <div class="hero-map-overlay">
                                     <div class="hero-map-overlay__item">
                                         <strong>ZIP</strong>
@@ -111,6 +113,7 @@
                     </form>
                 </div>
 
+                {{-- Seller Panel --}}
                 <div class="tab-panel" data-tab-panel="seller">
                     <form class="hero-form" method="POST" action="{{ route('leads.store') }}" enctype="multipart/form-data" data-multi-step novalidate>
                         @csrf
@@ -142,13 +145,13 @@
                             </div>
                             <div class="hero-form__grid">
                                 <input type="hidden" name="package_slug" value="power-leads">
-                                    <label class="floating-field zip-tags" data-zip-tags>
-                                        <input type="hidden" name="zip_code" value="">
-                                        <input type="text" placeholder="Enter ZIP code" data-zip-entry inputmode="numeric" maxlength="10">
-                                        <span>Property ZIP code</span>
-                                        <div class="zip-tag-list" aria-live="polite"></div>
-                                        <button type="button" class="zip-add-btn" data-zip-add>Add another ZIP</button>
-                                    </label>
+                                <label class="floating-field zip-tags" data-zip-tags>
+                                    <input type="hidden" name="zip_code" value="">
+                                    <input type="text" placeholder="Enter ZIP code" data-zip-entry inputmode="numeric" maxlength="10">
+                                    <span>Property ZIP code</span>
+                                    <div class="zip-tag-list" aria-live="polite"></div>
+                                    <button type="button" class="zip-add-btn" data-zip-add>Add another ZIP</button>
+                                </label>
                                 <label><span>Property type</span><select name="property_type"><option value="">Select type</option><option>House</option><option>Apartment</option><option>Condo</option><option>Commercial</option></select></label>
                                 <label><span>Asking price</span><input type="number" name="asking_price" placeholder="625000" min="0" inputmode="numeric"></label>
                                 <label><span>Timeline</span><select name="timeline"><option value="">Select timing</option><option>ASAP</option><option>0-30 days</option><option>1-3 months</option><option>3-6 months</option><option>Exploring options</option></select></label>
@@ -168,6 +171,7 @@
         </div>
     </section>
 
+    {{-- Stats Strip --}}
     <div class="stat-strip" aria-label="Platform statistics">
         <div class="container stat-strip__grid">
             <div class="stat-strip__item" data-counter="3200" data-suffix="+"><span class="stat-strip__number">3,200+</span><span class="stat-strip__label">Qualified leads delivered</span></div>
@@ -177,6 +181,7 @@
         </div>
     </div>
 
+    {{-- About Section --}}
     <section class="section section--light homepage-section homepage-section--about" aria-labelledby="about-omnireferral-heading" data-animate>
         <div class="container two-column about-layout homepage-about-grid">
             <div class="homepage-about-copy" data-animate="left">
@@ -201,6 +206,7 @@
         </div>
     </section>
 
+    {{-- How It Works --}}
     <section class="section section--gray homepage-section homepage-section--workflow" id="how-it-works" aria-labelledby="how-it-works-heading" data-animate>
         <div class="container">
             <div class="section-heading homepage-section__heading" data-animate="left">
@@ -263,6 +269,7 @@
         </div>
     </section>
 
+    {{-- Services / Features --}}
     <section class="section section--light homepage-section homepage-section--services" aria-labelledby="services-heading" data-animate>
         <div class="container">
             <div class="section-heading homepage-section__heading" data-animate="right">
@@ -295,6 +302,7 @@
         </div>
     </section>
 
+    {{-- Pricing Preview --}}
     <section class="section section--gray homepage-section homepage-section--pricing" id="pricing-preview" aria-labelledby="pricing-preview-heading" data-animate>
         <div class="container">
             <div class="section-heading homepage-section__heading" data-animate="left">
