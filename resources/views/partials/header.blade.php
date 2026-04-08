@@ -1,7 +1,7 @@
 <header class="site-header" data-animate >
     <div class="container nav-shell">
         <a href="{{ route('home') }}" class="brand-mark" aria-label="OmniReferral home">
-            <img src="{{ asset('images/omnireferral-logo.png') }}" alt="OmniReferral Logo" class="brand-logo">
+            <img src="{{ asset('images/omnireferral-logo.png') }}" alt="OmniReferral Logo" >
         </a>
         <nav class="main-nav" id="mainNav" aria-label="Primary navigation">
             @guest

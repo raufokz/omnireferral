@@ -3,7 +3,7 @@
 @section('content')
 <div class="homepage-shell homepage-shell--refined">
     {{-- Hero Section --}}
-    <section class="hero hero--premium homepage-hero homepage-hero--minimal" aria-labelledby="hero-headline" style="background-image: linear-gradient(120deg, rgba(0, 28, 72, 0.86), rgba(0, 28, 72, 0.78)), url('{{ asset('images/hero/bg.jpg') }}'); background-size: cover; background-position: center;">
+    <section class="hero hero--premium homepage-hero homepage-hero--minimal homepage-hero--with-image" aria-labelledby="hero-headline">
         <div class="hero__backdrop"></div>
         <div class="container hero__content hero__content--premium homepage-hero__layout">
             <div class="hero__copy hero__copy--premium homepage-hero__copy" data-reveal="left">
@@ -40,12 +40,12 @@
                 </div>
 
                 <div class="tab-switcher hero-tabs" role="tablist" aria-label="Lead type">
-                    <button class="tab-switcher__button is-active" type="button" role="tab" aria-selected="true" data-tab-trigger="buyer">Buyer</button>
-                    <button class="tab-switcher__button" type="button" role="tab" aria-selected="false" data-tab-trigger="seller">Seller</button>
+                    <button class="tab-switcher__button is-active" id="hero-tab-buyer" type="button" role="tab" aria-selected="true" aria-controls="hero-panel-buyer" tabindex="0" data-tab-trigger="buyer">Buyer</button>
+                    <button class="tab-switcher__button" id="hero-tab-seller" type="button" role="tab" aria-selected="false" aria-controls="hero-panel-seller" tabindex="-1" data-tab-trigger="seller">Seller</button>
                 </div>
 
                 {{-- Buyer Panel --}}
-                <div class="tab-panel is-active" data-tab-panel="buyer">
+                <div class="tab-panel is-active" id="hero-panel-buyer" role="tabpanel" aria-labelledby="hero-tab-buyer" data-tab-panel="buyer">
                     <form class="hero-form" method="POST" action="{{ route('leads.store') }}" data-multi-step novalidate>
                         @csrf
                         <input type="hidden" name="intent" value="buyer">
@@ -114,7 +114,7 @@
                 </div>
 
                 {{-- Seller Panel --}}
-                <div class="tab-panel" data-tab-panel="seller">
+                <div class="tab-panel" id="hero-panel-seller" role="tabpanel" aria-labelledby="hero-tab-seller" data-tab-panel="seller" hidden>
                     <form class="hero-form" method="POST" action="{{ route('leads.store') }}" enctype="multipart/form-data" data-multi-step novalidate>
                         @csrf
                         <input type="hidden" name="intent" value="seller">
@@ -310,36 +310,76 @@
                 <h2 id="pricing-preview-heading">Choose a lead package that matches your growth stage</h2>
                 <p>Each plan is positioned to make the next move obvious, whether you are testing a market or scaling a high-performing team.</p>
             </div>
-            <div class="pricing-grid pricing-grid--spotlight" data-stagger>
-                @foreach($packages->take(3) as $package)
+
+            <div class="pricing-toggle-row" data-pricing-toggle="home">
+                <span class="is-active" data-category="real_estate">Real Estate Plans</span>
+                <button type="button" class="toggle" aria-label="Toggle pricing category">
+                    <span class="toggle-thumb is-active"></span>
+                </button>
+                <span data-category="virtual_assistance">Virtual Assistance</span>
+            </div>
+
+            <div class="pricing-grid pricing-grid--spotlight" data-pricing-grid="home" data-category="real_estate" data-stagger>
+                @foreach($pricingPlans['real_estate'] as $plan)
                     @php
-                        $packageSummary = match (true) {
-                            str_contains(strtolower($package->name), 'quick') => 'A lighter entry point for agents who want verified contacts and clean routing.',
-                            str_contains(strtolower($package->name), 'power') => 'Balanced lead detail and urgency for steady month-over-month growth.',
-                            default => 'Higher-intent opportunities with the strongest qualification and faster support.',
-                        };
+                        $ctaUrl = ($plan['slug'] ?? null) ? route('packages.checkout', $plan['slug']) : route('contact');
+                        $isFeatured = $plan['is_featured'] ?? false;
                     @endphp
-                    <article class="pricing-card pricing-card--interactive homepage-pricing-card {{ $package->is_featured ? 'pricing-card--featured' : '' }}">
+                    <article class="pricing-card pricing-card--interactive homepage-pricing-card {{ $isFeatured ? 'pricing-card--featured' : '' }}">
                         <div class="homepage-pricing-card__header">
                             <div class="homepage-pricing-card__eyebrow-row">
-                                <span class="pricing-label">{{ $package->is_featured ? 'Most Chosen' : 'Lead Package' }}</span>
-                                @if($package->is_featured)
+                                <span class="pricing-label">{{ $plan['tier'] }}</span>
+                                @if($isFeatured)
                                     <div class="pricing-badge-popular">Most Popular</div>
                                 @endif
                             </div>
-                            <h3>{{ $package->name }}</h3>
-                            <p class="homepage-pricing-card__summary">{{ $packageSummary }}</p>
+                            <h3>{{ $plan['name'] }}</h3>
+                            @if(!empty($plan['value_price']))
+                                <span class="pricing-card__value">Value ${{ number_format($plan['value_price']) }}</span>
+                            @endif
+                            <p class="homepage-pricing-card__summary">{{ $plan['summary'] }}</p>
                         </div>
                         <div class="price-row homepage-pricing-card__price">
-                            <strong>${{ number_format($package->one_time_price ?? 0) }}</strong>
-                            <span>Starting one-time</span>
+                            <strong>${{ number_format($plan['price']) }}</strong>
+                            <span>{{ $plan['price_note'] }}</span>
                         </div>
                         <ul class="feature-check-list homepage-pricing-card__features">
-                            @foreach($package->features as $feature)
+                            @foreach($plan['features'] as $feature)
                                 <li>{{ $feature }}</li>
                             @endforeach
                         </ul>
-                        <a href="{{ route('pricing') }}" class="button {{ $package->is_featured ? 'button--orange' : 'button--blue' }}">View Tier</a>
+                        <a href="{{ $ctaUrl }}" class="button {{ $isFeatured ? 'button--orange' : 'button--blue' }}">{{ $plan['cta_label'] ?? 'Get Started' }}</a>
+                    </article>
+                @endforeach
+            </div>
+
+            <div class="pricing-grid pricing-grid--spotlight" data-pricing-grid="home" data-category="virtual_assistance" style="display:none;" data-stagger>
+                @foreach($pricingPlans['virtual_assistance'] as $plan)
+                    @php
+                        $ctaUrl = $plan['cta_url'] ?? route('contact', ['plan' => $plan['name']]);
+                        $isFeatured = $plan['is_featured'] ?? false;
+                    @endphp
+                    <article class="pricing-card pricing-card--interactive homepage-pricing-card {{ $isFeatured ? 'pricing-card--featured' : '' }}">
+                        <div class="homepage-pricing-card__header">
+                            <div class="homepage-pricing-card__eyebrow-row">
+                                <span class="pricing-label">{{ $plan['tier'] }}</span>
+                                @if($isFeatured)
+                                    <div class="pricing-badge-popular">Top Pick</div>
+                                @endif
+                            </div>
+                            <h3>{{ $plan['name'] }}</h3>
+                            <p class="homepage-pricing-card__summary">{{ $plan['summary'] }}</p>
+                        </div>
+                        <div class="price-row homepage-pricing-card__price">
+                            <strong>${{ number_format($plan['price']) }}</strong>
+                            <span>{{ $plan['price_note'] }}</span>
+                        </div>
+                        <ul class="feature-check-list homepage-pricing-card__features">
+                            @foreach($plan['features'] as $feature)
+                                <li>{{ $feature }}</li>
+                            @endforeach
+                        </ul>
+                        <a href="{{ $ctaUrl }}" class="button {{ $isFeatured ? 'button--orange' : 'button--blue' }}">{{ $plan['cta_label'] ?? 'Get Started' }}</a>
                     </article>
                 @endforeach
             </div>
@@ -488,4 +528,9 @@
         </div>
     </section>
 </div>
+@push('scripts')
+    @include('partials.pricing-toggle-script')
+@endpush
 @endsection
+
+

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Package;
 use App\Services\StripeCheckoutService;
+use App\Support\PricingContent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +19,7 @@ class PricingController extends Controller
         return view('pages.pricing', [
             'leadPackages' => Package::active()->leadPlans()->orderBy('sort_order')->orderBy('one_time_price')->get(),
             'assistantPackages' => Package::active()->assistantPlans()->orderBy('sort_order')->orderBy('monthly_price')->get(),
+            'pricingPlans' => PricingContent::plans(),
             'packageEmbeds' => $packageEmbeds,
             'onboardingUrl' => route('client.form.submission', ['role' => 'agent']),
             'meta' => [

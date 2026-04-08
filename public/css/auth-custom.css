@@ -8,8 +8,68 @@
     justify-content: center;
     /* The exact diagonal background: Orange top-left, Navy bottom-right */
     background: linear-gradient(115deg, #FF6000 0%, #FF6000 50%, #06152B 50%, #06152B 100%);
-    padding: 2rem;
+    padding: 5.5rem 2rem 2rem;
     font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.auth-page-topbar {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    z-index: 200;
+    pointer-events: none;
+}
+
+.auth-page-topbar__brand,
+.auth-page-topbar__close {
+    pointer-events: auto;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 0 14px 30px rgba(6, 21, 43, 0.22);
+    transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.auth-page-topbar__brand {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.65rem 1rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.auth-page-topbar__logo {
+    height: 34px;
+    width: auto;
+    object-fit: contain;
+}
+
+.auth-page-topbar__close {
+    width: 46px;
+    height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #FFFFFF;
+}
+
+.auth-page-topbar__close svg {
+    width: 18px;
+    height: 18px;
+}
+
+.auth-page-topbar__brand:hover,
+.auth-page-topbar__close:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.32);
 }
 
 /* Hide header/layout components */
@@ -256,10 +316,29 @@
         padding: 3rem 2rem;
     }
     .page-auth {
-        padding: 0;
+        padding: 4.75rem 0 0;
         background: #0B192C; /* Solid for mobile */
     }
     .auth-custom-card {
         border-radius: 0;
+    }
+
+    .auth-page-topbar {
+        top: 0.75rem;
+        left: 0.75rem;
+        right: 0.75rem;
+    }
+
+    .auth-page-topbar__brand {
+        padding: 0.55rem 0.85rem;
+    }
+
+    .auth-page-topbar__logo {
+        height: 28px;
+    }
+
+    .auth-page-topbar__close {
+        width: 42px;
+        height: 42px;
     }
 }

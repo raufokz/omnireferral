@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+    @include('partials.auth-home-bar')
     <div class="auth-custom-card">
         <!-- Left Column (Navy background) -->
         <div class="auth-col-left">

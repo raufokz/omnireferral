@@ -9,6 +9,7 @@ use App\Models\Property;
 use App\Models\RealtorProfile;
 use App\Models\TeamMember;
 use App\Models\Testimonial;
+use App\Support\PricingContent;
 use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 
@@ -62,6 +63,7 @@ class HomeController extends Controller
         return view('home', [
             'packages' => Package::active()->leadPlans()->orderBy('sort_order')->orderBy('one_time_price')->get(),
             'assistantPackages' => Package::active()->assistantPlans()->orderBy('sort_order')->orderBy('monthly_price')->get(),
+            'pricingPlans' => PricingContent::plans(),
             'testimonials' => $testimonials,
             'partners' => Partner::orderBy('sort_order')->get(),
             'partnerLogos' => $partnerLogos,
@@ -182,6 +184,19 @@ class HomeController extends Controller
         ]);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

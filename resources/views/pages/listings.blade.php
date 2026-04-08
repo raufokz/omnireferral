@@ -1,45 +1,65 @@
 @extends('layouts.app')
 @section('content')
+@php
+    $propertyCollection = method_exists($properties, 'getCollection') ? $properties->getCollection() : collect($properties);
+    $listingCount = method_exists($properties, 'total') ? $properties->total() : $properties->count();
+    $zipMarketCount = $propertyCollection->pluck('zip_code')->filter()->unique()->count();
+    $propertyTypeCount = $propertyCollection->pluck('property_type')->filter()->unique()->count();
+@endphp
 
 {{-- ============================================================
      LISTINGS HERO
 ============================================================ --}}
 <section class="listings-hero-v2">
+    <div class="listings-hero-v2__glow" aria-hidden="true"></div>
     <div class="container listings-hero-v2__inner">
-        <div class="listings-hero-v2__copy" data-animate="up">
+        <div class="listings-hero-v2__copy" data-animate="left">
             <span class="eyebrow">Property Marketplace</span>
-            <h1>Find your perfect match — agent-backed, ZIP-focused listings</h1>
+            <h1>Find your perfect match with agent-backed, ZIP-focused listings</h1>
             <p>Search by ZIP code, budget, and property type with a faster, marketplace-style experience built for buyers, sellers, and agents.</p>
+
+            <div class="listings-hero-v2__actions">
+                <a href="#listing-results" class="button button--orange">Browse Listings</a>
+                <a href="{{ route('contact') }}" class="button button--ghost-light">Request A Match</a>
+            </div>
+
             <div class="listings-hero-v2__pills">
-                <span class="lh-pill">🔒 ISA-Qualified</span>
-                <span class="lh-pill">📍 ZIP-Based Routing</span>
-                <span class="lh-pill">⚡ 48hr Avg. Delivery</span>
+                <span class="lh-pill">ISA-qualified</span>
+                <span class="lh-pill">ZIP-based routing</span>
+                <span class="lh-pill">48 hr average delivery</span>
             </div>
         </div>
-        <div class="listings-hero-v2__stats" data-animate="right">
-            <div class="lh-stat-card">
-                <span class="lh-stat-card__number">{{ $properties->count() }}</span>
-                <span class="lh-stat-card__label">Active Listings</span>
+
+        <aside class="listings-hero-v2__panel" data-animate="right">
+            <span class="listings-hero-v2__panel-eyebrow">Marketplace Snapshot</span>
+            <h2>Search with clearer market context</h2>
+            <p>Pricing, property type, ZIP coverage, and the next action are surfaced immediately so users can move faster with confidence.</p>
+
+            <div class="listings-hero-v2__stats">
+                <div class="lh-stat-card">
+                    <span class="lh-stat-card__number">{{ number_format($listingCount) }}</span>
+                    <span class="lh-stat-card__label">Active Listings</span>
+                </div>
+                <div class="lh-stat-card">
+                    <span class="lh-stat-card__number">{{ $zipMarketCount }}</span>
+                    <span class="lh-stat-card__label">ZIP Markets</span>
+                </div>
+                <div class="lh-stat-card">
+                    <span class="lh-stat-card__number">{{ $propertyTypeCount }}</span>
+                    <span class="lh-stat-card__label">Property Types</span>
+                </div>
             </div>
-            <div class="lh-stat-card">
-                <span class="lh-stat-card__number">48</span>
-                <span class="lh-stat-card__label">ZIP Markets</span>
-            </div>
-            <div class="lh-stat-card">
-                <span class="lh-stat-card__number">450+</span>
-                <span class="lh-stat-card__label">Agent Partners</span>
-            </div>
-        </div>
+        </aside>
     </div>
 </section>
 
 {{-- ============================================================
-     MAIN LISTINGS LAYOUT: Cards LEFT, Fixed Filter RIGHT
+     MAIN LISTINGS LAYOUT: Cards LEFT, Sticky Filter RIGHT
 ============================================================ --}}
-<section class="listings-page-v2">
+<section class="listings-page-v2" id="listing-results">
     <div class="container listings-page-v2__layout">
 
-        {{-- ── LEFT: Property Grid ── --}}
+        {{-- LEFT: Property Grid --}}
         <div class="listings-main-v2">
 
             {{-- Results header --}}
@@ -52,8 +72,8 @@
                     <label for="listingSort">Sort:</label>
                     <select id="listingSort" class="ls-sort-select">
                         <option value="relevant">Most Relevant</option>
-                        <option value="price-asc">Price: Low → High</option>
-                        <option value="price-desc">Price: High → Low</option>
+                        <option value="price-asc">Price: Low to High</option>
+                        <option value="price-desc">Price: High to Low</option>
                     </select>
                 </div>
             </div>
@@ -67,6 +87,7 @@
                         data-zip="{{ $property->zip_code }}"
                         data-type="{{ strtolower($property->property_type) }}"
                         data-price="{{ $property->price }}"
+                        data-beds="{{ (int) ($property->beds ?? 0) }}"
                     >
                         <div class="lc-card__media">
                             <img src="{{ $property->image_url }}" alt="{{ $property->title }}" loading="lazy">
@@ -80,22 +101,22 @@
                             <div class="lc-card__type-row">
                                 <span class="lc-card__type">{{ $property->property_type }}</span>
                                 @if($property->zip_code)
-                                    <span class="lc-card__zip">📍 {{ $property->zip_code }}</span>
+                                    <span class="lc-card__zip">ZIP {{ $property->zip_code }}</span>
                                 @endif
                             </div>
                             <h3 class="lc-card__title">{{ $property->title }}</h3>
                             <p class="lc-card__location">{{ $property->location }}</p>
                             <div class="lc-card__meta">
                                 <div class="lc-meta-item">
-                                    <strong>{{ $property->beds ?? '—' }}</strong>
+                                    <strong>{{ $property->beds ?? '-' }}</strong>
                                     <span>Beds</span>
                                 </div>
                                 <div class="lc-meta-item">
-                                    <strong>{{ $property->baths ?? '—' }}</strong>
+                                    <strong>{{ $property->baths ?? '-' }}</strong>
                                     <span>Baths</span>
                                 </div>
                                 <div class="lc-meta-item">
-                                    <strong>{{ $property->sqft ? number_format($property->sqft) : '—' }}</strong>
+                                    <strong>{{ $property->sqft ? number_format($property->sqft) : '-' }}</strong>
                                     <span>Sqft</span>
                                 </div>
                             </div>
@@ -110,9 +131,9 @@
                     </article>
                 @empty
                     <div class="listing-empty-state">
-                        <div class="listing-empty-state__icon">🏘️</div>
+                        <div class="listing-empty-state__icon">Home</div>
                         <h3>No listings available yet</h3>
-                        <p>Check back soon — new properties are added regularly.</p>
+                        <p>Check back soon. New properties are added regularly.</p>
                         <a href="{{ route('contact') }}" class="button button--orange">Request a Match</a>
                     </div>
                 @endforelse
@@ -120,14 +141,14 @@
 
             {{-- Empty state after filter --}}
             <div class="listing-empty-state" id="listingEmptyState" hidden>
-                <div class="listing-empty-state__icon">🔍</div>
+                <div class="listing-empty-state__icon">Search</div>
                 <h3>No listings match your filters</h3>
                 <p>Adjust your ZIP code, property type, or price range to see more opportunities.</p>
                 <button class="button button--orange" onclick="document.getElementById('filterReset').click()">Clear Filters</button>
             </div>
         </div>
 
-        {{-- ── RIGHT: Fixed/Sticky Filter Sidebar ── --}}
+        {{-- RIGHT: Sticky Filter Sidebar --}}
         <aside class="listings-filter-sidebar" id="filterSidebar">
             <div class="lf-sidebar__inner">
 
@@ -173,7 +194,7 @@
                             </label>
                             <div class="lf-price-inputs">
                                 <input type="number" id="filterPriceMin" class="lf-input" placeholder="Min $" min="0" step="10000">
-                                <span class="lf-price-sep">–</span>
+                                <span class="lf-price-sep">-</span>
                                 <input type="number" id="filterPriceMax" class="lf-input" placeholder="Max $" min="0" step="10000">
                             </div>
                         </div>
@@ -220,8 +241,8 @@
 
                 {{-- CTA card --}}
                 <div class="lf-card lf-card--cta">
-                    <div class="lf-cta__icon">🏆</div>
-                    <h4>Can't find what you need?</h4>
+                    <div class="lf-cta__icon">Match</div>
+                    <h4>Cannot find what you need?</h4>
                     <p>Our ISA team qualifies leads personally and routes to top local agents.</p>
                     <a href="{{ route('contact') }}" class="button button--orange lf-btn-full">Request a Match</a>
                 </div>
@@ -241,31 +262,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const bedsInput = document.getElementById('filterBedsVal');
     let activeBeds = 0;
 
-    // Bedroom buttons
     bedBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             bedBtns.forEach(b => b.classList.remove('is-active'));
             btn.classList.add('is-active');
-            activeBeds = parseInt(btn.dataset.beds);
+            activeBeds = parseInt(btn.dataset.beds, 10);
             bedsInput.value = activeBeds;
         });
     });
     bedBtns[0]?.classList.add('is-active');
 
-    // Apply filter
     document.getElementById('filterApply')?.addEventListener('click', () => {
         const zip = document.getElementById('filterZip').value.trim().toLowerCase();
         const type = document.getElementById('filterType').value.toLowerCase();
         const minPrice = parseFloat(document.getElementById('filterPriceMin').value) || 0;
         const maxPrice = parseFloat(document.getElementById('filterPriceMax').value) || Infinity;
-        const beds = parseInt(bedsInput.value) || 0;
+        const beds = parseInt(bedsInput.value, 10) || 0;
 
         let visible = 0;
         cards.forEach(card => {
             const cardZip = (card.dataset.zip || '').toLowerCase();
             const cardType = (card.dataset.type || '').toLowerCase();
             const cardPrice = parseFloat(card.dataset.price) || 0;
-            const cardBeds = parseInt(card.dataset.beds) || 0;
+            const cardBeds = parseInt(card.dataset.beds, 10) || 0;
 
             const matchZip = !zip || cardZip.includes(zip);
             const matchType = !type || cardType.includes(type);
@@ -281,7 +300,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (countEl) countEl.textContent = `Showing ${visible} propert${visible === 1 ? 'y' : 'ies'}`;
     });
 
-    // Reset
     document.getElementById('filterReset')?.addEventListener('click', () => {
         document.getElementById('filterZip').value = '';
         document.getElementById('filterType').value = '';
@@ -296,7 +314,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (countEl) countEl.textContent = `Showing ${cards.length} properties`;
     });
 
-    // Sort
     document.getElementById('listingSort')?.addEventListener('change', (e) => {
         const grid = document.getElementById('listingGrid');
         const items = [...grid.querySelectorAll('[data-listing-card]')];
@@ -310,7 +327,6 @@ document.addEventListener('DOMContentLoaded', () => {
         items.forEach(item => grid.appendChild(item));
     });
 
-    // Sticky sidebar
     const sidebar = document.getElementById('filterSidebar');
     const headerH = document.getElementById('siteHeader')?.offsetHeight || 80;
     if (sidebar) {
