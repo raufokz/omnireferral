@@ -15,9 +15,10 @@
 @endphp
 
 <div class="testimonials-page">
-<section class="testimonials-page-hero">
-    <div class="container testimonials-page-hero__grid">
-        <div class="testimonials-page-hero__copy">
+<section class="page-hero agent-directory-hero testimonials-hero">
+    <div class="agent-directory-hero__glow" aria-hidden="true"></div>
+    <div class="container agent-directory-hero__inner">
+        <div class="agent-directory-hero__copy">
             @if(session('success'))
                 <div class="alert alert--success testimonial-submit-alert">
                     {{ session('success') }}
@@ -26,51 +27,38 @@
             <span class="eyebrow">Testimonials</span>
             <h1>Real feedback from buyers, sellers, agents, and community members</h1>
             <p>See how OmniReferral is helping every side of the real estate journey with cleaner lead quality, better communication, stronger handoffs, and a more polished client experience.</p>
-            <div class="testimonials-page-hero__proofline">
+            <div class="agent-directory-hero__actions">
+                <a href="#testimonial-library" class="button button--orange">Explore Testimonials</a>
+                <a href="#share-review" class="button button--ghost-light">Share Your Review</a>
+            </div>
+            <div class="agent-directory-hero__proof testimonials-hero__proof">
                 <span>{{ number_format($counts['buyer']) }} buyer stories</span>
                 <span>{{ number_format($counts['seller']) }} seller stories</span>
                 <span>{{ number_format($counts['agent']) }} agent reviews</span>
                 <span>{{ number_format($counts['community']) }} community notes</span>
             </div>
-            <div class="testimonials-page-hero__metrics">
-                <div class="testimonials-page-metric">
+        </div>
+
+        <aside class="agent-directory-hero__panel testimonials-hero__panel">
+            <span class="agent-directory-hero__panel-eyebrow">Trust Snapshot</span>
+            <h2>Specific proof beats generic claims.</h2>
+            <p>The strongest reviews show what actually changed: clearer next steps, better handoffs, faster follow-up, stronger context, and a noticeably more premium feel across the journey.</p>
+            <div class="agent-directory-hero__stats testimonials-hero__stats">
+                <div class="agent-directory-hero__stat">
                     <strong>{{ number_format($counts['all']) }}</strong>
-                    <span>Total stories</span>
+                    <span>total published stories</span>
                 </div>
-                <div class="testimonials-page-metric">
+                <div class="agent-directory-hero__stat">
                     <strong>{{ number_format($averageRating, 1) }}/5</strong>
-                    <span>Average rating</span>
+                    <span>average rating across audiences</span>
                 </div>
-                <div class="testimonials-page-metric">
+                <div class="agent-directory-hero__stat">
                     <strong>{{ number_format($videoTestimonials->count()) }}</strong>
-                    <span>Video highlights</span>
+                    <span>video highlights available</span>
                 </div>
             </div>
-        </div>
-        <div class="testimonials-page-hero__card cockpit-table-card">
-            <span class="eyebrow">What People Notice Most</span>
-            <h2>Trust, speed, and a more polished handoff</h2>
-            <ul class="testimonials-page-hero__list">
-                <li>Buyer and seller feedback in one place</li>
-                <li>Specific reviews that feel more human than generic praise</li>
-                <li>Agent praise focused on lead quality and routing clarity</li>
-                <li>Community feedback submitted for admin approval before publishing</li>
-            </ul>
-            <div class="testimonials-page-hero__card-metrics">
-                <div>
-                    <strong>{{ number_format($selectedAudience === 'all' ? $counts['all'] : $counts[$selectedAudience]) }}</strong>
-                    <span>Stories in {{ $selectedScope }}</span>
-                </div>
-                <div>
-                    <strong>{{ number_format($featuredTestimonials->count()) }}</strong>
-                    <span>Spotlight stories below</span>
-                </div>
-            </div>
-            <div class="testimonials-page-hero__actions">
-                <a href="#testimonial-library" class="button button--orange">Explore Testimonials</a>
-                <a href="{{ route('pricing') }}" class="button button--ghost-light">View Packages</a>
-            </div>
-        </div>
+            <p class="testimonials-hero__note">{{ ucfirst($selectedScope) }} are currently in focus through the active filter.</p>
+        </aside>
     </div>
 </section>
 

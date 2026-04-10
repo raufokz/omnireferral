@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@push('styles')
+    @vite('resources/css/modules/home.css')
+@endpush
+
 @section('content')
 @php
     $publishedTestimonials = \App\Models\Testimonial::published()
@@ -419,78 +423,11 @@
                 <p>Each plan is positioned to make the next move obvious, whether you are testing a market or scaling a high-performing team.</p>
             </div>
 
-            <div class="pricing-toggle-row" data-pricing-toggle="home">
-                <span class="is-active" data-category="real_estate">Real Estate Plans</span>
-                <button type="button" class="toggle" aria-label="Toggle pricing category">
-                    <span class="toggle-thumb is-active"></span>
-                </button>
-                <span data-category="virtual_assistance">Virtual Assistance</span>
-            </div>
-
-            <div class="pricing-grid pricing-grid--spotlight" data-pricing-grid="home" data-category="real_estate" data-stagger>
-                @foreach($pricingPlans['real_estate'] as $plan)
-                    @php
-                        $ctaUrl = ($plan['slug'] ?? null) ? route('packages.checkout', $plan['slug']) : route('contact');
-                        $isFeatured = $plan['is_featured'] ?? false;
-                    @endphp
-                    <article class="pricing-card pricing-card--interactive homepage-pricing-card {{ $isFeatured ? 'pricing-card--featured' : '' }}">
-                        <div class="homepage-pricing-card__header">
-                            <div class="homepage-pricing-card__eyebrow-row">
-                                <span class="pricing-label">{{ $plan['tier'] }}</span>
-                                @if($isFeatured)
-                                    <div class="pricing-badge-popular">Most Popular</div>
-                                @endif
-                            </div>
-                            <h3>{{ $plan['name'] }}</h3>
-                            @if(!empty($plan['value_price']))
-                                <span class="pricing-card__value">Value ${{ number_format($plan['value_price']) }}</span>
-                            @endif
-                            <p class="homepage-pricing-card__summary">{{ $plan['summary'] }}</p>
-                        </div>
-                        <div class="price-row homepage-pricing-card__price">
-                            <strong>${{ number_format($plan['price']) }}</strong>
-                            <span>{{ $plan['price_note'] }}</span>
-                        </div>
-                        <ul class="feature-check-list homepage-pricing-card__features">
-                            @foreach($plan['features'] as $feature)
-                                <li>{{ $feature }}</li>
-                            @endforeach
-                        </ul>
-                        <a href="{{ $ctaUrl }}" class="button {{ $isFeatured ? 'button--orange' : 'button--blue' }}">{{ $plan['cta_label'] ?? 'Get Started' }}</a>
-                    </article>
-                @endforeach
-            </div>
-
-            <div class="pricing-grid pricing-grid--spotlight" data-pricing-grid="home" data-category="virtual_assistance" style="display:none;" data-stagger>
-                @foreach($pricingPlans['virtual_assistance'] as $plan)
-                    @php
-                        $ctaUrl = $plan['cta_url'] ?? route('contact', ['plan' => $plan['name']]);
-                        $isFeatured = $plan['is_featured'] ?? false;
-                    @endphp
-                    <article class="pricing-card pricing-card--interactive homepage-pricing-card {{ $isFeatured ? 'pricing-card--featured' : '' }}">
-                        <div class="homepage-pricing-card__header">
-                            <div class="homepage-pricing-card__eyebrow-row">
-                                <span class="pricing-label">{{ $plan['tier'] }}</span>
-                                @if($isFeatured)
-                                    <div class="pricing-badge-popular">Top Pick</div>
-                                @endif
-                            </div>
-                            <h3>{{ $plan['name'] }}</h3>
-                            <p class="homepage-pricing-card__summary">{{ $plan['summary'] }}</p>
-                        </div>
-                        <div class="price-row homepage-pricing-card__price">
-                            <strong>${{ number_format($plan['price']) }}</strong>
-                            <span>{{ $plan['price_note'] }}</span>
-                        </div>
-                        <ul class="feature-check-list homepage-pricing-card__features">
-                            @foreach($plan['features'] as $feature)
-                                <li>{{ $feature }}</li>
-                            @endforeach
-                        </ul>
-                        <a href="{{ $ctaUrl }}" class="button {{ $isFeatured ? 'button--orange' : 'button--blue' }}">{{ $plan['cta_label'] ?? 'Get Started' }}</a>
-                    </article>
-                @endforeach
-            </div>
+            @include('partials.pricing-plan-switcher', [
+                'pricingPlans' => $pricingPlans,
+                'toggleGroup' => 'home',
+                'leadActionUrl' => route('contact'),
+            ])
         </div>
     </section>
 

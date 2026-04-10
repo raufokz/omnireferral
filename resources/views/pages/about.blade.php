@@ -1,43 +1,45 @@
 @extends('layouts.app')
 
 @section('content')
-<section class="page-hero page-hero--omni">
-    <div class="container omni-page-hero__grid">
-        <div class="omni-page-hero__copy">
+@php
+    $teamCount = $team->count();
+@endphp
+
+<section class="page-hero agent-directory-hero about-page-hero">
+    <div class="agent-directory-hero__glow" aria-hidden="true"></div>
+    <div class="container agent-directory-hero__inner">
+        <div class="agent-directory-hero__copy">
             <span class="eyebrow">About OmniReferral</span>
             <h1>Built by teams who understand the real estate handoff.</h1>
-            <p>OmniReferral is designed to make lead qualification, agent matching, listing operations, and follow-up feel clear, professional, and approachable across the whole platform.</p>
-            <div class="omni-page-hero__chips">
-                <span>Global Omnireferral colors</span>
-                <span>Shared UI for every workspace</span>
-                <span>Human support and real routing</span>
-            </div>
-            <div class="omni-page-hero__actions">
+            <p>OmniReferral is designed to make lead qualification, agent matching, listing operations, and follow-up feel clear, professional, and dependable across the whole platform, so every team works from the same playbook.</p>
+            <div class="agent-directory-hero__actions">
                 <a href="{{ route('pricing') }}" class="button button--orange">Explore Packages</a>
                 <a href="{{ route('contact') }}" class="button button--ghost-light">Contact Our Team</a>
             </div>
+
+            <div class="agent-directory-hero__proof">
+                <span>Qualified lead routing</span>
+                <span>Listings and messaging in one flow</span>
+                <span>Human support behind the platform</span>
+            </div>
         </div>
 
-        <aside class="omni-page-hero__panel">
-            <span class="eyebrow">Platform Focus</span>
-            <h2>One brand system across buyers, sellers, agents, staff, and admins.</h2>
-            <p>We keep the visual language, support flow, and message hierarchy consistent so each handoff feels like the same product.</p>
-            <div class="omni-page-hero__meta">
-                <div>
-                    <span>Lead Flow</span>
-                    <strong>Qualified and routed</strong>
+        <aside class="agent-directory-hero__panel">
+            <span class="agent-directory-hero__panel-eyebrow">Platform Focus</span>
+            <h2>One operating system for buyers, sellers, agents, staff, and admins.</h2>
+            <p>We keep the design language, support flow, and message hierarchy aligned so each handoff feels like part of the same product instead of separate disconnected tools.</p>
+            <div class="agent-directory-hero__stats">
+                <div class="agent-directory-hero__stat">
+                    <strong>{{ number_format(max($teamCount, 1)) }}</strong>
+                    <span>public team members</span>
                 </div>
-                <div>
-                    <span>Listings</span>
-                    <strong>Submitted, reviewed, and approved</strong>
+                <div class="agent-directory-hero__stat">
+                    <strong>1</strong>
+                    <span>shared workflow from intake to handoff</span>
                 </div>
-                <div>
-                    <span>Messaging</span>
-                    <strong>Agent and listing context preserved</strong>
-                </div>
-                <div>
-                    <span>Support</span>
-                    <strong>Real team, fast follow-up</strong>
+                <div class="agent-directory-hero__stat">
+                    <strong>24 hr</strong>
+                    <span>support response target</span>
                 </div>
             </div>
         </aside>

@@ -15,6 +15,7 @@
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
 
     @if(request()->routeIs('login', 'register', 'password.*'))
         <link rel="stylesheet" href="{{ asset('css/auth-custom.css') }}">

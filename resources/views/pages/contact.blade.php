@@ -1,47 +1,49 @@
 @extends('layouts.app')
+
+@push('styles')
+    @vite('resources/css/modules/contact.css')
+@endpush
+
 @section('content')
 
-{{-- ============================
-     CONTACT HERO
-============================ --}}
-<section class="page-hero page-hero--omni contact-hero-v2">
-    <div class="contact-hero-v2__overlay" aria-hidden="true"></div>
-    <div class="container omni-page-hero__grid contact-hero-v2__inner" data-animate="up">
-        <div class="omni-page-hero__copy">
+<section class="page-hero agent-directory-hero contact-page-hero">
+    <div class="agent-directory-hero__glow" aria-hidden="true"></div>
+    <div class="container agent-directory-hero__inner" data-animate="up">
+        <div class="agent-directory-hero__copy">
             <span class="eyebrow">Get In Touch</span>
             <h1>Let&apos;s talk about your next lead, listing, or partnership.</h1>
             <p>We keep conversations simple, helpful, and fast. Expect a response within one business day from the OmniReferral team.</p>
-            <div class="omni-page-hero__chips chv2-trust-row">
-                <span>24-hour average response</span>
-                <span>Real team, no bots</span>
-                <span>Encrypted communication</span>
-            </div>
-            <div class="omni-page-hero__actions">
+            <div class="agent-directory-hero__actions">
                 <a href="mailto:hello@omnireferral.us" class="button button--orange">Email Support</a>
                 <a href="tel:+18005550147" class="button button--ghost-light">Call Directly</a>
             </div>
+            <div class="agent-directory-hero__proof">
+                <span>24-hour average response</span>
+                <span>Real team, no bots</span>
+                <span>Lead, listing, and billing help</span>
+            </div>
         </div>
 
-        <aside class="omni-page-hero__panel">
-            <span class="eyebrow">Response Window</span>
+        <aside class="agent-directory-hero__panel">
+            <span class="agent-directory-hero__panel-eyebrow">Response Window</span>
             <h2>We route the right conversation to the right OmniReferral team.</h2>
             <p>Sales, support, partnership, and marketplace questions all follow the same branded intake flow, so your message does not get lost.</p>
-            <div class="omni-page-hero__meta">
-                <div>
-                    <span>Email</span>
-                    <strong>hello@omnireferral.us</strong>
+            <div class="agent-directory-hero__stats contact-page-hero__stats">
+                <div class="agent-directory-hero__stat">
+                    <strong>&lt; 24h</strong>
+                    <span>average response target</span>
                 </div>
-                <div>
-                    <span>Phone</span>
-                    <strong>(800) 555-0147</strong>
+                <div class="agent-directory-hero__stat">
+                    <strong>Mon-Fri</strong>
+                    <span>9am-6pm ET support hours</span>
                 </div>
-                <div>
-                    <span>Hours</span>
-                    <strong>Mon-Fri, 9am-6pm ET</strong>
+                <div class="agent-directory-hero__stat">
+                    <strong>Email</strong>
+                    <span>hello@omnireferral.us</span>
                 </div>
-                <div>
-                    <span>Support</span>
-                    <strong>Lead, listing, and billing help</strong>
+                <div class="agent-directory-hero__stat">
+                    <strong>Phone</strong>
+                    <span>(800) 555-0147</span>
                 </div>
             </div>
         </aside>
