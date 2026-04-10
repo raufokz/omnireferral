@@ -11,11 +11,86 @@ use App\Models\User;
 use App\Notifications\AgentCredentialsNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class GoHighLevelWebhookController extends Controller
 {
+    public function packagePurchased(Request $request): JsonResponse
+    {
+        if (! $this->isAuthorized($request)) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $email = $request->string('email')->value() ?: data_get($request->all(), 'contact.email');
+        abort_unless($email, 422, 'Missing email address.');
+
+        $name = $request->string('name')->value() ?: data_get($request->all(), 'contact.name', 'New OmniReferral Agent');
+        $phone = $request->string('phone')->value() ?: data_get($request->all(), 'contact.phone');
+        $packageSlug = $request->string('package_slug')->value() ?: data_get($request->all(), 'package.slug');
+        $packageId = $request->integer('package_id') ?: data_get($request->all(), 'package.id');
+
+        $tempPassword = Str::password(14, true, true, false, false);
+
+        $user = User::firstOrNew(['email' => $email]);
+        $isNewUser = ! $user->exists;
+
+        $user->fill([
+            'name' => $name,
+            'phone' => $phone,
+            'role' => 'agent',
+            'status' => 'active',
+            'ghl_contact_id' => $request->string('contact_id')->value() ?: data_get($request->all(), 'contact.id'),
+            'onboarding_completed_at' => null,
+            'must_reset_password' => $isNewUser ? true : (bool) $user->must_reset_password,
+        ]);
+
+        if ($isNewUser) {
+            $user->password = $tempPassword;
+        }
+
+        $package = $packageId
+            ? Package::find($packageId)
+            : Package::where('slug', $packageSlug)->first();
+
+        if ($package) {
+            $user->current_plan_id = $package->id;
+        }
+
+        if (! $user->affiliate_code) {
+            $user->affiliate_code = strtoupper(Str::random(8));
+        }
+
+        $user->save();
+
+        // Create a lightweight profile stub; full details will be filled on onboarding.
+        RealtorProfile::updateOrCreate(['user_id' => $user->id], [
+            'slug' => RealtorProfile::where('user_id', $user->id)->value('slug') ?: Str::slug($user->name . '-' . Str::lower(Str::random(6))),
+            'brokerage_name' => $request->string('brokerage_name')->value() ?: 'OmniReferral Partner',
+            'city' => $request->string('city')->value() ?: 'Dallas',
+            'state' => strtoupper($request->string('state')->value() ?: 'TX'),
+            'zip_code' => $request->string('zip_code')->value() ?: '75201',
+            'specialties' => $request->string('specialties')->value() ?: 'Buyer Representation, Seller Strategy, Lead Conversion',
+            'bio' => $request->string('bio')->value() ?: 'Agent profile created after package purchase.',
+            'headshot' => 'images/realtors/3.png',
+        ]);
+
+        SyncUserToGoHighLevel::dispatch($user->id);
+
+        if ($isNewUser) {
+            $user->notify(new AgentCredentialsNotification($tempPassword));
+        }
+
+        // Keep the client in the normal auth flow instead of a custom onboarding page.
+        return response()->json([
+            'message' => 'Purchase processed successfully.',
+            'user_id' => $user->id,
+            'role' => $user->role,
+            'onboarding_url' => route('login'),
+            'dashboard_url' => route('dashboard.agent'),
+            'login_url' => route('login'),
+        ]);
+    }
+
     public function onboardingCompleted(Request $request): JsonResponse
     {
         if (! $this->isAuthorized($request)) {
@@ -47,7 +122,7 @@ class GoHighLevelWebhookController extends Controller
         ]);
 
         if ($isNewUser) {
-            $user->password = Hash::make($tempPassword);
+            $user->password = $tempPassword;
         }
 
         $package = $packageId

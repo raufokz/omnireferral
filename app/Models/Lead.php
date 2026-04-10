@@ -21,10 +21,15 @@ class Lead extends Model
         'package_id',
         'status',
         'source',
+        'source_timestamp',
         'name',
         'email',
         'phone',
         'zip_code',
+        'property_address',
+        'beds_baths',
+        'working_with_realtor',
+        'dnc_disclaimer',
         'property_type',
         'budget',
         'asking_price',
@@ -36,6 +41,13 @@ class Lead extends Model
         'property_image',
         'ghl_contact_id',
         'preferences',
+        'notes',
+        'rep_name',
+        'state',
+        'sent_to',
+        'assignment',
+        'reason_in_house',
+        'realtor_response',
         'form_data',
         'route_notes',
         'assigned_agent_id',
@@ -49,6 +61,8 @@ class Lead extends Model
     protected $casts = [
         'form_data' => 'array',
         'is_priority' => 'boolean',
+        'working_with_realtor' => 'boolean',
+        'source_timestamp' => 'datetime',
         'reviewed_at' => 'datetime',
         'assigned_at' => 'datetime',
         'contacted_at' => 'datetime',
@@ -108,5 +122,67 @@ class Lead extends Model
         }
 
         return Storage::url($this->property_image);
+    }
+
+    public static function normalizeEmail(?string $email): ?string
+    {
+        $email = Str::lower(trim((string) $email));
+
+        return $email !== '' ? $email : null;
+    }
+
+    public static function normalizePhone(?string $phone): ?string
+    {
+        $digits = preg_replace('/\D+/', '', (string) $phone) ?: '';
+
+        if ($digits === '') {
+            return null;
+        }
+
+        return strlen($digits) > 10 ? substr($digits, -10) : $digits;
+    }
+
+    public static function duplicateQuery(?string $email, ?string $phone)
+    {
+        $normalizedEmail = self::normalizeEmail($email);
+        $normalizedPhone = self::normalizePhone($phone);
+
+        if (! $normalizedEmail && ! $normalizedPhone) {
+            return self::query()->whereRaw('1 = 0');
+        }
+
+        return self::query()
+            ->withTrashed()
+            ->where(function ($query) use ($normalizedEmail, $normalizedPhone) {
+                $applied = false;
+
+                if ($normalizedEmail) {
+                    $query->whereRaw('LOWER(email) = ?', [$normalizedEmail]);
+                    $applied = true;
+                }
+
+                if ($normalizedPhone) {
+                    $method = $applied ? 'orWhereRaw' : 'whereRaw';
+                    $query->{$method}("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, '-', ''), '(', ''), ')', ''), ' ', ''), '+', '') LIKE ?", ['%' . $normalizedPhone]);
+                }
+            });
+    }
+
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            'not_interested' => 'Rejected',
+            'in_progress' => 'In Progress',
+            default => Str::headline((string) $this->status),
+        };
+    }
+
+    public function statusTone(): string
+    {
+        return match ($this->status) {
+            'qualified' => 'qualified',
+            'not_interested' => 'rejected',
+            default => (string) $this->status,
+        };
     }
 }

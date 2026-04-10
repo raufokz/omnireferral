@@ -1,147 +1,141 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
+
+@section('dashboard_nav')
+    <a href="{{ route('dashboard') }}">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        Dashboard
+    </a>
+    <a href="{{ route('dashboard.affiliate') }}" class="active">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        Affiliate Hub
+    </a>
+    <a href="#referrals">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+        Referral Log
+    </a>
+    <a href="#link">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+        Your Link
+    </a>
+@endsection
 
 @section('content')
-<section class="page-hero dashboard-page-hero dashboard-page-hero--affiliate">
-    <div class="container page-hero__content">
-        <span class="eyebrow">Affiliate Workspace</span>
-        <h1>Grow your network and earn commissions</h1>
-        <p>Share OmniReferral with your colleagues. Track clicks, package purchases, and upcoming payouts in one unified hub.</p>
-    </div>
-</section>
 
-<section class="section dashboard-page dashboard-page--metamorphosis" x-data="{ search: '', filter: 'all' }">
-    <div class="container cockpit-grid">
-        <!-- Sidebar Navigation (Preserved context) -->
-        <aside class="cockpit-side" style="grid-row: span 2;">
-            <div class="cockpit-table-card mb-8" style="padding: 1.5rem;">
-                <div class="flex items-center gap-4 mb-6">
-                    <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-800 font-bold">A</div>
-                    <div>
-                        <span class="eyebrow" style="margin: 0;">Affiliate Profile</span>
-                        <h2 style="font-size: 1.25rem; margin: 0;">{{ Auth::user()->name }}</h2>
-                    </div>
+    <div class="dash-cards-grid">
+        <div class="dash-card dash-card--purple">
+            <div class="dash-card-top">
+                <div class="dash-card-avatars" style="font-weight: bold;">
+                    <span>{{ number_format($profile->click_count) }}</span>
                 </div>
-                <nav class="dashboard-side-nav" aria-label="Affiliate dashboard navigation">
-                    <a class="is-active" href="{{ route('dashboard.affiliate') }}">Overview</a>
-                    <a href="#link">My Link</a>
-                    <a href="#referrals">Referral Log</a>
-                    <a href="{{ route('dashboard') }}">Main Workspace</a>
-                </nav>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
             </div>
-
-            <div class="cockpit-table-card mb-8" id="link" style="padding: 1.5rem;">
-                <span class="eyebrow">Your Unique Link</span>
-                <h3 class="mb-4">Start referring</h3>
-                <div class="bg-gray-50 p-4 rounded-xl border border-dashed border-indigo-200">
-                    <input type="text" class="text-xs font-mono w-full bg-transparent border-none focus:ring-0 text-indigo-900" readonly value="{{ url('/?ref=' . $profile->referral_code) }}" onclick="this.select(); document.execCommand('copy');">
+            <div class="dash-card-bottom">
+                <h3>Link Clicks</h3>
+                <div class="dash-card-meta">
+                    <strong>{{ number_format($profile->click_count) }}</strong> <span>total visits</span>
                 </div>
-                <button class="button w-full mt-4" style="background: var(--color-gateway-brand-bg); padding: 0.75rem;" onclick="navigator.clipboard.writeText('{{ url('/?ref=' . $profile->referral_code) }}'); alert('Link copied!');">Copy Link</button>
-            </div>
-
-            <div class="cockpit-table-card" style="padding: 1.5rem; background: var(--color-gateway-brand-bg); color: #fff;">
-                <span class="eyebrow" style="color: rgba(255,255,255,0.7);">Goal Progress</span>
-                <h3 style="color: #fff; margin-bottom: 1rem;">Direct Payouts</h3>
-                <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-bottom: 1.5rem;">Conversions become pending payouts 30 days after package verification.</p>
-                <div class="h-2 w-full bg-white/10 rounded-full mb-2">
-                    <div class="h-full bg-indigo-400 rounded-full" style="width: 65%;"></div>
+                <div class="dash-progress-bar">
+                    <div class="dash-progress-fill" style="width: 100%"></div>
                 </div>
-                <div class="text-xs text-white/60">Next payout target: $500.00</div>
             </div>
-        </aside>
-
-        <!-- KPI Row -->
-        <div class="cockpit-kpi-row">
-            <article class="cockpit-kpi-card">
-                <span class="eyebrow">Clicks</span>
-                <strong>{{ number_format($profile->click_count) }}</strong>
-                <p>Link Awareness</p>
-            </article>
-            <article class="cockpit-kpi-card" style="border-color: var(--color-gateway-accent);">
-                <span class="eyebrow">Converted</span>
-                <strong>{{ number_format($profile->conversion_count) }}</strong>
-                <p>Active Referrals</p>
-            </article>
-            <article class="cockpit-kpi-card">
-                <span class="eyebrow">Rate</span>
-                <strong>{{ number_format($profile->commission_rate, 0) }}%</strong>
-                <p>Base Tier Payout</p>
-            </article>
-            <article class="cockpit-kpi-card" style="border-color: #10b981;">
-                <span class="eyebrow">Pending</span>
-                <strong>${{ number_format($profile->pending_payout_cents / 100, 2) }}</strong>
-                <p>Cleared Payouts</p>
-            </article>
         </div>
 
-        <main class="cockpit-main">
-            <!-- Referral Log -->
-            <div id="referrals">
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <h2 class="text-2xl font-bold text-gray-900">Referral Log</h2>
-                        <p class="text-gray-500">Accounts created via your link.</p>
-                    </div>
-                    <div class="flex gap-4">
-                        <div class="floating-group" style="margin-bottom: 0; min-width: 240px;">
-                            <input type="text" x-model="search" placeholder=" ">
-                            <label>Filter referrals...</label>
-                        </div>
-                    </div>
+        <div class="dash-card dash-card--teal">
+            <div class="dash-card-top">
+                <div class="dash-card-avatars" style="font-weight: bold;">
+                    <span>{{ number_format($profile->conversion_count) }}</span>
                 </div>
-
-                <div class="cockpit-table-card">
-                    <table class="cockpit-table">
-                        <thead>
-                            <tr>
-                                <th>Account Details</th>
-                                <th>Role</th>
-                                <th>Joined</th>
-                                <th>Status</th>
-                                <th style="width: 60px;"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($referrals as $referredUser)
-                                <tr x-show="!search || '{{ strtolower($referredUser->name) }}'.includes(search.toLowerCase())">
-                                    <td>
-                                        <span class="cockpit-primary-data">{{ $referredUser->name }}</span>
-                                        <span class="cockpit-secondary-data">User ID: #{{ $referredUser->id }}</span>
-                                    </td>
-                                    <td>
-                                        <span class="cockpit-primary-data">{{ ucfirst($referredUser->role) }}</span>
-                                        <span class="cockpit-secondary-data">Target workspace</span>
-                                    </td>
-                                    <td>
-                                        <span class="cockpit-primary-data">{{ $referredUser->created_at->format('M j, Y') }}</span>
-                                        <span class="cockpit-secondary-data">{{ $referredUser->created_at->diffForHumans() }}</span>
-                                    </td>
-                                    <td>
-                                        <span class="status-pill status-pill--{{ $referredUser->status === 'active' ? 'assigned' : 'new' }}">{{ ucfirst($referredUser->status) }}</span>
-                                    </td>
-                                    <td>
-                                        <button class="kebab-trigger">⋮</button>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5">
-                                        <div class="cockpit-empty-state">
-                                            <img src="{{ asset('images/illustrations/empty-leads.png') }}" alt="Empty" class="cockpit-empty-illustration">
-                                            <h3>Start your network</h3>
-                                            <p class="text-gray-500">Share your unique link above to see your first referrals here.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+            </div>
+            <div class="dash-card-bottom">
+                <h3>Converted Users</h3>
+                <div class="dash-card-meta">
+                    <strong>{{ number_format($profile->conversion_count) }}</strong> <span>active referrals</span>
+                </div>
+                <div class="dash-progress-bar">
+                    <div class="dash-progress-fill" style="width: 40%"></div>
                 </div>
             </div>
-        </main>
-    </div>
-</section>
+        </div>
 
+        <div class="dash-card dash-card--orange">
+            <div class="dash-card-top">
+                <div class="dash-card-avatars" style="font-weight: bold;">
+                    <span style="width: auto; padding: 0 8px; border-radius: 12px; font-size: 0.8rem;">${{ number_format($profile->pending_payout_cents / 100, 0) }}</span>
+                </div>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            </div>
+            <div class="dash-card-bottom">
+                <h3>Pending Payout</h3>
+                <div class="dash-card-meta">
+                    <strong>${{ number_format($profile->pending_payout_cents / 100, 2) }}</strong> <span>clearing soon</span>
+                </div>
+                <div class="dash-progress-bar">
+                    <div class="dash-progress-fill" style="width: 70%"></div>
+                </div>
+            </div>
         </div>
     </div>
-</section>
+
+    <div class="dash-bottom-grid">
+        <section id="referrals">
+            <span class="dash-section-title">Referral Log</span>
+            <div class="dash-task-list">
+                @forelse($referrals as $referredUser)
+                <div class="dash-task-item" style="border-left-color: {{ $referredUser->status === 'active' ? '#4BB2B2' : '#FA734A' }};">
+                    <div class="dash-task-item__content">
+                        <strong>{{ $referredUser->name }}</strong>
+                        <span>{{ ucfirst($referredUser->role) }} • Joined {{ $referredUser->created_at->format('M j, Y') }}</span>
+                    </div>
+                    <span style="font-size: 0.8rem; font-weight: 600; padding: 4px 10px; border-radius: 20px; background: {{ $referredUser->status === 'active' ? '#E6F4F4' : '#FFF0EA' }}; color: {{ $referredUser->status === 'active' ? '#4BB2B2' : '#FA734A' }};">
+                        {{ ucfirst($referredUser->status) }}
+                    </span>
+                </div>
+                @empty
+                <div class="dash-task-item">
+                    <div class="dash-task-item__content">
+                        <strong>No referrals yet</strong>
+                        <span>Share your link to begin earning commissions.</span>
+                    </div>
+                </div>
+                @endforelse
+            </div>
+        </section>
+
+        <section id="link">
+            <span class="dash-section-title">Program Overview</span>
+            <div class="dash-stats-grid">
+                <div class="dash-stat-box">
+                    <strong>{{ number_format($profile->commission_rate, 0) }}%</strong>
+                    <span>Base Tier Payout</span>
+                </div>
+                <div class="dash-stat-box">
+                    <strong>30</strong>
+                    <span>Days to Clear</span>
+                </div>
+            </div>
+
+            <div class="dash-pro-banner mt-4" style="flex-direction: column; align-items: flex-start; gap: 1rem; background: #EFEAF2; border: 1px solid #E1D3E7;">
+                <div>
+                    <h4>Your Affiliate Link</h4>
+                    <p style="color: #6A3771; opacity: 0.8; margin-bottom: 0.5rem;">Copy and share to start earning.</p>
+                </div>
+                
+                <div style="background: #FFF; width: 100%; border-radius: 8px; padding: 0.75rem; border: 1px dashed #6A3771;">
+                    <input type="text" class="text-xs font-mono w-full bg-transparent border-none focus:ring-0" style="color: #6A3771; outline: none; width: 100%;" readonly value="{{ url('/?ref=' . $profile->referral_code) }}" onclick="this.select(); document.execCommand('copy');">
+                </div>
+                <button class="dash-btn-primary" style="background:#6A3771; width:100%; justify-content:center;" onclick="navigator.clipboard.writeText('{{ url('/?ref=' . $profile->referral_code) }}'); alert('Link copied!');">Copy Link</button>
+            </div>
+            
+            <div class="dash-pro-banner mt-4">
+                <div>
+                    <h4>Next Payout Goal</h4>
+                    <p>Track towards $500.00 goal.</p>
+                </div>
+                <div style="text-align:right;">
+                    <span>65%</span>
+                </div>
+            </div>
+        </section>
+    </div>
 @endsection

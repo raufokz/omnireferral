@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
+use RuntimeException;
 
 class User extends Authenticatable
 {
@@ -17,7 +19,14 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'must_reset_password',
+        'password_set_at',
         'phone',
+        'address_line_1',
+        'address_line_2',
+        'city',
+        'state',
+        'zip_code',
         'role',
         'staff_team',
         'status',
@@ -41,6 +50,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'must_reset_password' => 'boolean',
+            'password_set_at' => 'datetime',
             'onboarding_completed_at' => 'datetime',
             'last_synced_at' => 'datetime',
         ];
@@ -84,6 +95,21 @@ class User extends Authenticatable
     public function leadMatches(): HasMany
     {
         return $this->hasMany(LeadMatch::class, 'agent_id');
+    }
+
+    public function receivedContacts(): HasMany
+    {
+        return $this->hasMany(Contact::class, 'recipient_user_id');
+    }
+
+    public function submittedTestimonials(): HasMany
+    {
+        return $this->hasMany(Testimonial::class, 'submitted_by_user_id');
+    }
+
+    public function reviewedTestimonials(): HasMany
+    {
+        return $this->hasMany(Testimonial::class, 'reviewed_by_user_id');
     }
 
     public function isAdmin(): bool
@@ -134,6 +160,48 @@ class User extends Authenticatable
     public function hasAnyRole(array $roles): bool
     {
         return in_array($this->role, $roles, true);
+    }
+
+    public function passwordMatches(string $plainPassword): bool
+    {
+        $storedPassword = (string) $this->password;
+
+        if ($storedPassword === '') {
+            return false;
+        }
+
+        try {
+            if (Hash::check($plainPassword, $storedPassword)) {
+                return true;
+            }
+        } catch (RuntimeException) {
+            // Legacy imports may still contain plain-text passwords.
+        }
+
+        return hash_equals($storedPassword, $plainPassword);
+    }
+
+    public function passwordIsStoredAsPlainText(): bool
+    {
+        $storedPassword = (string) $this->password;
+
+        if ($storedPassword === '') {
+            return false;
+        }
+
+        return (($info = password_get_info($storedPassword))['algoName'] ?? 'unknown') === 'unknown';
+    }
+
+    public function upgradePlainTextPassword(string $plainPassword): void
+    {
+        if (! $this->passwordIsStoredAsPlainText() || ! hash_equals((string) $this->password, $plainPassword)) {
+            return;
+        }
+
+        $this->forceFill([
+            'password' => $plainPassword,
+            'password_set_at' => now(),
+        ])->save();
     }
 
     public function dashboardRoute(): string

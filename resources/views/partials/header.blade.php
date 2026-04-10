@@ -1,33 +1,54 @@
-<header class="site-header" data-animate >
+<header class="site-header"  data-animate>
     <div class="container nav-shell">
-        <a href="{{ route('home') }}" class="brand-mark" aria-label="OmniReferral home">
-            <img src="{{ asset('images/omnireferral-logo.png') }}" alt="OmniReferral Logo" >
+        <a href="{{ route('home') }}"  aria-label="OmniReferral home">
+            <img src="{{ asset('images/omnireferral-logo.png') }}" height="100" width="100" alt="OmniReferral Logo" >
         </a>
         <nav class="main-nav" id="mainNav" aria-label="Primary navigation">
-            @guest
-                <a class="{{ request()->routeIs('home') ? 'is-active' : '' }}" href="{{ route('home') }}#how-it-works" data-nav-section="how-it-works">How It Works</a>
-                <a class="{{ request()->routeIs('listings') || request()->routeIs('properties.show') ? 'is-active' : '' }}" href="{{ route('listings') }}">Listings</a>
-                <a class="{{ request()->routeIs('pricing') || request()->routeIs('packages.*') ? 'is-active' : '' }}" href="{{ route('pricing') }}">Pricing</a>
-                <a class="{{ request()->routeIs('agents.*') ? 'is-active' : '' }}" href="{{ route('agents.index') }}">Agents</a>
-                <a class="{{ request()->routeIs('blog.*') ? 'is-active' : '' }}" href="{{ route('blog.index') }}">Blog</a>
-                <a class="{{ request()->routeIs('contact') ? 'is-active' : '' }}" href="{{ route('contact') }}">Contact</a>
-            @else
-                <a class="{{ request()->routeIs('dashboard') || request()->routeIs('dashboard.*') || request()->routeIs('admin.dashboard') ? 'is-active' : '' }}" href="{{ route('dashboard') }}">Workspace</a>
-                <a href="{{ route('dashboard') }}#leads">Leads</a>
-                <a class="{{ request()->routeIs('pricing') || request()->routeIs('packages.*') ? 'is-active' : '' }}" href="{{ route('pricing') }}">Packages</a>
-                <a class="{{ request()->routeIs('contact') ? 'is-active' : '' }}" href="{{ route('contact') }}">Support</a>
-                <a href="{{ route('dashboard') }}#profile">Profile</a>
-            @endguest
+            <a class="{{ request()->routeIs('home') ? 'is-active' : '' }}" href="{{ route('home') }}#how-it-works" data-nav-section="how-it-works">How It Works</a>
+            <a class="{{ request()->routeIs('listings') || request()->routeIs('properties.show') ? 'is-active' : '' }}" href="{{ route('listings') }}">Listings</a>
+            <a class="{{ request()->routeIs('pricing') || request()->routeIs('packages.*') ? 'is-active' : '' }}" href="{{ route('pricing') }}">Pricing</a>
+            <a class="{{ request()->routeIs('agents.*') ? 'is-active' : '' }}" href="{{ route('agents.index') }}">Agents</a>
+            <a class="{{ request()->routeIs('reviews') ? 'is-active' : '' }}" href="{{ route('reviews') }}">Testimonials</a>
+            <div class="nav-dropdown {{ request()->routeIs('about', 'blog.*', 'faq', 'resources', 'news', 'careers', 'surveys', 'scam.prevention', 'communication.policy') ? 'is-active' : '' }}" data-nav-dropdown>
+                <button
+                    type="button"
+                    class="nav-submenu-toggle {{ request()->routeIs('about', 'blog.*', 'faq', 'resources', 'news', 'careers', 'surveys', 'scam.prevention', 'communication.policy') ? 'is-active' : '' }}"
+                    data-nav-submenu-toggle
+                    aria-expanded="false"
+                    aria-haspopup="true"
+                >
+                    More+
+                    <span class="nav-submenu-toggle__caret" aria-hidden="true"></span>
+                </button>
+                <div class="nav-submenu" data-nav-submenu>
+                    <a class="{{ request()->routeIs('about') ? 'is-active' : '' }}" href="{{ route('about') }}">About</a>
+                    <a class="{{ request()->routeIs('blog.*') ? 'is-active' : '' }}" href="{{ route('blog.index') }}">Blog</a>
+                    <a class="{{ request()->routeIs('faq') ? 'is-active' : '' }}" href="{{ route('faq') }}">FAQ</a>
+                    <a class="{{ request()->routeIs('resources') ? 'is-active' : '' }}" href="{{ route('resources') }}">Resources</a>
+                    <a class="{{ request()->routeIs('news') ? 'is-active' : '' }}" href="{{ route('news') }}">News</a>
+                    <a class="{{ request()->routeIs('careers') ? 'is-active' : '' }}" href="{{ route('careers') }}">Careers</a>
+                    <a class="{{ request()->routeIs('surveys') ? 'is-active' : '' }}" href="{{ route('surveys') }}">Campaign Tools</a>
+                    <a class="{{ request()->routeIs('scam.prevention') ? 'is-active' : '' }}" href="{{ route('scam.prevention') }}">Scam Prevention</a>
+                    <a class="{{ request()->routeIs('communication.policy') ? 'is-active' : '' }}" href="{{ route('communication.policy') }}">Communication Policy</a>
+                </div>
+            </div>
+            <a class="{{ request()->routeIs('contact') ? 'is-active' : '' }}" href="{{ route('contact') }}">Contact</a>
+            @auth
+                <a class="{{ request()->routeIs('dashboard', 'dashboard.*', 'admin.*') ? 'is-active' : '' }}" href="{{ auth()->user()->dashboardRoute() }}">Workspace</a>
+                @if(auth()->user()->isStaff())
+                    <a class="{{ request()->routeIs('admin.leads.*') ? 'is-active' : '' }}" href="{{ route('admin.leads.index') }}">Lead Ops</a>
+                @endif
+            @endauth
 
             <div class="mobile-nav-actions">
                 <hr class="mobile-nav-divider">
                 @auth
-                    <a href="{{ route('dashboard') }}" class="button button--orange">My Workspace</a>
+                    <a href="{{ auth()->user()->dashboardRoute() }}" class="button button--orange">My Workspace</a>
                     <a href="{{ route('pricing') }}" class="button button--secondary">Packages</a>
                     <a href="{{ route('contact') }}" class="button button--ghost">Support</a>
                 @else
-                    <a href="{{ route('register') }}" class="button button--orange">Get Started</a>
-                    <a href="{{ route('login') }}" class="button button--ghost">Login</a>
+                    <a href="{{ route('login') }}" class="button button--orange nav-auth-cta">Login / Sign Up</a>
+                    <a href="{{ route('pricing') }}" class="button button--secondary">Get Leads</a>
                     <a href="{{ route('contact') }}" class="button button--secondary">Contact Sales</a>
                 @endauth
             </div>
@@ -40,8 +61,7 @@
                     <button type="submit" class="button button--orange">Logout</button>
                 </form>
             @else
-                <a href="{{ route('login') }}" class="button button--ghost-blue">Login</a>
-                <a href="{{ route('register') }}" class="button button--blue">Sign Up</a>
+                <a href="{{ route('register') }}" class="button button--blue nav-auth-cta">Login / Sign Up</a>
                 <a href="{{ route('pricing') }}" class="button button--orange">Get Leads</a>
             @endauth
         </div>

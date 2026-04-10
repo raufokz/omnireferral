@@ -61,6 +61,8 @@ class GoHighLevelService
 
     public function syncUser(User $user): ?array
     {
+        $profile = $user->realtorProfile;
+
         return $this->createOrUpdateContact([
             'name' => $user->name,
             'email' => $user->email,
@@ -71,6 +73,13 @@ class GoHighLevelService
                 ['key' => 'role', 'field_value' => $user->role],
                 ['key' => 'staff_team', 'field_value' => $user->staff_team],
                 ['key' => 'affiliate_code', 'field_value' => $user->affiliate_code],
+                ['key' => 'address_line_1', 'field_value' => $user->address_line_1],
+                ['key' => 'address_line_2', 'field_value' => $user->address_line_2],
+                ['key' => 'city', 'field_value' => $user->city],
+                ['key' => 'state', 'field_value' => $user->state],
+                ['key' => 'zip_code', 'field_value' => $user->zip_code],
+                ['key' => 'brokerage_name', 'field_value' => $profile?->brokerage_name],
+                ['key' => 'license_number', 'field_value' => $profile?->license_number],
             ],
         ]);
     }

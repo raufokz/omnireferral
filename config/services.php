@@ -27,6 +27,11 @@ return [
         'key' => env('GOOGLE_MAPS_API_KEY'),
     ],
 
+    'google_sheets' => [
+        'leads_sheet_url' => env('GOOGLE_SHEETS_LEADS_URL'),
+        'leads_csv_url' => env('GOOGLE_SHEETS_LEADS_CSV_URL'),
+    ],
+
     'gohighlevel' => [
         'api_key' => env('GOHIGHLEVEL_API_KEY'),
         'location_id' => env('GOHIGHLEVEL_LOCATION_ID'),

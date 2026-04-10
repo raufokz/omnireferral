@@ -4,71 +4,51 @@
 {{-- ============================
      CONTACT HERO
 ============================ --}}
-<section class="contact-hero-v2">
+<section class="page-hero page-hero--omni contact-hero-v2">
     <div class="contact-hero-v2__overlay" aria-hidden="true"></div>
-    <div class="container contact-hero-v2__inner" data-animate="up">
-        <span class="eyebrow chv2-eyebrow">Get in Touch</span>
-        <h1 class="chv2-headline">Let's talk about your next<br>lead, listing, or partnership</h1>
-        <p class="chv2-sub">We keep conversations simple, helpful, and fast. Expect a response within one business day.</p>
-        <div class="chv2-trust-row">
-            <span class="chv2-trust-chip">&#10003; 24-hr avg. response</span>
-            <span class="chv2-trust-chip">&#10003; Real team, no bots</span>
-            <span class="chv2-trust-chip">&#10003; Encrypted messages</span>
+    <div class="container omni-page-hero__grid contact-hero-v2__inner" data-animate="up">
+        <div class="omni-page-hero__copy">
+            <span class="eyebrow">Get In Touch</span>
+            <h1>Let&apos;s talk about your next lead, listing, or partnership.</h1>
+            <p>We keep conversations simple, helpful, and fast. Expect a response within one business day from the OmniReferral team.</p>
+            <div class="omni-page-hero__chips chv2-trust-row">
+                <span>24-hour average response</span>
+                <span>Real team, no bots</span>
+                <span>Encrypted communication</span>
+            </div>
+            <div class="omni-page-hero__actions">
+                <a href="mailto:hello@omnireferral.us" class="button button--orange">Email Support</a>
+                <a href="tel:+18005550147" class="button button--ghost-light">Call Directly</a>
+            </div>
         </div>
+
+        <aside class="omni-page-hero__panel">
+            <span class="eyebrow">Response Window</span>
+            <h2>We route the right conversation to the right OmniReferral team.</h2>
+            <p>Sales, support, partnership, and marketplace questions all follow the same branded intake flow, so your message does not get lost.</p>
+            <div class="omni-page-hero__meta">
+                <div>
+                    <span>Email</span>
+                    <strong>hello@omnireferral.us</strong>
+                </div>
+                <div>
+                    <span>Phone</span>
+                    <strong>(800) 555-0147</strong>
+                </div>
+                <div>
+                    <span>Hours</span>
+                    <strong>Mon-Fri, 9am-6pm ET</strong>
+                </div>
+                <div>
+                    <span>Support</span>
+                    <strong>Lead, listing, and billing help</strong>
+                </div>
+            </div>
+        </aside>
     </div>
 </section>
 
-{{-- ============================
-     MAIN CONTACT LAYOUT
-============================ --}}
 <section class="section contact-body-section">
-    <style>
-        .contact-info-card {
-            display: block !important;
-            flex-direction: column !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-        }
-        .contact-info-card__title, .eyebrow {
-            display: block !important;
-            width: 100% !important;
-            text-align: left !important;
-        }
-        .contact-info-items {
-            display: flex !important;
-            flex-direction: column !important;
-            width: 100% !important;
-        }
-        .ci-item {
-            display: flex !important;
-            flex-direction: row !important;
-            align-items: flex-start !important;
-            width: 100% !important;
-        }
-        .ci-item__body {
-            flex: 1 1 auto !important;
-            min-width: 0 !important;
-            word-break: normal !important;
-            overflow-wrap: break-word !important;
-        }
-        .ci-item__label, .ci-item__value {
-            display: block !important;
-            white-space: normal !important;
-        }
-        .contact-body-grid {
-            display: grid !important;
-            grid-template-columns: 1fr 380px !important;
-            align-items: start !important;
-            width: 100% !important;
-            max-width: 1200px !important;
-            margin: 0 auto !important;
-        }
-        @media (max-width: 900px) {
-            .contact-body-grid {
-                grid-template-columns: 1fr !important;
-            }
-        }
-    </style>
     <div class="container contact-body-grid">
 
         {{-- LEFT: Contact Form --}}

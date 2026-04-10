@@ -1,6 +1,114 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $publishedTestimonials = \App\Models\Testimonial::published()
+        ->orderByDesc('is_featured')
+        ->orderBy('sort_order')
+        ->latest()
+        ->get();
+
+    $dbHomepageTestimonials = $publishedTestimonials
+        ->take(9)
+        ->map(function ($testimonial) {
+            return [
+                'quote' => $testimonial->quote,
+                'name' => $testimonial->name,
+                'role' => $testimonial->company ?: ($testimonial->audience_label . ' Client'),
+                'location' => $testimonial->location ?: 'OmniReferral Network',
+                'path' => $testimonial->photo_url,
+                'audience' => $testimonial->audience_label,
+                'has_video' => $testimonial->has_video,
+            ];
+        });
+
+    $fallbackHomepageTestimonials = collect([
+        [
+            'quote' => 'The buyer path felt organized from day one. We never felt lost, and every next step came with real clarity.',
+            'name' => 'Ariana Holt',
+            'role' => 'Buyer Client',
+            'location' => 'Dallas, TX',
+            'path' => asset('images/reviews/review-1.svg'),
+            'audience' => 'Buyer',
+            'has_video' => false,
+        ],
+        [
+            'quote' => 'Our seller lead was handled with more professionalism than we expected. The team moved fast and kept communication clean.',
+            'name' => 'Marcus Dean',
+            'role' => 'Seller Client',
+            'location' => 'Charlotte, NC',
+            'path' => asset('images/reviews/review-2.svg'),
+            'audience' => 'Seller',
+            'has_video' => false,
+        ],
+        [
+            'quote' => 'The context on each lead changed our first call quality immediately. Our agents spend less time sorting and more time converting.',
+            'name' => 'Jordan Miles',
+            'role' => 'Broker | Miles Realty Group',
+            'location' => 'Austin, TX',
+            'path' => asset('images/reviews/review-3.svg'),
+            'audience' => 'Agent',
+            'has_video' => false,
+        ],
+        [
+            'quote' => 'We loved that the seller experience still felt premium even before we were matched. It made the whole journey easier to trust.',
+            'name' => 'Nina Foster',
+            'role' => 'Seller Client',
+            'location' => 'Phoenix, AZ',
+            'path' => asset('images/reviews/review-4.svg'),
+            'audience' => 'Seller',
+            'has_video' => false,
+        ],
+        [
+            'quote' => 'OmniReferral feels more like an operating partner than a lead vendor. The packaging and handoff are much sharper.',
+            'name' => 'Chris Everett',
+            'role' => 'Investor Advisor | Everett Homes',
+            'location' => 'Phoenix, AZ',
+            'path' => asset('images/reviews/review-1.svg'),
+            'audience' => 'Agent',
+            'has_video' => false,
+        ],
+        [
+            'quote' => 'The intake questions were simple, but the follow-through felt highly personalized. That balance really stood out for us.',
+            'name' => 'Leah Monroe',
+            'role' => 'Buyer Client',
+            'location' => 'Tampa, FL',
+            'path' => asset('images/reviews/review-2.svg'),
+            'audience' => 'Buyer',
+            'has_video' => false,
+        ],
+    ]);
+
+    $homepageTestimonials = ($dbHomepageTestimonials->count() >= 4
+        ? $dbHomepageTestimonials
+        : $dbHomepageTestimonials->concat($fallbackHomepageTestimonials))
+        ->unique('name')
+        ->take(9)
+        ->values();
+
+    $homepageFeaturedTestimonial = $homepageTestimonials->first();
+    $homepageCarouselTestimonials = $homepageTestimonials->skip(1)->values();
+
+    if ($homepageCarouselTestimonials->isEmpty() && $homepageFeaturedTestimonial) {
+        $homepageCarouselTestimonials = collect([$homepageFeaturedTestimonial]);
+    }
+
+    $homepageAudienceCounts = [
+        'buyer' => $publishedTestimonials->where('audience', 'buyer')->count(),
+        'seller' => $publishedTestimonials->where('audience', 'seller')->count(),
+        'agent' => $publishedTestimonials->where('audience', 'agent')->count(),
+    ];
+
+    $homepageAverageRating = number_format((float) ($publishedTestimonials->avg('rating') ?: 5), 1);
+    $homepageMarketplaceProperties = collect($properties)
+        ->filter(fn ($property) => $property->approval_status === \App\Models\Property::APPROVAL_APPROVED && $property->status === 'Active')
+        ->values();
+
+    $partnerLogoRows = [
+        $partnerLogos->values(),
+        $partnerLogos->reverse()->values(),
+    ];
+@endphp
 <div class="homepage-shell homepage-shell--refined">
     {{-- Hero Section --}}
     <section class="hero hero--premium homepage-hero homepage-hero--minimal homepage-hero--with-image" aria-labelledby="hero-headline">
@@ -394,7 +502,7 @@
                 <p>Pricing, property type, location, and the next action are surfaced immediately so users can browse faster and with more confidence.</p>
             </div>
             <div class="listing-grid listing-grid--showcase homepage-featured-listings" data-stagger>
-                @foreach($properties as $property)
+                @foreach($homepageMarketplaceProperties as $property)
                     <article class="listing-card listing-card--showcase homepage-listing-card" data-animate>
                         <div class="listing-card__media">
                             <img src="{{ $property->image_url }}" alt="{{ $property->title }} property image" loading="lazy">
@@ -433,7 +541,7 @@
                                 </div>
                                 <div class="listing-card__actions">
                                     <a href="{{ route('properties.show', $property) }}" class="button button--ghost-blue">Details</a>
-                                    <a href="{{ route('contact') }}?property={{ urlencode($property->title) }}" class="button button--orange">Contact</a>
+                                    <a href="{{ route('properties.show', $property) }}#property-contact" class="button button--orange">Contact Agent</a>
                                 </div>
                             </div>
                         </div>
@@ -447,29 +555,90 @@
         <div class="container">
             <div class="section-heading homepage-section__heading" data-animate="left">
                 <span class="eyebrow">Testimonials</span>
-                <h2 id="testimonials-heading">Trusted by realtors who want cleaner lead flow and stronger handoffs</h2>
-                <p>Social proof should feel credible, specific, and polished. These agent stories are positioned to reinforce exactly that.</p>
+                <h2 id="testimonials-heading">Trusted by buyers, sellers, and agents who want a cleaner, more credible experience</h2>
+                <p>We upgraded this section to feel more like real proof: stronger stories, clearer segments, and testimonials that speak to quality, clarity, and follow-through.</p>
             </div>
-            <div class="testimonial-carousel homepage-testimonial-carousel" data-carousel data-stagger>
-                <div class="testimonial-track">
-                    @foreach($testimonials as $testimonial)
-                        <article class="testimonial-card homepage-testimonial-card">
-                            <div class="testimonial-stars" aria-label="Five star rating">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-                            <p class="testimonial-card__quote">"{{ $testimonial['quote'] }}"</p>
-                            <div class="testimonial-card__footer">
-                                <img src="{{ asset($testimonial['path']) }}" alt="{{ $testimonial['name'] }}" loading="lazy">
-                                <div>
-                                    <strong>{{ $testimonial['name'] }}</strong>
-                                    <span>{{ $testimonial['role'] }}</span>
-                                    <small>{{ $testimonial['location'] }}</small>
-                                </div>
-                            </div>
-                        </article>
-                    @endforeach
+            <div class="homepage-testimonial-overview" data-animate="right">
+                <div class="homepage-testimonial-overview__stats">
+                    <article class="homepage-testimonial-overview__stat">
+                        <strong>{{ number_format(max($publishedTestimonials->count(), $homepageTestimonials->count())) }}+</strong>
+                        <span>Published and curated stories</span>
+                    </article>
+                    <article class="homepage-testimonial-overview__stat">
+                        <strong>{{ $homepageAverageRating }}/5</strong>
+                        <span>Average testimonial rating</span>
+                    </article>
+                    <article class="homepage-testimonial-overview__stat">
+                        <strong>{{ number_format($homepageAudienceCounts['agent']) }}</strong>
+                        <span>Agent-focused reviews</span>
+                    </article>
                 </div>
-                <div class="carousel-controls homepage-carousel-controls">
-                    <button type="button" data-carousel-prev aria-label="Previous testimonial">Previous</button>
-                    <button type="button" data-carousel-next aria-label="Next testimonial">Next</button>
+                <div class="homepage-testimonial-overview__actions">
+                    <div class="homepage-testimonial-overview__pill-group">
+                        <div class="homepage-testimonial-overview__pill">Buyer confidence</div>
+                        <div class="homepage-testimonial-overview__pill">Seller clarity</div>
+                        <div class="homepage-testimonial-overview__pill">Agent conversion quality</div>
+                    </div>
+                    <a href="{{ route('reviews') }}" class="button button--ghost-blue">See All Testimonials</a>
+                </div>
+            </div>
+
+            <div class="homepage-testimonial-stage">
+                @if($homepageFeaturedTestimonial)
+                    <article class="testimonial-card homepage-testimonial-featured" data-animate="left">
+                        <div class="homepage-testimonial-featured__meta">
+                            <span class="homepage-testimonial-card__badge">Featured Story</span>
+                            <span class="homepage-testimonial-card__badge homepage-testimonial-card__badge--video">{{ $homepageFeaturedTestimonial['audience'] }}</span>
+                        </div>
+                        <div class="testimonial-stars" aria-label="Five star rating">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <p class="homepage-testimonial-featured__quote">"{{ $homepageFeaturedTestimonial['quote'] }}"</p>
+                        <div class="testimonial-card__footer homepage-testimonial-featured__footer">
+                            <img src="{{ $homepageFeaturedTestimonial['path'] }}" alt="{{ $homepageFeaturedTestimonial['name'] }}" loading="lazy">
+                            <div>
+                                <strong>{{ $homepageFeaturedTestimonial['name'] }}</strong>
+                                <span>{{ $homepageFeaturedTestimonial['role'] }}</span>
+                                <small>{{ $homepageFeaturedTestimonial['location'] }}</small>
+                            </div>
+                        </div>
+                        <a href="{{ route('reviews') }}" class="button button--orange">Read More Stories</a>
+                    </article>
+                @endif
+
+                <div class="testimonial-carousel homepage-testimonial-carousel" data-carousel data-animate="right">
+                    <div class="testimonial-track">
+                        @foreach($homepageCarouselTestimonials as $testimonial)
+                            <article class="testimonial-card homepage-testimonial-card">
+                                <div class="homepage-testimonial-card__meta">
+                                    <span class="homepage-testimonial-card__badge">{{ $testimonial['audience'] }}</span>
+                                    @if(!empty($testimonial['has_video']))
+                                        <span class="homepage-testimonial-card__badge homepage-testimonial-card__badge--video">Video story</span>
+                                    @endif
+                                </div>
+                                <div class="testimonial-stars" aria-label="Five star rating">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                                <p class="testimonial-card__quote">"{{ $testimonial['quote'] }}"</p>
+                                <div class="testimonial-card__footer">
+                                    <img src="{{ $testimonial['path'] }}" alt="{{ $testimonial['name'] }}" loading="lazy">
+                                    <div>
+                                        <strong>{{ $testimonial['name'] }}</strong>
+                                        <span>{{ $testimonial['role'] }}</span>
+                                        <small>{{ $testimonial['location'] }}</small>
+                                    </div>
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
+                    <div class="carousel-controls homepage-carousel-controls">
+                        <div class="homepage-carousel-meta">
+                            <div class="homepage-carousel-status" data-carousel-status>1 / {{ max($homepageCarouselTestimonials->count(), 1) }}</div>
+                            <div class="homepage-carousel-progress">
+                                <span data-carousel-progress></span>
+                            </div>
+                        </div>
+                        <div class="homepage-carousel-buttons">
+                            <button type="button" data-carousel-prev aria-label="Previous testimonial">Previous</button>
+                            <button type="button" data-carousel-next aria-label="Next testimonial">Next</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -480,14 +649,31 @@
             <div class="section-heading homepage-section__heading" data-animate="left">
                 <span class="eyebrow">Our Partners</span>
                 <h2 id="partner-logos-heading">Connected with trusted brands across the referral journey</h2>
-                <p>Partner recognition should build confidence quickly, so the logos are presented in a calmer, more premium grid instead of competing for attention.</p>
+                <p>Brand proof works best when it feels calm, credible, and premium. These partner logos now move in a smoother trust-first presentation.</p>
             </div>
-            <div class="partner-logo-grid" data-stagger>
-                @foreach($partnerLogos as $logo)
-                    <div class="partner-logo-card">
-                        <img src="{{ asset($logo['path']) }}" alt="{{ $logo['name'] }} logo" loading="lazy">
+            <div class="homepage-partner-shell">
+                <div class="homepage-partner-shell__intro">
+                    <div class="homepage-partner-shell__card">
+                        <strong>{{ number_format($partnerLogos->count()) }}+</strong>
+                        <span>Recognizable brands and marketplace references</span>
                     </div>
-                @endforeach
+                    <div class="homepage-partner-shell__card">
+                        <strong>Premium trust layer</strong>
+                        <span>Presented with calmer motion and stronger visual consistency</span>
+                    </div>
+                </div>
+                <div class="partner-marquee" aria-label="Partner brand logos">
+                    @foreach($partnerLogoRows as $rowIndex => $row)
+                        <div class="partner-marquee__track {{ $rowIndex === 1 ? 'partner-marquee__track--reverse' : '' }}">
+                            @foreach($row->concat($row) as $logo)
+                                <div class="homepage-partner-chip">
+                                    <img src="{{ asset($logo['path']) }}" alt="{{ $logo['name'] }} logo" loading="lazy">
+                                    <span>{{ $logo['name'] }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
     </section>
@@ -532,5 +718,3 @@
     @include('partials.pricing-toggle-script')
 @endpush
 @endsection
-
-

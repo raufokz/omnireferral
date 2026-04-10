@@ -1,181 +1,428 @@
 @extends('layouts.app')
 
 @section('content')
-<section class="page-hero dashboard-page-hero dashboard-page-hero--buyer">
-    <div class="container page-hero__content">
-        <span class="eyebrow">Buyer Workspace</span>
-        <h1>Track your home search without losing the human touch</h1>
-        <p>Saved homes, ZIP-based browsing, and request updates stay organized in one calm, trust-building space.</p>
-    </div>
-</section>
+@php
+    $buyerUser = auth()->user();
+    $buyerAvatar = $buyerUser?->avatar
+        ? asset('storage/' . ltrim($buyerUser->avatar, '/'))
+        : asset('images/realtors/3.png');
+    $buyerJourneyMax = max(1, collect($buyerJourney)->max('count'));
+    $propertyMix = $properties
+        ->groupBy(fn ($property) => ucfirst($property->property_type ?: 'Home'))
+        ->map(fn ($group) => $group->count())
+        ->sortDesc()
+        ->take(3);
+    $agentMatchCount = data_get(collect($buyerJourney)->firstWhere('label', 'Agent Match'), 'count', 0);
+    $closedBuyerCount = data_get(collect($buyerJourney)->firstWhere('label', 'Closed'), 'count', 0);
+    $buyerHighlights = [
+        ['label' => 'Shortlist', 'value' => $buyerStats['saved_listings']],
+        ['label' => 'Favorites', 'value' => $buyerStats['favorites']],
+        ['label' => 'Requests', 'value' => $buyerRequests->count()],
+        ['label' => 'Alerts', 'value' => $buyerStats['new_alerts']],
+    ];
+@endphp
 
-<section class="section dashboard-page dashboard-page--metamorphosis" x-data="{ search: '', filter: 'all' }">
-    <div class="container cockpit-grid">
-        <!-- Sidebar Navigation (Preserved context) -->
-        <aside class="cockpit-side" style="grid-row: span 3;">
-            <div class="cockpit-table-card mb-8" style="padding: 1.5rem;">
-                <div class="flex items-center gap-4 mb-6">
-                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 font-bold">B</div>
-                    <div>
-                        <span class="eyebrow" style="margin: 0;">Buyer Workspace</span>
-                        <h2 style="font-size: 1.25rem; margin: 0;">{{ Auth::user()->name }}</h2>
+<section class="or-dashboard or-dashboard--buyer">
+    <div class="or-dashboard__shell">
+        <aside class="or-dashboard__sidebar">
+            <div class="or-dashboard__brand">
+                <img src="{{ asset('images/omnireferral-logo.png') }}" alt="OmniReferral logo">
+                <div class="or-dashboard__brand-copy">
+                    <strong>Buyer Workspace</strong>
+                    <span>OmniReferral search desk</span>
+                </div>
+            </div>
+
+            <nav class="or-dashboard__nav" aria-label="Buyer workspace navigation">
+                <a class="is-active" href="{{ route('dashboard.buyer') }}">
+                    <span>Overview</span>
+                    <small>Search progress, saved homes, and request activity</small>
+                </a>
+                <a href="#buyer-shortlist">
+                    <span>Saved Homes</span>
+                    <small>Review the homes you are tracking right now</small>
+                </a>
+                <a href="#buyer-requests">
+                    <span>Requests</span>
+                    <small>Watch buyer intake and agent match movement</small>
+                </a>
+                <a href="{{ route('listings') }}">
+                    <span>Marketplace</span>
+                    <small>Explore approved homes across OmniReferral</small>
+                </a>
+                <a href="{{ route('contact') }}">
+                    <span>Support</span>
+                    <small>Talk with the team about your search strategy</small>
+                </a>
+            </nav>
+
+            <article class="or-dashboard__profile-card">
+                <div class="or-dashboard__profile-head">
+                    <div class="or-dashboard__avatar">
+                        <img src="{{ $buyerAvatar }}" alt="{{ $buyerUser?->name ?: 'Buyer' }} profile image" loading="lazy">
+                    </div>
+                    <div class="or-dashboard__profile-copy">
+                        <span class="eyebrow">Buyer Profile</span>
+                        <h2>{{ $buyerUser?->name ?: 'OmniReferral Buyer' }}</h2>
+                        <p>{{ $buyerUser?->email ?: 'Search preferences ready to refine' }}</p>
                     </div>
                 </div>
-                <nav class="dashboard-side-nav" aria-label="Buyer dashboard navigation">
-                    <a class="is-active" href="{{ route('dashboard.buyer') }}">Overview</a>
-                    <a href="#shortlist">My Shortlist</a>
-                    <a href="#requests">Requests</a>
-                    <a href="{{ route('listings') }}">Browse All</a>
-                </nav>
-            </div>
 
-            <div class="cockpit-table-card mb-8" style="padding: 1.5rem;">
-                <span class="eyebrow">Search Depth</span>
-                <h3 class="mb-4">Target Market</h3>
-                <div class="map-card" style="height: 200px; border-radius: 12px; overflow: hidden;">
-                    <iframe src="https://www.google.com/maps?q={{ urlencode($properties->first()?->zip_code ?? 'Dallas, TX') }}&output=embed" style="width: 100%; height: 100%; border:0;" allowfullscreen="" loading="lazy"></iframe>
+                <div class="or-dashboard__chip-row">
+                    <span>Buyer</span>
+                    <span>{{ $buyerStats['saved_searches'] }} saved searches</span>
+                    <span>{{ $buyerStats['new_alerts'] }} live alerts</span>
                 </div>
-                <button class="button button--ghost-blue w-full mt-4" style="padding: 0.75rem;">Change Area</button>
-            </div>
 
-            <div class="cockpit-table-card" style="padding: 1.5rem; background: var(--color-gateway-brand-bg); color: #fff;">
-                <span class="eyebrow" style="color: rgba(255,255,255,0.7);">Need Help?</span>
-                <h3 style="color: #fff; margin-bottom: 1rem;">Concierge Support</h3>
-                <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-bottom: 1.5rem;">Our team is ready to help you verify property details or schedule tours.</p>
-                <a href="{{ route('contact') }}" class="button w-full" style="background: var(--color-gateway-accent); border: none;">Contact Advisor</a>
-            </div>
+                <div class="or-dashboard__profile-grid">
+                    @foreach($buyerHighlights as $highlight)
+                        <div>
+                            <span>{{ $highlight['label'] }}</span>
+                            <strong>{{ $highlight['value'] }}</strong>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="or-dashboard__action-row">
+                    <a href="{{ route('listings') }}" class="button button--blue">Browse Listings</a>
+                    <a href="{{ route('contact') }}" class="button button--ghost-blue">Talk To Support</a>
+                </div>
+            </article>
+
+            <article class="or-dashboard__mini-card">
+                <span class="eyebrow">Search Rhythm</span>
+                <strong>Stay ready for the next best match</strong>
+                <p>OmniReferral keeps shortlist activity, request movement, and new inventory signals visible in one consistent workspace.</p>
+                <div class="or-dashboard__mini-grid">
+                    <div>
+                        <span>Agent Match</span>
+                        <strong>{{ $agentMatchCount }}</strong>
+                    </div>
+                    <div>
+                        <span>Closed</span>
+                        <strong>{{ $closedBuyerCount }}</strong>
+                    </div>
+                </div>
+                <a href="{{ route('contact') }}" class="button button--orange">Request Buyer Help</a>
+            </article>
         </aside>
 
-        <!-- KPI Row -->
-        <div class="cockpit-kpi-row">
-            <article class="cockpit-kpi-card">
-                <span class="eyebrow">Shortlist</span>
-                <strong>{{ $buyerStats['saved_listings'] }}</strong>
-                <p>Saved Homes</p>
-            </article>
-            <article class="cockpit-kpi-card" style="border-color: var(--color-gateway-accent);">
-                <span class="eyebrow">Top Picks</span>
-                <strong>{{ $buyerStats['favorites'] }}</strong>
-                <p>High Priority</p>
-            </article>
-            <article class="cockpit-kpi-card">
-                <span class="eyebrow">Searches</span>
-                <strong>{{ $buyerStats['saved_searches'] }}</strong>
-                <p>Saved Criteria</p>
-            </article>
-            <article class="cockpit-kpi-card" style="border-color: #10b981;">
-                <span class="eyebrow">Alerts</span>
-                <strong>{{ $buyerStats['new_alerts'] }}</strong>
-                <p>Market Updates</p>
-            </article>
-        </div>
-
-        <main class="cockpit-main">
-            <!-- Shortlist Section -->
-            <div class="flex items-center justify-between mb-6" id="shortlist">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-900">Your Shortlist</h2>
-                    <p class="text-gray-500">Homes that match your target markets.</p>
-                </div>
-                <div class="flex gap-4">
-                    <div class="floating-group" style="margin-bottom: 0; min-width: 240px;">
-                        <input type="text" x-model="search" placeholder=" ">
-                        <label>Filter by ZIP...</label>
+        <main class="or-dashboard__main">
+            <header class="or-dashboard__header">
+                <div class="or-dashboard__header-copy">
+                    <span class="eyebrow">Buyer Dashboard</span>
+                    <h1>Keep your shortlist, search alerts, and request follow-up aligned.</h1>
+                    <p>This buyer workspace now uses the same Omnireferral shell as every other role, so the brand colors, spacing, font, and interaction patterns stay consistent everywhere.</p>
+                    <div class="or-dashboard__header-chips">
+                        <span>{{ $buyerStats['saved_searches'] }} saved searches</span>
+                        <span>{{ $buyerRequests->count() }} recent requests</span>
+                        <span>{{ $properties->count() }} live homes in view</span>
                     </div>
                 </div>
+
+                <div class="or-dashboard__header-actions">
+                    <a href="{{ route('listings') }}" class="button">Explore Listings</a>
+                    <a href="{{ route('contact') }}" class="button button--ghost-blue">Contact OmniReferral</a>
+                </div>
+            </header>
+
+            <div class="or-dashboard__stat-row">
+                <article class="or-dashboard__stat-card">
+                    <span>Saved Shortlist</span>
+                    <strong>{{ $buyerStats['saved_listings'] }}</strong>
+                    <p>Homes currently visible inside your shortlist flow</p>
+                </article>
+                <article class="or-dashboard__stat-card">
+                    <span>Top Picks</span>
+                    <strong>{{ $buyerStats['favorites'] }}</strong>
+                    <p>Favorite properties worth another look this week</p>
+                </article>
+                <article class="or-dashboard__stat-card">
+                    <span>Request Queue</span>
+                    <strong>{{ $buyerRequests->count() }}</strong>
+                    <p>Buyer submissions waiting on qualification or routing</p>
+                </article>
+                <article class="or-dashboard__stat-card or-dashboard__stat-card--warm">
+                    <span>Market Alerts</span>
+                    <strong>{{ $buyerStats['new_alerts'] }}</strong>
+                    <p>Signals tied to new activity in the buyer funnel</p>
+                </article>
             </div>
 
-            <div class="listing-grid listing-grid--dashboard mb-12">
-                @forelse($properties as $property)
-                    <article class="listing-card" x-show="!search || '{{ $property->zip_code }}'.includes(search)" data-animate="up">
-                        <div class="relative">
-                            <img src="{{ $property->image_url }}" alt="Home" style="height: 200px; object-fit: cover;">
-                            <span class="absolute top-4 left-4 status-pill status-pill--qualified" style="background: var(--color-gateway-brand-bg); color: white;">{{ $property->zip_code }}</span>
-                        </div>
-                        <div class="listing-card__body p-6">
-                            <strong class="text-2xl" style="color: var(--color-gateway-brand-bg);">${{ number_format($property->price) }}</strong>
-                            <h3 style="margin: 0.5rem 0 0.25rem;">{{ $property->title }}</h3>
-                            <p class="listing-location mb-6">{{ $property->location }}</p>
-                            
-                            <div class="grid grid-cols-2 gap-3">
-                                <a href="{{ route('properties.show', $property) }}" class="button button--ghost-blue" style="padding: 0.75rem; font-size: 0.85rem;">Details</a>
-                                <a href="{{ route('contact') }}?property={{ urlencode($property->title) }}" class="button" style="padding: 0.75rem; font-size: 0.85rem; background: var(--color-gateway-brand-bg);">Tour</a>
-                            </div>
-                        </div>
-                    </article>
-                @empty
-                    <div class="col-span-full">
-                        <div class="cockpit-empty-state">
-                            <img src="{{ asset('images/illustrations/empty-leads.png') }}" alt="Empty" class="cockpit-empty-illustration">
-                            <h3>Start your search</h3>
-                            <p class="text-gray-500">Browse our active listings to find homes that fit your criteria.</p>
-                            <a href="{{ route('listings') }}" class="button mt-6">Explore Listings</a>
+            <div class="or-dashboard__content-grid">
+                <section class="or-dashboard__surface">
+                    <div class="or-dashboard__surface-header">
+                        <div>
+                            <span class="eyebrow">Journey Pulse</span>
+                            <h2>Buyer request movement at a glance</h2>
+                            <p>Track each stage from first submission through qualification, matching, and close.</p>
                         </div>
                     </div>
-                @endforelse
-            </div>
 
-            <!-- Request Tracker -->
-            <div id="requests">
-                <div class="mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">Request Journey</h2>
-                    <p class="text-gray-500">Track your verified inquiries in real-time.</p>
-                </div>
-
-                <div class="cockpit-table-card p-8">
-                    <div class="grid grid-cols-4 gap-8 mb-12">
-                        @php($maxBuyerStage = max(1, collect($buyerJourney)->max('count')))
+                    <div class="or-dashboard__progress-list">
                         @foreach($buyerJourney as $stage)
-                            <div class="text-center">
-                                <div class="text-2xl font-bold text-blue-900 mb-1">{{ $stage['count'] }}</div>
-                                <div class="text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-3">{{ $stage['label'] }}</div>
-                                <div class="h-1 w-full bg-gray-100 rounded-full">
-                                    <div class="h-full bg-orange-500 rounded-full" style="width: {{ ($stage['count'] / $maxBuyerStage) * 100 }}%"></div>
+                            <article class="or-dashboard__progress-item">
+                                <div class="or-dashboard__progress-item-top">
+                                    <strong>{{ $stage['label'] }}</strong>
+                                    <span>{{ $stage['count'] }} records</span>
                                 </div>
-                            </div>
+                                <div class="or-dashboard__progress-track">
+                                    <span style="width: {{ ($stage['count'] / $buyerJourneyMax) * 100 }}%"></span>
+                                </div>
+                            </article>
                         @endforeach
                     </div>
+                </section>
 
-                    <table class="cockpit-table">
+                <section class="or-dashboard__surface">
+                    <div class="or-dashboard__surface-header">
+                        <div>
+                            <span class="eyebrow">Search Profile</span>
+                            <h2>What your current activity says</h2>
+                            <p>A compact snapshot of saved-search depth, inventory mix, and search momentum.</p>
+                        </div>
+                    </div>
+
+                    <div class="or-dashboard__mini-grid">
+                        <div>
+                            <span>Saved Searches</span>
+                            <strong>{{ $buyerStats['saved_searches'] }}</strong>
+                        </div>
+                        <div>
+                            <span>Favorites</span>
+                            <strong>{{ $buyerStats['favorites'] }}</strong>
+                        </div>
+                        <div>
+                            <span>Active Inventory</span>
+                            <strong>{{ $properties->count() }}</strong>
+                        </div>
+                        <div>
+                            <span>Alerts</span>
+                            <strong>{{ $buyerStats['new_alerts'] }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="or-dashboard__tag-cloud">
+                        @forelse($propertyMix as $label => $count)
+                            <span>{{ $label }} {{ $count }}</span>
+                        @empty
+                            <span>Inventory mix updating</span>
+                        @endforelse
+                    </div>
+                </section>
+            </div>
+
+            <section class="or-dashboard__surface or-dashboard__surface--wide" id="buyer-shortlist">
+                <div class="or-dashboard__surface-header">
+                    <div>
+                        <span class="eyebrow">Saved Homes</span>
+                        <h2>Properties worth keeping close</h2>
+                        <p>The marketplace cards below keep your current shortlist-style view aligned with the rest of the workspace design.</p>
+                    </div>
+                    <a href="{{ route('listings') }}" class="button button--ghost-blue">Browse More</a>
+                </div>
+
+                <div class="or-dashboard__listing-grid">
+                    @forelse($properties->take(3) as $property)
+                        <article class="or-dashboard__listing-card">
+                            <div class="or-dashboard__listing-media">
+                                <img src="{{ $property->image_url }}" alt="{{ $property->title }}" loading="lazy">
+                                <span class="or-dashboard__listing-badge">{{ ucfirst($property->property_type ?: 'Home') }}</span>
+                            </div>
+                            <div class="or-dashboard__listing-body">
+                                <div class="or-dashboard__listing-top">
+                                    <strong>${{ number_format($property->price) }}</strong>
+                                    <span>{{ $property->status }}</span>
+                                </div>
+                                <h3>{{ $property->title }}</h3>
+                                <p>{{ $property->location }}</p>
+                                <div class="or-dashboard__listing-meta">
+                                    <span>{{ $property->beds }} bd</span>
+                                    <span>{{ $property->baths }} ba</span>
+                                    <span>{{ number_format($property->sqft) }} sqft</span>
+                                </div>
+                                <div class="or-dashboard__listing-actions">
+                                    <a href="{{ route('properties.show', $property) }}" class="button button--ghost-blue">View Listing</a>
+                                    <a href="{{ route('properties.show', $property) }}#property-contact" class="button">Contact Agent</a>
+                                </div>
+                            </div>
+                        </article>
+                    @empty
+                        <div class="or-dashboard__empty">
+                            <h3>No approved homes are visible yet</h3>
+                            <p>New marketplace listings will appear here as soon as inventory is available.</p>
+                        </div>
+                    @endforelse
+                </div>
+            </section>
+
+            <section class="or-dashboard__surface or-dashboard__surface--wide" id="buyer-requests">
+                <div class="or-dashboard__surface-header">
+                    <div>
+                        <span class="eyebrow">Recent Requests</span>
+                        <h2>Your latest buyer conversations</h2>
+                        <p>See the most recent request activity without leaving the overview screen.</p>
+                    </div>
+                </div>
+
+                <div class="or-dashboard__table-wrap">
+                    <table class="or-dashboard__table">
                         <thead>
                             <tr>
-                                <th>Inquiry Target</th>
-                                <th>ZIP / Market</th>
+                                <th>Request</th>
+                                <th>Market</th>
                                 <th>Status</th>
-                                <th style="width: 60px;"></th>
+                                <th>Submitted</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($buyerRequests as $request)
+                            @forelse($buyerRequests->take(4) as $request)
                                 <tr>
                                     <td>
-                                        <span class="cockpit-primary-data">{{ $request->name }}</span>
-                                        <span class="cockpit-secondary-data">{{ $request->property_type ?: 'Resident search' }}</span>
+                                        <div class="or-dashboard__detail-stack">
+                                            <strong>{{ $request->name }}</strong>
+                                            <span>{{ $request->email ?: 'No email provided' }}</span>
+                                        </div>
                                     </td>
                                     <td>
-                                        <span class="cockpit-primary-data">{{ $request->zip_code }}</span>
-                                        <span class="cockpit-secondary-data">Targeted market</span>
+                                        <div class="or-dashboard__detail-stack">
+                                            <strong>{{ $request->zip_code ?: 'No ZIP yet' }}</strong>
+                                            <span>{{ $request->property_type ?: 'Search preferences pending' }}</span>
+                                        </div>
                                     </td>
                                     <td>
-                                        <span class="status-pill status-pill--{{ $request->status }}">{{ ucfirst($request->status) }}</span>
+                                        <span class="status-pill status-pill--{{ \Illuminate\Support\Str::slug((string) $request->status, '_') }}">
+                                            {{ $request->statusLabel() }}
+                                        </span>
                                     </td>
-                                    <td>
-                                        <button class="kebab-trigger">⋮</button>
-                                    </td>
+                                    <td>{{ $request->created_at?->format('M j, Y') ?: 'Pending' }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center py-8 text-gray-500">No active inquiries submitted yet.</td>
+                                    <td colspan="4">
+                                        <div class="or-dashboard__empty">
+                                            <h3>No buyer requests yet</h3>
+                                            <p>Once you submit a request or inquiry, the activity timeline will show up here.</p>
+                                        </div>
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </section>
         </main>
-    </div>
-</section>
-        </div>
+
+        <aside class="or-dashboard__rail">
+            <article class="or-dashboard__summary-card">
+                <span class="eyebrow">Search Summary</span>
+                <h3>Buyer activity snapshot</h3>
+                <p>One consistent Omnireferral card system keeps the most important numbers visible on every role dashboard.</p>
+                <strong class="or-dashboard__summary-total">{{ $buyerStats['saved_listings'] }}</strong>
+                <div class="or-dashboard__summary-meta">
+                    <div>
+                        <span>Saved Searches</span>
+                        <strong>{{ $buyerStats['saved_searches'] }}</strong>
+                    </div>
+                    <div>
+                        <span>Favorites</span>
+                        <strong>{{ $buyerStats['favorites'] }}</strong>
+                    </div>
+                    <div>
+                        <span>Requests</span>
+                        <strong>{{ $buyerRequests->count() }}</strong>
+                    </div>
+                    <div>
+                        <span>Alerts</span>
+                        <strong>{{ $buyerStats['new_alerts'] }}</strong>
+                    </div>
+                </div>
+                <div class="or-dashboard__summary-actions">
+                    <a href="{{ route('listings') }}" class="button button--orange">See Listings</a>
+                    <a href="{{ route('contact') }}" class="button button--ghost-blue">Get Help</a>
+                </div>
+            </article>
+
+            <article class="or-dashboard__panel">
+                <div class="or-dashboard__surface-header">
+                    <div>
+                        <span class="eyebrow">Activity</span>
+                        <h2>Newest buyer requests</h2>
+                    </div>
+                </div>
+
+                <div class="or-dashboard__queue-list">
+                    @forelse($buyerRequests->take(3) as $request)
+                        <article>
+                            <strong>{{ $request->name }}</strong>
+                            <small>{{ $request->created_at?->format('M j, g:i A') ?: 'Pending' }}</small>
+                            <p>{{ $request->zip_code ?: 'No ZIP submitted yet' }} and {{ $request->statusLabel() }}.</p>
+                        </article>
+                    @empty
+                        <article>
+                            <strong>No buyer activity yet</strong>
+                            <p>New conversations and requests will appear here as they arrive.</p>
+                        </article>
+                    @endforelse
+                </div>
+            </article>
+
+            <article class="or-dashboard__panel">
+                <div class="or-dashboard__surface-header">
+                    <div>
+                        <span class="eyebrow">Top Categories</span>
+                        <h2>Inventory mix</h2>
+                    </div>
+                </div>
+
+                <div class="or-dashboard__rail-list">
+                    @forelse($propertyMix as $label => $count)
+                        <article>
+                            <strong>{{ $label }}</strong>
+                            <p>{{ $count }} homes in the current visible set.</p>
+                        </article>
+                    @empty
+                        <article>
+                            <strong>Mix updating</strong>
+                            <p>Inventory categories will populate as listings are approved.</p>
+                        </article>
+                    @endforelse
+                </div>
+            </article>
+
+            <article class="or-dashboard__panel">
+                <div class="or-dashboard__surface-header">
+                    <div>
+                        <span class="eyebrow">Focus Areas</span>
+                        <h2>How to keep momentum</h2>
+                    </div>
+                </div>
+
+                <div class="or-dashboard__spotlight">
+                    <article>
+                        <span class="or-dashboard__spotlight-index">01</span>
+                        <div>
+                            <strong>Keep favorites current</strong>
+                            <p>Refreshing your shortlist makes it easier to surface the right homes quickly.</p>
+                        </div>
+                    </article>
+                    <article>
+                        <span class="or-dashboard__spotlight-index">02</span>
+                        <div>
+                            <strong>Respond to agent outreach</strong>
+                            <p>Fast replies help OmniReferral route you toward the right expert without delay.</p>
+                        </div>
+                    </article>
+                    <article>
+                        <span class="or-dashboard__spotlight-index">03</span>
+                        <div>
+                            <strong>Use listing contact forms</strong>
+                            <p>Direct listing inquiries keep the conversation tied to the exact home you care about.</p>
+                        </div>
+                    </article>
+                </div>
+            </article>
+        </aside>
     </div>
 </section>
 @endsection

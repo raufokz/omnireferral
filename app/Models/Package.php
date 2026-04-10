@@ -89,4 +89,25 @@ class Package extends Model
 
         return $requested === 'monthly' ? 'subscription' : 'payment';
     }
+
+    public function listingLimit(): int
+    {
+        if ($this->category !== 'lead') {
+            return 0;
+        }
+
+        return match ($this->slug) {
+            'quick-leads' => 5,
+            'power-leads' => 15,
+            'prime-leads' => 35,
+            default => 0,
+        };
+    }
+
+    public function listingLimitLabel(): string
+    {
+        $limit = $this->listingLimit();
+
+        return $limit > 0 ? $limit . ' active listings' : 'No listing access';
+    }
 }

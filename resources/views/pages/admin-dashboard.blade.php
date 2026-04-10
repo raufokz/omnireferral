@@ -1,282 +1,407 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="admin-shell">
-    <aside class="admin-sidebar">
-        <div class="admin-brand">
-            <span class="eyebrow">Super Admin</span>
-            <h2>Control Center</h2>
-            <p>OmniReferral operations and lead routing overview.</p>
-        </div>
-        <nav class="admin-nav" aria-label="Admin navigation">
-            <a class="is-active" href="{{ route('admin.dashboard') }}">Overview</a>
-            <a href="#lead-registry">Lead Pipeline</a>
-            <a href="#agent-review">Agent Review</a>
-            <a href="{{ route('admin.blog.index') }}">Blog CMS</a>
-            <a href="{{ route('pricing') }}">Packages</a>
-        </nav>
-        <div class="admin-sidecard">
-            <div class="sidecard-header">
-                <span class="eyebrow">Internal Queues</span>
-                <h4>Team Velocity</h4>
+@php
+    $workspaceAvatar = $workspaceUser?->avatar
+        ? asset('storage/' . ltrim($workspaceUser->avatar, '/'))
+        : asset('images/realtors/3.png');
+    $workspaceTitle = $isStaffView
+        ? $workspaceUser->roleLabel() . ' Operations Desk'
+        : 'Admin Command Center';
+    $workspaceCopy = $isStaffView
+        ? 'Coordinate lead follow-up, listing review, and internal operations from the same Omnireferral dashboard shell.'
+        : 'Oversee leads, agent supply, listing moderation, and growth operations from one aligned Omnireferral workspace.';
+    $workspaceHighlights = [
+        ['label' => 'Leads', 'value' => number_format($stats['leads'] ?? 0)],
+        ['label' => 'Partners', 'value' => number_format($stats['realtors'] ?? 0)],
+        ['label' => 'Listings', 'value' => number_format($stats['properties'] ?? 0)],
+        ['label' => 'Reviews', 'value' => number_format($stats['pendingListings'] ?? 0)],
+    ];
+@endphp
+
+<section class="or-dashboard or-dashboard--admin">
+    <div class="or-dashboard__shell">
+        <aside class="or-dashboard__sidebar">
+            <div class="or-dashboard__brand">
+                <img src="{{ asset('images/omnireferral-logo.png') }}" alt="OmniReferral logo">
+                <div class="or-dashboard__brand-copy">
+                    <strong>{{ $isStaffView ? 'Staff Workspace' : 'Admin Workspace' }}</strong>
+                    <span>OmniReferral operations desk</span>
+                </div>
             </div>
-            <div class="sidecard-list">
-                @foreach($teamQueues as $queue)
-                    <div class="sidecard-row">
+
+            <nav class="or-dashboard__nav" aria-label="Operations workspace navigation">
+                <a class="is-active" href="{{ route('admin.dashboard') }}">
+                    <span>Overview</span>
+                    <small>Lead flow, listing reviews, and team health</small>
+                </a>
+                <a href="{{ route('admin.leads.index') }}">
+                    <span>Lead Registry</span>
+                    <small>Review qualification, assignment, and package stages</small>
+                </a>
+                <a href="{{ route('admin.testimonials.index') }}">
+                    <span>Testimonials</span>
+                    <small>Manage published proof and customer stories</small>
+                </a>
+                <a href="{{ route('admin.blog.index') }}">
+                    <span>Content</span>
+                    <small>Update blog posts and growth-facing content</small>
+                </a>
+                <a href="{{ route('listings') }}">
+                    <span>Marketplace</span>
+                    <small>Check the public property experience</small>
+                </a>
+            </nav>
+
+            <article class="or-dashboard__profile-card">
+                <div class="or-dashboard__profile-head">
+                    <div class="or-dashboard__avatar">
+                        <img src="{{ $workspaceAvatar }}" alt="{{ $workspaceUser?->name ?: 'Workspace user' }} profile image" loading="lazy">
+                    </div>
+                    <div class="or-dashboard__profile-copy">
+                        <span class="eyebrow">{{ $isStaffView ? 'Staff Access' : 'Admin Access' }}</span>
+                        <h2>{{ $workspaceUser?->name ?: 'OmniReferral Team' }}</h2>
+                        <p>{{ $workspaceUser?->email ?: 'Operations access active' }}</p>
+                    </div>
+                </div>
+
+                <div class="or-dashboard__chip-row">
+                    <span>{{ $workspaceUser?->roleLabel() ?? 'Operations' }}</span>
+                    <span>{{ number_format($stats['pending'] ?? 0) }} pending agents</span>
+                    <span>{{ number_format($stats['pendingListings'] ?? 0) }} listing reviews</span>
+                </div>
+
+                <div class="or-dashboard__profile-grid">
+                    @foreach($workspaceHighlights as $highlight)
                         <div>
-                            <strong>{{ $queue['team'] }}</strong>
-                            <small>{{ $queue['copy'] }}</small>
+                            <span>{{ $highlight['label'] }}</span>
+                            <strong>{{ $highlight['value'] }}</strong>
                         </div>
-                        <span class="badge badge--pill">{{ $queue['count'] }}</span>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-        <div class="admin-system">
-            <span class="eyebrow">System Health</span>
-            <h4>Platform Sync</h4>
-            <p>All systems operational. Lead routing and API integrations stable.</p>
-            <div class="system-meta">
-                <span class="system-dot"></span>
-                <span class="system-text">Uptime: 99.9%</span>
-            </div>
-        </div>
-    </aside>
-
-    <main class="admin-main">
-        <header class="admin-topbar">
-            <div class="topbar-search">
-                <input type="text" placeholder="Search workspace" aria-label="Search dashboard">
-            </div>
-            <div class="topbar-actions">
-                <a class="button button--ghost-blue" href="{{ route('pricing') }}">View Packages</a>
-                <a class="button button--orange" href="{{ route('admin.blog.index') }}">Manage Content</a>
-            </div>
-        </header>
-
-        <section class="admin-kpi-grid" aria-label="Key metrics">
-            <article class="admin-kpi-card">
-                <span class="kpi-label">Leads</span>
-                <div class="kpi-value">{{ number_format($stats['leads']) }}</div>
-                <div class="kpi-sub">Global ecosystem</div>
-            </article>
-            <article class="admin-kpi-card">
-                <span class="kpi-label">Partners</span>
-                <div class="kpi-value">{{ number_format($stats['realtors']) }}</div>
-                <div class="kpi-sub">Active agents</div>
-            </article>
-            <article class="admin-kpi-card">
-                <span class="kpi-label">Pending</span>
-                <div class="kpi-value">{{ number_format($stats['pending']) }}</div>
-                <div class="kpi-sub">Compliance queue</div>
-            </article>
-            <article class="admin-kpi-card">
-                <span class="kpi-label">Revenue</span>
-                <div class="kpi-value">${{ number_format($stats['estimatedRevenue']) }}</div>
-                <div class="kpi-sub">Projected monthly</div>
-            </article>
-        </section>
-
-        <section id="lead-registry" class="admin-panel" aria-labelledby="lead-registry-heading">
-            <div class="panel-header">
-                <div>
-                    <span class="eyebrow">Lead Registry</span>
-                    <h2 id="lead-registry-heading">Qualification through routing</h2>
-                </div>
-                <div class="panel-filters">
-                    <input type="text" placeholder="Filter leads" aria-label="Filter leads">
-                </div>
-            </div>
-            <div class="admin-table" role="table" aria-label="Lead table">
-                <div class="admin-table-row admin-table-head" role="row">
-                    <span role="columnheader">Contact</span>
-                    <span role="columnheader">Market</span>
-                    <span role="columnheader">Package</span>
-                    <span role="columnheader">Status</span>
-                    <span role="columnheader">Routing</span>
-                    <span role="columnheader">Actions</span>
-                </div>
-                @forelse($recentLeads as $lead)
-                    <div class="admin-table-row" role="row">
-                        <span role="cell">
-                            <strong>{{ $lead->name }}</strong>
-                            <small>{{ ucfirst($lead->intent) }}</small>
-                        </span>
-                        <span role="cell">
-                            <strong>{{ $lead->zip_code }}</strong>
-                            <small>Target market</small>
-                        </span>
-                        <span role="cell">
-                            <strong>{{ strtoupper($lead->package_type ?? 'FREE') }}</strong>
-                            <small>ID: {{ $lead->id }}</small>
-                        </span>
-                        <span role="cell" class="admin-cell--status">
-                            <form action="{{ route('admin.leads.status', $lead) }}" method="POST" class="admin-inline-form">
-                                @csrf
-                                <select name="status" onchange="this.form.submit()" aria-label="Change lead status">
-                                    @foreach(['new','qualified','assigned','contacted','closed'] as $status)
-                                        <option value="{{ $status }}" {{ $lead->status === $status ? 'selected' : '' }}>{{ ucfirst($status) }}</option>
-                                    @endforeach
-                                </select>
-                            </form>
-                            <small>Last updated: {{ $lead->updated_at->diffForHumans() }}</small>
-                        </span>
-                        <span role="cell" class="admin-cell--route">
-                            @if(!$lead->assigned_agent_id)
-                                <form action="{{ route('admin.leads.route', $lead) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="button button--ghost-blue button--compact">Auto-assign</button>
-                                </form>
-                            @else
-                                <span class="badge badge--success">{{ $lead->assignedAgent?->name ?? 'Routed' }}</span>
-                                <small>Agent assigned</small>
-                            @endif
-                        </span>
-                        <span role="cell" class="admin-cell--actions">
-                            <form action="{{ route('admin.leads.assign', $lead) }}" method="POST" class="admin-inline-form">
-                                @csrf
-                                <select name="agent_id" onchange="this.form.submit()" aria-label="Assign specific agent">
-                                    <option value="">Assign to agent</option>
-                                    @foreach(\App\Models\User::where('role','agent')->limit(12)->get() as $agent)
-                                        <option value="{{ $agent->id }}" {{ optional($lead->assignedAgent)->id === $agent->id ? 'selected' : '' }}>{{ $agent->name }}</option>
-                                    @endforeach
-                                </select>
-                            </form>
-                        </span>
-                    </div>
-                @empty
-                    <div class="admin-table-row empty" role="row">No recent leads found.</div>
-                @endforelse
-            </div>
-        </section>
-
-        <section id="lead-activities" class="admin-panel" aria-labelledby="lead-activities-heading">
-            <div class="panel-header">
-                <div>
-                    <span class="eyebrow">Lead Activities</span>
-                    <h2 id="lead-activities-heading">Notes, tags, and reminders</h2>
-                </div>
-            </div>
-
-            <div class="card-panel">
-                <form id="leadActivityForm" action="{{ $recentLeads->first() ? route('admin.leads.activity', $recentLeads->first()) : '#' }}" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    @csrf
-                    <label>
-                        <span>Lead</span>
-                        <select name="lead_id" id="leadActivityLead" required>
-                            @foreach($recentLeads as $l)
-                                <option value="{{ $l->id }}" data-url="{{ route('admin.leads.activity', $l) }}">{{ $l->lead_number }} - {{ $l->name }} ({{ $l->zip_code }})</option>
-                            @endforeach
-                        </select>
-                    </label>
-
-                    <label>
-                        <span>Type</span>
-                        <select name="type" required>
-                            <option value="note">Note</option>
-                            <option value="tag">Tag</option>
-                            <option value="reminder">Reminder</option>
-                        </select>
-                    </label>
-
-                    <label>
-                        <span>Tag / Short value</span>
-                        <input type="text" name="value" placeholder="e.g. hot, follow-up, high-priority">
-                    </label>
-
-                    <label>
-                        <span>Due at (reminder)</span>
-                        <input type="datetime-local" name="due_at">
-                    </label>
-
-                    <label class="md:col-span-4">
-                        <span>Content</span>
-                        <textarea name="content" rows="2" placeholder="Add a quick note about next action" class="w-full"></textarea>
-                    </label>
-
-                    <div class="md:col-span-4">
-                        <button type="submit" class="button button--orange">Add activity</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="card-panel mt-4">
-                <h3>Recent activity feed</h3>
-                <ul class="follow-list">
-                    @foreach($recentLeads->flatMap(fn($lead) => $lead->activities->take(3)) as $activity)
-                        <li>
-                            <strong>{{ ucfirst($activity->type) }}</strong> on <em>{{ $activity->lead->lead_number }}</em> by {{ $activity->user?->name ?? 'System' }}
-                            @if($activity->value) (<span>{{ $activity->value }}</span>) @endif
-                            <p>{{ $activity->content }}</p>
-                            @if($activity->due_at)
-                                <small>Due {{ $activity->due_at->diffForHumans() }}</small>
-                            @endif
-                        </li>
                     @endforeach
-                </ul>
-            </div>
+                </div>
 
-            <script>
-                const leadActivityLead = document.getElementById('leadActivityLead');
-                const leadActivityForm = document.getElementById('leadActivityForm');
+                <div class="or-dashboard__action-row">
+                    <a href="{{ route('admin.leads.index') }}" class="button button--blue">Manage Leads</a>
+                    <a href="{{ route('admin.blog.index') }}" class="button button--ghost-blue">Open Content</a>
+                </div>
+            </article>
 
-                if (leadActivityLead && leadActivityForm) {
-                    leadActivityLead.addEventListener('change', () => {
-                        const selected = leadActivityLead.options[leadActivityLead.selectedIndex];
-                        if (selected && selected.dataset.url) {
-                            leadActivityForm.action = selected.dataset.url;
-                        }
-                    });
-                }
-            </script>
-        </section>
-
-        <section id="agent-review" class="admin-panel admin-panel--dual" aria-labelledby="agent-review-heading">
-            <div>
-                <div class="panel-header">
+            <article class="or-dashboard__mini-card">
+                <span class="eyebrow">Revenue Pulse</span>
+                <strong>${{ number_format($stats['estimatedRevenue'] ?? 0) }}</strong>
+                <p>Projected monthly revenue based on current lead-package signals and recent system activity.</p>
+                <div class="or-dashboard__mini-grid">
                     <div>
-                        <span class="eyebrow">Partner Compliance</span>
-                        <h2 id="agent-review-heading">Agents awaiting approval</h2>
+                        <span>Packages</span>
+                        <strong>{{ number_format($stats['packages'] ?? 0) }}</strong>
+                    </div>
+                    <div>
+                        <span>Contacts</span>
+                        <strong>{{ number_format($stats['contacts'] ?? 0) }}</strong>
                     </div>
                 </div>
-                <div class="stack-list">
-                    @forelse($pendingRealtors as $profile)
-                        <article class="stack-card">
-                            <div class="avatar-pill">{{ substr($profile->user->name ?? 'A', 0, 1) }}</div>
-                            <div class="stack-copy">
-                                <strong>{{ $profile->user->name ?? 'Unknown' }}</strong>
-                                <small>{{ $profile->brokerage_name ?? 'Omni Partner' }}</small>
-                            </div>
-                            <a class="button button--ghost-blue button--compact" href="{{ route('agents.show', $profile) }}">Review</a>
+                <a href="{{ route('admin.testimonials.index') }}" class="button button--orange">Review Proof</a>
+            </article>
+        </aside>
+
+        <main class="or-dashboard__main">
+            <header class="or-dashboard__header">
+                <div class="or-dashboard__header-copy">
+                    <span class="eyebrow">{{ $isStaffView ? 'Staff Dashboard' : 'Admin Dashboard' }}</span>
+                    <h1>{{ $workspaceTitle }}</h1>
+                    <p>{{ $workspaceCopy }}</p>
+                    <div class="or-dashboard__header-chips">
+                        <span>{{ number_format($stats['leads'] ?? 0) }} total leads</span>
+                        <span>{{ number_format($stats['pendingListings'] ?? 0) }} listings to review</span>
+                        <span>{{ number_format($stats['pending'] ?? 0) }} pending agent approvals</span>
+                    </div>
+                </div>
+
+                <div class="or-dashboard__header-actions">
+                    <a href="{{ route('admin.leads.index') }}" class="button">Lead Registry</a>
+                    <a href="{{ route('admin.blog.index') }}" class="button button--ghost-blue">Manage Content</a>
+                </div>
+            </header>
+
+            <div class="or-dashboard__stat-row">
+                <article class="or-dashboard__stat-card">
+                    <span>Total Leads</span>
+                    <strong>{{ number_format($stats['leads'] ?? 0) }}</strong>
+                    <p>All platform opportunities currently in the ecosystem</p>
+                </article>
+                <article class="or-dashboard__stat-card">
+                    <span>Active Partners</span>
+                    <strong>{{ number_format($stats['realtors'] ?? 0) }}</strong>
+                    <p>Agents and partner profiles active across the network</p>
+                </article>
+                <article class="or-dashboard__stat-card">
+                    <span>Pending Approvals</span>
+                    <strong>{{ number_format($stats['pending'] ?? 0) }}</strong>
+                    <p>Agent profiles waiting for operations review</p>
+                </article>
+                <article class="or-dashboard__stat-card or-dashboard__stat-card--warm">
+                    <span>Listing Reviews</span>
+                    <strong>{{ number_format($stats['pendingListings'] ?? 0) }}</strong>
+                    <p>Property submissions queued for approval or rejection</p>
+                </article>
+            </div>
+
+            <div class="or-dashboard__content-grid">
+                <section class="or-dashboard__surface">
+                    <div class="or-dashboard__surface-header">
+                        <div>
+                            <span class="eyebrow">Lead Pipeline</span>
+                            <h2>Stage distribution across the funnel</h2>
+                            <p>Monitor how many leads are new, qualified, assigned, or closed without leaving the dashboard.</p>
+                        </div>
+                    </div>
+
+                    <div class="or-dashboard__progress-list">
+                        @foreach($pipelineHealth as $stage)
+                            <article class="or-dashboard__progress-item">
+                                <div class="or-dashboard__progress-item-top">
+                                    <strong>{{ $stage['label'] }}</strong>
+                                    <span>{{ number_format($stage['count']) }} leads</span>
+                                </div>
+                                <div class="or-dashboard__progress-track">
+                                    <span style="width: {{ $stage['percent'] }}%"></span>
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
+                </section>
+
+                <section class="or-dashboard__surface">
+                    <div class="or-dashboard__surface-header">
+                        <div>
+                            <span class="eyebrow">Team Queues</span>
+                            <h2>Operations focus by desk</h2>
+                            <p>See the pressure points across qualification, packaging, agent delivery, and growth work.</p>
+                        </div>
+                    </div>
+
+                    <div class="or-dashboard__metric-board">
+                        @foreach($teamQueues as $queue)
+                            <article>
+                                <div class="or-dashboard__detail-stack">
+                                    <strong>{{ $queue['team'] }}</strong>
+                                    <span>{{ $queue['copy'] }}</span>
+                                </div>
+                                <strong>{{ number_format($queue['count']) }}</strong>
+                            </article>
+                        @endforeach
+                    </div>
+                </section>
+            </div>
+
+            <section class="or-dashboard__surface or-dashboard__surface--wide">
+                <div class="or-dashboard__surface-header">
+                    <div>
+                        <span class="eyebrow">Recent Leads</span>
+                        <h2>Latest records in the registry</h2>
+                        <p>Keep the most recent leads visible before you jump into the full management screen.</p>
+                    </div>
+                    <a href="{{ route('admin.leads.index') }}" class="button button--ghost-blue">Manage All Leads</a>
+                </div>
+
+                <div class="or-dashboard__table-wrap">
+                    <table class="or-dashboard__table">
+                        <thead>
+                            <tr>
+                                <th>Lead</th>
+                                <th>Intent</th>
+                                <th>Package</th>
+                                <th>Status</th>
+                                <th>Assigned</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($recentLeads as $lead)
+                                <tr>
+                                    <td>
+                                        <div class="or-dashboard__detail-stack">
+                                            <strong>{{ $lead->name }}</strong>
+                                            <span>{{ $lead->email ?: 'No email provided' }}</span>
+                                            <small>{{ $lead->phone ?: 'No phone provided' }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="or-dashboard__detail-stack">
+                                            <strong>{{ ucfirst($lead->intent ?: 'Unknown') }}</strong>
+                                            <span>{{ $lead->zip_code ?: 'No ZIP' }}</span>
+                                        </div>
+                                    </td>
+                                    <td>{{ strtoupper($lead->package_type ?: 'N/A') }}</td>
+                                    <td>
+                                        <span class="status-pill status-pill--{{ \Illuminate\Support\Str::slug((string) $lead->status, '_') }}">
+                                            {{ $lead->statusLabel() }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $lead->assignedAgent?->name ?? 'Unassigned' }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5">
+                                        <div class="or-dashboard__empty">
+                                            <h3>No recent leads yet</h3>
+                                            <p>Lead intake activity will appear here as soon as records start flowing in.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <div class="or-dashboard__dual-grid">
+                <section class="or-dashboard__surface">
+                    <div class="or-dashboard__surface-header">
+                        <div>
+                            <span class="eyebrow">Listing Review Queue</span>
+                            <h2>Approve or reject pending listings</h2>
+                            <p>Agent and seller submissions remain pending until operations takes action.</p>
+                        </div>
+                    </div>
+
+                    <div class="or-dashboard__queue-list">
+                        @forelse($pendingProperties as $property)
+                            <article>
+                                <strong>{{ $property->title }}</strong>
+                                <small>{{ $property->created_at?->format('M j, Y g:i A') ?: 'Pending review' }}</small>
+                                <p>{{ $property->location }} and {{ optional(optional($property->realtorProfile)->user)->name ?? 'unassigned owner' }}.</p>
+                                <div class="or-dashboard__action-row">
+                                    <a href="{{ route('properties.show', $property) }}" class="button button--ghost-blue">Preview</a>
+                                    <form method="POST" action="{{ route('admin.properties.review', $property) }}" class="admin-inline-form">
+                                        @csrf
+                                        <input type="hidden" name="decision" value="approve">
+                                        <button type="submit" class="button">Approve</button>
+                                    </form>
+                                    <form method="POST" action="{{ route('admin.properties.review', $property) }}" class="admin-inline-form">
+                                        @csrf
+                                        <input type="hidden" name="decision" value="reject">
+                                        <button type="submit" class="button button--ghost-blue">Reject</button>
+                                    </form>
+                                </div>
+                            </article>
+                        @empty
+                            <article>
+                                <strong>No listings waiting for review</strong>
+                                <p>New submissions will appear here as soon as agents or sellers send them in.</p>
+                            </article>
+                        @endforelse
+                    </div>
+                </section>
+
+                <section class="or-dashboard__surface">
+                    <div class="or-dashboard__surface-header">
+                        <div>
+                            <span class="eyebrow">Recent Listing Inquiries</span>
+                            <h2>Messages routed through listing contact flows</h2>
+                            <p>Buyer, seller, and agent listing inquiries now land in a single view for operations visibility.</p>
+                        </div>
+                    </div>
+
+                    <div class="or-dashboard__queue-list">
+                        @forelse($recentListingMessages as $message)
+                            <article>
+                                <strong>{{ $message->subject ?: 'Listing inquiry' }}</strong>
+                                <small>{{ $message->created_at?->format('M j, Y g:i A') ?: 'Just now' }}</small>
+                                <p>
+                                    {{ ucfirst($message->role ?: 'guest') }}
+                                    about
+                                    {{ $message->property?->title ?: ($message->realtorProfile?->user?->name ? 'agent profile for ' . $message->realtorProfile->user->name : 'a direct inquiry') }}.
+                                </p>
+                                <small>Routed to {{ $message->recipient?->name ?: 'OmniReferral team' }}</small>
+                            </article>
+                        @empty
+                            <article>
+                                <strong>No listing inquiries yet</strong>
+                                <p>Website listing and agent-profile messages will show here once they are submitted.</p>
+                            </article>
+                        @endforelse
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <aside class="or-dashboard__rail">
+            <article class="or-dashboard__summary-card">
+                <span class="eyebrow">Operations Summary</span>
+                <h3>Platform-wide snapshot</h3>
+                <p>The summary rail mirrors the same premium Omnireferral card language used across every role dashboard.</p>
+                <strong class="or-dashboard__summary-total">${{ number_format($stats['estimatedRevenue'] ?? 0) }}</strong>
+                <div class="or-dashboard__summary-meta">
+                    <div>
+                        <span>Packages</span>
+                        <strong>{{ number_format($stats['packages'] ?? 0) }}</strong>
+                    </div>
+                    <div>
+                        <span>Testimonials</span>
+                        <strong>{{ number_format($stats['testimonials'] ?? 0) }}</strong>
+                    </div>
+                    <div>
+                        <span>Listings</span>
+                        <strong>{{ number_format($stats['properties'] ?? 0) }}</strong>
+                    </div>
+                    <div>
+                        <span>Contacts</span>
+                        <strong>{{ number_format($stats['contacts'] ?? 0) }}</strong>
+                    </div>
+                </div>
+                <div class="or-dashboard__summary-actions">
+                    <a href="{{ route('admin.leads.index') }}" class="button button--orange">Open Registry</a>
+                    <a href="{{ route('admin.testimonials.index') }}" class="button button--ghost-blue">Manage Testimonials</a>
+                </div>
+            </article>
+
+            <article class="or-dashboard__panel">
+                <div class="or-dashboard__surface-header">
+                    <div>
+                        <span class="eyebrow">Pending Agents</span>
+                        <h2>Profiles needing approval</h2>
+                    </div>
+                </div>
+
+                <div class="or-dashboard__queue-list">
+                    @forelse($pendingRealtors as $realtor)
+                        <article>
+                            <strong>{{ optional($realtor->user)->name ?? 'Pending profile' }}</strong>
+                            <small>{{ optional($realtor->created_at)->format('M j, Y') ?: 'Recently created' }}</small>
+                            <p>{{ $realtor->brokerage_name ?: 'Brokerage pending' }} in {{ $realtor->city ?: 'market pending' }}.</p>
                         </article>
                     @empty
-                        <div class="stack-card stack-card--empty">Queue is clear</div>
+                        <article>
+                            <strong>No pending agent profiles</strong>
+                            <p>New partner approvals will appear here when onboarding creates them.</p>
+                        </article>
                     @endforelse
                 </div>
-            </div>
-            <div>
-                <div class="panel-header">
+            </article>
+
+            <article class="or-dashboard__panel">
+                <div class="or-dashboard__surface-header">
                     <div>
-                        <span class="eyebrow">Operational Goals</span>
-                        <h2>Focus areas</h2>
+                        <span class="eyebrow">Recent Activity</span>
+                        <h2>Latest timeline</h2>
                     </div>
                 </div>
-                <div class="stack-list">
-                    <article class="stack-card stack-card--note">
-                        <strong>Lead Lag Index</strong>
-                        <p>Target first touch inside 10 minutes for all ISA queues.</p>
-                    </article>
-                    <article class="stack-card stack-card--note">
-                        <strong>Route Saturation</strong>
-                        <p>Ensure at least 3 active agents cover each top-10 ZIP.</p>
-                    </article>
-                    <article class="stack-card stack-card--note">
-                        <strong>Content Velocity</strong>
-                        <p>Publish 2 market updates per week to maintain SEO authority.</p>
-                    </article>
-                </div>
-            </div>
-        </section>
-    </main>
-</div>
+
+                <ul class="or-dashboard__activity-feed">
+                    @forelse(collect($recentActivityFeed ?? [])->take(4) as $activity)
+                        <li>
+                            <strong>{{ ucfirst($activity->type ?? 'Activity') }}</strong>
+                            <p>{{ $activity->content }}</p>
+                        </li>
+                    @empty
+                        <li>
+                            <strong>No activity recorded yet</strong>
+                            <p>Lead notes, assignment updates, and workflow events will show here once they are available.</p>
+                        </li>
+                    @endforelse
+                </ul>
+            </article>
+        </aside>
+    </div>
+</section>
 @endsection

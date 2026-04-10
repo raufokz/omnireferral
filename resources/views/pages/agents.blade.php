@@ -132,7 +132,7 @@
 
                         <div class="agent-card__actions">
                             <a href="{{ route('agents.show', $agent) }}" class="button button--ghost-blue">View Profile</a>
-                            <a href="{{ route('contact') }}?agent={{ urlencode($agent->user->name) }}" class="button button--orange">Contact Agent</a>
+                            <a href="{{ route('agents.show', $agent) }}#agent-contact" class="button button--orange">Contact Agent</a>
                         </div>
                     </div>
                 </article>

@@ -10,7 +10,7 @@
         <div class="phb-copy phb-copy--split">
             <span class="eyebrow phb-eyebrow">Premium Real Estate Lead Engine</span>
             <h1 class="phb-copy__headline">Simple, transparent pricing for serious agents</h1>
-            <p class="phb-copy__sub">ISA-qualified, sales-backed leads with clear packages, optional virtual assistance, and rapid onboarding.</p>
+            <p class="phb-copy__sub">ISA-qualified, sales-backed leads with clear packages, optional virtual assistance, and a smoother GoHighLevel handoff.</p>
             <div class="phb-copy__ctas">
                 <a href="#pricing-plans" class="button button--orange">View Packages</a>
                 <a href="{{ route('contact') }}" class="button button--ghost-light">Talk to Sales</a>
@@ -100,35 +100,46 @@
         <div class="pricing-cards-grid" data-pricing-grid="pricing-page" data-category="real_estate" data-stagger>
             @foreach($pricingPlans['real_estate'] as $plan)
             @php
-                $ctaUrl = ($plan['slug'] ?? null) ? route('packages.checkout', $plan['slug']) : $onboardingUrl;
+                $ctaUrl = ($plan['slug'] ?? null) ? route('packages.checkout', $plan['slug']) : $primaryActionUrl;
                 $isFeatured = $plan['is_featured'] ?? false;
             @endphp
             <article class="pricing-pkg-card {{ $isFeatured ? 'pricing-pkg-card--featured' : '' }}">
                 @if($isFeatured)
                 <div class="pricing-pkg-card__badge">Most Popular</div>
                 @endif
-                <div class="pricing-pkg-card__head">
-                    <div class="pricing-pkg-card__meta">
-                        <span class="pricing-label">{{ $plan['tier'] }}</span>
-                        @if(!empty($plan['value_price']))
-                            <span class="pricing-card__value">Value ${{ number_format($plan['value_price']) }}</span>
-                        @endif
+
+                {{-- White Top Section --}}
+                <div class="pricing-pkg-card__top">
+                    <div class="pricing-pkg-card__head">
+                        <div class="pricing-pkg-card__meta">
+                            <span class="pricing-label">{{ $plan['tier'] }}</span>
+                            @if(!empty($plan['value_price']))
+                                <span class="pricing-card__value">Value ${{ number_format($plan['value_price']) }}</span>
+                            @endif
+                        </div>
+                        <h3 class="pricing-pkg-card__name">{{ $plan['name'] }}</h3>
+                        <p class="pricing-pkg-card__tagline">{{ $plan['summary'] }}</p>
                     </div>
-                    <h3 class="pricing-pkg-card__name">{{ $plan['name'] }}</h3>
-                    <p class="pricing-pkg-card__tagline">{{ $plan['summary'] }}</p>
+                    <div class="pricing-pkg-card__price">
+                        <strong class="ppc-price-amount">${{ number_format($plan['price']) }}</strong>
+                        <span class="ppc-price-period">/{{ explode(' ', $plan['price_note'])[0] ?? 'month' }}</span>
+                    </div>
                 </div>
-                <div class="pricing-pkg-card__price">
-                    <strong class="ppc-price-amount">${{ number_format($plan['price']) }}</strong>
-                    <span class="ppc-price-period">{{ $plan['price_note'] }}</span>
-                </div>
-                <ul class="feature-check-list pricing-pkg-card__features">
-                    @foreach($plan['features'] as $feature)
-                    <li>{{ $feature }}</li>
-                    @endforeach
-                </ul>
-                <div class="pricing-pkg-card__actions">
-                    <a href="{{ $ctaUrl }}" class="button {{ $isFeatured ? 'button--orange' : 'button--blue' }} w-full">{{ $plan['cta_label'] ?? 'Get Started' }}</a>
-                    <a href="{{ route('contact', ['plan' => $plan['name']]) }}" class="ppc-form-link">Talk to sales about {{ $plan['name'] }}</a>
+
+                {{-- Colored Bottom Section --}}
+                <div class="pricing-pkg-card__bottom">
+                    <ul class="feature-check-list pricing-pkg-card__features">
+                        @foreach($plan['features'] as $feature)
+                        <li>{{ $feature }}</li>
+                        @endforeach
+                    </ul>
+                    <div class="pricing-pkg-card__actions">
+                        <a href="{{ $ctaUrl }}" class="button {{ $isFeatured ? 'button--orange' : 'button--outline-white' }} w-full">
+                            {{ $plan['cta_label'] ?? 'Get Started' }}
+                            <span class="ppc-btn-icon">→</span>
+                        </a>
+                        <a href="{{ route('contact', ['plan' => $plan['name']]) }}" class="ppc-form-link">Talk to sales about {{ $plan['name'] }}</a>
+                    </div>
                 </div>
             </article>
             @endforeach
@@ -144,24 +155,35 @@
                 @if($isFeatured)
                 <div class="pricing-pkg-card__badge">Top Pick</div>
                 @endif
-                <div class="pricing-pkg-card__head">
-                    <div class="pricing-pkg-card__meta">
-                        <span class="pricing-label">{{ $plan['tier'] }}</span>
+
+                {{-- White Top Section --}}
+                <div class="pricing-pkg-card__top">
+                    <div class="pricing-pkg-card__head">
+                        <div class="pricing-pkg-card__meta">
+                            <span class="pricing-label">{{ $plan['tier'] }}</span>
+                        </div>
+                        <h3 class="pricing-pkg-card__name">{{ $plan['name'] }}</h3>
+                        <p class="pricing-pkg-card__tagline">{{ $plan['summary'] }}</p>
                     </div>
-                    <h3 class="pricing-pkg-card__name">{{ $plan['name'] }}</h3>
-                    <p class="pricing-pkg-card__tagline">{{ $plan['summary'] }}</p>
+                    <div class="pricing-pkg-card__price">
+                        <strong class="ppc-price-amount">${{ number_format($plan['price']) }}</strong>
+                        <span class="ppc-price-period">/{{ explode(' ', $plan['price_note'])[0] ?? 'month' }}</span>
+                    </div>
                 </div>
-                <div class="pricing-pkg-card__price">
-                    <strong class="ppc-price-amount">${{ number_format($plan['price']) }}</strong>
-                    <span class="ppc-price-period">{{ $plan['price_note'] }}</span>
-                </div>
-                <ul class="feature-check-list pricing-pkg-card__features">
-                    @foreach($plan['features'] as $feature)
-                    <li>{{ $feature }}</li>
-                    @endforeach
-                </ul>
-                <div class="pricing-pkg-card__actions">
-                    <a href="{{ $ctaUrl }}" class="button {{ $isFeatured ? 'button--orange' : 'button--blue' }} w-full">{{ $plan['cta_label'] ?? 'Get Started' }}</a>
+
+                {{-- Colored Bottom Section --}}
+                <div class="pricing-pkg-card__bottom">
+                    <ul class="feature-check-list pricing-pkg-card__features">
+                        @foreach($plan['features'] as $feature)
+                        <li>{{ $feature }}</li>
+                        @endforeach
+                    </ul>
+                    <div class="pricing-pkg-card__actions">
+                        <a href="{{ $ctaUrl }}" class="button {{ $isFeatured ? 'button--orange' : 'button--outline-white' }} w-full">
+                            {{ $plan['cta_label'] ?? 'Get Started' }}
+                            <span class="ppc-btn-icon">→</span>
+                        </a>
+                    </div>
                 </div>
             </article>
             @endforeach
@@ -241,10 +263,10 @@
         <div class="pfc-inner" data-animate="up">
             <div class="pfc-copy">
                 <h2>Ready to grow your book of business?</h2>
-                <p>Pick a package above, or talk to our sales team for a personalized recommendation.</p>
+                <p>Pick a package above, or talk to our sales team for a personalized recommendation. GoHighLevel handles the post-purchase setup automatically.</p>
             </div>
             <div class="pfc-actions">
-                <a href="{{ $onboardingUrl }}" class="button button--orange">Start Today</a>
+                <a href="{{ $primaryActionUrl }}" class="button button--orange">{{ $primaryActionLabel }}</a>
                 <a href="{{ route('contact') }}" class="button button--ghost-light">Talk to Sales</a>
             </div>
         </div>

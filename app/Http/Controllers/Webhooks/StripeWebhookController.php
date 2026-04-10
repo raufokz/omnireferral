@@ -46,7 +46,7 @@ class StripeWebhookController extends Controller
                 ])->save();
 
                 if ($package) {
-                    $user->notify(new PackagePurchasedNotification($package, route('onboarding', 'agent')));
+                    $user->notify(new PackagePurchasedNotification($package, route('login')));
                 }
             }
         }

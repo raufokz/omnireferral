@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Lead;
-use App\Models\RealtorProfile;
 use App\Models\User;
 use App\Services\LeadRoutingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,9 +13,8 @@ class LeadRoutingTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_it_routes_to_agent_in_matching_zip_code(): void
+    public function test_it_does_not_auto_assign_matching_zip_lead(): void
     {
-        // 1. Setup active Agent User
         $agentUser = User::create([
             'name' => 'Agent Test',
             'email' => 'agent@test.com',
@@ -25,16 +23,6 @@ class LeadRoutingTest extends TestCase
             'status' => 'active',
         ]);
 
-        RealtorProfile::create([
-            'user_id' => $agentUser->id,
-            'slug' => Str::slug($agentUser->name),
-            'brokerage_name' => 'Test Brokerage',
-            'zip_code' => '75201',
-            'city' => 'Dallas',
-            'state' => 'TX',
-        ]);
-
-        // 2. Setup Lead in same ZIP
         $lead = Lead::create([
             'lead_number' => 'LD-' . Str::random(6),
             'intent' => 'buyer',
@@ -47,20 +35,17 @@ class LeadRoutingTest extends TestCase
             'source' => 'website',
         ]);
 
-        // 3. Execute Routing
         $service = new LeadRoutingService();
         $assignedUser = $service->routeLead($lead);
 
-        // 4. Assertions
-        $this->assertNotNull($assignedUser);
-        $this->assertEquals($agentUser->id, $assignedUser->id);
+        $this->assertNull($assignedUser);
 
         $lead->refresh();
-        $this->assertEquals('assigned', $lead->status);
-        $this->assertEquals($agentUser->id, $lead->assigned_agent_id);
+        $this->assertSame('new', $lead->status);
+        $this->assertNull($lead->assigned_agent_id);
     }
 
-    public function test_it_does_not_route_already_assigned_lead(): void
+    public function test_it_returns_existing_assigned_agent_without_reassigning(): void
     {
         $agentUser = User::create([
             'name' => 'Agent Test 2',

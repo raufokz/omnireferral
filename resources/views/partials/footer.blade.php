@@ -57,6 +57,9 @@
             <h3>Legal</h3>
             <a href="{{ route('privacy') }}">Privacy Policy</a>
             <a href="{{ route('terms') }}">Terms of Service</a>
+            <a href="{{ route('payment.policy') }}">Payment &amp; Cancellation</a>
+            <a href="{{ route('scam.prevention') }}">Scam Prevention</a>
+            <a href="{{ route('communication.policy') }}">Communication Policy</a>
             <a href="{{ route('privacy') }}#cookies">Cookie Policy</a>
             <a href="{{ route('privacy') }}#accessibility">Accessibility</a>
             <a href="{{ route('sitemap') }}">Sitemap</a>
@@ -67,6 +70,9 @@
         <div class="footer-legal-links">
             <a href="{{ route('privacy') }}">Privacy</a>
             <a href="{{ route('terms') }}">Terms</a>
+            <a href="{{ route('payment.policy') }}">Payments</a>
+            <a href="{{ route('scam.prevention') }}">Scam Prevention</a>
+            <a href="{{ route('communication.policy') }}">Communication</a>
             <a href="{{ route('privacy') }}#cookies">Cookies</a>
             <a href="{{ route('privacy') }}#accessibility">Accessibility</a>
             <a href="{{ route('sitemap') }}">Sitemap</a>

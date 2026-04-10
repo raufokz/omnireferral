@@ -12,6 +12,10 @@
     font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
+[x-cloak] {
+    display: none !important;
+}
+
 .auth-page-topbar {
     position: fixed;
     top: 1rem;
@@ -194,6 +198,11 @@
     gap: 1rem;
     margin-bottom: 1.5rem;
 }
+
+.user-type-grid--register {
+    grid-template-columns: repeat(3, 1fr);
+}
+
 .ut-card {
     border: 1px solid #E2E8F0;
     border-radius: 10px;
@@ -232,10 +241,80 @@
     color: #FF6000;
 }
 
+.auth-role-helper {
+    margin: -0.5rem 0 1.35rem;
+    color: #64748B;
+    font-size: 0.82rem;
+    line-height: 1.6;
+}
+
+.auth-error-summary {
+    margin-bottom: 1.2rem;
+    padding: 1rem 1.05rem;
+    border-radius: 12px;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #991B1B;
+}
+
+.auth-error-summary strong {
+    display: block;
+    margin-bottom: 0.45rem;
+    font-size: 0.88rem;
+}
+
+.auth-error-summary ul {
+    margin: 0;
+    padding-left: 1rem;
+    font-size: 0.82rem;
+    line-height: 1.55;
+}
+
+.auth-section-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.2rem 0 1rem;
+}
+
+.auth-section-divider::before,
+.auth-section-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #E2E8F0;
+}
+
+.auth-section-divider span {
+    color: #64748B;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.auth-form-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.auth-form-grid--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 /* Forms */
 .form-group {
     margin-bottom: 1.25rem;
 }
+
+.auth-form-grid .form-group {
+    margin-bottom: 0;
+}
+
+.form-group--full {
+    grid-column: 1 / -1;
+}
+
 .form-group label {
     display: block;
     font-size: 0.75rem;
@@ -243,7 +322,9 @@
     color: #334155;
     margin-bottom: 0.4rem;
 }
-.form-group input {
+
+.form-group input,
+.form-group select {
     width: 100%;
     padding: 0.85rem 1rem;
     border: 1.5px solid #F1F5F9;
@@ -254,13 +335,39 @@
     font-weight: 500;
     transition: all 0.2s;
 }
-.form-group input::placeholder {
+
+.form-group input::placeholder,
+.form-group select::placeholder {
     color: #94A3B8;
 }
-.form-group input:focus {
+
+.form-group input:focus,
+.form-group select:focus {
     outline: none;
     border-color: #FF6000;
     box-shadow: 0 0 0 4px rgba(255, 96, 0, 0.1);
+}
+
+.auth-upload-panel {
+    padding: 1rem;
+    border: 1.5px dashed #CBD5E1;
+    border-radius: 12px;
+    background: #F8FAFC;
+}
+
+.auth-upload-panel input[type="file"] {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.auth-upload-panel small {
+    display: block;
+    margin-top: 0.55rem;
+    color: #64748B;
+    font-size: 0.75rem;
+    line-height: 1.5;
 }
 
 .btn-submit {
@@ -340,5 +447,10 @@
     .auth-page-topbar__close {
         width: 42px;
         height: 42px;
+    }
+
+    .user-type-grid--register,
+    .auth-form-grid--two {
+        grid-template-columns: 1fr;
     }
 }

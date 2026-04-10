@@ -9,6 +9,7 @@ Alpine.start();
 // --- Configuration & Helpers ---
 const HEADER_OFFSET = 24;
 const SCROLL_THRESHOLD = 24;
+const MOBILE_NAV_BREAKPOINT = 1100;
 
 const showToast = (message, type = 'info', duration = 5000) => {
     let container = document.getElementById('toast-container');
@@ -42,45 +43,98 @@ const showToast = (message, type = 'info', duration = 5000) => {
 window.showToast = showToast;
 
 // --- DOM elements ---
-const siteHeader = document.getElementById('siteHeader');
+const siteHeader = document.getElementById('siteHeader') || document.querySelector('.site-header');
 const menuToggle = document.getElementById('menuToggle');
 const mainNav = document.getElementById('mainNav');
+const navDropdowns = Array.from(document.querySelectorAll('[data-nav-dropdown]'));
 
 // --- Header & Navigation Logic ---
-if (siteHeader) {
-    let lastScrollY = window.scrollY;
-    let ticking = false;
-
-    const updateHeader = () => {
-        const scrollY = window.scrollY;
-        siteHeader.classList.toggle('is-scrolled', scrollY > SCROLL_THRESHOLD);
-        lastScrollY = scrollY;
-        ticking = false;
-    };
-
-    window.addEventListener('scroll', () => {
-        if (!ticking) {
-            requestAnimationFrame(updateHeader);
-            ticking = true;
-        }
-    }, { passive: true });
-
-    updateHeader();
-}
+// Scroll effect removed as per request.
 
 if (menuToggle && mainNav) {
+    const closeNavDropdowns = () => {
+        navDropdowns.forEach((dropdown) => {
+            dropdown.classList.remove('is-open');
+            dropdown.querySelector('[data-nav-submenu-toggle]')?.setAttribute('aria-expanded', 'false');
+        });
+    };
+
     const toggleMenu = (open) => {
         const isOpen = typeof open === 'boolean' ? open : !mainNav.classList.contains('is-open');
         mainNav.classList.toggle('is-open', isOpen);
         menuToggle.classList.toggle('is-open', isOpen);
         menuToggle.setAttribute('aria-expanded', isOpen);
+        document.body.classList.toggle('menu-open', isOpen);
         document.body.style.overflow = isOpen ? 'hidden' : '';
+
+        if (!isOpen) {
+            closeNavDropdowns();
+        }
     };
 
     menuToggle.addEventListener('click', toggleMenu);
     mainNav.querySelectorAll('a').forEach(link => link.addEventListener('click', () => toggleMenu(false)));
     document.addEventListener('keydown', e => e.key === 'Escape' && toggleMenu(false));
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > MOBILE_NAV_BREAKPOINT) {
+            toggleMenu(false);
+        }
+    });
 }
+
+const initNavDropdowns = () => {
+    if (!navDropdowns.length) return;
+
+    const closeDropdowns = (except = null) => {
+        navDropdowns.forEach((dropdown) => {
+            if (dropdown === except) return;
+            dropdown.classList.remove('is-open');
+            dropdown.querySelector('[data-nav-submenu-toggle]')?.setAttribute('aria-expanded', 'false');
+        });
+    };
+
+    navDropdowns.forEach((dropdown) => {
+        const toggle = dropdown.querySelector('[data-nav-submenu-toggle]');
+        if (!toggle) return;
+
+        const setOpen = (open) => {
+            dropdown.classList.toggle('is-open', open);
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        };
+
+        toggle.addEventListener('click', (event) => {
+            event.preventDefault();
+            const shouldOpen = !dropdown.classList.contains('is-open');
+            closeDropdowns(dropdown);
+            setOpen(shouldOpen);
+        });
+
+        dropdown.addEventListener('mouseenter', () => {
+            if (window.innerWidth > MOBILE_NAV_BREAKPOINT) {
+                closeDropdowns(dropdown);
+                setOpen(true);
+            }
+        });
+
+        dropdown.addEventListener('mouseleave', () => {
+            if (window.innerWidth > MOBILE_NAV_BREAKPOINT) {
+                setOpen(false);
+            }
+        });
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!navDropdowns.some((dropdown) => dropdown.contains(event.target))) {
+            closeDropdowns();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeDropdowns();
+        }
+    });
+};
 
 // --- Smooth Scrolling ---
 const scrollToHash = (hash) => {
@@ -327,6 +381,88 @@ const initEmbedLoaders = () => {
     });
 };
 
+const initCarousels = () => {
+    document.querySelectorAll('[data-carousel]').forEach((carousel) => {
+        const track = carousel.querySelector('.testimonial-track');
+        const cards = Array.from(track?.querySelectorAll('.testimonial-card') ?? []);
+        const prevButton = carousel.querySelector('[data-carousel-prev]');
+        const nextButton = carousel.querySelector('[data-carousel-next]');
+        const status = carousel.querySelector('[data-carousel-status]');
+        const progress = carousel.querySelector('[data-carousel-progress]');
+
+        if (!track || cards.length === 0) return;
+
+        let currentIndex = 0;
+        let autoRotate = null;
+
+        const visibleCount = () => {
+            if (window.innerWidth <= 700) return 1;
+            if (window.innerWidth <= 1100) return 2;
+            return 3;
+        };
+
+        const maxIndex = () => Math.max(cards.length - visibleCount(), 0);
+
+        const slideWidth = () => {
+            const cardWidth = cards[0].getBoundingClientRect().width;
+            const gap = parseFloat(window.getComputedStyle(track).gap || '0');
+            return cardWidth + gap;
+        };
+
+        const render = () => {
+            currentIndex = Math.min(currentIndex, maxIndex());
+            track.style.transform = `translateX(-${currentIndex * slideWidth()}px)`;
+
+            if (prevButton) {
+                prevButton.disabled = currentIndex === 0;
+            }
+
+            if (nextButton) {
+                nextButton.disabled = currentIndex >= maxIndex();
+            }
+
+            if (status) {
+                const pages = Math.max(cards.length - visibleCount() + 1, 1);
+                status.textContent = `${Math.min(currentIndex + 1, pages)} / ${pages}`;
+
+                if (progress) {
+                    const completion = pages <= 1 ? 1 : currentIndex / (pages - 1);
+                    progress.style.width = `${Math.max(completion * 100, 12)}%`;
+                }
+            }
+        };
+
+        const startAutoRotate = () => {
+            if (cards.length <= visibleCount()) return;
+
+            window.clearInterval(autoRotate);
+            autoRotate = window.setInterval(() => {
+                currentIndex = currentIndex >= maxIndex() ? 0 : currentIndex + 1;
+                render();
+            }, 5200);
+        };
+
+        prevButton?.addEventListener('click', () => {
+            currentIndex = Math.max(currentIndex - 1, 0);
+            render();
+            startAutoRotate();
+        });
+
+        nextButton?.addEventListener('click', () => {
+            currentIndex = Math.min(currentIndex + 1, maxIndex());
+            render();
+            startAutoRotate();
+        });
+
+        carousel.addEventListener('mouseenter', () => window.clearInterval(autoRotate));
+        carousel.addEventListener('mouseleave', startAutoRotate);
+        window.addEventListener('resize', render, { passive: true });
+
+        render();
+        startAutoRotate();
+    });
+};
+
 // --- Multi-Step Forms ---
 document.querySelectorAll('[data-multi-step]').forEach(form => {
     const steps = Array.from(form.querySelectorAll('.form-step'));
@@ -390,9 +526,11 @@ window.initHomeMap = () => {
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
     initAnimations();
+    initNavDropdowns();
     initTabSwitchers();
     initAgentDirectoryFilters();
     initEmbedLoaders();
+    initCarousels();
     if (window.initHomeMap) window.initHomeMap();
 
     // Lazy load images

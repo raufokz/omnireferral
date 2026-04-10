@@ -15,13 +15,15 @@ class PricingController extends Controller
     public function index(): View
     {
         $packageEmbeds = $this->packageEmbeds();
+        $primaryCta = $this->primaryAction();
 
         return view('pages.pricing', [
             'leadPackages' => Package::active()->leadPlans()->orderBy('sort_order')->orderBy('one_time_price')->get(),
             'assistantPackages' => Package::active()->assistantPlans()->orderBy('sort_order')->orderBy('monthly_price')->get(),
             'pricingPlans' => PricingContent::plans(),
             'packageEmbeds' => $packageEmbeds,
-            'onboardingUrl' => route('client.form.submission', ['role' => 'agent']),
+            'primaryActionUrl' => $primaryCta['url'],
+            'primaryActionLabel' => $primaryCta['label'],
             'meta' => [
                 'title' => 'Pricing | OmniReferral Lead Packages and Virtual Assistant Plans',
                 'description' => 'Compare Quick, Power, and Prime lead packages plus virtual assistant services built for busy real estate professionals.',
@@ -31,16 +33,51 @@ class PricingController extends Controller
 
     public function checkout(Package $package): View
     {
+        $pricingPlan = PricingContent::planBySlug($package->slug);
         $packageEmbed = $this->packageEmbeds()[$package->slug] ?? null;
+        $postPurchaseAction = $this->postPurchaseAction();
+        $packageDisplay = [
+            'name' => $pricingPlan['name'] ?? $package->name,
+            'tier' => $pricingPlan['tier'] ?? ($package->category === 'lead' ? 'Lead Package' : 'Virtual Assistance'),
+            'summary' => $pricingPlan['summary'] ?? $package->description,
+            'price_note' => $pricingPlan['price_note'] ?? ($package->one_time_price ? '/ One-Time' : '/ Monthly'),
+            'features' => $pricingPlan['features'] ?? ($package->features ?? []),
+            'value_price' => $pricingPlan['value_price'] ?? null,
+        ];
+        $packageEmbed = [
+            'title' => $packageEmbed['title'] ?? $packageDisplay['name'],
+            'src' => $packageEmbed['src'] ?? $package->ghl_form_url,
+            'description' => $packageEmbed['description']
+                ?? ($packageDisplay['summary'] ?: 'Complete the follow-up setup form after payment to help OmniReferral provision your workspace correctly.'),
+        ];
+        $billingOptions = collect([
+            $package->one_time_price ? [
+                'key' => 'one_time',
+                'label' => 'Pay One-Time',
+                'amount' => $package->one_time_price,
+                'note' => 'Secure one-time checkout for the selected package.',
+                'button' => 'button--orange',
+            ] : null,
+            $package->monthly_price ? [
+                'key' => 'monthly',
+                'label' => 'Subscribe Monthly',
+                'amount' => $package->monthly_price,
+                'note' => 'Recurring billing for ongoing access and support.',
+                'button' => 'button--ghost-blue',
+            ] : null,
+        ])->filter()->values();
 
         return view('pages.package-checkout', [
             'package' => $package,
+            'packageDisplay' => $packageDisplay,
             'packageEmbed' => $packageEmbed,
+            'billingOptions' => $billingOptions,
             'stripeEnabled' => (bool) config('services.stripe.secret'),
-            'onboardingUrl' => route('client.form.submission', ['role' => 'agent']),
+            'postPurchaseActionUrl' => $postPurchaseAction['url'],
+            'postPurchaseActionLabel' => $postPurchaseAction['label'],
             'meta' => [
-                'title' => $package->name . ' Checkout | OmniReferral',
-                'description' => 'Continue to payment and onboarding for the ' . $package->name . ' package.',
+                'title' => $packageDisplay['name'] . ' Checkout | OmniReferral',
+                'description' => 'Continue to payment and post-purchase setup for the ' . $packageDisplay['name'] . ' package.',
             ],
         ]);
     }
@@ -69,13 +106,16 @@ class PricingController extends Controller
 
     public function success(Package $package): View
     {
+        $postPurchaseAction = $this->postPurchaseAction();
+
         return view('pages.package-success', [
             'package' => $package,
             'sessionId' => request()->string('session_id')->value(),
-            'onboardingUrl' => route('client.form.submission', ['role' => 'agent']),
+            'postPurchaseActionUrl' => $postPurchaseAction['url'],
+            'postPurchaseActionLabel' => $postPurchaseAction['label'],
             'meta' => [
                 'title' => 'Payment Success | OmniReferral',
-                'description' => 'Welcome aboard! Your OmniReferral package is ready and onboarding can begin.',
+                'description' => 'Welcome aboard! Your OmniReferral package is ready and your next access step is available.',
             ],
         ]);
     }
@@ -86,7 +126,7 @@ class PricingController extends Controller
             'quick-leads' => [
                 'title' => 'Quick Package',
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/6VrZG7vbNueWG6hoqYru',
-                'description' => 'Start with a lighter lead package and move into onboarding once the form is complete.',
+                'description' => 'Start with a lighter lead package and let GoHighLevel handle the follow-up setup after the form is complete.',
             ],
             'power-leads' => [
                 'title' => 'Power Package',
@@ -108,6 +148,40 @@ class PricingController extends Controller
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/ye7sDOoYsZaiCNjWRARI',
                 'description' => 'A monthly campaign package for visibility, nurture, and stronger brand support.',
             ],
+        ];
+    }
+
+    private function primaryAction(): array
+    {
+        $user = Auth::user();
+
+        if ($user) {
+            return [
+                'url' => $user->dashboardRoute(),
+                'label' => 'Open Dashboard',
+            ];
+        }
+
+        return [
+            'url' => route('register'),
+            'label' => 'Start Today',
+        ];
+    }
+
+    private function postPurchaseAction(): array
+    {
+        $user = Auth::user();
+
+        if ($user) {
+            return [
+                'url' => $user->dashboardRoute(),
+                'label' => 'Open Dashboard',
+            ];
+        }
+
+        return [
+            'url' => route('login'),
+            'label' => 'Go To Login',
         ];
     }
 }

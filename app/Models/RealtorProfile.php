@@ -12,7 +12,7 @@ class RealtorProfile extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'slug', 'brokerage_name', 'city', 'state', 'zip_code', 'rating', 'review_count', 'leads_closed', 'specialties', 'bio', 'headshot',
+        'user_id', 'slug', 'brokerage_name', 'license_number', 'address_line_1', 'address_line_2', 'city', 'state', 'zip_code', 'rating', 'review_count', 'leads_closed', 'specialties', 'bio', 'headshot',
     ];
 
     public function getRouteKeyName(): string
@@ -28,5 +28,10 @@ class RealtorProfile extends Model
     public function properties(): HasMany
     {
         return $this->hasMany(Property::class);
+    }
+
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(Contact::class);
     }
 }

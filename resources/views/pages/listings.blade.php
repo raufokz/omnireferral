@@ -1,8 +1,10 @@
 @extends('layouts.app')
 @section('content')
 @php
-    $propertyCollection = method_exists($properties, 'getCollection') ? $properties->getCollection() : collect($properties);
-    $listingCount = method_exists($properties, 'total') ? $properties->total() : $properties->count();
+    $propertyCollection = (method_exists($properties, 'getCollection') ? $properties->getCollection() : collect($properties))
+        ->filter(fn ($property) => $property->approval_status === \App\Models\Property::APPROVAL_APPROVED && $property->status === 'Active')
+        ->values();
+    $listingCount = $propertyCollection->count();
     $zipMarketCount = $propertyCollection->pluck('zip_code')->filter()->unique()->count();
     $propertyTypeCount = $propertyCollection->pluck('property_type')->filter()->unique()->count();
 @endphp
@@ -66,7 +68,7 @@
             <div class="listings-results-bar">
                 <div>
                     <h2 class="listings-results-bar__title">Featured Listings</h2>
-                    <p class="listings-results-bar__count" id="visibleCount">Showing {{ $properties->count() }} properties</p>
+                    <p class="listings-results-bar__count" id="visibleCount">Showing {{ $propertyCollection->count() }} properties</p>
                 </div>
                 <div class="listings-sort-row">
                     <label for="listingSort">Sort:</label>
@@ -80,7 +82,7 @@
 
             {{-- Cards grid --}}
             <div class="listing-cards-grid" id="listingGrid" data-stagger>
-                @forelse($properties as $property)
+                @forelse($propertyCollection as $property)
                     <article
                         class="lc-card"
                         data-listing-card
@@ -124,7 +126,7 @@
                                 <span class="lc-card__agent">Listed by {{ optional(optional($property->realtorProfile)->user)->name ?? 'OmniPartner' }}</span>
                                 <div class="lc-card__actions">
                                     <a href="{{ route('properties.show', $property) }}" class="button button--ghost-blue">Details</a>
-                                    <a href="{{ route('contact') }}?property={{ urlencode($property->title) }}" class="button button--orange">Contact</a>
+                                    <a href="{{ route('properties.show', $property) }}#property-contact" class="button button--orange">Contact Agent</a>
                                 </div>
                             </div>
                         </div>
