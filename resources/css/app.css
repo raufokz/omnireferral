@@ -6035,49 +6035,24 @@ body {
 }
 
 .faq-hero {
-    position: relative;
-    overflow: hidden;
-    padding: clamp(5rem, 9vw, 7rem) 0 3.75rem;
-    background:
-        radial-gradient(circle at top right, rgba(255, 255, 255, 0.12), transparent 20%),
-        radial-gradient(circle at top left, rgba(255, 122, 0, 0.18), transparent 28%),
-        linear-gradient(135deg, #071833 0%, #0e2a53 52%, #15437f 100%);
-    color: #fff;
+    isolation: isolate;
 }
 
 .faq-hero::after {
-    content: "";
-    position: absolute;
-    inset: auto -10% -30% auto;
-    width: 320px;
-    height: 320px;
-    border-radius: 999px;
-    background: radial-gradient(circle, rgba(255, 122, 0, 0.16), transparent 68%);
-    pointer-events: none;
+    display: none;
 }
 
-.faq-hero .page-hero__content {
-    position: relative;
-    z-index: 1;
+.faq-hero__panel {
     display: grid;
-    gap: 1.1rem;
+    gap: 1rem;
 }
 
-.faq-hero h1 {
-    max-width: 12ch;
-    font-size: clamp(2.6rem, 4.8vw, 4.4rem);
-    line-height: 0.94;
-    letter-spacing: -0.04em;
-    margin: 0;
-    color: #fff;
+.faq-hero .agent-directory-hero__copy h1 {
+    max-width: 12.5ch;
 }
 
-.faq-hero p {
-    max-width: 62ch;
-    margin: 0;
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 1.02rem;
-    line-height: 1.75;
+.faq-hero .agent-directory-hero__copy p {
+    max-width: 63ch;
 }
 
 .faq-page__quick-links {
@@ -6086,15 +6061,25 @@ body {
     gap: 0.75rem;
 }
 
-.faq-page__quick-links a {
+.faq-hero .faq-page__quick-links a {
     display: inline-flex;
     align-items: center;
-    padding: 0.65rem 1rem;
+    padding: 0.55rem 0.9rem;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    color: #fff;
-    font-weight: 700;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.86rem;
+    font-weight: 600;
+}
+
+.faq-hero .faq-page__quick-links a:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.24);
+}
+
+.faq-hero__stats {
+    align-items: stretch;
 }
 
 .faq-section {
@@ -10187,10 +10172,49 @@ small {
     color: #cbd5e1;
 }
 
+.listing-card__save-group {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    z-index: 10;
+    display: grid;
+    justify-items: center;
+    gap: 0.35rem;
+}
+
+.listing-card__save-form {
+    margin: 0;
+}
+
+.listing-card__save-group .listing-card__save {
+    position: static;
+    top: auto;
+    right: auto;
+}
+
+.listing-card__save.is-active {
+    background: #ffffff;
+    color: #ef4444;
+    box-shadow: 0 12px 26px rgba(239, 68, 68, 0.2);
+}
+
 .listing-card__save:hover {
     background: #ffffff;
     color: #ef4444;
     transform: scale(1.1);
+}
+
+.listing-card__save-count {
+    min-width: 2rem;
+    padding: 0.3rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--color-brand-blue);
+    font-size: 0.75rem;
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
 }
 
 .listing-card__price-badge {
@@ -10287,6 +10311,7 @@ small {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    min-width: 0;
 }
 
 .listing-agent-mini small {
@@ -10295,10 +10320,18 @@ small {
     color: var(--color-text-soft);
 }
 
+.listing-agent-mini > div {
+    min-width: 0;
+}
+
 .listing-agent-mini p {
     font-weight: 700;
     font-size: 0.9rem;
     color: var(--color-heading);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .listing-card__actions {
@@ -12056,9 +12089,48 @@ small {
     box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
 }
 
+.lc-card__save-group {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 3;
+    display: grid;
+    justify-items: center;
+    gap: 0.3rem;
+}
+
+.lc-card__save-form {
+    margin: 0;
+}
+
+.lc-card__save-group .lc-card__save {
+    position: static;
+    top: auto;
+    right: auto;
+}
+
+.lc-card__save.is-active {
+    color: var(--color-primary);
+    background: #fff;
+    box-shadow: 0 10px 22px rgba(255, 107, 0, 0.18);
+}
+
 .lc-card__save:hover {
     color: var(--color-primary);
     transform: scale(1.1);
+}
+
+.lc-card__save-count {
+    min-width: 1.9rem;
+    padding: 0.28rem 0.45rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.94);
+    color: var(--color-brand-blue);
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1;
+    text-align: center;
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
 }
 
 .lc-card__body {
@@ -13898,7 +13970,9 @@ iframe {
     }
 
     .lc-card__agent {
-        white-space: normal;
+        white-space: nowrap !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .lc-card__meta {

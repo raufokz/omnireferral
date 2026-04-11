@@ -132,42 +132,48 @@
             ],
         ],
     ];
+    $faqSectionCount = count($faqSections);
+    $faqQuestionCount = collect($faqSections)->sum(fn ($section) => count($section['items']));
 @endphp
 
 <div class="faq-page">
-    <section class="page-hero page-hero--omni faq-hero" data-reveal>
-        <div class="container omni-page-hero__grid faq-hero__grid">
-            <div class="omni-page-hero__copy">
+    <section class="page-hero agent-directory-hero faq-hero" data-reveal>
+        <div class="agent-directory-hero__glow" aria-hidden="true"></div>
+        <div class="container agent-directory-hero__inner faq-hero__inner">
+            <div class="agent-directory-hero__copy" data-animate="left">
                 <span class="eyebrow">FAQ</span>
                 <h1>Questions we hear across the whole OmniReferral website.</h1>
                 <p>This page pulls together the main questions users ask after browsing pricing, listings, reviews, legal pages, dashboards, and checkout, so buyers, sellers, agents, and staff all start from one clearer source.</p>
-                <div class="faq-page__quick-links">
+
+                <div class="agent-directory-hero__actions">
+                    <a href="#faq-content" class="button button--orange">Browse Questions</a>
+                    <a href="{{ route('contact') }}" class="button button--ghost-light">Ask Our Team</a>
+                </div>
+
+                <div class="faq-page__quick-links agent-directory-hero__proof faq-hero__proof-links">
                     @foreach($faqSections as $section)
-                        <a href="#{{ $section['id'] }}">{{ $section['title'] }}</a>
+                        <a href="#{{ $section['id'] }}">{{ $section['eyebrow'] }}</a>
                     @endforeach
                 </div>
             </div>
 
-            <aside class="omni-page-hero__panel faq-hero__panel">
-                <span class="eyebrow">Quick Snapshot</span>
+            <aside class="agent-directory-hero__panel faq-hero__panel" data-animate="right">
+                <span class="agent-directory-hero__panel-eyebrow">Quick Snapshot</span>
                 <h2>Start with the part of the platform you are using.</h2>
                 <p>Pricing, listings, dashboards, checkout, and trust pages all connect here so users do not have to jump between multiple screens for basic answers.</p>
-                <div class="omni-page-hero__meta">
-                    <div>
-                        <span>Coverage</span>
-                        <strong>5 core question groups</strong>
+
+                <div class="agent-directory-hero__stats faq-hero__stats">
+                    <div class="agent-directory-hero__stat">
+                        <strong>{{ $faqSectionCount }}</strong>
+                        <span>Core question groups</span>
                     </div>
-                    <div>
-                        <span>Audience</span>
-                        <strong>Buyers, sellers, agents, and staff</strong>
+                    <div class="agent-directory-hero__stat">
+                        <strong>{{ $faqQuestionCount }}</strong>
+                        <span>Answers on this page</span>
                     </div>
-                    <div>
-                        <span>Related</span>
-                        <strong>Pricing, legal, reviews, and support</strong>
-                    </div>
-                    <div>
-                        <span>Next Step</span>
-                        <strong>Contact OmniReferral for anything custom</strong>
+                    <div class="agent-directory-hero__stat">
+                        <strong>4 roles</strong>
+                        <span>Buyers, sellers, agents, and staff</span>
                     </div>
                 </div>
             </aside>
@@ -218,7 +224,7 @@
                 </div>
             </aside>
 
-            <div class="faq-page__content">
+            <div class="faq-page__content" id="faq-content">
                 @foreach($faqSections as $section)
                     <section class="faq-page__section-card" id="{{ $section['id'] }}" data-reveal>
                         <div class="faq-page__section-header">

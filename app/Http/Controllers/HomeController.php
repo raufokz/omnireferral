@@ -17,6 +17,7 @@ class HomeController extends Controller
 {
     public function index(): View
     {
+        $viewer = auth()->user();
         $realtors = RealtorProfile::with('user')->get();
 
         $testimonialQuotes = [
@@ -35,7 +36,7 @@ class HomeController extends Controller
                 return [
                     'path' => $realtor->headshot,
                     'name' => $realtor->user->name,
-                    'role' => 'Realtor · ' . ($realtor->brokerage_name ?: 'OmniReferral Partner Network'),
+                    'role' => 'Realtor | ' . ($realtor->brokerage_name ?: 'OmniReferral Partner Network'),
                     'location' => $realtor->city . ', ' . $realtor->state,
                     'quote' => $testimonialQuotes[$index % count($testimonialQuotes)],
                 ];
@@ -70,7 +71,13 @@ class HomeController extends Controller
             'realtors' => $realtors->take(12),
             'blogs' => Blog::latest()->take(3)->get(),
             'team' => TeamMember::latest()->get(),
-            'properties' => Property::with('realtorProfile.user')->latest()->take(6)->get(),
+            'properties' => Property::query()
+                ->with('realtorProfile.user')
+                ->withFavoriteSummary($viewer)
+                ->marketplaceVisible()
+                ->latest()
+                ->take(6)
+                ->get(),
             'meta' => [
                 'title' => 'OmniReferral | Premium Real Estate Lead Generation for High-Performing Agents',
                 'description' => 'OmniReferral helps real estate teams grow with ISA-qualified buyer and seller leads, premium package options, and a polished referral workflow built for conversion.',
@@ -131,8 +138,15 @@ class HomeController extends Controller
 
     public function listings(): View
     {
+        $viewer = auth()->user();
+
         return view('pages.listings', [
-            'properties' => Property::with('realtorProfile.user')->latest()->get(),
+            'properties' => Property::query()
+                ->with('realtorProfile.user')
+                ->withFavoriteSummary($viewer)
+                ->marketplaceVisible()
+                ->latest()
+                ->get(),
             'meta' => [
                 'title' => 'Property Listings | OmniReferral',
                 'description' => 'Browse OmniReferral property listings by zip code, property type, and price range.',
@@ -184,20 +198,3 @@ class HomeController extends Controller
         ]);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

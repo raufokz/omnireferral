@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use App\Models\Lead;
 use App\Models\Property;
+use App\Models\PropertyFavorite;
 use App\Models\RealtorProfile;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -26,7 +27,11 @@ class PortalController extends Controller
             'agentProfile' => $profile,
             'activeAgentPage' => 'overview',
             'recentLeads' => (clone $portal['leadsQuery'])->latest()->take(5)->get(),
-            'recentProperties' => $profile->properties()->latest()->take(4)->get(),
+            'recentProperties' => $profile->properties()
+                ->withFavoriteSummary()
+                ->latest()
+                ->take(4)
+                ->get(),
             'recentMessages' => (clone $portal['messagesQuery'])->latest()->take(4)->get(),
             'meta' => [
                 'title' => 'Agent Overview | OmniReferral',
@@ -133,7 +138,10 @@ class PortalController extends Controller
             'agentUser' => $user,
             'agentProfile' => $profile,
             'activeAgentPage' => 'listings',
-            'properties' => $profile->properties()->latest()->paginate(9),
+            'properties' => $profile->properties()
+                ->withFavoriteSummary()
+                ->latest()
+                ->paginate(9),
             'meta' => [
                 'title' => 'Agent Listings | OmniReferral',
                 'description' => 'Publish and manage property listings based on your current OmniReferral package access.',
@@ -208,6 +216,9 @@ class PortalController extends Controller
         $totalLeads = (clone $leadsQuery)->count();
         $contactedLeads = (clone $leadsQuery)->whereIn('status', ['contacted', 'qualified', 'closed'])->count();
         $totalMessages = (clone $messagesQuery)->count();
+        $totalFavoritesReceived = PropertyFavorite::query()
+            ->whereHas('property', fn ($query) => $query->where('realtor_profile_id', $profile->id))
+            ->count();
 
         $pipeline = [
             ['label' => 'New', 'count' => (clone $leadsQuery)->where('status', 'new')->count()],
@@ -233,6 +244,7 @@ class PortalController extends Controller
                 'canCreateListings' => $listingLimit > 0 && $remainingListingSlots > 0,
                 'totalMessagesCount' => $totalMessages,
                 'unreadMessagesCount' => (clone $messagesQuery)->where('message_status', 'new')->count(),
+                'totalFavoritesReceived' => $totalFavoritesReceived,
                 'pipeline' => $pipeline,
                 'agentStats' => [
                     'score' => number_format((float) ($profile->rating ?? 4.9), 1),

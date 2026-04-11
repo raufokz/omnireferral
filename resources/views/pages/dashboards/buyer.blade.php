@@ -240,6 +240,7 @@
                                     <span>{{ $property->beds }} bd</span>
                                     <span>{{ $property->baths }} ba</span>
                                     <span>{{ number_format($property->sqft) }} sqft</span>
+                                    <span>{{ number_format($property->favorites_count ?? 0) }} saves</span>
                                 </div>
                                 <div class="or-dashboard__listing-actions">
                                     <a href="{{ route('properties.show', $property) }}" class="button button--ghost-blue">View Listing</a>

@@ -101,7 +101,17 @@ class DashboardController extends Controller
 
     public function buyer(): View
     {
-        $properties = Property::with('realtorProfile.user')->marketplaceVisible()->latest()->take(6)->get();
+        $buyer = Auth::user();
+        $favoritePropertiesQuery = $buyer
+            ? $buyer->favoriteProperties()
+                ->with('realtorProfile.user')
+                ->withFavoriteSummary($buyer)
+                ->marketplaceVisible()
+            : Property::query()->whereRaw('1 = 0');
+        $properties = $favoritePropertiesQuery
+            ->orderByPivot('created_at', 'desc')
+            ->take(6)
+            ->get();
         $buyerRequests = Lead::where('intent', 'buyer')->latest()->take(5)->get();
         $buyerJourney = [
             ['label' => 'Submitted', 'count' => Lead::where('intent', 'buyer')->whereIn('status', ['new', 'contacted'])->count()],
@@ -109,14 +119,15 @@ class DashboardController extends Controller
             ['label' => 'Agent Match', 'count' => Lead::where('intent', 'buyer')->where('status', 'assigned')->count()],
             ['label' => 'Closed', 'count' => Lead::where('intent', 'buyer')->where('status', 'closed')->count()],
         ];
+        $favoriteCount = $buyer ? $buyer->propertyFavorites()->count() : 0;
 
         return view('pages.dashboards.buyer', [
             'properties' => $properties,
             'buyerRequests' => $buyerRequests,
             'buyerJourney' => $buyerJourney,
             'buyerStats' => [
-                'saved_listings' => $properties->count(),
-                'favorites' => min(4, $properties->count()),
+                'saved_listings' => $favoriteCount,
+                'favorites' => $favoriteCount,
                 'saved_searches' => 3,
                 'new_alerts' => Lead::where('intent', 'buyer')->count(),
             ],

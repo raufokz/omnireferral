@@ -149,6 +149,7 @@ Route::post('/webhooks/stripe', StripeWebhookController::class)
 Route::middleware(['auth'])->group(function () {
     Route::get('/account/security', [SecurityController::class, 'show'])->name('account.security');
     Route::post('/account/password', [SecurityController::class, 'updatePassword'])->name('account.password.update');
+    Route::post('/properties/{property}/favorite', [PropertyController::class, 'toggleFavorite'])->name('properties.favorite.toggle');
 
     Route::middleware(['must_reset_password'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

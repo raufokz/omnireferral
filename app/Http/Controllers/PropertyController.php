@@ -15,14 +15,26 @@ class PropertyController extends Controller
 {
     public function show(Property $property): View
     {
+        $viewer = Auth::user();
+
         abort_unless(
             ($property->isApproved() && $property->status === 'Active') || $this->canManage($property),
             404
         );
 
+        $property->load('realtorProfile.user')
+            ->loadCount(['favorites as favorites_count']);
+
+        $property->setAttribute(
+            'is_favorited',
+            $viewer ? $property->favorites()->where('user_id', $viewer->id)->exists() : false
+        );
+
         return view('pages.property-details', [
-            'property' => $property->load('realtorProfile.user'),
-            'relatedProperties' => Property::with('realtorProfile.user')
+            'property' => $property,
+            'relatedProperties' => Property::query()
+                ->with('realtorProfile.user')
+                ->withFavoriteSummary($viewer)
                 ->marketplaceVisible()
                 ->whereKeyNot($property->id)
                 ->where('zip_code', $property->zip_code)
@@ -206,6 +218,27 @@ class PropertyController extends Controller
                 ? 'Listing approved and moved into the public marketplace.'
                 : 'Listing rejected. The agent can update it and resubmit for review.'
         );
+    }
+
+    public function toggleFavorite(Request $request, Property $property): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user, 403);
+        abort_unless($property->isApproved() && $property->status === 'Active', 404);
+
+        $favorite = $property->favorites()->where('user_id', $user->id)->first();
+
+        if ($favorite) {
+            $favorite->delete();
+
+            return back()->with('success', 'Property removed from favorites.');
+        }
+
+        $property->favorites()->create([
+            'user_id' => $user->id,
+        ]);
+
+        return back()->with('success', 'Property added to favorites.');
     }
 
     protected function canManage(Property $property): bool

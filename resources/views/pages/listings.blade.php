@@ -95,9 +95,19 @@
                             <img src="{{ $property->image_url }}" alt="{{ $property->title }}" loading="lazy">
                             <span class="lc-card__status">{{ $property->status ?? 'Active' }}</span>
                             <div class="lc-card__price">${{ number_format($property->price) }}</div>
-                            <button type="button" class="lc-card__save" aria-label="Save listing">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-                            </button>
+                            <div class="lc-card__save-group">
+                                <form method="POST" action="{{ route('properties.favorite.toggle', $property) }}" class="lc-card__save-form">
+                                    @csrf
+                                    <button
+                                        type="submit"
+                                        class="lc-card__save {{ $property->is_favorited ? 'is-active' : '' }}"
+                                        aria-label="{{ $property->is_favorited ? 'Remove listing from favorites' : 'Add listing to favorites' }}"
+                                    >
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="{{ $property->is_favorited ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                                    </button>
+                                </form>
+                                <span class="lc-card__save-count">{{ number_format($property->favorites_count ?? 0) }}</span>
+                            </div>
                         </div>
                         <div class="lc-card__body">
                             <div class="lc-card__type-row">
@@ -123,7 +133,7 @@
                                 </div>
                             </div>
                             <div class="lc-card__footer">
-                                <span class="lc-card__agent">Listed by {{ optional(optional($property->realtorProfile)->user)->name ?? 'OmniPartner' }}</span>
+                                <span class="lc-card__agent" title="Listed by {{ optional(optional($property->realtorProfile)->user)->name ?? 'OmniPartner' }}">Listed by {{ optional(optional($property->realtorProfile)->user)->name ?? 'OmniPartner' }}</span>
                                 <div class="lc-card__actions">
                                     <a href="{{ route('properties.show', $property) }}" class="button button--ghost-blue">Details</a>
                                     <a href="{{ route('properties.show', $property) }}#property-contact" class="button button--orange">Contact Agent</a>

@@ -183,6 +183,19 @@
                     <div class="listing-card__media">
                         <img src="{{ $property->image_url }}" alt="{{ $property->title }}" loading="lazy">
                         <span class="listing-badge">{{ $property->status }}</span>
+                        <div class="listing-card__save-group">
+                            <form method="POST" action="{{ route('properties.favorite.toggle', $property) }}" class="listing-card__save-form">
+                                @csrf
+                                <button
+                                    type="submit"
+                                    class="listing-card__save {{ $property->is_favorited ? 'is-active' : '' }}"
+                                    aria-label="{{ $property->is_favorited ? 'Remove property from favorites' : 'Add property to favorites' }}"
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="{{ $property->is_favorited ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                                </button>
+                            </form>
+                            <span class="listing-card__save-count">{{ number_format($property->favorites_count ?? 0) }}</span>
+                        </div>
                     </div>
                     <div class="listing-card__body">
                         <div class="listing-card__top">

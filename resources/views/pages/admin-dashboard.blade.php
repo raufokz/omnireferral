@@ -114,6 +114,7 @@
                         <span>{{ number_format($stats['leads'] ?? 0) }} total leads</span>
                         <span>{{ number_format($stats['pendingListings'] ?? 0) }} listings to review</span>
                         <span>{{ number_format($stats['pending'] ?? 0) }} pending agent approvals</span>
+                        <span>{{ number_format($stats['propertyFavorites'] ?? 0) }} property saves</span>
                     </div>
                 </div>
 
@@ -270,6 +271,7 @@
                                 <strong>{{ $property->title }}</strong>
                                 <small>{{ $property->created_at?->format('M j, Y g:i A') ?: 'Pending review' }}</small>
                                 <p>{{ $property->location }} and {{ optional(optional($property->realtorProfile)->user)->name ?? 'unassigned owner' }}.</p>
+                                <small>{{ number_format($property->favorites_count ?? 0) }} saves</small>
                                 <div class="or-dashboard__action-row">
                                     <a href="{{ route('properties.show', $property) }}" class="button button--ghost-blue">Preview</a>
                                     <form method="POST" action="{{ route('admin.properties.review', $property) }}" class="admin-inline-form">
@@ -343,6 +345,10 @@
                     <div>
                         <span>Listings</span>
                         <strong>{{ number_format($stats['properties'] ?? 0) }}</strong>
+                    </div>
+                    <div>
+                        <span>Favorites</span>
+                        <strong>{{ number_format($stats['propertyFavorites'] ?? 0) }}</strong>
                     </div>
                     <div>
                         <span>Contacts</span>

@@ -7,6 +7,7 @@ use App\Models\Contact;
 use App\Models\Lead;
 use App\Models\Package;
 use App\Models\Property;
+use App\Models\PropertyFavorite;
 use App\Models\RealtorProfile;
 use App\Models\Testimonial;
 use App\Models\User;
@@ -66,6 +67,7 @@ class DashboardController extends Controller
         });
         $pendingProperties = Property::query()
             ->with('realtorProfile.user')
+            ->withFavoriteSummary()
             ->pendingReview()
             ->latest()
             ->take(6)
@@ -91,6 +93,7 @@ class DashboardController extends Controller
                 'pending' => RealtorProfile::whereHas('user', function ($query) {
                     $query->where('status', 'pending');
                 })->count(),
+                'propertyFavorites' => PropertyFavorite::count(),
                 'estimatedRevenue' => $estimatedRevenue,
                 'testimonials' => Testimonial::count(),
             ],

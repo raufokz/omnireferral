@@ -125,6 +125,7 @@
                         <span>{{ $agentStats['response_rate'] }} response rate</span>
                         <span>{{ $agentStats['closed_leads'] }} closed leads</span>
                         <span>{{ $totalMessagesCount }} inbox conversations</span>
+                        <span>{{ $totalFavoritesReceived }} property saves</span>
                     </div>
                 </div>
 
@@ -311,6 +312,7 @@
                                 </div>
                                 <div class="or-dashboard__tag-cloud" style="margin-top: 1rem;">
                                     <span>{{ $property->approvalStatusLabel() }}</span>
+                                    <span>{{ number_format($property->favorites_count ?? 0) }} saves</span>
                                     @if($property->approval_notes)
                                         <span>{{ \Illuminate\Support\Str::limit($property->approval_notes, 38) }}</span>
                                     @endif

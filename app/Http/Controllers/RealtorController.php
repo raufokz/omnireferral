@@ -20,9 +20,14 @@ class RealtorController extends Controller
 
     public function show(RealtorProfile $realtor): View
     {
+        $viewer = auth()->user();
+
         $realtor->load([
             'user',
-            'properties' => fn ($query) => $query->marketplaceVisible()->latest(),
+            'properties' => fn ($query) => $query
+                ->withFavoriteSummary($viewer)
+                ->marketplaceVisible()
+                ->latest(),
         ]);
 
         return view('pages.agent-show', [

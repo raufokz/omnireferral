@@ -153,6 +153,7 @@
                                     </div>
                                     <div class="agent-portal-listing-card__status" style="display:flex; gap:.5rem; flex-wrap:wrap; margin-top: .75rem;">
                                         <span class="status-pill status-pill--{{ $property->approvalStatusTone() }}">{{ $property->approvalStatusLabel() }}</span>
+                                        <span class="status-pill status-pill--qualified">{{ number_format($property->favorites_count ?? 0) }} saves</span>
                                         @if($property->approval_notes)
                                             <span class="status-pill status-pill--pending">{{ \Illuminate\Support\Str::limit($property->approval_notes, 40) }}</span>
                                         @endif

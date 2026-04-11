@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -47,6 +48,7 @@ class Property extends Model
     protected $casts = [
         'images' => 'array',
         'is_featured' => 'boolean',
+        'is_favorited' => 'boolean',
         'published_at' => 'datetime',
         'reviewed_at' => 'datetime',
     ];
@@ -73,6 +75,17 @@ class Property extends Model
         return $this->hasMany(Contact::class);
     }
 
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(PropertyFavorite::class);
+    }
+
+    public function favoritedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'property_favorites')
+            ->withTimestamps();
+    }
+
     public function scopeApproved($query)
     {
         return $query->where('approval_status', self::APPROVAL_APPROVED);
@@ -88,6 +101,19 @@ class Property extends Model
         return $query
             ->where('approval_status', self::APPROVAL_APPROVED)
             ->where('status', 'Active');
+    }
+
+    public function scopeWithFavoriteSummary($query, ?User $user = null)
+    {
+        $query->withCount(['favorites as favorites_count']);
+
+        if ($user) {
+            $query->withExists([
+                'favorites as is_favorited' => fn ($favoriteQuery) => $favoriteQuery->where('user_id', $user->id),
+            ]);
+        }
+
+        return $query;
     }
 
     public function isApproved(): bool
