@@ -7,13 +7,18 @@ use App\Models\Contact;
 use App\Models\Lead;
 use App\Models\Package;
 use App\Models\Property;
+use App\Models\PropertyFavorite;
 use App\Models\RealtorProfile;
+use App\Models\Testimonial;
+use App\Models\User;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
     public function index(): View
     {
+        $workspaceUser = auth()->user();
+        $isStaffView = $workspaceUser?->role === 'staff';
         $revenueMap = [
             'quick' => 199,
             'power' => 349,
@@ -60,28 +65,64 @@ class DashboardController extends Controller
             $stage['percent'] = (int) round(($stage['count'] / $maxLeadStage) * 100);
             return $stage;
         });
+        $pendingProperties = Property::query()
+            ->with('realtorProfile.user')
+            ->withFavoriteSummary()
+            ->pendingReview()
+            ->latest()
+            ->take(6)
+            ->get();
+        $recentListingMessages = Contact::query()
+            ->with(['property', 'recipient', 'realtorProfile.user'])
+            ->where(function ($query) {
+                $query->whereNotNull('property_id')
+                    ->orWhereNotNull('realtor_profile_id');
+            })
+            ->latest()
+            ->take(6)
+            ->get();
 
         return view('pages.admin-dashboard', [
             'stats' => [
                 'leads' => Lead::count(),
                 'realtors' => RealtorProfile::count(),
                 'properties' => Property::count(),
+                'pendingListings' => Property::pendingReview()->count(),
                 'contacts' => Contact::count(),
                 'packages' => Package::count(),
                 'pending' => RealtorProfile::whereHas('user', function ($query) {
                     $query->where('status', 'pending');
                 })->count(),
+                'propertyFavorites' => PropertyFavorite::count(),
                 'estimatedRevenue' => $estimatedRevenue,
+                'testimonials' => Testimonial::count(),
             ],
             'recentLeads' => $recentLeads,
             'pendingRealtors' => RealtorProfile::whereHas('user', function ($query) {
                 $query->where('status', 'pending');
             })->latest()->take(4)->get(),
+            'testimonialStats' => [
+                'video' => Testimonial::whereNotNull('video_url')->where('video_url', '!=', '')->count(),
+                'published' => Testimonial::where('is_published', true)->count(),
+                'featured' => Testimonial::where('is_featured', true)->count(),
+            ],
+            'latestTestimonials' => Testimonial::orderByDesc('is_featured')
+                ->orderBy('sort_order')
+                ->latest()
+                ->take(4)
+                ->get(),
+            'assignableAgents' => User::where('role', 'agent')->orderBy('name')->limit(12)->get(),
+            'workspaceUser' => $workspaceUser,
+            'isStaffView' => $isStaffView,
             'pipelineHealth' => $pipelineHealth,
             'teamQueues' => $teamQueues,
+            'pendingProperties' => $pendingProperties,
+            'recentListingMessages' => $recentListingMessages,
             'meta' => [
-                'title' => 'Admin Dashboard | OmniReferral',
-                'description' => 'Manage leads, agents, listings, and growth across OmniReferral.',
+                'title' => $isStaffView ? 'Staff Dashboard | OmniReferral' : 'Admin Dashboard | OmniReferral',
+                'description' => $isStaffView
+                    ? 'Coordinate operations queues, lead follow-up, and internal workflows across OmniReferral.'
+                    : 'Manage leads, agents, listings, and growth across OmniReferral.',
             ],
         ]);
     }

@@ -21,6 +21,18 @@
                     </div>
                 </div>
 
+                @if($property->approval_status !== \App\Models\Property::APPROVAL_APPROVED)
+                    <div class="agent-portal-warning" style="margin-bottom: 1.5rem;">
+                        <strong>{{ $property->approvalStatusLabel() }}</strong>
+                        <p>
+                            Saving changes will submit this listing back to admin for review before it appears publicly.
+                            @if($property->approval_notes)
+                                Latest note: {{ $property->approval_notes }}
+                            @endif
+                        </p>
+                    </div>
+                @endif
+
                 <form action="{{ route('properties.update', $property) }}" method="POST" class="auth-form-shell dashboard-form">
                     @csrf
                     @method('PUT')
@@ -52,7 +64,9 @@
                             <span>Status</span>
                             <select name="status" required>
                                 <option value="Active" {{ old('status', $property->status) === 'Active' ? 'selected' : '' }}>Active</option>
-                                <option value="Pending" {{ old('status', $property->status) === 'Pending' ? 'selected' : '' }}>Pending</option>
+                                @if(auth()->user()?->isStaff())
+                                    <option value="Pending" {{ old('status', $property->status) === 'Pending' ? 'selected' : '' }}>Pending</option>
+                                @endif
                                 <option value="Sold" {{ old('status', $property->status) === 'Sold' ? 'selected' : '' }}>Sold</option>
                                 <option value="Off-Market" {{ old('status', $property->status) === 'Off-Market' ? 'selected' : '' }}>Off-Market</option>
                             </select>
@@ -66,7 +80,7 @@
 
                     <div class="dashboard-form__actions" style="display: flex; gap: 1rem; align-items: center; justify-content: space-between; margin-top: 2rem;">
                         <a href="{{ url()->previous() }}" class="button button--ghost">Cancel Update</a>
-                        <button type="submit" class="button button--orange">Save Property</button>
+                        <button type="submit" class="button button--orange">{{ $property->approval_status === \App\Models\Property::APPROVAL_APPROVED ? 'Save Property' : 'Save And Resubmit' }}</button>
                     </div>
                 </form>
             </div>

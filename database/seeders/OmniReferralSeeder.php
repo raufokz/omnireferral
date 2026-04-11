@@ -240,17 +240,31 @@ class OmniReferralSeeder extends Seeder
         });
 
         foreach ([
-            ['Jordan Miles', 'Broker | Miles Realty Group', 'Austin, TX', 'The biggest improvement for us was lead quality. Our team started spending more time in real conversations and less time sorting through weak inquiries.'],
-            ['Natalie Stone', 'Realtor | Stone & Key Partners', 'Tampa, FL', 'Power Leads gave us a better balance of urgency and detail. It feels like a much more polished system than the other lead sources we had tried.'],
-            ['Chris Everett', 'Investor Advisor | Everett Homes', 'Phoenix, AZ', 'What stood out immediately was the handoff. The leads arrived with better notes, better context, and a clear next step for our agents.'],
-            ['Lauren Price', 'Team Lead | Price Residential', 'Atlanta, GA', 'OmniReferral feels credible from the first interaction. The workflow, onboarding, and support all helped us look more professional with clients.'],
-        ] as $index => [$name, $company, $location, $quote]) {
+            ['Jordan Miles', 'agent', 'Broker | Miles Realty Group', 'Austin, TX', 'The biggest improvement for us was lead quality. Our team started spending more time in real conversations and less time sorting weak inquiries.', true],
+            ['Lauren Price', 'agent', 'Team Lead | Price Residential', 'Atlanta, GA', 'OmniReferral feels credible from the first interaction. The workflow, onboarding, and support helped our team look more polished with every lead.', true],
+            ['Natalie Stone', 'agent', 'Realtor | Stone & Key Partners', 'Tampa, FL', 'Power Leads gave us the right balance of urgency and detail. It feels far more organized than the other lead sources we tested.', false],
+            ['Chris Everett', 'agent', 'Investor Advisor | Everett Homes', 'Phoenix, AZ', 'What stood out immediately was the handoff. The leads arrived with better notes, better context, and a clear next step for our agents.', false],
+            ['Sofia Mercer', 'agent', 'Principal Broker | Mercer Lane Realty', 'Nashville, TN', 'The dashboard keeps our team aligned. By the time a lead reaches us, the opportunity already feels structured and worth acting on.', false],
+            ['Caleb Warren', 'agent', 'Growth Agent | Warren Residential', 'Charlotte, NC', 'We are closing the gap between intake and first contact much faster now. The quality of the first conversation improved almost immediately.', false],
+            ['Ariana Holt', 'buyer', 'Buyer Client', 'Dallas, TX', 'The buyer experience felt organized and high-touch from the start. Every next step came with more clarity than we expected.', true],
+            ['Leah Monroe', 'buyer', 'Buyer Client', 'Orlando, FL', 'The intake was simple, but the follow-up felt personal and informed. We always knew who was guiding the next step.', false],
+            ['Olivia Grant', 'buyer', 'First-Time Buyer', 'Raleigh, NC', 'I never felt like I was filling out a generic form. The communication felt thoughtful, and every update made the process easier to trust.', false],
+            ['Daniel Brooks', 'buyer', 'Relocation Buyer', 'Scottsdale, AZ', 'We needed quick answers in a new market. OmniReferral made the process feel calm, clear, and much less overwhelming.', false],
+            ['Marcus Dean', 'seller', 'Seller Client', 'Charlotte, NC', 'We wanted a smoother listing handoff and stronger communication. OmniReferral made the entire seller journey feel much more polished.', true],
+            ['Nina Foster', 'seller', 'Seller Client', 'Phoenix, AZ', 'Our seller lead was handled quickly and professionally. The team stayed clear, responsive, and easy to trust.', false],
+            ['Tessa Vaughn', 'seller', 'Home Seller', 'Tampa, FL', 'I appreciated how premium the experience felt before we even got deep into the process. The communication stayed clean and consistent.', false],
+            ['Ramon Ellis', 'seller', 'Property Owner', 'Atlanta, GA', 'The updates were better than expected, and the handoff never felt messy. That gave us a lot more confidence in the process.', false],
+        ] as $index => [$name, $audience, $company, $location, $quote, $isFeatured]) {
             Testimonial::updateOrCreate(['name' => $name], [
+                'audience' => $audience,
                 'company' => $company,
                 'location' => $location,
                 'rating' => 5,
                 'quote' => $quote,
-                'photo' => 'images/reviews/review-' . ($index + 1) . '.svg',
+                'photo' => 'images/reviews/review-' . (($index % 4) + 1) . '.svg',
+                'is_featured' => $isFeatured,
+                'is_published' => true,
+                'sort_order' => $index + 1,
             ]);
         }
 

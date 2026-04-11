@@ -1,94 +1,99 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="gateway-shell" x-data="{ showPassword: false, role: '{{ old('role', 'buyer') }}' }">
-    <!-- Left Column: Brand Story (60%) -->
-    <div class="gateway-brand-col">
-        <img src="{{ asset('images/auth/gateway-hero.png') }}" alt="OmniReferral Success" class="gateway-brand-image">
-        <div class="gateway-brand-content">
-            <div class="brand-mark mb-8">
-                <span class="brand-mark__omni" style="color: #fff;">Omni</span><span class="brand-mark__referral" style="color: var(--color-gateway-accent);">Referral</span>
+    @include('partials.auth-home-bar')
+    <div class="auth-custom-card">
+        <!-- Left Column (Navy background) -->
+        <div class="auth-col-left">
+   <div class="auth-logo-header">
+    <a href="{{ url('/') }}">
+        <img src="{{ asset('images/omnireferral-logo.png') }}" alt="OmniReferral Logo"
+            style="height: 100px; width: auto; object-fit: contain;">
+    </a>
+</div>
+            <div class="auth-hero-arch">
+                <img src="{{ asset('images/auth/arch-city.jpg') }}" alt="Cityscape">
             </div>
-            <h1>Your Next Deal Awaits.</h1>
-            <p>Access the world's most intelligent real estate lead matching ecosystem. Designed for those who value speed, quality, and partnership.</p>
+
+            <h1>OMNIREFERRAL.<br>Your Gateway to the Network.</h1>
+            <p>Access your personalized workspace, manage your referrals, and connect with top-tier professionals across the
+                nation.</p>
         </div>
-    </div>
 
-    <!-- Right Column: Action Zone (40%) -->
-    <div class="gateway-action-col">
-        <div class="gateway-form-container">
-            <div class="form-intro mb-8">
-                <span class="eyebrow">Secure Access</span>
-                <h2>Welcome Back</h2>
-                <p>Select your workspace to continue your momentum.</p>
-            </div>
+        <!-- Right Column (White background) -->
+        <div class="auth-col-right" x-data="{ userType: '{{ old('role', 'agent') }}' }">
+            <h2>Welcome Back</h2>
+            <p class="auth-subtitle">Sign in to your account</p>
 
-            <!-- Social Logins (Primary Path) -->
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                <a href="#" class="gateway-social-btn">
-                    <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.79-.07-1.54-.19-2.27h-11.55v4.51h6.62c-.29 1.5-.1.1.1 1.54 1.11-1.39 1.11-1.39 2.01-2.32h5.11zm-11.75 4.69c-2.32 0-4.28-1.56-4.98-3.69H2.09v3.48a12.016 12.016 0 0010.42 5.51c3.25 0 5.97-1.08 7.96-2.91l-3.23-2.51c-1.12.75-2.55 1.12-4.11 1.12zM5.33 14.24c-.18-.55-.29-1.13-.29-1.74s.11-1.19.29-1.74V7.28H2.09A11.96 11.96 0 000 12.5c0 1.92.45 3.74 1.25 5.35l3.08-2.61zm6.54-9.35c1.77 0 3.35.61 4.6 1.8l3.45-3.45C17.84 1.19 15.11 0 11.87 0a12.016 12.016 0 00-10.42 5.51l3.24 2.51c.7-2.13 2.66-3.69 4.98-3.69z"/></svg>
-                    <span>Google</span>
-                </a>
-                <a href="#" class="gateway-social-btn">
-                    <svg width="20" height="20" fill="#1877F2" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                    <span>Facebook</span>
-                </a>
-            </div>
-
-            <div class="gateway-divider"><span>Or use your email</span></div>
-
-            @if ($errors->any())
-                <div class="alert alert-danger mb-6" style="padding: 1rem; border-radius: 12px; font-size: 0.9rem;">
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            <form method="POST" action="{{ route('login') }}" class="gateway-form">
+            <form method="POST" action="{{ route('login') }}">
                 @csrf
-                
-                <div class="floating-group">
-                    <select name="role" x-model="role" required>
-                        <option value="buyer">Buyer Workspace</option>
-                        <option value="seller">Seller Workspace</option>
-                        <option value="agent">Agent Workspace</option>
-                        <option value="admin">Admin / Staff</option>
-                    </select>
-                    <label>Select Workspace</label>
+
+                <!-- Hidden role input that Alpine updates -->
+                <input type="hidden" name="role" x-model="userType">
+
+                <span class="user-type-label">Select your workspace</span>
+                <div class="user-type-grid">
+                    <div class="ut-card" :class="{ 'active': userType === 'agent' }" @click="userType = 'agent'">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 6a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-7 9h14M5 15v6h14v-6M5 15l-1-7h16l-1 7" />
+                        </svg>
+                        <span>Agent</span>
+                    </div>
+                    <div class="ut-card" :class="{ 'active': userType === 'buyer' }" @click="userType = 'buyer'">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path
+                                d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+                        </svg>
+                        <span>Buyer</span>
+                    </div>
+                    <div class="ut-card" :class="{ 'active': userType === 'seller' }" @click="userType = 'seller'">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M3 21v-8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8M10 21V9m4 12V9M3 9l9-7 9 7" />
+                        </svg>
+                        <span>Seller</span>
+                    </div>
+                    <div class="ut-card" :class="{ 'active': userType === 'admin' }" @click="userType = 'admin'">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <span>Admin</span>
+                    </div>
                 </div>
 
-                <div class="floating-group">
-                    <input type="email" name="email" value="{{ old('email') }}" placeholder=" " required autocomplete="email">
+                @if ($errors->any())
+                    <div
+                        style="background-color: #fee2e2; color: #991b1b; padding: 1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem;">
+                        <ul style="padding-left: 1rem; margin: 0; list-style-type: disc;">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <div class="form-group">
                     <label>Email Address</label>
+                    <input type="email" name="email" value="{{ old('email') }}" required autocomplete="email">
                 </div>
 
-                <div class="floating-group password-wrap">
-                    <input :type="showPassword ? 'text' : 'password'" name="password" placeholder=" " required autocomplete="current-password">
+                <div class="form-group">
                     <label>Password</label>
-                    <button type="button" class="password-toggle" @click="showPassword = !showPassword" x-text="showPassword ? 'Hide' : 'Show'"></button>
+                    <input type="password" name="password" required autocomplete="current-password">
                 </div>
 
-                <div class="flex items-center justify-between mt-6 mb-8 text-sm">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="remember" class="rounded border-gray-300">
-                        <span class="text-gray-600">Keep me signed in</span>
-                    </label>
-                    <a href="{{ route('password.request') }}" class="text-blue-700 font-semibold hover:underline">Forgot?</a>
+                <div style="text-align: right; margin-bottom: 1.5rem; margin-top: -0.5rem;">
+                    <a href="{{ route('password.request') }}"
+                        style="font-size: 0.8rem; color: #64748B; text-decoration: none; font-weight: 600;">Forgot
+                        Password?</a>
                 </div>
 
-                <button type="submit" class="button w-full" style="padding: 1.25rem;">
-                    Sign In to <span x-text="role.charAt(0).toUpperCase() + role.slice(1)"></span>
-                </button>
+                <button type="submit" class="btn-submit">Log In</button>
 
-                <p class="text-center mt-8 text-gray-500 font-medium">
-                    Don't have an account? 
-                    <a href="{{ route('register') }}" class="text-orange-600 hover:underline">Create one now</a>
-                </p>
+                <div class="auth-bottom-links">
+                    Don't have an account? <a href="{{ route('register') }}">Sign Up</a>
+                </div>
             </form>
         </div>
     </div>
-</div>
 @endsection

@@ -1,26 +1,55 @@
 @extends('layouts.app')
+
+@push('styles')
+    @vite('resources/css/modules/contact.css')
+@endpush
+
 @section('content')
 
-{{-- ============================
-     CONTACT HERO
-============================ --}}
-<section class="contact-hero-v2">
-    <div class="contact-hero-v2__overlay" aria-hidden="true"></div>
-    <div class="container contact-hero-v2__inner" data-animate="up">
-        <span class="eyebrow chv2-eyebrow">Get in Touch</span>
-        <h1 class="chv2-headline">Let's talk about your next<br>lead, listing, or partnership</h1>
-        <p class="chv2-sub">We keep conversations simple, helpful, and fast. Expect a response within one business day.</p>
-        <div class="chv2-trust-row">
-            <span class="chv2-trust-chip">&#10003; 24-hr avg. response</span>
-            <span class="chv2-trust-chip">&#10003; Real team, no bots</span>
-            <span class="chv2-trust-chip">&#10003; Encrypted messages</span>
+<section class="page-hero agent-directory-hero contact-page-hero">
+    <div class="agent-directory-hero__glow" aria-hidden="true"></div>
+    <div class="container agent-directory-hero__inner" data-animate="up">
+        <div class="agent-directory-hero__copy">
+            <span class="eyebrow">Get In Touch</span>
+            <h1>Let&apos;s talk about your next lead, listing, or partnership.</h1>
+            <p>We keep conversations simple, helpful, and fast. Expect a response within one business day from the OmniReferral team.</p>
+            <div class="agent-directory-hero__actions">
+                <a href="mailto:hello@omnireferral.us" class="button button--orange">Email Support</a>
+                <a href="tel:+18005550147" class="button button--ghost-light">Call Directly</a>
+            </div>
+            <div class="agent-directory-hero__proof">
+                <span>24-hour average response</span>
+                <span>Real team, no bots</span>
+                <span>Lead, listing, and billing help</span>
+            </div>
         </div>
+
+        <aside class="agent-directory-hero__panel">
+            <span class="agent-directory-hero__panel-eyebrow">Response Window</span>
+            <h2>We route the right conversation to the right OmniReferral team.</h2>
+            <p>Sales, support, partnership, and marketplace questions all follow the same branded intake flow, so your message does not get lost.</p>
+            <div class="agent-directory-hero__stats contact-page-hero__stats">
+                <div class="agent-directory-hero__stat">
+                    <strong>&lt; 24h</strong>
+                    <span>average response target</span>
+                </div>
+                <div class="agent-directory-hero__stat">
+                    <strong>Mon-Fri</strong>
+                    <span>9am-6pm ET support hours</span>
+                </div>
+                <div class="agent-directory-hero__stat">
+                    <strong>Email</strong>
+                    <span>hello@omnireferral.us</span>
+                </div>
+                <div class="agent-directory-hero__stat">
+                    <strong>Phone</strong>
+                    <span>(800) 555-0147</span>
+                </div>
+            </div>
+        </aside>
     </div>
 </section>
 
-{{-- ============================
-     MAIN CONTACT LAYOUT
-============================ --}}
 <section class="section contact-body-section">
     <div class="container contact-body-grid">
 
@@ -107,70 +136,86 @@
         </div>
 
         {{-- RIGHT: Info Panel --}}
-        <div class="contact-info-col">
+        <div class="contact-side-col">
 
             {{-- Contact details --}}
-            <div class="contact-info-card">
-                <span class="eyebrow">Contact Details</span>
-                <h3 class="contact-info-card__title">Reach OmniReferral</h3>
+            <aside class="contact-side-card" aria-label="Contact details">
+                <div class="contact-side-card__header">
+                    <span class="eyebrow">Contact Details</span>
+                    <h3 class="contact-side-card__title">Reach the right OmniReferral team faster.</h3>
+                    <p class="contact-side-card__copy">
+                        Choose the best contact path for sales, support, billing, or partnership questions.
+                        Every inquiry is reviewed by a real team member and routed manually.
+                    </p>
+                </div>
 
-                <div class="contact-info-items">
-                    <div class="ci-item">
-                        <div class="ci-item__icon ci-item__icon--blue">
+                <div class="contact-side-list">
+                    <a href="mailto:hello@omnireferral.us" class="contact-side-item">
+                        <span class="contact-side-item__icon contact-side-item__icon--blue" aria-hidden="true">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                        </div>
-                        <div class="ci-item__body">
-                            <span class="ci-item__label">Email Support</span>
-                            <a href="mailto:hello@omnireferral.us" class="ci-item__value">hello@omnireferral.us</a>
-                        </div>
-                    </div>
-                    <div class="ci-item">
-                        <div class="ci-item__icon ci-item__icon--orange">
+                        </span>
+                        <span class="contact-side-item__body">
+                            <span class="contact-side-item__label">Email support</span>
+                            <span class="contact-side-item__value">hello@omnireferral.us</span>
+                            <span class="contact-side-item__note">Best for package questions, billing help, onboarding, and detailed support requests.</span>
+                        </span>
+                    </a>
+
+                    <a href="tel:+18005550147" class="contact-side-item">
+                        <span class="contact-side-item__icon contact-side-item__icon--orange" aria-hidden="true">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 01.22 1.18 2 2 0 012.18 0H5.18a2 2 0 012 1.72c.128.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.14 7.94a16 16 0 006.29 6.29l1.3-1.3a2 2 0 012.11-.45c.907.339 1.85.572 2.81.7A2 2 0 0122 16.92z"/></svg>
-                        </div>
-                        <div class="ci-item__body">
-                            <span class="ci-item__label">Direct Line</span>
-                            <a href="tel:+18005550147" class="ci-item__value">(800) 555-0147</a>
-                        </div>
-                    </div>
-                    <div class="ci-item">
-                        <div class="ci-item__icon ci-item__icon--green">
+                        </span>
+                        <span class="contact-side-item__body">
+                            <span class="contact-side-item__label">Direct line</span>
+                            <span class="contact-side-item__value">(800) 555-0147</span>
+                            <span class="contact-side-item__note">Best for urgent follow-up, sales conversations, and live support during business hours.</span>
+                        </span>
+                    </a>
+
+                    <div class="contact-side-item contact-side-item--static">
+                        <span class="contact-side-item__icon contact-side-item__icon--green" aria-hidden="true">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        </div>
-                        <div class="ci-item__body">
-                            <span class="ci-item__label">Office Hours</span>
-                            <span class="ci-item__value">Mon-Fri, 9am-6pm ET</span>
-                        </div>
+                        </span>
+                        <span class="contact-side-item__body">
+                            <span class="contact-side-item__label">Office hours</span>
+                            <span class="contact-side-item__value">Mon-Fri, 9am-6pm ET</span>
+                            <span class="contact-side-item__note">Messages are monitored on weekdays and routed to the right team as quickly as possible.</span>
+                        </span>
                     </div>
-                    <div class="ci-item">
-                        <div class="ci-item__icon ci-item__icon--purple">
+
+                    <div class="contact-side-item contact-side-item--static">
+                        <span class="contact-side-item__icon contact-side-item__icon--purple" aria-hidden="true">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                        </div>
-                        <div class="ci-item__body">
-                            <span class="ci-item__label">Headquarters</span>
-                            <span class="ci-item__value">omnireferral.us</span>
-                        </div>
+                        </span>
+                        <span class="contact-side-item__body">
+                            <span class="contact-side-item__label">Support hub</span>
+                            <span class="contact-side-item__value">New York, NY</span>
+                            <span class="contact-side-item__note">Campaign coordination for agent packages, partnerships, and nationwide lead support.</span>
+                        </span>
                     </div>
                 </div>
-            </div>
+            </aside>
 
             {{-- Response time card --}}
-            <div class="contact-response-card">
-                <div class="crc-inner">
-                    <div class="crc-stat">
-                        <strong>&#60; 24h</strong>
-                        <span>Average response time</span>
-                    </div>
-                    <div class="crc-divider"></div>
-                    <div class="crc-stat">
-                        <strong>Real Team</strong>
-                        <span>No automated bots</span>
-                    </div>
+            <div class="contact-side-banner" aria-label="Response summary">
+                <div class="contact-side-banner__stat">
+                    <strong>&#60; 24h</strong>
+                    <span>Average response time</span>
+                </div>
+                <div class="contact-side-banner__divider" aria-hidden="true"></div>
+                <div class="contact-side-banner__stat">
+                    <strong>Real Team</strong>
+                    <span>No automated bots</span>
                 </div>
             </div>
 
             {{-- Map --}}
-            <div class="contact-map-card">
+            <div class="contact-location-card">
+                <div class="contact-location-card__header">
+                    <span class="eyebrow">Coverage</span>
+                    <h3>Built in New York, supporting agent campaigns across U.S. markets.</h3>
+                </div>
+
                 <iframe
                     title="OmniReferral location map"
                     src="https://www.google.com/maps?q=New+York,+NY&output=embed"

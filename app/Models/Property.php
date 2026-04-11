@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -13,11 +15,17 @@ class Property extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const APPROVAL_PENDING = 'pending';
+    public const APPROVAL_APPROVED = 'approved';
+    public const APPROVAL_REJECTED = 'rejected';
+
     protected $fillable = [
         'title',
         'description',
         'slug',
         'status',
+        'approval_status',
+        'approval_notes',
         'property_type',
         'price',
         'location',
@@ -32,13 +40,17 @@ class Property extends Model
         'source',
         'is_featured',
         'published_at',
+        'reviewed_by_user_id',
+        'reviewed_at',
         'realtor_profile_id',
     ];
 
     protected $casts = [
         'images' => 'array',
         'is_featured' => 'boolean',
+        'is_favorited' => 'boolean',
         'published_at' => 'datetime',
+        'reviewed_at' => 'datetime',
     ];
 
     protected $appends = ['image_url'];
@@ -51,6 +63,80 @@ class Property extends Model
     public function realtorProfile(): BelongsTo
     {
         return $this->belongsTo(RealtorProfile::class);
+    }
+
+    public function reviewedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by_user_id');
+    }
+
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(Contact::class);
+    }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(PropertyFavorite::class);
+    }
+
+    public function favoritedByUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'property_favorites')
+            ->withTimestamps();
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('approval_status', self::APPROVAL_APPROVED);
+    }
+
+    public function scopePendingReview($query)
+    {
+        return $query->where('approval_status', self::APPROVAL_PENDING);
+    }
+
+    public function scopeMarketplaceVisible($query)
+    {
+        return $query
+            ->where('approval_status', self::APPROVAL_APPROVED)
+            ->where('status', 'Active');
+    }
+
+    public function scopeWithFavoriteSummary($query, ?User $user = null)
+    {
+        $query->withCount(['favorites as favorites_count']);
+
+        if ($user) {
+            $query->withExists([
+                'favorites as is_favorited' => fn ($favoriteQuery) => $favoriteQuery->where('user_id', $user->id),
+            ]);
+        }
+
+        return $query;
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->approval_status === self::APPROVAL_APPROVED;
+    }
+
+    public function approvalStatusLabel(): string
+    {
+        return match ($this->approval_status) {
+            self::APPROVAL_PENDING => 'Awaiting Review',
+            self::APPROVAL_REJECTED => 'Rejected',
+            default => 'Approved',
+        };
+    }
+
+    public function approvalStatusTone(): string
+    {
+        return match ($this->approval_status) {
+            self::APPROVAL_PENDING => 'pending',
+            self::APPROVAL_REJECTED => 'rejected',
+            default => 'qualified',
+        };
     }
 
     public function getImageUrlAttribute(): string

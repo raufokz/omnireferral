@@ -6,7 +6,6 @@ use App\Jobs\SyncLeadToGoHighLevel;
 use App\Models\Lead;
 use App\Models\Package;
 use App\Models\User;
-use App\Notifications\NewLeadAssignedNotification;
 use App\Notifications\NewLeadCreatedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +19,7 @@ class LeadController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email'],
             'phone' => ['required', 'string', 'max:30'],
-            'intent' => ['required', 'in:buyer,seller'],
+            'intent' => ['required', 'in:buyer,seller,investor,other'],
             'zip_code' => ['required', 'string', 'max:10'],
             'property_type' => ['nullable', 'string', 'max:100'],
             'budget' => ['nullable', 'integer'],
@@ -39,6 +38,14 @@ class LeadController extends Controller
 
         if ($request->hasFile('property_image')) {
             $validated['property_image'] = $request->file('property_image')->store('properties/leads', 'public');
+        }
+
+        $normalizedEmail = Lead::normalizeEmail($validated['email'] ?? null);
+        $normalizedPhone = Lead::normalizePhone($validated['phone'] ?? null);
+        $existingLead = Lead::duplicateQuery($normalizedEmail, $normalizedPhone)->latest('id')->first();
+
+        if ($existingLead) {
+            return back()->with('info', 'This lead is already in the system. We kept the original record and avoided a duplicate entry.');
         }
 
         $package = isset($validated['package_slug'])
@@ -65,23 +72,12 @@ class LeadController extends Controller
             'is_priority' => in_array($request->input('timeline'), ['ASAP', '0-30 days'], true),
         ]);
 
-        // Auto-assign to an available agent in the network for immediate follow-up.
-        $agent = User::where('role', 'agent')->inRandomOrder()->first();
-        if ($agent) {
-            $lead->assigned_agent_id = $agent->id;
-            $lead->status = 'assigned';
-            $lead->assigned_at = now();
-            $lead->save();
-
-            $agent->notify(new NewLeadAssignedNotification($lead));
-        }
-
         // Notify admin/staff operations throughput.
         $watchers = User::whereIn('role', ['admin', 'staff'])->get();
         Notification::send($watchers, new NewLeadCreatedNotification($lead));
 
         SyncLeadToGoHighLevel::dispatch($lead->id);
 
-        return back()->with('success', 'Welcome aboard! Your request has been captured and routed into the OmniReferral review queue.');
+        return back()->with('success', 'Welcome aboard! Your request has been captured in the OmniReferral review queue and is currently unassigned until operations routes it.');
     }
 }

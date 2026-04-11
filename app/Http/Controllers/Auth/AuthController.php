@@ -10,7 +10,6 @@ use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -35,7 +34,16 @@ class AuthController extends Controller
             'password.required' => 'Enter your password to continue.',
         ]);
 
-        if (Auth::attempt($request->only('email', 'password'), (bool) $request->boolean('remember'))) {
+        $authenticated = false;
+        $user = User::where('email', $credentials['email'])->first();
+
+        if ($user && $user->passwordMatches((string) $credentials['password'])) {
+            $user->upgradePlainTextPassword((string) $credentials['password']);
+            Auth::login($user, (bool) $request->boolean('remember'));
+            $authenticated = true;
+        }
+
+        if ($authenticated) {
             $request->session()->regenerate();
 
             $user = Auth::user();
@@ -68,19 +76,30 @@ class AuthController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['required', 'string', 'in:buyer,seller,agent'],
-            'phone' => ['nullable', 'string', 'max:20'],
-            'profile_image' => ['nullable', 'image', 'max:4096'],
-            'city' => ['nullable', 'string', 'max:100'],
-            'state' => ['nullable', 'string', 'max:2'],
-            'zip_code' => ['nullable', 'string', 'max:10'],
+            'phone' => ['required', 'string', 'max:20'],
+            'profile_image' => ['required', 'image', 'max:4096'],
+            'address_line_1' => ['required', 'string', 'max:255'],
+            'address_line_2' => ['nullable', 'string', 'max:255'],
+            'city' => ['required', 'string', 'max:100'],
+            'state' => ['required', 'string', 'size:2'],
+            'zip_code' => ['required', 'string', 'max:10'],
+            'brokerage_name' => ['required_if:role,agent', 'nullable', 'string', 'max:255'],
+            'license_number' => ['required_if:role,agent', 'nullable', 'string', 'max:100'],
         ], [
             'name.required' => 'Tell us your name so we can personalize your setup.',
             'email.required' => 'Oops, looks like you missed your email!',
             'email.unique' => 'That email is already connected to an OmniReferral account.',
             'password.min' => 'Use at least 8 characters so your account stays secure.',
+            'password.confirmed' => 'Your password confirmation does not match yet.',
+            'phone.required' => 'Add your phone number so your account is ready for follow-up.',
+            'profile_image.required' => 'Upload a profile image so your account looks complete from day one.',
             'profile_image.image' => 'Please upload a valid profile photo.',
+            'address_line_1.required' => 'Add your address so we can complete your profile.',
+            'state.size' => 'Use the 2-letter state code, like TX or FL.',
+            'brokerage_name.required_if' => 'Agents need a brokerage name before continuing.',
+            'license_number.required_if' => 'Agents need a license number before continuing.',
         ]);
 
         $avatarPath = $request->hasFile('profile_image')
@@ -90,9 +109,14 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'password' => $request->password,
             'role' => $request->role,
             'phone' => $request->phone,
+            'address_line_1' => $request->address_line_1,
+            'address_line_2' => $request->address_line_2,
+            'city' => $request->city,
+            'state' => strtoupper($request->state),
+            'zip_code' => $request->zip_code,
             'status' => 'active',
             'avatar' => $avatarPath,
             'affiliate_code' => strtoupper(Str::random(8)),
@@ -102,10 +126,13 @@ class AuthController extends Controller
             RealtorProfile::create([
                 'user_id' => $user->id,
                 'slug' => Str::slug($user->name . '-' . Str::lower(Str::random(6))),
-                'brokerage_name' => 'OmniReferral Partner',
-                'city' => $request->input('city', 'Dallas'),
-                'state' => strtoupper($request->input('state', 'TX')),
-                'zip_code' => $request->input('zip_code', '75201'),
+                'brokerage_name' => $request->brokerage_name,
+                'license_number' => $request->license_number,
+                'address_line_1' => $request->address_line_1,
+                'address_line_2' => $request->address_line_2,
+                'city' => $request->city,
+                'state' => strtoupper($request->state),
+                'zip_code' => $request->zip_code,
                 'specialties' => 'Buyer Representation, Seller Strategy, Referral Conversion',
                 'bio' => 'New OmniReferral partner profile created through the onboarding funnel.',
                 'headshot' => $avatarPath ? 'storage/' . $avatarPath : 'images/realtors/3.png',
@@ -125,8 +152,8 @@ class AuthController extends Controller
         Auth::login($user);
 
         return redirect()
-            ->route('onboarding', $user->role)
-            ->with('success', 'Welcome aboard! Your account is ready and onboarding is the next step.');
+            ->to($user->dashboardRoute())
+            ->with('success', 'Welcome aboard! Your account is ready and your dashboard is now available.');
     }
 
     public function showForgotPassword(): View
@@ -172,7 +199,7 @@ class AuthController extends Controller
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password) {
                 $user->forceFill([
-                    'password' => Hash::make($password),
+                    'password' => $password,
                     'remember_token' => Str::random(60),
                 ])->save();
 

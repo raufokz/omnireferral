@@ -1,14 +1,23 @@
 @extends('layouts.app')
+
+@push('styles')
+    @vite('resources/css/modules/pricing.css')
+@endpush
+
 @section('content')
+@php
+    $featuredHeroPlan = collect($pricingPlans['real_estate'] ?? [])->firstWhere('is_featured', true)
+        ?? collect($pricingPlans['real_estate'] ?? [])->first();
+@endphp
 <section class="pricing-hero-band">
     <div class="pricing-hero-band__bg" aria-hidden="true"></div>
-    <div class="container pricing-hero-band__inner" data-animate="up">
-        <div class="phb-copy">
+    <div class="container pricing-hero-band__inner pricing-hero-band__inner--split" data-animate="up">
+        <div class="phb-copy phb-copy--split">
             <span class="eyebrow phb-eyebrow">Premium Real Estate Lead Engine</span>
             <h1 class="phb-copy__headline">Simple, transparent pricing for serious agents</h1>
-            <p class="phb-copy__sub">ISA-qualified, sales-backed leads with clear packages, optional virtual assistance, and rapid onboarding.</p>
+            <p class="phb-copy__sub">ISA-qualified, sales-backed leads with clear packages, optional virtual assistance, and a smoother GoHighLevel handoff.</p>
             <div class="phb-copy__ctas">
-                <a href="{{ $onboardingUrl }}" class="button button--orange">Get Started Today</a>
+                <a href="#pricing-plans" class="button button--orange">View Packages</a>
                 <a href="{{ route('contact') }}" class="button button--ghost-light">Talk to Sales</a>
             </div>
             <div class="phb-copy__badges">
@@ -17,6 +26,40 @@
                 <span class="phb-badge">High-intent buyers and sellers</span>
             </div>
         </div>
+
+        @if($featuredHeroPlan)
+            <aside class="pricing-hero-band__panel">
+                <span class="pricing-hero-band__panel-eyebrow">Most Chosen Plan</span>
+                <h2>{{ $featuredHeroPlan['name'] }}</h2>
+                <p>{{ $featuredHeroPlan['summary'] }}</p>
+
+                <div class="pricing-hero-band__panel-price">
+                    <strong>${{ number_format($featuredHeroPlan['price']) }}</strong>
+                    <span>{{ $featuredHeroPlan['price_note'] }}</span>
+                </div>
+
+                <ul class="pricing-hero-band__panel-list">
+                    @foreach(array_slice($featuredHeroPlan['features'] ?? [], 0, 4) as $feature)
+                        <li>{{ $feature }}</li>
+                    @endforeach
+                </ul>
+
+                <div class="pricing-hero-band__metrics">
+                    <div class="pricing-hero-band__metric">
+                        <strong>{{ count($pricingPlans['real_estate'] ?? []) }}</strong>
+                        <span>Lead paths</span>
+                    </div>
+                    <div class="pricing-hero-band__metric">
+                        <strong>{{ count($pricingPlans['virtual_assistance'] ?? []) }}</strong>
+                        <span>VA plans</span>
+                    </div>
+                    <div class="pricing-hero-band__metric">
+                        <strong>48 hr</strong>
+                        <span>Avg. routing</span>
+                    </div>
+                </div>
+            </aside>
+        @endif
     </div>
 </section>
 
@@ -43,91 +86,26 @@
     </div>
 </section>
 
-<section class="section pricing-packages-section">
+<section class="section section--gray homepage-section homepage-section--pricing pricing-packages-section" id="pricing-plans">
     <div class="container">
-        <div class="pricing-section-head" data-animate="up">
-            <span class="eyebrow">Lead Packages</span>
+        <div class="section-heading homepage-section__heading" data-animate="left">
+            <span class="eyebrow">Pricing Snapshot</span>
             <h2>Choose the package that matches your growth stage</h2>
             <p class="pricing-section-head__sub">Each tier delivers meaningful ROI, whether testing a new market or scaling a high-performing team.</p>
         </div>
 
-        <div class="pricing-category-toggle" id="pricingToggle">
-            <button class="pct-btn is-active" data-category="lead" type="button">Referrals / Lead Engine</button>
-            <button class="pct-btn" data-category="va" type="button">Virtual Assistance</button>
-        </div>
-
-        <div class="pricing-cards-grid" id="leadPackagesGrid" data-stagger>
-            @foreach($leadPackages as $pkg)
-            <article class="pricing-pkg-card {{ $pkg->is_featured ? 'pricing-pkg-card--featured' : '' }}">
-                @if($pkg->is_featured)
-                <div class="pricing-pkg-card__badge">Most Popular</div>
-                @endif
-                <div class="pricing-pkg-card__head">
-                    <h3 class="pricing-pkg-card__name">{{ $pkg->name }}</h3>
-                    <p class="pricing-pkg-card__tagline">
-                        @if(str_contains(strtolower($pkg->name), 'quick'))Entry-point leads with fast setup and verified intent.
-                        @elseif(str_contains(strtolower($pkg->name), 'power'))Balanced lead depth, quality, and market reach.
-                        @else Top-tier opportunities, highest intent, priority routing.@endif
-                    </p>
-                </div>
-                <div class="pricing-pkg-card__price">
-                    @if($pkg->one_time_price)
-                    <strong class="ppc-price-amount">${{ number_format($pkg->one_time_price) }}</strong>
-                    <span class="ppc-price-period">one-time</span>
-                    @elseif($pkg->monthly_price)
-                    <strong class="ppc-price-amount">${{ number_format($pkg->monthly_price) }}</strong>
-                    <span class="ppc-price-period">per month</span>
-                    @endif
-                </div>
-                <ul class="pricing-pkg-card__features">
-                    @foreach($pkg->features as $feature)
-                    <li><span class="ppf-check">&#10003;</span> {{ $feature }}</li>
-                    @endforeach
-                </ul>
-                <div class="pricing-pkg-card__actions">
-                    <a href="{{ route('packages.checkout', $pkg) }}" class="button {{ $pkg->is_featured ? 'button--orange' : 'button--blue' }} w-full">Get {{ $pkg->name }}</a>
-                    <a href="{{ $onboardingUrl }}" class="ppc-form-link">Apply via form instead</a>
-                </div>
-            </article>
-            @endforeach
-        </div>
-
-        <div class="pricing-cards-grid" id="vaPackagesGrid" style="display:none;" data-stagger>
-            @foreach($assistantPackages as $pkg)
-            <article class="pricing-pkg-card {{ $pkg->is_featured ? 'pricing-pkg-card--featured' : '' }}">
-                @if($pkg->is_featured)
-                <div class="pricing-pkg-card__badge">Top Pick</div>
-                @endif
-                <div class="pricing-pkg-card__head">
-                    <h3 class="pricing-pkg-card__name">{{ $pkg->name }}</h3>
-                    <p class="pricing-pkg-card__tagline">{{ $pkg->description ?? 'Dedicated support built for busy real estate teams.' }}</p>
-                </div>
-                <div class="pricing-pkg-card__price">
-                    @if($pkg->monthly_price)
-                    <strong class="ppc-price-amount">${{ number_format($pkg->monthly_price) }}</strong>
-                    <span class="ppc-price-period">per month</span>
-                    @elseif($pkg->one_time_price)
-                    <strong class="ppc-price-amount">${{ number_format($pkg->one_time_price) }}</strong>
-                    <span class="ppc-price-period">one-time</span>
-                    @endif
-                </div>
-                <ul class="pricing-pkg-card__features">
-                    @foreach($pkg->features as $feature)
-                    <li><span class="ppf-check">&#10003;</span> {{ $feature }}</li>
-                    @endforeach
-                </ul>
-                <div class="pricing-pkg-card__actions">
-                    <a href="{{ route('packages.checkout', $pkg) }}" class="button {{ $pkg->is_featured ? 'button--orange' : 'button--blue' }} w-full">Get Started</a>
-                </div>
-            </article>
-            @endforeach
-        </div>
+        @include('partials.pricing-plan-switcher', [
+            'pricingPlans' => $pricingPlans,
+            'toggleGroup' => 'pricing-page',
+            'leadActionUrl' => $primaryActionUrl,
+            'featureLimit' => 8,
+        ])
     </div>
 </section>
 
 <section class="section pricing-why-strip">
     <div class="container">
-        <div class="pricing-section-head" data-animate="up">
+        <div class="section-heading" data-animate="up">
             <span class="eyebrow">Why OmniReferral</span>
             <h2>What makes our leads different</h2>
         </div>
@@ -159,7 +137,7 @@
 @if(!empty($comparison) && count($comparison))
 <section class="section pricing-comparison-section">
     <div class="container">
-        <div class="pricing-section-head" data-animate="up">
+        <div class="section-heading" data-animate="up">
             <span class="eyebrow">Compare Plans</span>
             <h2>What is included in each package</h2>
         </div>
@@ -198,10 +176,10 @@
         <div class="pfc-inner" data-animate="up">
             <div class="pfc-copy">
                 <h2>Ready to grow your book of business?</h2>
-                <p>Pick a package above, or talk to our sales team for a personalized recommendation.</p>
+                <p>Pick a package above, or talk to our sales team for a personalized recommendation. GoHighLevel handles the post-purchase setup automatically.</p>
             </div>
             <div class="pfc-actions">
-                <a href="{{ $onboardingUrl }}" class="button button--orange">Start Today</a>
+                <a href="{{ $primaryActionUrl }}" class="button button--orange">{{ $primaryActionLabel }}</a>
                 <a href="{{ route('contact') }}" class="button button--ghost-light">Talk to Sales</a>
             </div>
         </div>
@@ -209,21 +187,6 @@
 </section>
 
 @push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var catBtns = document.querySelectorAll('.pct-btn');
-    var leadGrid = document.getElementById('leadPackagesGrid');
-    var vaGrid = document.getElementById('vaPackagesGrid');
-    catBtns.forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            catBtns.forEach(function(b) { b.classList.remove('is-active'); });
-            btn.classList.add('is-active');
-            var cat = btn.getAttribute('data-category');
-            if (leadGrid) leadGrid.style.display = cat === 'lead' ? '' : 'none';
-            if (vaGrid) vaGrid.style.display = cat === 'va' ? '' : 'none';
-        });
-    });
-});
-</script>
+    @include('partials.pricing-toggle-script')
 @endpush
 @endsection

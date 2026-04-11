@@ -101,7 +101,17 @@ class DashboardController extends Controller
 
     public function buyer(): View
     {
-        $properties = Property::with('realtorProfile.user')->latest()->take(6)->get();
+        $buyer = Auth::user();
+        $favoritePropertiesQuery = $buyer
+            ? $buyer->favoriteProperties()
+                ->with('realtorProfile.user')
+                ->withFavoriteSummary($buyer)
+                ->marketplaceVisible()
+            : Property::query()->whereRaw('1 = 0');
+        $properties = $favoritePropertiesQuery
+            ->orderByPivot('created_at', 'desc')
+            ->take(6)
+            ->get();
         $buyerRequests = Lead::where('intent', 'buyer')->latest()->take(5)->get();
         $buyerJourney = [
             ['label' => 'Submitted', 'count' => Lead::where('intent', 'buyer')->whereIn('status', ['new', 'contacted'])->count()],
@@ -109,14 +119,15 @@ class DashboardController extends Controller
             ['label' => 'Agent Match', 'count' => Lead::where('intent', 'buyer')->where('status', 'assigned')->count()],
             ['label' => 'Closed', 'count' => Lead::where('intent', 'buyer')->where('status', 'closed')->count()],
         ];
+        $favoriteCount = $buyer ? $buyer->propertyFavorites()->count() : 0;
 
         return view('pages.dashboards.buyer', [
             'properties' => $properties,
             'buyerRequests' => $buyerRequests,
             'buyerJourney' => $buyerJourney,
             'buyerStats' => [
-                'saved_listings' => $properties->count(),
-                'favorites' => min(4, $properties->count()),
+                'saved_listings' => $favoriteCount,
+                'favorites' => $favoriteCount,
                 'saved_searches' => 3,
                 'new_alerts' => Lead::where('intent', 'buyer')->count(),
             ],
@@ -129,7 +140,7 @@ class DashboardController extends Controller
 
     public function seller(): View
     {
-        $properties = Property::latest()->take(4)->get();
+        $properties = Property::marketplaceVisible()->latest()->take(4)->get();
         $sellerRequests = Lead::where('intent', 'seller')->latest()->take(5)->get();
         $sellerJourney = [
             ['label' => 'Submitted', 'count' => Lead::where('intent', 'seller')->whereIn('status', ['new', 'contacted'])->count()],
@@ -158,30 +169,40 @@ class DashboardController extends Controller
     public function agent(): View
     {
         $user = Auth::user();
-        $agentProfile = $user?->realtorProfile ?: RealtorProfile::with('user')->first();
+        $agentProfile = $user?->realtorProfile;
         $agentUserId = $agentProfile?->user_id;
-        $agentLeadsQuery = Lead::query()->when($agentUserId, fn ($query) => $query->where('assigned_agent_id', $agentUserId));
+        $agentLeadsQuery = Lead::query()->when(
+            $agentUserId,
+            fn ($query) => $query->where('assigned_agent_id', $agentUserId),
+            fn ($query) => $query->whereRaw('1 = 0')
+        );
         $agentLeads = (clone $agentLeadsQuery)->latest()->take(8)->get();
         $allPackages = Package::active()->leadPlans()->orderBy('sort_order')->orderBy('one_time_price')->get();
         $assistantPackages = Package::active()->assistantPlans()->orderBy('sort_order')->orderBy('monthly_price')->take(2)->get();
+        $totalLeads = (clone $agentLeadsQuery)->count();
+        $contactedLeadCount = (clone $agentLeadsQuery)->whereIn('status', ['contacted', 'qualified', 'closed'])->count();
+        $qualifiedLeadCount = (clone $agentLeadsQuery)->where('status', 'qualified')->count();
+        $closedLeadCount = (clone $agentLeadsQuery)->where('status', 'closed')->count();
         $pipeline = [
             ['label' => 'New', 'count' => (clone $agentLeadsQuery)->where('status', 'new')->count()],
             ['label' => 'Contacted', 'count' => (clone $agentLeadsQuery)->where('status', 'contacted')->count()],
-            ['label' => 'Qualified', 'count' => (clone $agentLeadsQuery)->where('status', 'qualified')->count()],
-            ['label' => 'Closed', 'count' => (clone $agentLeadsQuery)->where('status', 'closed')->count()],
+            ['label' => 'Qualified', 'count' => $qualifiedLeadCount],
+            ['label' => 'Closed', 'count' => $closedLeadCount],
         ];
 
         return view('pages.dashboards.agent', [
             'agent' => $agentProfile,
+            'agentUser' => $user,
             'leads' => $agentLeads,
             'packages' => $allPackages,
             'assistantPackages' => $assistantPackages,
             'pipeline' => $pipeline,
+            'activePlan' => $user?->currentPlan,
             'agentStats' => [
-                'score' => '9.4',
-                'leads_received' => $agentLeads->count(),
-                'response_rate' => '84%',
-                'rewards' => 3,
+                'score' => number_format((float) ($agentProfile?->rating ?? 4.9), 1),
+                'leads_received' => $totalLeads,
+                'response_rate' => $totalLeads > 0 ? round(($contactedLeadCount / $totalLeads) * 100) . '%' : '0%',
+                'rewards' => max(1, min(5, (int) ceil(($qualifiedLeadCount + $closedLeadCount) / 2))),
             ],
             'meta' => [
                 'title' => 'Agent Dashboard | OmniReferral',

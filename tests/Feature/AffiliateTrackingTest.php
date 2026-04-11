@@ -5,6 +5,9 @@ namespace Tests\Feature;
 use App\Models\AffiliateProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AffiliateTrackingTest extends TestCase
@@ -21,6 +24,9 @@ class AffiliateTrackingTest extends TestCase
 
     public function test_it_links_registered_user_to_affiliate(): void
     {
+        Storage::fake('public');
+        Queue::fake();
+
         $agentUser = User::create([
             'name' => 'Agent Test',
             'email' => 'agent@test.com',
@@ -39,11 +45,20 @@ class AffiliateTrackingTest extends TestCase
              ->post('/register', [
                  'name' => 'Buyer Test',
                  'email' => 'buyer@test.com',
+                 'phone' => '(555) 000-1234',
+                 'address_line_1' => '100 Referral Lane',
+                 'city' => 'Dallas',
+                 'state' => 'TX',
+                 'zip_code' => '75201',
                  'password' => 'password123',
                  'password_confirmation' => 'password123',
                  'role' => 'buyer',
+                 'profile_image' => UploadedFile::fake()->createWithContent(
+                     'buyer-profile.png',
+                     base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+yF9sAAAAASUVORK5CYII=')
+                 ),
              ])
-             ->assertRedirect(route('onboarding', 'buyer'));
+             ->assertRedirect(route('dashboard.buyer'));
 
         $this->assertDatabaseHas('users', [
             'email' => 'buyer@test.com',

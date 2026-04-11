@@ -26,8 +26,8 @@ class PackagePurchasedNotification extends Notification
             ->subject('OmniReferral Package Purchased: ' . $this->package->name)
             ->greeting('Congratulations, ' . $notifiable->name . '!')
             ->line('Your payment for the ' . $this->package->name . ' package has been received.')
-            ->line('We have started preparing your onboarding and lead delivery workflow.')
-            ->action('Continue Onboarding', $this->purchaseUrl)
+            ->line('We have started preparing your account setup and lead delivery workflow.')
+            ->action('Sign In To OmniReferral', $this->purchaseUrl)
             ->line('If you did not initiate this transaction, please contact support immediately.');
     }
 }
