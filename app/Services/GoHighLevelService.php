@@ -52,6 +52,7 @@ class GoHighLevelService
             ],
             'custom_fields' => [
                 ['key' => 'zip_code', 'field_value' => $lead->zip_code],
+                ['key' => 'property_address', 'field_value' => $lead->property_address],
                 ['key' => 'timeline', 'field_value' => $lead->timeline],
                 ['key' => 'financing_status', 'field_value' => $lead->financing_status],
                 ['key' => 'lead_number', 'field_value' => $lead->lead_number],

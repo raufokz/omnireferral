@@ -28,7 +28,7 @@ class LeadFollowUpReminderNotification extends Notification
             ->line('This lead needs attention. Please follow up as soon as possible.')
             ->line('Intent: ' . ucfirst($this->lead->intent))
             ->line('Status: ' . ucfirst($this->lead->status))
-            ->line('ZIP code: ' . $this->lead->zip_code)
+            ->line($this->lead->locationLabel() . ': ' . $this->lead->locationSummary())
             ->line('Agent assigned: ' . ($this->lead->assignedAgent?->name ?? 'Unassigned'))
             ->action('View admin lead pipeline', route('admin.dashboard'))
             ->line('Tip: Add a note and update status after reaching out.');

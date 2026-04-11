@@ -466,7 +466,7 @@ const initCarousels = () => {
 // --- Multi-Step Forms ---
 document.querySelectorAll('[data-multi-step]').forEach(form => {
     const steps = Array.from(form.querySelectorAll('.form-step'));
-    const progress = form.querySelector('.form-progress-bar > div');
+    const progressBar = form.querySelector('.form-progress-bar');
     let current = 0;
 
     const showStep = (idx) => {
@@ -475,7 +475,10 @@ document.querySelectorAll('[data-multi-step]').forEach(form => {
             s.classList.toggle('is-active', i === current);
             s.hidden = i !== current;
         });
-        if (progress) progress.style.width = `${((current + 1) / steps.length) * 100}%`;
+
+        if (progressBar) {
+            progressBar.style.setProperty('--progress', `${((current + 1) / steps.length) * 100}%`);
+        }
     };
 
     form.querySelectorAll('[data-form-next]').forEach(btn => {
@@ -494,7 +497,42 @@ document.querySelectorAll('[data-multi-step]').forEach(form => {
 
 // --- Dynamic Map Support ---
 window.initHomeMap = () => {
+    const zipInput = document.querySelector('[data-market-zip]');
+    const zipDisplay = document.getElementById('buyer-zip-display');
+    const zipStatus = document.getElementById('buyer-zip-status');
+
+    const syncZipState = (value) => {
+        const zip = (value || '').trim();
+        const isValidZip = /^\d{5}(?:-\d{4})?$/.test(zip);
+
+        if (zipDisplay) {
+            zipDisplay.textContent = zip || 'Enter ZIP';
+        }
+
+        if (zipStatus) {
+            zipStatus.textContent = zip === '' ? 'Awaiting input' : (isValidZip ? 'Ready to route' : 'Enter a valid ZIP');
+        }
+    };
+
+    syncZipState(zipInput?.value ?? '');
+
     const mapEl = document.getElementById('homeMap') || document.getElementById('hero-map');
+    if (zipInput) {
+        zipInput.addEventListener('input', e => {
+            const sanitized = e.target.value.replace(/[^\d-]/g, '').slice(0, 10);
+
+            if (e.target.value !== sanitized) {
+                e.target.value = sanitized;
+            }
+
+            syncZipState(sanitized);
+
+            if (typeof window.updateMapZip === 'function' && sanitized.length >= 5) {
+                window.updateMapZip(sanitized);
+            }
+        });
+    }
+
     if (!mapEl || typeof google === 'undefined') return;
 
     const map = new google.maps.Map(mapEl, {
@@ -519,8 +557,9 @@ window.initHomeMap = () => {
         });
     };
 
-    const zipInput = document.querySelector('input[name="zip_code"]');
-    zipInput?.addEventListener('input', e => window.updateMapZip(e.target.value));
+    if (zipInput && /^\d{5}(?:-\d{4})?$/.test(zipInput.value.trim())) {
+        window.updateMapZip(zipInput.value.trim());
+    }
 };
 
 // --- Initialization ---

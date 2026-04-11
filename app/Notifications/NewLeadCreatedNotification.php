@@ -28,8 +28,10 @@ class NewLeadCreatedNotification extends Notification
             ->line('A lead has been created in OmniReferral with the following details:')
             ->line('Intent: ' . ucfirst($this->lead->intent))
             ->line('Package: ' . ucfirst($this->lead->package_type))
-            ->line('ZIP: ' . $this->lead->zip_code)
-            ->line('Budget: ' . ($this->lead->budget ? '$' . number_format($this->lead->budget) : 'N/A'))
+            ->line($this->lead->locationLabel() . ': ' . $this->lead->locationSummary())
+            ->line(($this->lead->intent === 'seller' ? 'Asking price' : 'Budget') . ': ' . ($this->lead->intent === 'seller'
+                ? ($this->lead->asking_price ? '$' . number_format($this->lead->asking_price) : 'N/A')
+                : ($this->lead->budget ? '$' . number_format($this->lead->budget) : 'N/A')))
             ->line('Timeline: ' . ($this->lead->timeline ?: 'N/A'))
             ->line('Status: ' . ucfirst($this->lead->status))
             ->action('View Lead', route('admin.dashboard'))
