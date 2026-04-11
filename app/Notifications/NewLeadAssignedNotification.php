@@ -28,7 +28,7 @@ class NewLeadAssignedNotification extends Notification
             ->line('You have been assigned a new lead for follow-up.')
             ->line('Lead name: ' . $this->lead->name)
             ->line('Intent: ' . ucfirst($this->lead->intent))
-            ->line('ZIP: ' . $this->lead->zip_code)
+            ->line($this->lead->locationLabel() . ': ' . $this->lead->locationSummary())
             ->line('Package: ' . ucfirst($this->lead->package_type))
             ->line('Status: ' . ucfirst($this->lead->status))
             ->action('Open Agent Dashboard', route('dashboard.agent'))

@@ -185,4 +185,14 @@ class Lead extends Model
             default => (string) $this->status,
         };
     }
+
+    public function locationSummary(): string
+    {
+        return $this->property_address ?: ($this->zip_code ?: 'Location pending');
+    }
+
+    public function locationLabel(): string
+    {
+        return $this->property_address ? 'Property address' : 'ZIP';
+    }
 }

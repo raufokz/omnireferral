@@ -158,7 +158,7 @@
 
                 {{-- Buyer Panel --}}
                 <div class="tab-panel is-active" id="hero-panel-buyer" role="tabpanel" aria-labelledby="hero-tab-buyer" data-tab-panel="buyer">
-                    <form class="hero-form" method="POST" action="{{ route('leads.store') }}" data-multi-step novalidate>
+                    <form class="hero-form hero-form--buyer-home" method="POST" action="{{ route('leads.store') }}" data-multi-step novalidate>
                         @csrf
                         <input type="hidden" name="intent" value="buyer">
 
@@ -167,6 +167,10 @@
                         </div>
 
                         <div class="form-step is-active">
+                            <div class="hero-form-step-meta">
+                                <span>Step 1 of 3</span>
+                                <strong>Contact Details</strong>
+                            </div>
                             <div class="form-intro hero-form-intro">
                                 <h2>Find buyer-ready opportunities</h2>
                                 <p>Start with your details and we will connect you to the right local path.</p>
@@ -182,6 +186,10 @@
                         </div>
 
                         <div class="form-step">
+                            <div class="hero-form-step-meta">
+                                <span>Step 2 of 3</span>
+                                <strong>Market &amp; Budget</strong>
+                            </div>
                             <div class="form-intro hero-form-intro">
                                 <h2>Where are you looking?</h2>
                                 <p>We use your location, budget, and timing to route you intelligently.</p>
@@ -201,17 +209,39 @@
                                 </div>
                             </div>
 
-                            <div class="hero-form__grid">
+                            <div class="hero-form__grid hero-form__grid--buyer-home">
                                 <input type="hidden" name="package_slug" value="quick-leads">
-                                <label class="floating-field zip-tags" data-zip-tags>
-                                    <input type="hidden" name="zip_code" value="">
-                                    <input type="text" placeholder="Enter ZIP code" data-zip-entry inputmode="numeric" maxlength="10">
-                                    <span>ZIP code</span>
-                                    <div class="zip-tag-list" aria-live="polite"></div>
-                                    <button type="button" class="zip-add-btn" data-zip-add>Add another ZIP</button>
-                                </label>
+                                <div class="buyer-zip-card hero-form__full">
+                                    <div class="buyer-zip-card__header">
+                                        <span class="buyer-zip-card__eyebrow">Target Market</span>
+                                        <h3>Choose your first target ZIP code</h3>
+                                        <p>Start with one market and we will widen the search area later if you want nearby neighborhoods too.</p>
+                                    </div>
+                                    <label class="buyer-zip-card__field">
+                                        <span>Preferred ZIP code</span>
+                                        <input type="text" name="zip_code" placeholder="75201" data-market-zip inputmode="numeric" maxlength="10" required pattern="^\d{5}(?:-\d{4})?$">
+                                    </label>
+                                    <small class="buyer-zip-card__hint">Use a valid 5-digit ZIP code to help our team route your request accurately.</small>
+                                </div>
                                 <label><span>Property type</span><select name="property_type"><option value="">Select type</option><option>House</option><option>Apartment</option><option>Condo</option><option>Commercial</option></select></label>
                                 <label><span>Budget range</span><input type="number" name="budget" placeholder="450000" min="0" inputmode="numeric"></label>
+                            </div>
+                            <div class="hero-form__footer">
+                                <button type="button" class="button button--ghost" data-form-prev>Back</button>
+                                <button type="button" class="button button--orange" data-form-next>Continue</button>
+                            </div>
+                        </div>
+
+                        <div class="form-step">
+                            <div class="hero-form-step-meta">
+                                <span>Step 3 of 3</span>
+                                <strong>Timing &amp; Preferences</strong>
+                            </div>
+                            <div class="form-intro hero-form-intro">
+                                <h2>Help us match the right next step</h2>
+                                <p>These final details help the ISA and routing team deliver a cleaner buyer handoff.</p>
+                            </div>
+                            <div class="hero-form__grid hero-form__grid--buyer-home">
                                 <label><span>Timeline</span><select name="timeline"><option value="">Select timing</option><option>ASAP</option><option>0-30 days</option><option>1-3 months</option><option>3-6 months</option><option>Exploring</option></select></label>
                                 <label><span>Financing status</span><select name="financing_status"><option value="">Select status</option><option>Cash buyer</option><option>Pre-approved</option><option>Need financing guidance</option><option>Just exploring</option></select></label>
                                 <label><span>Preferred contact</span><select name="contact_preference"><option value="">Choose contact method</option><option>Email</option><option>Phone</option><option>Text</option></select></label>
@@ -227,7 +257,7 @@
 
                 {{-- Seller Panel --}}
                 <div class="tab-panel" id="hero-panel-seller" role="tabpanel" aria-labelledby="hero-tab-seller" data-tab-panel="seller" hidden>
-                    <form class="hero-form" method="POST" action="{{ route('leads.store') }}" enctype="multipart/form-data" data-multi-step novalidate>
+                    <form class="hero-form hero-form--seller-home" method="POST" action="{{ route('leads.store') }}" enctype="multipart/form-data" data-multi-step novalidate>
                         @csrf
                         <input type="hidden" name="intent" value="seller">
 
@@ -236,6 +266,10 @@
                         </div>
 
                         <div class="form-step is-active">
+                            <div class="hero-form-step-meta">
+                                <span>Step 1 of 3</span>
+                                <strong>Contact Details</strong>
+                            </div>
                             <div class="form-intro hero-form-intro">
                                 <h2>Share a seller opportunity</h2>
                                 <p>Give us the contact details first and we will handle the structured handoff.</p>
@@ -251,22 +285,37 @@
                         </div>
 
                         <div class="form-step">
+                            <div class="hero-form-step-meta">
+                                <span>Step 2 of 3</span>
+                                <strong>Address &amp; Pricing</strong>
+                            </div>
                             <div class="form-intro hero-form-intro">
-                                <h2>Property details</h2>
-                                <p>Share the basics so our team can qualify and route the lead correctly.</p>
+                                <h2>Tell us about the property</h2>
+                                <p>Use the full property address so our team can review the opportunity with better market context.</p>
                             </div>
                             <div class="hero-form__grid">
                                 <input type="hidden" name="package_slug" value="power-leads">
-                                <label class="floating-field zip-tags" data-zip-tags>
-                                    <input type="hidden" name="zip_code" value="">
-                                    <input type="text" placeholder="Enter ZIP code" data-zip-entry inputmode="numeric" maxlength="10">
-                                    <span>Property ZIP code</span>
-                                    <div class="zip-tag-list" aria-live="polite"></div>
-                                    <button type="button" class="zip-add-btn" data-zip-add>Add another ZIP</button>
-                                </label>
+                                <label class="hero-form__full"><span>Property address</span><input type="text" name="property_address" placeholder="123 Main St, Dallas, TX 75201" required autocomplete="street-address"></label>
                                 <label><span>Property type</span><select name="property_type"><option value="">Select type</option><option>House</option><option>Apartment</option><option>Condo</option><option>Commercial</option></select></label>
                                 <label><span>Asking price</span><input type="number" name="asking_price" placeholder="625000" min="0" inputmode="numeric"></label>
                                 <label><span>Timeline</span><select name="timeline"><option value="">Select timing</option><option>ASAP</option><option>0-30 days</option><option>1-3 months</option><option>3-6 months</option><option>Exploring options</option></select></label>
+                            </div>
+                            <div class="hero-form__footer">
+                                <button type="button" class="button button--ghost" data-form-prev>Back</button>
+                                <button type="button" class="button button--orange" data-form-next>Continue</button>
+                            </div>
+                        </div>
+
+                        <div class="form-step">
+                            <div class="hero-form-step-meta">
+                                <span>Step 3 of 3</span>
+                                <strong>Selling Details</strong>
+                            </div>
+                            <div class="form-intro hero-form-intro">
+                                <h2>Finish the seller handoff</h2>
+                                <p>Share the final selling details so the ISA team can verify the lead and route it properly.</p>
+                            </div>
+                            <div class="hero-form__grid">
                                 <label><span>Financing / deal constraints</span><select name="financing_status"><option value="">Select status</option><option>Need pricing help</option><option>As-is sale</option><option>Open to renovations</option><option>Need quick close</option></select></label>
                                 <label><span>Preferred contact</span><select name="contact_preference"><option value="">Choose contact method</option><option>Email</option><option>Phone</option><option>Text</option></select></label>
                                 <label class="hero-form__full"><span>Upload property image</span><input type="file" name="property_image" accept="image/*"></label>

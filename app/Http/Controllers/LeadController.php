@@ -10,6 +10,7 @@ use App\Notifications\NewLeadCreatedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\Rule;
 
 class LeadController extends Controller
 {
@@ -20,7 +21,19 @@ class LeadController extends Controller
             'email' => ['required', 'email'],
             'phone' => ['required', 'string', 'max:30'],
             'intent' => ['required', 'in:buyer,seller,investor,other'],
-            'zip_code' => ['required', 'string', 'max:10'],
+            'zip_code' => [
+                Rule::requiredIf(fn () => $request->input('intent') === 'buyer'),
+                'nullable',
+                'string',
+                'max:10',
+                'regex:/^\d{5}(?:-\d{4})?$/',
+            ],
+            'property_address' => [
+                Rule::requiredIf(fn () => $request->input('intent') === 'seller'),
+                'nullable',
+                'string',
+                'max:255',
+            ],
             'property_type' => ['nullable', 'string', 'max:100'],
             'budget' => ['nullable', 'integer'],
             'asking_price' => ['nullable', 'integer'],
@@ -34,7 +47,20 @@ class LeadController extends Controller
             'email.required' => 'Oops, looks like you missed your email!',
             'name.required' => 'We need your name so we know who to help.',
             'property_image.image' => 'Please upload a valid property photo.',
+            'zip_code.required' => 'Add the ZIP code where you want to buy so we can route the request.',
+            'zip_code.regex' => 'Enter a valid ZIP code using 5 digits or ZIP+4 format.',
+            'property_address.required' => 'Add the full property address so we can review the seller opportunity properly.',
         ]);
+
+        if (($validated['intent'] ?? null) === 'buyer') {
+            $validated['zip_code'] = $this->normalizeZipCode($validated['zip_code'] ?? null);
+            $validated['property_address'] = null;
+        }
+
+        if (($validated['intent'] ?? null) === 'seller') {
+            $validated['property_address'] = trim((string) ($validated['property_address'] ?? ''));
+            $validated['zip_code'] = $this->extractZipCode($validated['property_address']);
+        }
 
         if ($request->hasFile('property_image')) {
             $validated['property_image'] = $request->file('property_image')->store('properties/leads', 'public');
@@ -67,8 +93,9 @@ class LeadController extends Controller
                 'timeline' => $request->input('timeline'),
                 'financing_status' => $request->input('financing_status'),
                 'contact_preference' => $request->input('contact_preference'),
+                'property_address' => $validated['property_address'] ?? null,
             ],
-            'lead_score' => $request->filled('timeline') && $request->filled('budget') ? 82 : 68,
+            'lead_score' => $request->filled('timeline') && ($request->filled('budget') || $request->filled('asking_price')) ? 82 : 68,
             'is_priority' => in_array($request->input('timeline'), ['ASAP', '0-30 days'], true),
         ]);
 
@@ -79,5 +106,25 @@ class LeadController extends Controller
         SyncLeadToGoHighLevel::dispatch($lead->id);
 
         return back()->with('success', 'Welcome aboard! Your request has been captured in the OmniReferral review queue and is currently unassigned until operations routes it.');
+    }
+
+    private function normalizeZipCode(?string $zipCode): ?string
+    {
+        $zipCode = trim((string) $zipCode);
+
+        return $zipCode !== '' ? $zipCode : null;
+    }
+
+    private function extractZipCode(?string $address): ?string
+    {
+        $address = trim((string) $address);
+
+        if ($address === '') {
+            return null;
+        }
+
+        preg_match('/\b\d{5}(?:-\d{4})?\b/', $address, $matches);
+
+        return $matches[0] ?? null;
     }
 }
