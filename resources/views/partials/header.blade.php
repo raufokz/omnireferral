@@ -57,9 +57,9 @@
                     <a href="{{ route('pricing') }}" class="button button--secondary">Packages</a>
                     <a href="{{ route('contact') }}" class="button button--ghost">Support</a>
                 @else
-                    <a href="{{ route('login') }}" class="button button--orange nav-auth-cta">Login / Sign Up</a>
+                    <a href="{{ route('login') }}" class="button button--secondary">Login</a>
+                    <a href="{{ route('register') }}" class="button button--orange nav-auth-cta">Register</a>
                     <a href="{{ route('pricing') }}" class="button button--secondary">Get Leads</a>
-                    <a href="{{ route('contact') }}" class="button button--secondary">Contact Sales</a>
                 @endauth
             </div>
         </nav>
@@ -72,7 +72,8 @@
                     <button type="submit" class="button button--orange">Logout</button>
                 </form>
             @else
-                <a href="{{ route('login') }}" class="button button--blue nav-auth-cta">Login / Sign Up</a>
+                <a href="{{ route('login') }}" class="button button--ghost-blue">Login</a>
+                <a href="{{ route('register') }}" class="button button--blue nav-auth-cta">Register</a>
                 <a href="{{ route('pricing') }}" class="button button--orange">Get Leads</a>
             @endauth
         </div>

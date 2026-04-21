@@ -312,9 +312,9 @@
 .auth-step-actions {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: 0.7rem;
-    margin-top: 0.45rem;
+    margin-top: 1rem;
 }
 
 .auth-step-actions--single {
