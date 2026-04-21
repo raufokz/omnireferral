@@ -32,7 +32,7 @@
             'name' => 'Ariana Holt',
             'role' => 'Buyer Client',
             'location' => 'Dallas, TX',
-            'path' => asset('images/reviews/review-1.svg'),
+            'path' => asset('images/reviews/review-1-real.png'),
             'audience' => 'Buyer',
             'has_video' => false,
         ],
@@ -41,7 +41,7 @@
             'name' => 'Marcus Dean',
             'role' => 'Seller Client',
             'location' => 'Charlotte, NC',
-            'path' => asset('images/reviews/review-2.svg'),
+            'path' => asset('images/reviews/review-1-real.png'),
             'audience' => 'Seller',
             'has_video' => false,
         ],
@@ -50,7 +50,7 @@
             'name' => 'Jordan Miles',
             'role' => 'Broker | Miles Realty Group',
             'location' => 'Austin, TX',
-            'path' => asset('images/reviews/review-3.svg'),
+            'path' => asset('images/reviews/review-1-real.png'),
             'audience' => 'Agent',
             'has_video' => false,
         ],
@@ -59,7 +59,7 @@
             'name' => 'Nina Foster',
             'role' => 'Seller Client',
             'location' => 'Phoenix, AZ',
-            'path' => asset('images/reviews/review-4.svg'),
+            'path' => asset('images/reviews/review-1-real.png'),
             'audience' => 'Seller',
             'has_video' => false,
         ],
@@ -68,7 +68,7 @@
             'name' => 'Chris Everett',
             'role' => 'Investor Advisor | Everett Homes',
             'location' => 'Phoenix, AZ',
-            'path' => asset('images/reviews/review-1.svg'),
+            'path' => asset('images/reviews/review-1-real.png'),
             'audience' => 'Agent',
             'has_video' => false,
         ],
@@ -77,7 +77,7 @@
             'name' => 'Leah Monroe',
             'role' => 'Buyer Client',
             'location' => 'Tampa, FL',
-            'path' => asset('images/reviews/review-2.svg'),
+            'path' => asset('images/reviews/review-1-real.png'),
             'audience' => 'Buyer',
             'has_video' => false,
         ],
@@ -394,7 +394,7 @@
             </div>
             <div class="about-home-visual" data-animate="right">
                 <div class="about-home-visual__image-wrap">
-                    <img src="{{ asset('images/about/about-omnireferral.svg') }}" alt="Illustration representing OmniReferral's coordinated lead routing platform" loading="lazy">
+                    <img src="{{ asset('images/about/about-omnireferral-real.png') }}" alt="Real estate brokers looking at data in luxury property" loading="lazy">
                 </div>
                 <div class="about-home-visual__note">
                     <h3>Designed to remove friction</h3>
