@@ -8,9 +8,59 @@
 .page-auth #main-content {
     width: 100%;
     min-height: 100vh;
+}
+
+.page-login #main-content,
+.page-register #main-content {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
     /* The exact diagonal background: Orange top-left, Navy bottom-right */
     background: linear-gradient(115deg, #FF6000 0%, #FF6000 50%, #06152B 50%, #06152B 100%);
     padding: calc(var(--header-height, 80px) + 2rem) 2rem 2rem;
+}
+
+.page-password #main-content {
+    background: linear-gradient(160deg, #eef4ff 0%, #f8fbff 45%, #e8f1ff 100%);
+    padding: calc(var(--header-height, 80px) + 1.5rem) 1rem 2.5rem;
+}
+
+.page-password .page-hero {
+    padding: 0 0 1rem;
+    background: transparent;
+}
+
+.page-password .page-hero__content {
+    text-align: center;
+    max-width: 680px;
+}
+
+.page-password .page-hero__content p {
+    color: #4E607A;
+}
+
+.page-password .auth-section {
+    padding: 0;
+}
+
+.page-password .auth-form-shell {
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    border-radius: 16px;
+    border: 1px solid rgba(11, 54, 104, 0.12);
+    box-shadow: 0 20px 44px rgba(15, 23, 42, 0.1);
+    background: #FFFFFF;
+}
+
+.page-password .auth-form-shell .button {
+    width: 100%;
+    justify-content: center;
+}
+
+.page-password .auth-switch-copy {
+    text-align: center;
 }
 
 [x-cloak] {
@@ -604,9 +654,15 @@
     .auth-col-right {
         padding: 3rem 2rem;
     }
-    .page-auth #main-content {
+    .page-login #main-content,
+    .page-register #main-content {
         padding: calc(var(--header-height-mobile, 64px) + 1.25rem) 0.75rem 1rem;
         background: #0B192C; /* Solid for mobile */
+    }
+
+    .page-password #main-content {
+        padding: calc(var(--header-height-mobile, 64px) + 1rem) 0.75rem 1.25rem;
+        background: linear-gradient(180deg, #f3f8ff 0%, #edf4ff 100%);
     }
     .auth-custom-card {
         border-radius: 0;

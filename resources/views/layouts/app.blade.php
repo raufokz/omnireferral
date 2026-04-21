@@ -41,6 +41,9 @@
         request()->routeIs('home') ? 'page-home' : null,
         request()->routeIs('dashboard*', 'admin.*') ? 'page-dashboard' : null,
         request()->routeIs('login', 'register', 'password.*') ? 'page-auth' : null,
+        request()->routeIs('login') ? 'page-login' : null,
+        request()->routeIs('register') ? 'page-register' : null,
+        request()->routeIs('password.*') ? 'page-password' : null,
     ])->filter()->implode(' ');
 @endphp
 <body class="antialiased {{ $bodyClass }}" data-google-maps-api-key="{{ config('services.google_maps.key') }}">
