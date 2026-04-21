@@ -120,8 +120,8 @@
         <div class="container hero__content hero__content--premium homepage-hero__layout">
             <div class="hero__copy hero__copy--premium homepage-hero__copy" data-reveal="left">
                 <span class="eyebrow">Premium Real Estate Lead Engine</span>
-                <h1 id="hero-headline">Find serious buyers & sellers faster.</h1>
-                <p>ISA-qualified intake, smarter routing, and dashboards that feel like a modern marketplace.</p>
+                <h1 id="hero-headline">Buyer & Seller Leads. Faster Closings.</h1>
+                <p>AI + ISA screening, smart routing, and conversion-first delivery built for modern teams.</p>
 
                 <div class="hero__actions hero__actions--spacious">
                     <a href="#lead-forms" class="button button--orange">Get Started</a>
@@ -147,8 +147,8 @@
             <div class="search-card hero-search-card hero-search-card--premium homepage-hero__form" data-animate="right" id="lead-forms">
                 <div class="hero-search-card__header">
                     <span class="eyebrow">Start Your Request</span>
-                    <h2>Tell us what kind of opportunity you need</h2>
-                    <p>Choose the buyer or seller path and we will guide your request into the right next step without adding friction.</p>
+                    <h2>Launch your lead request</h2>
+                    <p>Pick Buyer or Seller and complete the short step flow.</p>
                 </div>
 
                 <div class="tab-switcher hero-tabs" role="tablist" aria-label="Lead type">
@@ -196,7 +196,7 @@
                             </div>
 
                             <div class="hero-map-card">
-                                <div class="hero-map" id="hero-map" aria-label="Lead search map">Map placeholder – integrate Leaflet/Google Maps</div>
+                                <div class="hero-map" id="hero-map" aria-label="Lead search map">Map preview - ZIP routing</div>
                                 <div class="hero-map-overlay">
                                     <div class="hero-map-overlay__item">
                                         <strong>ZIP</strong>

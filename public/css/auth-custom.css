@@ -2,14 +2,15 @@
 
 /* Global Reset for Auth Pages */
 .page-auth {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.page-auth #main-content {
+    width: 100%;
     min-height: 100vh;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
     /* The exact diagonal background: Orange top-left, Navy bottom-right */
     background: linear-gradient(115deg, #FF6000 0%, #FF6000 50%, #06152B 50%, #06152B 100%);
     padding: calc(var(--header-height, 80px) + 2rem) 2rem 2rem;
-    font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 [x-cloak] {
@@ -83,6 +84,9 @@
 }
 
 .page-auth .site-header {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
     background: rgba(6, 21, 43, 0.85) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.16) !important;
     backdrop-filter: blur(14px);
@@ -111,6 +115,7 @@
     display: flex;
     width: 100%;
     max-width: 1050px;
+    margin: 0 auto;
     background: #FFFFFF;
     border-radius: 12px;
     box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
@@ -198,8 +203,42 @@
     gap: 1rem;
 }
 
+.auth-form .form-progress {
+    width: 100%;
+    height: 8px;
+    margin-bottom: 0.4rem;
+    border-radius: 999px;
+    background: #E2E8F0;
+    overflow: hidden;
+}
+
+.auth-form .form-progress-bar {
+    width: 100% !important;
+    height: 100%;
+    background: transparent !important;
+    border-radius: inherit;
+    position: relative;
+}
+
+.auth-form .form-progress-bar::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: var(--progress, 25%);
+    border-radius: inherit;
+    background: linear-gradient(90deg, #FF6000 0%, #0F4DA8 100%);
+    transition: width 0.3s ease;
+}
+
 .auth-step {
     margin: 0;
+    padding: 1rem;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    background: #FFFFFF;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
 }
 
 .auth-step-meta {
@@ -225,7 +264,7 @@
 
 .auth-step-meta strong {
     color: #0F172A;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     font-weight: 700;
 }
 
@@ -286,6 +325,7 @@
     border: none;
     border-radius: 10px;
     padding: 0.8rem 1.15rem;
+    min-width: 130px;
     font-size: 0.88rem;
     font-weight: 700;
     cursor: pointer;
@@ -564,7 +604,7 @@
     .auth-col-right {
         padding: 3rem 2rem;
     }
-    .page-auth {
+    .page-auth #main-content {
         padding: calc(var(--header-height-mobile, 64px) + 1.25rem) 0.75rem 1rem;
         background: #0B192C; /* Solid for mobile */
     }

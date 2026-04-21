@@ -320,6 +320,303 @@
     line-height: 1.55;
 }
 
+/* =====================================================
+   COMPACT HERO MODE (desktop ~400px)
+   ===================================================== */
+.homepage-hero {
+    height: 400px;
+    min-height: 400px;
+    padding-top: clamp(0.95rem, 1.8vw, 1.5rem) !important;
+    padding-bottom: clamp(0.9rem, 1.7vw, 1.45rem) !important;
+}
+
+.homepage-hero__layout {
+    min-height: 360px;
+    max-height: 390px;
+    align-items: stretch;
+    gap: clamp(0.9rem, 1.8vw, 1.4rem);
+}
+
+.homepage-hero__copy,
+.homepage-hero__form {
+    height: 100%;
+    max-height: 390px;
+}
+
+.homepage-hero__copy {
+    padding: clamp(0.9rem, 1.8vw, 1.2rem);
+    display: grid;
+    grid-template-rows: auto auto auto 1fr;
+    align-content: start;
+}
+
+.homepage-hero__copy h1 {
+    margin-bottom: 0.45rem;
+    max-width: 13ch;
+    font-size: clamp(1.9rem, 3.4vw, 2.7rem);
+    line-height: 0.99;
+}
+
+.homepage-hero__copy p {
+    margin-bottom: 0.55rem;
+    max-width: 44ch;
+    font-size: 0.9rem;
+    line-height: 1.45;
+}
+
+.hero__actions--spacious {
+    margin-top: 0.55rem;
+    gap: 0.55rem;
+}
+
+.hero__actions--spacious .button {
+    min-height: 40px;
+    padding: 0.55rem 0.95rem;
+    font-size: 0.8rem;
+}
+
+.hero__trust-row {
+    margin-top: 0.65rem;
+    gap: 0.45rem;
+}
+
+.hero-trust-chip {
+    gap: 0.42rem;
+    padding: 0.38rem 0.66rem;
+    font-size: 0.72rem;
+    line-height: 1.2;
+}
+
+.hero-trust-chip svg {
+    width: 0.82rem;
+    height: 0.82rem;
+}
+
+.homepage-hero__form {
+    display: flex;
+    flex-direction: column;
+    padding: clamp(0.72rem, 1.25vw, 0.95rem);
+}
+
+.homepage-hero__form .hero-search-card__header {
+    gap: 0.2rem;
+    margin-bottom: 0.45rem;
+}
+
+.homepage-hero__form .hero-search-card__header h2 {
+    font-size: clamp(1rem, 1.45vw, 1.24rem);
+    line-height: 1.12;
+}
+
+.homepage-hero__form .hero-search-card__header p {
+    margin: 0;
+    font-size: 0.76rem;
+    line-height: 1.34;
+}
+
+.homepage-hero__form .hero-tabs {
+    margin-bottom: 0.45rem;
+    padding: 0.2rem;
+}
+
+.homepage-hero__form .tab-switcher__button {
+    padding: 0.42rem 0.65rem;
+    font-size: 0.72rem;
+}
+
+.homepage-hero__form .tab-panel {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 0.2rem;
+}
+
+.homepage-hero__form .tab-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.homepage-hero__form .tab-panel::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(11, 54, 104, 0.32);
+}
+
+.homepage-hero__form .hero-form--buyer-home,
+.homepage-hero__form .hero-form--seller-home {
+    gap: 0.42rem;
+}
+
+.homepage-hero__form .form-progress {
+    height: 5px;
+    margin-bottom: 0.45rem;
+}
+
+.homepage-hero__form .hero-form--buyer-home .form-step,
+.homepage-hero__form .hero-form--seller-home .form-step {
+    padding: 0.64rem 0.72rem;
+    border-radius: 16px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 12px 20px rgba(15, 33, 61, 0.05);
+}
+
+.homepage-hero__form .hero-form-step-meta {
+    gap: 0.45rem;
+    margin-bottom: 0.45rem;
+    padding-bottom: 0.42rem;
+}
+
+.homepage-hero__form .hero-form-step-meta span {
+    padding: 0.24rem 0.5rem;
+    font-size: 0.61rem;
+}
+
+.homepage-hero__form .hero-form-step-meta strong {
+    font-size: 0.76rem;
+}
+
+.homepage-hero__form .hero-form--buyer-home .hero-form-intro,
+.homepage-hero__form .hero-form--seller-home .hero-form-intro {
+    gap: 0.18rem;
+    margin-bottom: 0.45rem;
+    padding-bottom: 0.42rem;
+}
+
+.homepage-hero__form .hero-form--buyer-home .hero-form-intro h2,
+.homepage-hero__form .hero-form--seller-home .hero-form-intro h2 {
+    font-size: 0.95rem;
+    line-height: 1.25;
+}
+
+.homepage-hero__form .hero-form--buyer-home .hero-form-intro p,
+.homepage-hero__form .hero-form--seller-home .hero-form-intro p {
+    margin: 0;
+    font-size: 0.73rem;
+    line-height: 1.32;
+}
+
+.homepage-hero__form .hero-form--buyer-home .hero-form__grid,
+.homepage-hero__form .hero-form--seller-home .hero-form__grid {
+    gap: 0.45rem;
+}
+
+.homepage-hero__form .hero-form--buyer-home label,
+.homepage-hero__form .hero-form--seller-home label {
+    gap: 0.24rem;
+    padding: 0.5rem 0.55rem;
+    border-radius: 12px;
+}
+
+.homepage-hero__form .hero-form--buyer-home label > span,
+.homepage-hero__form .hero-form--seller-home label > span {
+    font-size: 0.66rem;
+}
+
+.homepage-hero__form .hero-form--buyer-home input,
+.homepage-hero__form .hero-form--buyer-home textarea,
+.homepage-hero__form .hero-form--buyer-home select,
+.homepage-hero__form .hero-form--seller-home input,
+.homepage-hero__form .hero-form--seller-home textarea,
+.homepage-hero__form .hero-form--seller-home select {
+    min-height: 36px;
+    padding: 0.42rem 0.56rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+}
+
+.homepage-hero__form .hero-form--buyer-home textarea,
+.homepage-hero__form .hero-form--seller-home textarea {
+    min-height: 70px;
+}
+
+.homepage-hero__form .hero-form--buyer-home .hero-form__footer,
+.homepage-hero__form .hero-form--seller-home .hero-form__footer {
+    margin-top: 0.45rem;
+    padding-top: 0.45rem;
+    gap: 0.45rem;
+}
+
+.homepage-hero__form .hero-form--buyer-home .hero-form__footer .button,
+.homepage-hero__form .hero-form--seller-home .hero-form__footer .button {
+    min-width: 118px;
+    min-height: 34px;
+    padding: 0.45rem 0.65rem;
+    font-size: 0.72rem;
+}
+
+.homepage-hero__form .hero-map-card {
+    margin-bottom: 0.4rem;
+    border-radius: 12px;
+}
+
+.homepage-hero__form .hero-map {
+    min-height: 86px;
+    height: 86px;
+    font-size: 0.66rem;
+    display: grid;
+    place-items: center;
+}
+
+.homepage-hero__form .hero-map-overlay {
+    margin-top: 0.3rem;
+    gap: 0.3rem;
+}
+
+.homepage-hero__form .hero-map-overlay__item {
+    min-width: 0;
+    padding: 0.33rem 0.42rem;
+    border-radius: 9px;
+    font-size: 0.65rem;
+}
+
+.homepage-hero__form .hero-map-overlay__item strong {
+    margin-right: 0.2rem;
+    font-size: 0.61rem;
+}
+
+.homepage-hero__form .hero-map-overlay__item span {
+    font-size: 0.61rem;
+}
+
+.homepage-hero__form .buyer-zip-card {
+    gap: 0.45rem;
+    padding: 0.58rem 0.62rem;
+    border-radius: 14px;
+}
+
+.homepage-hero__form .buyer-zip-card__eyebrow {
+    padding: 0.23rem 0.5rem;
+    font-size: 0.56rem;
+}
+
+.homepage-hero__form .buyer-zip-card__header {
+    gap: 0.15rem;
+}
+
+.homepage-hero__form .buyer-zip-card__header h3 {
+    font-size: 0.83rem;
+}
+
+.homepage-hero__form .buyer-zip-card__header p {
+    font-size: 0.68rem;
+    line-height: 1.28;
+}
+
+.homepage-hero__form .buyer-zip-card__field {
+    gap: 0.22rem;
+}
+
+.homepage-hero__form .buyer-zip-card__field span {
+    font-size: 0.65rem;
+}
+
+.homepage-hero__form .buyer-zip-card__field input[data-market-zip] {
+    min-height: 36px;
+    padding-inline: 0.58rem;
+}
+
+.homepage-hero__form .buyer-zip-card__hint {
+    font-size: 0.62rem;
+    line-height: 1.24;
+}
+
 .stat-strip__item {
     position: relative;
     overflow: hidden;
@@ -1011,6 +1308,22 @@
 }
 
 @media (max-width: 1024px) {
+    .homepage-hero {
+        height: auto;
+    }
+
+    .homepage-hero__layout,
+    .homepage-hero__copy,
+    .homepage-hero__form {
+        min-height: auto;
+        max-height: none;
+        height: auto;
+    }
+
+    .homepage-hero__form .tab-panel {
+        max-height: 320px;
+    }
+
     .homepage-hero__trust {
         grid-template-columns: 1fr;
     }
@@ -1060,6 +1373,12 @@
         min-height: auto;
         padding-top: 1.5rem !important;
         padding-bottom: 1.2rem !important;
+    }
+
+    .homepage-hero__form .tab-panel {
+        max-height: none;
+        overflow: visible;
+        padding-right: 0;
     }
 
     .homepage-section__heading {
