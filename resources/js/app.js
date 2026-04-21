@@ -68,6 +68,56 @@ const showToast = (message, type = 'info', duration = 5000) => {
 };
 window.showToast = showToast;
 
+const dismissFlashNotification = (flash) => {
+    if (!flash || flash.classList.contains('is-closing')) return;
+    flash.classList.add('is-closing');
+    setTimeout(() => flash.remove(), 300);
+};
+
+const initFlashNotifications = () => {
+    const flashNotifications = Array.from(document.querySelectorAll('.app-flash'));
+    if (!flashNotifications.length) return;
+
+    flashNotifications.forEach((flash) => {
+        if (flash.dataset.enhanced === 'true') return;
+        flash.dataset.enhanced = 'true';
+
+        const durationCandidate = Number(flash.dataset.duration || 5200);
+        const autoCloseDuration = Number.isFinite(durationCandidate) ? Math.max(1800, durationCandidate) : 5200;
+        flash.style.setProperty('--flash-duration', `${autoCloseDuration}ms`);
+
+        let closeButton = flash.querySelector('.app-flash__close');
+        if (!closeButton) {
+            closeButton = document.createElement('button');
+            closeButton.type = 'button';
+            closeButton.className = 'app-flash__close';
+            closeButton.setAttribute('aria-label', 'Close notification');
+            closeButton.innerHTML = '&times;';
+            flash.appendChild(closeButton);
+        }
+
+        if (!flash.querySelector('.app-flash__timer')) {
+            const timer = document.createElement('span');
+            timer.className = 'app-flash__timer';
+            timer.setAttribute('aria-hidden', 'true');
+            flash.appendChild(timer);
+        }
+
+        let timerId = setTimeout(() => dismissFlashNotification(flash), autoCloseDuration);
+
+        closeButton.addEventListener('click', () => {
+            clearTimeout(timerId);
+            dismissFlashNotification(flash);
+        });
+    });
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFlashNotifications);
+} else {
+    initFlashNotifications();
+}
+
 // --- DOM elements ---
 const siteHeader = document.getElementById('siteHeader') || document.querySelector('.site-header');
 const menuToggle = document.getElementById('menuToggle');

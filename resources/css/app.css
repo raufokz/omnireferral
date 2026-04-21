@@ -17840,7 +17840,7 @@ iframe {
     display: flex;
     align-items: flex-start;
     gap: 0.6rem;
-    padding: 0.7rem 0.75rem;
+    padding: 0.7rem 2.1rem 0.7rem 0.75rem;
     margin: 0;
     border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.28);
@@ -17881,6 +17881,11 @@ iframe {
     top: calc(var(--header-height) + 9.15rem);
 }
 
+.app-flash.is-closing {
+    animation: appFlashOut 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    pointer-events: none;
+}
+
 .app-flash--error {
     background: linear-gradient(140deg, #ff6b00, #ff7e26);
     border-color: rgba(255, 168, 120, 0.45);
@@ -17908,6 +17913,60 @@ iframe {
     z-index: 1;
 }
 
+.app-flash__close {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.4rem;
+    width: 1.35rem;
+    height: 1.35rem;
+    border: 0;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    z-index: 2;
+}
+
+.app-flash__close:hover {
+    background: rgba(255, 255, 255, 0.28);
+    transform: scale(1.06);
+}
+
+.app-flash__close:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.7);
+    outline-offset: 2px;
+}
+
+.app-flash__timer {
+    position: absolute;
+    left: 0.45rem;
+    right: 0.45rem;
+    bottom: 0.28rem;
+    height: 2px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.25);
+    overflow: hidden;
+    z-index: 1;
+}
+
+.app-flash__timer::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.92);
+    transform-origin: left;
+    animation: appFlashTimer var(--flash-duration, 5200ms) linear forwards;
+}
+
 @keyframes appFlashIn {
     from {
         opacity: 0;
@@ -17920,6 +17979,18 @@ iframe {
     }
 }
 
+@keyframes appFlashOut {
+    from {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(115%) scale(0.95);
+    }
+}
+
 @keyframes appFlashPulse {
     0%,
     100% {
@@ -17928,6 +17999,16 @@ iframe {
 
     50% {
         box-shadow: 0 18px 42px rgba(7, 24, 51, 0.34);
+    }
+}
+
+@keyframes appFlashTimer {
+    from {
+        transform: scaleX(1);
+    }
+
+    to {
+        transform: scaleX(0);
     }
 }
 
