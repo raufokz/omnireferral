@@ -125,17 +125,17 @@ class PricingController extends Controller
     {
         return [
             'quick-leads' => [
-                'title' => 'Starter Lead',
+                'title' => 'Starter',
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/q61dioT6A8taz0yLfK93',
                 'description' => 'Starter lead onboarding form for initial package setup and campaign handoff.',
             ],
             'power-leads' => [
-                'title' => 'Growth Lead',
+                'title' => 'Growth',
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/ENBVclSqwUuX7awfOEM8',
                 'description' => 'Growth lead onboarding form for teams scaling lead intake and routing.',
             ],
             'prime-leads' => [
-                'title' => 'Elite Lead',
+                'title' => 'Elite',
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/z2wUhJG00x4n3MxY616R',
                 'description' => 'Elite lead onboarding form for premium, high-intent package workflows.',
             ],

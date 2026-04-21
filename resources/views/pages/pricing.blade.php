@@ -98,7 +98,7 @@
             'pricingPlans' => $pricingPlans,
             'toggleGroup' => 'pricing-page',
             'leadActionUrl' => $primaryActionUrl,
-            'featureLimit' => 8,
+            'featureLimit' => null,
         ])
     </div>
 </section>

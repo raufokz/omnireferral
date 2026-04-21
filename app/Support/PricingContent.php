@@ -10,7 +10,7 @@ class PricingContent
             'real_estate' => [
                 [
                     'slug' => 'quick-leads',
-                    'name' => 'Starter Lead',
+                    'name' => 'Starter',
                     'tier' => 'Starter Tier',
                     'value_price' => 999,
                     'price' => 499,
@@ -33,7 +33,7 @@ class PricingContent
                 ],
                 [
                     'slug' => 'power-leads',
-                    'name' => 'Growth Lead',
+                    'name' => 'Growth',
                     'tier' => 'Growth Tier',
                     'value_price' => 1497,
                     'price' => 797,
@@ -59,7 +59,7 @@ class PricingContent
                 ],
                 [
                     'slug' => 'prime-leads',
-                    'name' => 'Elite Lead',
+                    'name' => 'Elite',
                     'tier' => 'Elite Tier',
                     'value_price' => 3299,
                     'price' => 2299,

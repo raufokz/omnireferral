@@ -21,8 +21,7 @@
             $ctaUrl = ($plan['slug'] ?? null) ? route('packages.checkout', $plan['slug']) : $leadActionUrl;
             $isFeatured = $plan['is_featured'] ?? false;
             $features = $plan['features'] ?? [];
-            $visibleFeatures = array_slice($features, 0, $featureLimit);
-            $remainingFeatures = max(count($features) - count($visibleFeatures), 0);
+            $visibleFeatures = $featureLimit ? array_slice($features, 0, $featureLimit) : $features;
         @endphp
         <article class="{{ $cardClass }} {{ $isFeatured ? 'pricing-card--featured' : '' }}">
             <div class="homepage-pricing-card__header">
@@ -46,9 +45,6 @@
                 @foreach($visibleFeatures as $feature)
                     <li>{{ $feature }}</li>
                 @endforeach
-                @if($remainingFeatures > 0)
-                    <li>+ {{ $remainingFeatures }} more package features included</li>
-                @endif
             </ul>
             <a href="{{ $ctaUrl }}" class="button {{ $isFeatured ? 'button--orange' : 'button--blue' }}">{{ $plan['cta_label'] ?? 'Get Started' }}</a>
             @if($showSalesLinks)
@@ -64,8 +60,7 @@
             $ctaUrl = $plan['cta_url'] ?? route('contact', ['plan' => $plan['name']]);
             $isFeatured = $plan['is_featured'] ?? false;
             $features = $plan['features'] ?? [];
-            $visibleFeatures = array_slice($features, 0, $featureLimit);
-            $remainingFeatures = max(count($features) - count($visibleFeatures), 0);
+            $visibleFeatures = $featureLimit ? array_slice($features, 0, $featureLimit) : $features;
         @endphp
         <article class="{{ $cardClass }} {{ $isFeatured ? 'pricing-card--featured' : '' }}">
             <div class="homepage-pricing-card__header">
@@ -86,9 +81,6 @@
                 @foreach($visibleFeatures as $feature)
                     <li>{{ $feature }}</li>
                 @endforeach
-                @if($remainingFeatures > 0)
-                    <li>+ {{ $remainingFeatures }} more support features included</li>
-                @endif
             </ul>
             <a href="{{ $ctaUrl }}" class="button {{ $isFeatured ? 'button--orange' : 'button--blue' }}">{{ $plan['cta_label'] ?? 'Get Started' }}</a>
             @if($showSalesLinks)
