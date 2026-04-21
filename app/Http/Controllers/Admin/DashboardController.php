@@ -65,12 +65,19 @@ class DashboardController extends Controller
             $stage['percent'] = (int) round(($stage['count'] / $maxLeadStage) * 100);
             return $stage;
         });
-        $pendingProperties = Property::query()
-            ->with('realtorProfile.user')
+        $userSubmittedListings = Property::query()
+            ->userSubmitted()
+            ->with(['realtorProfile.user', 'owner'])
             ->withFavoriteSummary()
-            ->pendingReview()
             ->latest()
-            ->take(6)
+            ->take(25)
+            ->get();
+
+        $pendingAccounts = User::query()
+            ->where('status', 'pending')
+            ->whereIn('role', ['buyer', 'seller', 'agent'])
+            ->orderBy('created_at')
+            ->take(12)
             ->get();
         $recentListingMessages = Contact::query()
             ->with(['property', 'recipient', 'realtorProfile.user'])
@@ -87,20 +94,20 @@ class DashboardController extends Controller
                 'leads' => Lead::count(),
                 'realtors' => RealtorProfile::count(),
                 'properties' => Property::count(),
-                'pendingListings' => Property::pendingReview()->count(),
+                'pendingListings' => Property::userSubmitted()->pendingReview()->count(),
+                'pendingAccounts' => User::where('status', 'pending')
+                    ->whereIn('role', ['buyer', 'seller', 'agent'])
+                    ->count(),
+                'userSubmittedListingsTotal' => Property::userSubmitted()->count(),
                 'contacts' => Contact::count(),
                 'packages' => Package::count(),
-                'pending' => RealtorProfile::whereHas('user', function ($query) {
-                    $query->where('status', 'pending');
-                })->count(),
                 'propertyFavorites' => PropertyFavorite::count(),
                 'estimatedRevenue' => $estimatedRevenue,
                 'testimonials' => Testimonial::count(),
             ],
             'recentLeads' => $recentLeads,
-            'pendingRealtors' => RealtorProfile::whereHas('user', function ($query) {
-                $query->where('status', 'pending');
-            })->latest()->take(4)->get(),
+            'pendingAccounts' => $pendingAccounts,
+            'userSubmittedListings' => $userSubmittedListings,
             'testimonialStats' => [
                 'video' => Testimonial::whereNotNull('video_url')->where('video_url', '!=', '')->count(),
                 'published' => Testimonial::where('is_published', true)->count(),
@@ -116,7 +123,6 @@ class DashboardController extends Controller
             'isStaffView' => $isStaffView,
             'pipelineHealth' => $pipelineHealth,
             'teamQueues' => $teamQueues,
-            'pendingProperties' => $pendingProperties,
             'recentListingMessages' => $recentListingMessages,
             'meta' => [
                 'title' => $isStaffView ? 'Staff Dashboard | OmniReferral' : 'Admin Dashboard | OmniReferral',

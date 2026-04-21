@@ -21,9 +21,6 @@ class MustResetPassword
             'account.security',
             'account.password.update',
             'logout',
-            'verification.notice',
-            'verification.verify',
-            'verification.send',
         )) {
             return $next($request);
         }

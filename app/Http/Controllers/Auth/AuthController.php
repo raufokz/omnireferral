@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Jobs\SyncUserToGoHighLevel;
 use App\Models\RealtorProfile;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -47,6 +46,26 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             $user = Auth::user();
+
+            if ($user && $user->status === 'pending') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'email' => 'Your account is waiting for administrator approval. You will be able to sign in once an admin activates your workspace.',
+                ])->onlyInput('email', 'role');
+            }
+
+            if ($user && $user->status === 'suspended') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'email' => 'This account is not active. Contact OmniReferral support if you believe this is a mistake.',
+                ])->onlyInput('email', 'role');
+            }
 
             if ($user && $user->role !== $credentials['role']) {
                 Auth::logout();
@@ -121,7 +140,7 @@ class AuthController extends Controller
             'city' => $request->city,
             'state' => strtoupper($request->state),
             'zip_code' => $request->zip_code,
-            'status' => 'active',
+            'status' => 'pending',
             'avatar' => $avatarPath,
             'affiliate_code' => strtoupper(Str::random(8)),
         ]);
@@ -153,13 +172,12 @@ class AuthController extends Controller
 
         SyncUserToGoHighLevel::dispatch($user->id);
 
-        event(new Registered($user));
-
-        Auth::login($user);
-
         return redirect()
-            ->to($user->dashboardRoute())
-            ->with('success', 'Welcome aboard! Check your email to verify your address, then your full dashboard unlocks automatically.');
+            ->route('login')
+            ->with(
+                'success',
+                'Thanks for registering. An administrator will review and activate your account. You can sign in from this page once your workspace is approved.'
+            );
     }
 
     public function showForgotPassword(): View

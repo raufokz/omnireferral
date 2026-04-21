@@ -25,13 +25,56 @@
         <article class="workspace-card workspace-kpi">
             <span>Pending Listings</span>
             <strong>{{ number_format($stats['pendingListings'] ?? 0) }}</strong>
-            <span>Awaiting moderation</span>
+            <span>User uploads awaiting review</span>
         </article>
         <article class="workspace-card workspace-kpi">
             <span>Estimated Revenue</span>
             <strong>${{ number_format($stats['estimatedRevenue'] ?? 0) }}</strong>
             <span>Recent lead-package projection</span>
         </article>
+    </section>
+
+    <section class="workspace-grid workspace-grid--2">
+        <article class="workspace-card workspace-kpi">
+            <span>Pending sign-ups</span>
+            <strong>{{ number_format($stats['pendingAccounts'] ?? 0) }}</strong>
+            <span>Buyer, seller, and agent registrations awaiting activation</span>
+        </article>
+        <article class="workspace-card workspace-kpi">
+            <span>User-submitted listings</span>
+            <strong>{{ number_format($stats['userSubmittedListingsTotal'] ?? 0) }}</strong>
+            <span>Agent &amp; seller uploads (all moderation states)</span>
+        </article>
+    </section>
+
+    <section class="workspace-card">
+        <span class="eyebrow">Account activation</span>
+        <h2>Pending registrations</h2>
+        <ul class="workspace-list">
+            @forelse($pendingAccounts as $account)
+                <li>
+                    <strong>{{ $account->name }}</strong>
+                    <small>{{ ucfirst($account->role) }} · {{ $account->email }} · {{ $account->created_at?->format('M j, Y g:i A') }}</small>
+                    <div class="workspace-actions" style="margin-top: 0.6rem;">
+                        <form method="POST" action="{{ route('admin.users.review', $account) }}">
+                            @csrf
+                            <input type="hidden" name="decision" value="approve">
+                            <button type="submit" class="button">Approve</button>
+                        </form>
+                        <form method="POST" action="{{ route('admin.users.review', $account) }}">
+                            @csrf
+                            <input type="hidden" name="decision" value="suspend">
+                            <button type="submit" class="button button--ghost-blue">Suspend</button>
+                        </form>
+                    </div>
+                </li>
+            @empty
+                <li>
+                    <strong>No accounts waiting for activation</strong>
+                    <small>New registrations will appear here until an admin approves them.</small>
+                </li>
+            @endforelse
+        </ul>
     </section>
 
     <section class="workspace-grid workspace-grid--2">
@@ -118,39 +161,68 @@
         </div>
     </section>
 
-    <section class="workspace-grid workspace-grid--2">
-        <article class="workspace-card">
-            <span class="eyebrow">Listing Review</span>
-            <h2>Pending Property Moderation</h2>
-            <ul class="workspace-list">
-                @forelse($pendingProperties as $property)
-                    <li>
-                        <strong>{{ $property->title }}</strong>
-                        <small>{{ $property->location }} · {{ optional(optional($property->realtorProfile)->user)->name ?? 'No owner' }}</small>
-                        <div class="workspace-actions" style="margin-top: 0.6rem;">
-                            <a href="{{ route('properties.show', $property) }}" class="button button--ghost-blue">Preview</a>
-                            <form method="POST" action="{{ route('admin.properties.review', $property) }}">
-                                @csrf
-                                <input type="hidden" name="decision" value="approve">
-                                <button type="submit" class="button">Approve</button>
-                            </form>
-                            <form method="POST" action="{{ route('admin.properties.review', $property) }}">
-                                @csrf
-                                <input type="hidden" name="decision" value="reject">
-                                <button type="submit" class="button button--ghost-blue">Reject</button>
-                            </form>
-                        </div>
-                    </li>
-                @empty
-                    <li>
-                        <strong>No listings waiting for review</strong>
-                        <small>New submissions will appear here automatically.</small>
-                    </li>
-                @endforelse
-            </ul>
-        </article>
+    <section class="workspace-card">
+            <span class="eyebrow">Listing review</span>
+            <h2>User-submitted listings</h2>
+            <p style="margin: 0 0 0.75rem; color: #64748b; font-size: 0.9rem;">Includes pending, approved, and rejected uploads from agent and seller workspaces (latest 25).</p>
+            <div class="workspace-table-wrap">
+                <table class="workspace-table">
+                    <thead>
+                        <tr>
+                            <th>Listing</th>
+                            <th>Source</th>
+                            <th>Moderation</th>
+                            <th>Owner</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($userSubmittedListings as $property)
+                            <tr>
+                                <td>
+                                    <strong>{{ $property->title }}</strong>
+                                    <div class="workspace-property__meta">{{ $property->location }}</div>
+                                </td>
+                                <td>{{ $property->source }}</td>
+                                <td>
+                                    <span class="status-pill status-pill--{{ \Illuminate\Support\Str::slug($property->approval_status, '_') }}">
+                                        {{ $property->approvalStatusLabel() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {{ $property->owner?->name ?? optional($property->realtorProfile?->user)->name ?? '—' }}
+                                </td>
+                                <td>
+                                    <div class="workspace-actions" style="flex-wrap: wrap; gap: 0.35rem;">
+                                        <a href="{{ route('properties.show', $property) }}" class="button button--ghost-blue">Preview</a>
+                                        @if($property->approval_status === \App\Models\Property::APPROVAL_PENDING)
+                                            <form method="POST" action="{{ route('admin.properties.review', $property) }}" style="display: inline;">
+                                                @csrf
+                                                <input type="hidden" name="decision" value="approve">
+                                                <button type="submit" class="button">Approve</button>
+                                            </form>
+                                            <form method="POST" action="{{ route('admin.properties.review', $property) }}" style="display: inline;">
+                                                @csrf
+                                                <input type="hidden" name="decision" value="reject">
+                                                <button type="submit" class="button button--ghost-blue">Reject</button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5">
+                                    <div class="workspace-empty">No user-submitted listings yet.</div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+    </section>
 
-        <article class="workspace-card">
+    <section class="workspace-card">
             <span class="eyebrow">Listing Inquiries</span>
             <h2>Recent Contact Flow</h2>
             <ul class="workspace-list">
@@ -169,7 +241,6 @@
                     </li>
                 @endforelse
             </ul>
-        </article>
     </section>
 </div>
 @endsection

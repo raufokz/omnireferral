@@ -60,9 +60,10 @@ class AffiliateTrackingTest extends TestCase
                  'terms_accepted' => true,
                  'communication_accepted' => true,
              ])
-            ->assertRedirect(route('dashboard.buyer'));
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('success');
 
-        $this->get(route('dashboard.buyer'))->assertRedirect(route('verification.notice'));
+        $this->assertGuest();
 
         $this->assertDatabaseHas('users', [
             'email' => 'buyer@test.com',

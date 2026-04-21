@@ -102,6 +102,14 @@ class Property extends Model
         return $query->where('approval_status', self::APPROVAL_PENDING);
     }
 
+    /**
+     * Listings created through agent or seller dashboards (excludes seeded / marketing imports).
+     */
+    public function scopeUserSubmitted($query)
+    {
+        return $query->whereIn('source', ['Agent Dashboard Upload', 'Seller Dashboard Upload']);
+    }
+
     public function scopeMarketplaceVisible($query)
     {
         return $query

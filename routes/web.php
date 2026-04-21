@@ -23,8 +23,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Models\Property;
 use App\Models\RealtorProfile;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Admin\UserModerationController;
 
 Route::get('/sitemap.xml', function () {
     $properties = Property::latest()->take(500)->get();
@@ -130,32 +129,15 @@ Route::post('/webhooks/stripe', StripeWebhookController::class)
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('webhooks.stripe');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'active.account'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
-    Route::get('/email/verify', function () {
-        return view('pages.auth.verify-email');
-    })->name('verification.notice');
-
-    Route::post('/email/verification-notification', function (Request $request) {
-        $request->user()->sendEmailVerificationNotification();
-
-        return back()->with('success', 'Verification link sent.');
-    })->middleware('throttle:6,1')->name('verification.send');
 });
 
-Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill();
-
-    return redirect()->intended(route('dashboard'))->with('success', 'Your email has been verified.');
-})->middleware(['auth', 'signed'])->name('verification.verify');
-
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(function () {
     Route::get('/account/security', [SecurityController::class, 'show'])->name('account.security');
     Route::post('/account/password', [SecurityController::class, 'updatePassword'])->name('account.password.update');
     Route::post('/properties/{property}/favorite', [PropertyController::class, 'toggleFavorite'])->name('properties.favorite.toggle');
 
-    Route::middleware(['must_reset_password'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/affiliate', [DashboardController::class, 'affiliate'])->name('dashboard.affiliate');
 
@@ -224,6 +206,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('admin/leads/{lead}/assign', [\App\Http\Controllers\Admin\LeadController::class, 'assign'])->name('admin.leads.assign');
         Route::post('admin/leads/{lead}/activity', [\App\Http\Controllers\Admin\LeadController::class, 'activity'])->name('admin.leads.activity');
         Route::post('admin/properties/{property}/review', [PropertyController::class, 'review'])->name('admin.properties.review');
-    });
+        Route::post('admin/users/{user}/review', [UserModerationController::class, 'review'])->name('admin.users.review');
     });
 });

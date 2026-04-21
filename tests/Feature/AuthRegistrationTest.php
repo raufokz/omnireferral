@@ -44,14 +44,14 @@ class AuthRegistrationTest extends TestCase
             'terms_accepted' => true,
             'communication_accepted' => true,
         ])
-            ->assertRedirect(route('dashboard.agent'))
+            ->assertRedirect(route('login'))
             ->assertSessionHas('success');
 
-        $this->assertAuthenticated();
-        $this->get(route('dashboard.agent'))->assertRedirect(route('verification.notice'));
+        $this->assertGuest();
 
         $user = User::where('email', 'taylor@example.com')->firstOrFail();
 
+        $this->assertSame('pending', $user->status);
         $this->assertSame('agent', $user->role);
         $this->assertSame('(555) 111-2222', $user->phone);
         $this->assertSame('123 Main Street', $user->address_line_1);
@@ -96,15 +96,69 @@ class AuthRegistrationTest extends TestCase
             'terms_accepted' => true,
             'communication_accepted' => true,
         ])
-            ->assertRedirect(route('dashboard.buyer'));
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('success');
 
-        $this->get(route('dashboard.buyer'))->assertRedirect(route('verification.notice'));
+        $this->assertGuest();
 
         $user = User::where('email', 'jamie@example.com')->firstOrFail();
 
+        $this->assertSame('pending', $user->status);
         $this->assertSame('buyer', $user->role);
         $this->assertNull($user->realtorProfile);
         Queue::assertPushed(SyncUserToGoHighLevel::class);
+    }
+
+    public function test_pending_user_cannot_sign_in_until_an_admin_activates_the_account(): void
+    {
+        Storage::fake('public');
+        Queue::fake();
+
+        $this->post(route('register'), [
+            'role' => 'buyer',
+            'name' => 'Pending Pat',
+            'email' => 'pending-pat@example.com',
+            'phone' => '(555) 999-0000',
+            'address_line_1' => '9 Wait Street',
+            'city' => 'Austin',
+            'state' => 'TX',
+            'zip_code' => '73301',
+            'password' => 'super-secret-password',
+            'password_confirmation' => 'super-secret-password',
+            'profile_image' => $this->fakePngUpload('pat.png'),
+            'terms_accepted' => true,
+            'communication_accepted' => true,
+        ])->assertRedirect(route('login'));
+
+        $user = User::where('email', 'pending-pat@example.com')->firstOrFail();
+        $this->assertSame('pending', $user->status);
+
+        $this->post(route('login'), [
+            'role' => 'buyer',
+            'email' => 'pending-pat@example.com',
+            'password' => 'super-secret-password',
+        ])->assertSessionHasErrors('email');
+
+        $this->assertGuest();
+
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($admin)->post(route('admin.users.review', $user), [
+            'decision' => 'approve',
+        ])->assertSessionHas('success');
+
+        $this->assertSame('active', $user->fresh()->status);
+
+        $this->post(route('login'), [
+            'role' => 'buyer',
+            'email' => 'pending-pat@example.com',
+            'password' => 'super-secret-password',
+        ])->assertRedirect(route('dashboard.buyer'));
+
+        $this->assertAuthenticated();
     }
 
     public function test_legacy_onboarding_routes_redirect_to_login_for_guests(): void
