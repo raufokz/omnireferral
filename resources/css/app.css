@@ -17827,3 +17827,66 @@ iframe {
     }
 }
 
+/* ====================================================
+   APP FLASH MESSAGES (NOTIFICATIONS)
+   ==================================================== */
+.app-flash {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    margin: 0 auto 2rem;
+    width: 100%;
+    text-align: center;
+    animation: slideDownFade 0.4s ease-out forwards;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.app-flash--error {
+    background-color: var(--color-brand-orange, #FF6B00);
+    color: #31425B; /* Dark navy/slate from the image */
+}
+
+.app-flash svg {
+    width: 160px;
+    height: 160px;
+    margin-bottom: 2.5rem;
+    stroke-width: 2.5;
+    color: #31425B;
+}
+
+.app-flash span {
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.4;
+    max-width: 600px;
+    color: #31425B;
+    font-family: 'Inter', sans-serif;
+}
+
+@keyframes slideDownFade {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.app-flash--info {
+    background-color: var(--color-brand-blue, #0B3668);
+    color: #FFFFFF;
+}
+.app-flash--info svg, .app-flash--info span {
+    color: #FFFFFF;
+}
+
+.app-flash--success {
+    background-color: var(--color-success, #10b981);
+    color: #FFFFFF;
+}
+.app-flash--success svg, .app-flash--success span {
+    color: #FFFFFF;
+}
