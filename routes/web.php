@@ -96,26 +96,9 @@ Route::get('/onboarding/{role}', function (string $role): RedirectResponse {
         ->with('info', 'GoHighLevel handles onboarding automatically now. Sign in to continue to your dashboard.');
 })->name('onboarding');
 
-Route::get('/client-form-submission7', function (): RedirectResponse {
-    $role = request()->string('role')->lower()->value() ?: 'agent';
-    abort_unless(in_array($role, ['buyer', 'seller', 'agent'], true), 404);
-
-    $dashboardRoute = match ($role) {
-        'buyer' => route('dashboard.buyer'),
-        'seller' => route('dashboard.seller'),
-        default => route('dashboard.agent'),
-    };
-
-    if (Auth::check()) {
-        return redirect()
-            ->to($dashboardRoute)
-            ->with('info', 'Your GoHighLevel setup is handled automatically. Continue from your dashboard.');
-    }
-
-    return redirect()
-        ->route('login')
-        ->with('info', 'Your GoHighLevel setup is handled automatically. Sign in to continue.');
-})->name('client.form.submission');
+Route::get('/client-submission-form7', [HomeController::class, 'clientFormSubmission'])->name('client.form.submission');
+Route::get('/client-form-submission7', [HomeController::class, 'clientFormSubmission']);
+Route::get('/form-submission', [HomeController::class, 'formSubmission'])->name('form.submission');
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 Route::post('/lead-store', [LeadController::class, 'store'])->name('leads.store');

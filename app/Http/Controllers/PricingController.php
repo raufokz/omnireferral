@@ -21,12 +21,13 @@ class PricingController extends Controller
             'leadPackages' => Package::active()->leadPlans()->orderBy('sort_order')->orderBy('one_time_price')->get(),
             'assistantPackages' => Package::active()->assistantPlans()->orderBy('sort_order')->orderBy('monthly_price')->get(),
             'pricingPlans' => PricingContent::plans(),
+            'comparison' => $this->comparisonMatrix(),
             'packageEmbeds' => $packageEmbeds,
             'primaryActionUrl' => $primaryCta['url'],
             'primaryActionLabel' => $primaryCta['label'],
             'meta' => [
                 'title' => 'Pricing | OmniReferral Lead Packages and Virtual Assistant Plans',
-                'description' => 'Compare Quick, Power, and Prime lead packages plus virtual assistant services built for busy real estate professionals.',
+                'description' => 'Compare Starter, Growth, and Elite lead packages plus virtual assistant services built for busy real estate professionals.',
             ],
         ]);
     }
@@ -124,29 +125,66 @@ class PricingController extends Controller
     {
         return [
             'quick-leads' => [
-                'title' => 'Quick Package',
-                'src' => 'https://api.leadconnectorhq.com/widget/survey/6VrZG7vbNueWG6hoqYru',
-                'description' => 'Start with a lighter lead package and let GoHighLevel handle the follow-up setup after the form is complete.',
+                'title' => 'Starter Lead',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/q61dioT6A8taz0yLfK93',
+                'description' => 'Starter lead onboarding form for initial package setup and campaign handoff.',
             ],
             'power-leads' => [
-                'title' => 'Power Package',
-                'src' => 'https://api.leadconnectorhq.com/widget/survey/NmuErgwOkT4c83tl1k12',
-                'description' => 'Our most popular package for teams that want stronger qualification and momentum.',
+                'title' => 'Growth Lead',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/ENBVclSqwUuX7awfOEM8',
+                'description' => 'Growth lead onboarding form for teams scaling lead intake and routing.',
             ],
             'prime-leads' => [
-                'title' => 'Prime Package',
-                'src' => 'https://api.leadconnectorhq.com/widget/survey/DAnafQ8CfUsIMsj8Zq4D',
-                'description' => 'Premium lead routing for agents who want the highest-intent opportunities.',
+                'title' => 'Elite Lead',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/z2wUhJG00x4n3MxY616R',
+                'description' => 'Elite lead onboarding form for premium, high-intent package workflows.',
             ],
             'va-starter' => [
-                'title' => 'Cold Calling Monthly',
-                'src' => 'https://api.leadconnectorhq.com/widget/survey/CV8WmfWmoDlJ5GEO9B99',
-                'description' => 'A monthly support option for teams that want consistent outbound activity and follow-up help.',
+                'title' => 'ISA Support',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/DAYWVBJkNiVLEfoW740d',
+                'description' => 'ISA support onboarding form for outreach and qualification operations.',
             ],
             'va-growth' => [
-                'title' => 'Social Media Monthly',
-                'src' => 'https://api.leadconnectorhq.com/widget/survey/ye7sDOoYsZaiCNjWRARI',
-                'description' => 'A monthly campaign package for visibility, nurture, and stronger brand support.',
+                'title' => 'Full Social Media Package',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/NiEcLMPWI084aKiAaNsi',
+                'description' => 'Full social media package onboarding form for monthly content and growth execution.',
+            ],
+        ];
+    }
+
+    private function comparisonMatrix(): array
+    {
+        return [
+            'headers' => [
+                'Starter ($399/mo)',
+                'Growth ($899/mo)',
+                'Elite ($1,999/mo)',
+            ],
+            'rows' => [
+                ['type' => 'group', 'label' => 'Lead Flow & Outreach'],
+                ['feature' => 'Qualified Referrals', 'values' => ['✔', '✔✔', '✔✔✔']],
+                ['feature' => 'AI + Human Outreach', 'values' => ['✔', '✔', '✔']],
+                ['feature' => 'Cold Calling ISA', 'values' => ['❌', '1 ISA', '2 ISAs']],
+                ['feature' => 'Territory Coverage', 'values' => ['2 Areas', '5 Areas', '10 Areas']],
+
+                ['type' => 'group', 'label' => 'Deals & Revenue'],
+                ['feature' => 'Wholesaler Access', 'values' => ['❌', '✔', '✔✔ Senior']],
+                ['feature' => 'JV Deal Opportunities', 'values' => ['❌', '✔', '✔✔ Advanced']],
+                ['feature' => 'Referral Fee', 'values' => ['15%', '7%', '5%']],
+                ['feature' => 'Live Call Transfers', 'values' => ['❌', '❌', '✔']],
+                ['feature' => 'Investor Access', 'values' => ['❌', '✔', '✔✔']],
+
+                ['type' => 'group', 'label' => 'Platform & Operations'],
+                ['feature' => 'Listings on Platform', 'values' => ['2', 'Up to 15', 'Unlimited']],
+                ['feature' => 'Featured Listings', 'values' => ['❌', '✔', '✔✔ Priority']],
+                ['feature' => 'CRM (GHL) Access', 'values' => ['❌', '❌', '✔ Full System']],
+                ['feature' => 'Virtual Assistant', 'values' => ['❌', '❌', '✔ Full-Time']],
+
+                ['type' => 'group', 'label' => 'Support & Performance'],
+                ['feature' => 'Account Manager', 'values' => ['✔', 'Senior', 'Senior Team + VA']],
+                ['feature' => 'Support Level', 'values' => ['Email', 'Priority', 'VIP']],
+                ['feature' => 'Strategy Calls', 'values' => ['Monthly', 'Weekly', 'Weekly + Monthly Planning']],
+                ['feature' => 'Performance Tracking', 'values' => ['Basic', 'Advanced', 'Dashboard + Forecasting']],
             ],
         ];
     }

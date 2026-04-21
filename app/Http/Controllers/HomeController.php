@@ -23,7 +23,7 @@ class HomeController extends Controller
         $testimonialQuotes = [
             'The ISA team does not hand us cold names. They hand us lead-ready conversations with budget, intent, and location already clarified.',
             'OmniReferral gave our brokerage a much cleaner conversion process. The lead notes feel specific, the routing feels intentional, and our first calls go better.',
-            'Prime leads changed how quickly we can move from inquiry to appointment. The level of context makes the entire sales conversation warmer from the start.',
+            'Elite leads changed how quickly we can move from inquiry to appointment. The level of context makes the entire sales conversation warmer from the start.',
             'We finally have a platform that feels as polished as the service we promise our clients. Our team trusts the lead quality and the follow-up rhythm.',
             'The dashboard, package structure, and onboarding flow make OmniReferral feel like a real operating system for lead generation, not just another vendor.',
             'Between the ISA qualification and the sales support, our agents spend less time filtering noise and more time working high-intent opportunities.',
@@ -187,13 +187,23 @@ class HomeController extends Controller
             default => route('dashboard.agent'),
         };
 
-        return view('pages.client-form-submission7', [
+        return view('pages.client-submission-form7', [
             'role' => $role,
             'dashboardRoute' => $dashboardRoute,
-            'onboardingFormSrc' => 'https://api.leadconnectorhq.com/widget/form/1KzI6i1lZ4rDTDZF02ot',
+            'onboardingFormSrc' => 'https://api.leadconnectorhq.com/widget/form/K1yKrK1hQrLDUM2Sz0Tz',
             'meta' => [
                 'title' => 'Complete Your Onboarding | OmniReferral',
                 'description' => 'Finish your OmniReferral onboarding after package selection and payment.',
+            ],
+        ]);
+    }
+
+    public function formSubmission(): View
+    {
+        return view('pages.form-submission', [
+            'meta' => [
+                'title' => 'Thank You | OmniReferral',
+                'description' => 'Thank you for submitting your onboarding form. Our team will follow up with your next steps shortly.',
             ],
         ]);
     }

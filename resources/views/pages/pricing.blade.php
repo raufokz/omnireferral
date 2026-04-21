@@ -153,16 +153,22 @@
                 </thead>
                 <tbody>
                     @foreach($comparison['rows'] ?? [] as $row)
-                    <tr>
-                        <td>{{ $row['feature'] }}</td>
-                        @foreach($row['values'] ?? [] as $val)
-                        <td class="pct-cell">
-                            @if($val === true || $val === 'yes')<span class="pct-check">&#10003;</span>
-                            @elseif($val === false || $val === 'no')<span class="pct-cross">--</span>
-                            @else{{ $val }}@endif
-                        </td>
-                        @endforeach
-                    </tr>
+                        @if(($row['type'] ?? null) === 'group')
+                            <tr class="pricing-comparison-group">
+                                <td colspan="{{ count($comparison['headers'] ?? []) + 1 }}">{{ $row['label'] ?? '' }}</td>
+                            </tr>
+                        @else
+                            <tr>
+                                <td>{{ $row['feature'] }}</td>
+                                @foreach($row['values'] ?? [] as $val)
+                                <td class="pct-cell">
+                                    @if($val === true || $val === 'yes')<span class="pct-check">&#10003;</span>
+                                    @elseif($val === false || $val === 'no')<span class="pct-cross">--</span>
+                                    @else{{ $val }}@endif
+                                </td>
+                                @endforeach
+                            </tr>
+                        @endif
                     @endforeach
                 </tbody>
             </table>

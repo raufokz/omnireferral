@@ -34,8 +34,8 @@
             'copy' => 'These are the most common package and pricing questions that come up across the pricing page, checkout flow, and support conversations.',
             'items' => [
                 [
-                    'q' => 'What is the difference between Quick, Power, and Prime?',
-                    'a' => 'Quick is the lightest entry path for agents who want verified opportunities with a smaller footprint. Power adds stronger qualification depth, more support, and more visibility. Prime is the highest-touch tier with broader routing coverage, premium support, and deeper marketing help.',
+                    'q' => 'What is the difference between Starter, Growth, and Elite?',
+                    'a' => 'Starter is the launch path for teams that want qualified referrals with structured outreach and follow-up. Growth adds assigned ISA support, stronger territory coverage, and JV-ready opportunities. Elite is the highest-touch tier with dedicated wholesaler support, full CRM automation, and front-of-queue referrals.',
                 ],
                 [
                     'q' => 'What do the virtual assistance plans cover?',
@@ -248,7 +248,7 @@
                     <article class="faq-page__knowledge-card">
                         <span class="eyebrow">Pricing</span>
                         <h3>Need help picking a plan?</h3>
-                        <p>Compare Quick, Power, Prime, and the VA support options on the pricing page before checkout.</p>
+                        <p>Compare Starter, Growth, Elite, and the VA support options on the pricing page before checkout.</p>
                         <a href="{{ route('pricing') }}">Explore pricing</a>
                     </article>
                     <article class="faq-page__knowledge-card">

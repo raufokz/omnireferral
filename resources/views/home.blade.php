@@ -401,7 +401,7 @@
                     <div class="work-step__content">
                         <span class="work-step__role">Sales Team</span>
                         <h3>Match the right package</h3>
-                        <p>Sales executives package each lead into the right Quick, Power, or Prime path so the delivery matches the urgency and value of your team's capacity.</p>
+                        <p>Sales executives package each lead into the right Starter, Growth, or Elite path so the delivery matches the urgency and value of your team's capacity.</p>
                         <div class="work-step__pills">
                             <span>Lead tier assigned</span>
                             <span>ZIP & market fit checked</span>
@@ -447,7 +447,7 @@
                 <article class="feature-icon-card">
                     <div class="feature-icon-card__icon">PK</div>
                     <h3>Package logic that makes sense</h3>
-                    <p>Quick, Power, and Prime are easy to understand and mapped to real growth stages.</p>
+                    <p>Starter, Growth, and Elite are easy to understand and mapped to real growth stages.</p>
                 </article>
                 <article class="feature-icon-card">
                     <div class="feature-icon-card__icon">DB</div>
@@ -464,7 +464,7 @@
     </section>
 
     {{-- Pricing Preview --}}
-    <section class="section section--gray homepage-section homepage-section--pricing" id="pricing-preview" aria-labelledby="pricing-preview-heading" data-animate>
+    <!-- <section class="section section--gray homepage-section homepage-section--pricing" id="pricing-preview" aria-labelledby="pricing-preview-heading" data-animate>
         <div class="container">
             <div class="section-heading homepage-section__heading" data-animate="left">
                 <span class="eyebrow">Pricing Snapshot</span>
@@ -478,7 +478,7 @@
                 'leadActionUrl' => route('contact'),
             ])
         </div>
-    </section>
+    </section> -->
 
     <section class="section section--light homepage-section homepage-section--featured" aria-labelledby="featured-listings-heading" data-animate>
         <div class="container">

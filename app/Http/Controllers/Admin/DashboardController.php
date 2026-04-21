@@ -45,7 +45,7 @@ class DashboardController extends Controller
             ],
             [
                 'team' => 'Sales Packaging Queue',
-                'copy' => 'Qualified leads ready to be matched into Quick, Power, or Prime sales conversations.',
+                'copy' => 'Qualified leads ready to be matched into Starter, Growth, or Elite sales conversations.',
                 'count' => Lead::where('status', 'qualified')->count(),
             ],
             [
@@ -127,4 +127,3 @@ class DashboardController extends Controller
         ]);
     }
 }
-
