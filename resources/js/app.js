@@ -9,7 +9,7 @@ Alpine.start();
 // --- Configuration & Helpers ---
 const HEADER_OFFSET = 24;
 const SCROLL_THRESHOLD = 24;
-const MOBILE_NAV_BREAKPOINT = 1100;
+const MOBILE_NAV_BREAKPOINT = 1024;
 
 const showToast = (message, type = 'info', duration = 5000) => {
     let container = document.getElementById('toast-container');
