@@ -117,7 +117,7 @@
     {{-- Hero Section --}}
     <section class="hero hero--premium homepage-hero homepage-hero--with-image" aria-labelledby="hero-headline">
         <div class="hero__backdrop">
-            <img src="{{ asset('images/home/hero_backdrop.png') }}" alt="Real Estate Background" class="hero__backdrop-img">
+            <img src="{{ asset('images/home/hero_backdrop_v2.png') }}" alt="Real Estate Background" class="hero__backdrop-img">
             <div class="hero__backdrop-overlay"></div>
         </div>
         <div class="container hero__content hero__content--premium homepage-hero__layout">
@@ -416,7 +416,7 @@
                 <div class="work-step" data-animate="up">
                     <div class="work-step__number">1</div>
                     <div class="work-step__visual">
-                        <img src="{{ asset('images/how-it-works/verification.png') }}" alt="ISA team qualifying buyers and sellers" loading="lazy">
+                        <img src="{{ asset('images/how-it-works/verification_v2.png') }}" alt="ISA team qualifying buyers and sellers" loading="lazy">
                     </div>
                     <div class="work-step__content">
                         <div class="work-step__meta">
@@ -436,7 +436,7 @@
                 <div class="work-step" data-animate="up">
                     <div class="work-step__number">2</div>
                     <div class="work-step__visual">
-                        <img src="{{ asset('images/how-it-works/matching.png') }}" alt="Real estate dashboard matching leads to agents" loading="lazy">
+                        <img src="{{ asset('images/how-it-works/matching_v2.png') }}" alt="Real estate dashboard matching leads to agents" loading="lazy">
                     </div>
                     <div class="work-step__content">
                         <div class="work-step__meta">
@@ -456,7 +456,7 @@
                 <div class="work-step" data-animate="up">
                     <div class="work-step__number">3</div>
                     <div class="work-step__visual">
-                        <img src="{{ asset('images/how-it-works/conversion.png') }}" alt="Real estate closer handing over house keys" loading="lazy">
+                        <img src="{{ asset('images/how-it-works/conversion_v2.png') }}" alt="Real estate closer handing over house keys" loading="lazy">
                     </div>
                     <div class="work-step__content">
                         <div class="work-step__meta">
