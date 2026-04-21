@@ -87,6 +87,8 @@ class AuthController extends Controller
             'zip_code' => ['required', 'string', 'max:10'],
             'brokerage_name' => ['required_if:role,agent', 'nullable', 'string', 'max:255'],
             'license_number' => ['required_if:role,agent', 'nullable', 'string', 'max:100'],
+            'terms_accepted' => ['accepted'],
+            'communication_accepted' => ['accepted'],
         ], [
             'name.required' => 'Tell us your name so we can personalize your setup.',
             'email.required' => 'Oops, looks like you missed your email!',
@@ -100,6 +102,8 @@ class AuthController extends Controller
             'state.size' => 'Use the 2-letter state code, like TX or FL.',
             'brokerage_name.required_if' => 'Agents need a brokerage name before continuing.',
             'license_number.required_if' => 'Agents need a license number before continuing.',
+            'terms_accepted.accepted' => 'Please accept the Terms and Privacy Policy before continuing.',
+            'communication_accepted.accepted' => 'Please agree to onboarding communication so we can activate your account.',
         ]);
 
         $avatarPath = $request->hasFile('profile_image')

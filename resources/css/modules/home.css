@@ -43,6 +43,9 @@
 
 .homepage-hero {
     isolation: isolate;
+    min-height: 400px;
+    padding-top: clamp(2rem, 3.8vw, 2.85rem) !important;
+    padding-bottom: clamp(1.35rem, 2.4vw, 1.95rem) !important;
 }
 
 .homepage-hero::after {
@@ -1053,6 +1056,12 @@
 }
 
 @media (max-width: 768px) {
+    .homepage-hero {
+        min-height: auto;
+        padding-top: 1.5rem !important;
+        padding-bottom: 1.2rem !important;
+    }
+
     .homepage-section__heading {
         margin-bottom: 2.5rem;
     }

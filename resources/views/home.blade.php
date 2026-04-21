@@ -168,7 +168,7 @@
 
                         <div class="form-step is-active">
                             <div class="hero-form-step-meta">
-                                <span>Step 1 of 3</span>
+                                <span>Step 1 of 4</span>
                                 <strong>Contact Details</strong>
                             </div>
                             <div class="form-intro hero-form-intro">
@@ -187,8 +187,8 @@
 
                         <div class="form-step">
                             <div class="hero-form-step-meta">
-                                <span>Step 2 of 3</span>
-                                <strong>Market &amp; Budget</strong>
+                                <span>Step 2 of 4</span>
+                                <strong>Market Details</strong>
                             </div>
                             <div class="form-intro hero-form-intro">
                                 <h2>Where are you looking?</h2>
@@ -224,7 +224,6 @@
                                     <small class="buyer-zip-card__hint">Use a valid 5-digit ZIP code to help our team route your request accurately.</small>
                                 </div>
                                 <label><span>Property type</span><select name="property_type"><option value="">Select type</option><option>House</option><option>Apartment</option><option>Condo</option><option>Commercial</option></select></label>
-                                <label><span>Budget range</span><input type="number" name="budget" placeholder="450000" min="0" inputmode="numeric"></label>
                             </div>
                             <div class="hero-form__footer">
                                 <button type="button" class="button button--ghost" data-form-prev>Back</button>
@@ -234,16 +233,34 @@
 
                         <div class="form-step">
                             <div class="hero-form-step-meta">
-                                <span>Step 3 of 3</span>
-                                <strong>Timing &amp; Preferences</strong>
+                                <span>Step 3 of 4</span>
+                                <strong>Budget &amp; Timing</strong>
                             </div>
                             <div class="form-intro hero-form-intro">
-                                <h2>Help us match the right next step</h2>
-                                <p>These final details help the ISA and routing team deliver a cleaner buyer handoff.</p>
+                                <h2>Set your buyer criteria</h2>
+                                <p>These details help us route the request to the right specialist faster.</p>
                             </div>
                             <div class="hero-form__grid hero-form__grid--buyer-home">
+                                <label><span>Budget range</span><input type="number" name="budget" placeholder="450000" min="0" inputmode="numeric"></label>
                                 <label><span>Timeline</span><select name="timeline"><option value="">Select timing</option><option>ASAP</option><option>0-30 days</option><option>1-3 months</option><option>3-6 months</option><option>Exploring</option></select></label>
                                 <label><span>Financing status</span><select name="financing_status"><option value="">Select status</option><option>Cash buyer</option><option>Pre-approved</option><option>Need financing guidance</option><option>Just exploring</option></select></label>
+                            </div>
+                            <div class="hero-form__footer">
+                                <button type="button" class="button button--ghost" data-form-prev>Back</button>
+                                <button type="button" class="button button--orange" data-form-next>Continue</button>
+                            </div>
+                        </div>
+
+                        <div class="form-step">
+                            <div class="hero-form-step-meta">
+                                <span>Step 4 of 4</span>
+                                <strong>Preferences &amp; Contact</strong>
+                            </div>
+                            <div class="form-intro hero-form-intro">
+                                <h2>Finalize your request</h2>
+                                <p>Tell us your preferred contact style and anything else your agent should know.</p>
+                            </div>
+                            <div class="hero-form__grid hero-form__grid--buyer-home">
                                 <label><span>Preferred contact</span><select name="contact_preference"><option value="">Choose contact method</option><option>Email</option><option>Phone</option><option>Text</option></select></label>
                                 <label class="hero-form__full"><span>Preferences &amp; constraints</span><textarea name="preferences" rows="2" placeholder="Tell us about your ideal home, timing, renovation concerns, and must-haves."></textarea></label>
                             </div>
@@ -267,7 +284,7 @@
 
                         <div class="form-step is-active">
                             <div class="hero-form-step-meta">
-                                <span>Step 1 of 3</span>
+                                <span>Step 1 of 4</span>
                                 <strong>Contact Details</strong>
                             </div>
                             <div class="form-intro hero-form-intro">
@@ -286,8 +303,8 @@
 
                         <div class="form-step">
                             <div class="hero-form-step-meta">
-                                <span>Step 2 of 3</span>
-                                <strong>Address &amp; Pricing</strong>
+                                <span>Step 2 of 4</span>
+                                <strong>Property Basics</strong>
                             </div>
                             <div class="form-intro hero-form-intro">
                                 <h2>Tell us about the property</h2>
@@ -297,8 +314,6 @@
                                 <input type="hidden" name="package_slug" value="power-leads">
                                 <label class="hero-form__full"><span>Property address</span><input type="text" name="property_address" placeholder="123 Main St, Dallas, TX 75201" required autocomplete="street-address"></label>
                                 <label><span>Property type</span><select name="property_type"><option value="">Select type</option><option>House</option><option>Apartment</option><option>Condo</option><option>Commercial</option></select></label>
-                                <label><span>Asking price</span><input type="number" name="asking_price" placeholder="625000" min="0" inputmode="numeric"></label>
-                                <label><span>Timeline</span><select name="timeline"><option value="">Select timing</option><option>ASAP</option><option>0-30 days</option><option>1-3 months</option><option>3-6 months</option><option>Exploring options</option></select></label>
                             </div>
                             <div class="hero-form__footer">
                                 <button type="button" class="button button--ghost" data-form-prev>Back</button>
@@ -308,15 +323,34 @@
 
                         <div class="form-step">
                             <div class="hero-form-step-meta">
-                                <span>Step 3 of 3</span>
-                                <strong>Selling Details</strong>
+                                <span>Step 3 of 4</span>
+                                <strong>Pricing &amp; Timeline</strong>
+                            </div>
+                            <div class="form-intro hero-form-intro">
+                                <h2>Confirm your sale timeline</h2>
+                                <p>This helps our team prioritize and match the right buyer and outreach motion.</p>
+                            </div>
+                            <div class="hero-form__grid">
+                                <label><span>Asking price</span><input type="number" name="asking_price" placeholder="625000" min="0" inputmode="numeric"></label>
+                                <label><span>Timeline</span><select name="timeline"><option value="">Select timing</option><option>ASAP</option><option>0-30 days</option><option>1-3 months</option><option>3-6 months</option><option>Exploring options</option></select></label>
+                                <label><span>Financing / deal constraints</span><select name="financing_status"><option value="">Select status</option><option>Need pricing help</option><option>As-is sale</option><option>Open to renovations</option><option>Need quick close</option></select></label>
+                            </div>
+                            <div class="hero-form__footer">
+                                <button type="button" class="button button--ghost" data-form-prev>Back</button>
+                                <button type="button" class="button button--orange" data-form-next>Continue</button>
+                            </div>
+                        </div>
+
+                        <div class="form-step">
+                            <div class="hero-form-step-meta">
+                                <span>Step 4 of 4</span>
+                                <strong>Final Handoff</strong>
                             </div>
                             <div class="form-intro hero-form-intro">
                                 <h2>Finish the seller handoff</h2>
-                                <p>Share the final selling details so the ISA team can verify the lead and route it properly.</p>
+                                <p>Share final details so the ISA team can verify and route your lead correctly.</p>
                             </div>
                             <div class="hero-form__grid">
-                                <label><span>Financing / deal constraints</span><select name="financing_status"><option value="">Select status</option><option>Need pricing help</option><option>As-is sale</option><option>Open to renovations</option><option>Need quick close</option></select></label>
                                 <label><span>Preferred contact</span><select name="contact_preference"><option value="">Choose contact method</option><option>Email</option><option>Phone</option><option>Text</option></select></label>
                                 <label class="hero-form__full"><span>Upload property image</span><input type="file" name="property_image" accept="image/*"></label>
                                 <label class="hero-form__full"><span>Property details</span><textarea name="preferences" rows="2" placeholder="Describe the home, your timeline, repair needs, and anything our team should know."></textarea></label>

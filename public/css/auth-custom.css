@@ -4,11 +4,11 @@
 .page-auth {
     min-height: 100vh;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     /* The exact diagonal background: Orange top-left, Navy bottom-right */
     background: linear-gradient(115deg, #FF6000 0%, #FF6000 50%, #06152B 50%, #06152B 100%);
-    padding: 5.5rem 2rem 2rem;
+    padding: calc(var(--header-height, 80px) + 2rem) 2rem 2rem;
     font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
@@ -76,12 +76,34 @@
     border-color: rgba(255, 255, 255, 0.32);
 }
 
-/* Hide header/layout components */
-.page-auth header, 
+/* Keep the standard site header on auth pages; hide footer to reduce clutter. */
 .page-auth footer,
-.page-auth .site-header,
 .page-auth .site-footer {
     display: none !important;
+}
+
+.page-auth .site-header {
+    background: rgba(6, 21, 43, 0.85) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+.page-auth .site-header .main-nav a,
+.page-auth .site-header .nav-submenu-toggle {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.page-auth .site-header .main-nav a:hover,
+.page-auth .site-header .nav-submenu-toggle:hover {
+    color: #FFFFFF;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.page-auth .site-header .main-nav a.is-active,
+.page-auth .site-header .nav-submenu-toggle.is-active {
+    color: #FFFFFF;
+    background: rgba(255, 96, 0, 0.25);
 }
 
 /* Main Modal Card */
@@ -169,6 +191,126 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+}
+
+.auth-form {
+    display: grid;
+    gap: 1rem;
+}
+
+.auth-step {
+    margin: 0;
+}
+
+.auth-step-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.auth-step-meta span {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.38rem 0.75rem;
+    border-radius: 999px;
+    background: #EFF6FF;
+    color: #1D4ED8;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.auth-step-meta strong {
+    color: #0F172A;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.auth-step-note {
+    margin: 0 0 0.75rem;
+    color: #475569;
+    font-size: 0.84rem;
+    line-height: 1.6;
+}
+
+.auth-step-summary {
+    margin: 0 0 1rem;
+    padding-left: 1.1rem;
+    color: #334155;
+    font-size: 0.82rem;
+    line-height: 1.6;
+}
+
+.auth-checkbox-list {
+    display: grid;
+    gap: 0.7rem;
+    margin-bottom: 0.25rem;
+}
+
+.auth-checkbox-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.8rem 0.85rem;
+    border-radius: 10px;
+    border: 1px solid #E2E8F0;
+    background: #F8FAFC;
+    color: #334155;
+    font-size: 0.8rem;
+    line-height: 1.55;
+}
+
+.auth-checkbox-item input {
+    width: 16px;
+    height: 16px;
+    margin-top: 0.15rem;
+    accent-color: #FF6000;
+}
+
+.auth-step-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+    margin-top: 0.45rem;
+}
+
+.auth-step-actions--single {
+    justify-content: flex-end;
+}
+
+.btn-step {
+    border: none;
+    border-radius: 10px;
+    padding: 0.8rem 1.15rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-step--ghost {
+    background: #E2E8F0;
+    color: #334155;
+}
+
+.btn-step--ghost:hover {
+    background: #CBD5E1;
+}
+
+.btn-step--primary {
+    background: #FF6000;
+    color: #FFFFFF;
+    box-shadow: 0 8px 18px rgba(255, 96, 0, 0.2);
+}
+
+.btn-step--primary:hover {
+    background: #E65600;
+    box-shadow: 0 10px 22px rgba(255, 96, 0, 0.25);
+    transform: translateY(-1px);
 }
 
 .auth-col-right h2 {
@@ -423,7 +565,7 @@
         padding: 3rem 2rem;
     }
     .page-auth {
-        padding: 4.75rem 0 0;
+        padding: calc(var(--header-height-mobile, 64px) + 1.25rem) 0.75rem 1rem;
         background: #0B192C; /* Solid for mobile */
     }
     .auth-custom-card {
@@ -452,5 +594,19 @@
     .user-type-grid--register,
     .auth-form-grid--two {
         grid-template-columns: 1fr;
+    }
+
+    .auth-step-meta {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .auth-step-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-step {
+        width: 100%;
     }
 }
