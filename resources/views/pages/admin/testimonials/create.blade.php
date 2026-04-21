@@ -1,25 +1,18 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
+
+@section('dashboard_eyebrow', 'Admin Workspace')
+@section('dashboard_title', 'Create Testimonial')
+@section('dashboard_description', 'Add a new testimonial with optional image and video proof.')
+
+@section('dashboard_actions')
+    <a href="{{ route('admin.testimonials.index') }}" class="button button--ghost-blue">Back To Studio</a>
+@endsection
 
 @section('content')
-<section class="section dashboard-page lead-ops-page">
-    <div class="container">
-        <div class="lead-ops-header">
-            <div>
-                <span class="eyebrow">Admin / Staff</span>
-                <h1>Add Testimonial</h1>
-                <p>Create a new buyer, seller, agent, or community testimonial and optionally attach a video link or uploaded clip.</p>
-            </div>
-            <div class="lead-ops-header__actions">
-                <a href="{{ route('admin.testimonials.index') }}" class="button button--ghost-blue">Back to Studio</a>
-            </div>
-        </div>
-
-        <div class="cockpit-table-card testimonial-admin-shell">
-            <form method="POST" action="{{ route('admin.testimonials.store') }}" enctype="multipart/form-data">
-                @csrf
-                @include('pages.admin.testimonials._form')
-            </form>
-        </div>
-    </div>
+<section class="workspace-card">
+    <form method="POST" action="{{ route('admin.testimonials.store') }}" enctype="multipart/form-data">
+        @csrf
+        @include('pages.admin.testimonials._form')
+    </form>
 </section>
 @endsection

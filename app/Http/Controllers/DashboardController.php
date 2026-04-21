@@ -101,67 +101,82 @@ class DashboardController extends Controller
 
     public function buyer(): View
     {
-        $buyer = Auth::user();
-        $favoritePropertiesQuery = $buyer
-            ? $buyer->favoriteProperties()
-                ->with('realtorProfile.user')
-                ->withFavoriteSummary($buyer)
-                ->marketplaceVisible()
-            : Property::query()->whereRaw('1 = 0');
-        $properties = $favoritePropertiesQuery
-            ->orderByPivot('created_at', 'desc')
-            ->take(6)
-            ->get();
-        $buyerRequests = Lead::where('intent', 'buyer')->latest()->take(5)->get();
-        $buyerJourney = [
-            ['label' => 'Submitted', 'count' => Lead::where('intent', 'buyer')->whereIn('status', ['new', 'contacted'])->count()],
-            ['label' => 'Qualified', 'count' => Lead::where('intent', 'buyer')->where('status', 'qualified')->count()],
-            ['label' => 'Agent Match', 'count' => Lead::where('intent', 'buyer')->where('status', 'assigned')->count()],
-            ['label' => 'Closed', 'count' => Lead::where('intent', 'buyer')->where('status', 'closed')->count()],
-        ];
-        $favoriteCount = $buyer ? $buyer->propertyFavorites()->count() : 0;
+        $workspace = $this->buyerWorkspace();
 
-        return view('pages.dashboards.buyer', [
-            'properties' => $properties,
-            'buyerRequests' => $buyerRequests,
-            'buyerJourney' => $buyerJourney,
-            'buyerStats' => [
-                'saved_listings' => $favoriteCount,
-                'favorites' => $favoriteCount,
-                'saved_searches' => 3,
-                'new_alerts' => Lead::where('intent', 'buyer')->count(),
-            ],
+        return view('pages.dashboards.buyer', $workspace + [
             'meta' => [
                 'title' => 'Buyer Dashboard | OmniReferral',
-                'description' => 'Track saved listings, favorite properties, map-based search, and buyer notifications.',
+                'description' => 'Track your saved homes, request progress, and live market activity.',
+            ],
+        ]);
+    }
+
+    public function buyerSavedHomes(): View
+    {
+        $workspace = $this->buyerWorkspace();
+
+        return view('pages.dashboards.buyer-saved', $workspace + [
+            'savedHomes' => $workspace['favoritePropertiesQuery']
+                ->orderByPivot('created_at', 'desc')
+                ->paginate(12),
+            'meta' => [
+                'title' => 'Saved Homes | OmniReferral',
+                'description' => 'Review and manage your saved buyer properties.',
+            ],
+        ]);
+    }
+
+    public function buyerRequests(): View
+    {
+        $workspace = $this->buyerWorkspace();
+
+        return view('pages.dashboards.buyer-requests', $workspace + [
+            'requests' => Lead::where('intent', 'buyer')->latest()->paginate(12),
+            'meta' => [
+                'title' => 'Buyer Requests | OmniReferral',
+                'description' => 'Track your buyer request flow across every stage.',
             ],
         ]);
     }
 
     public function seller(): View
     {
-        $properties = Property::marketplaceVisible()->latest()->take(4)->get();
-        $sellerRequests = Lead::where('intent', 'seller')->latest()->take(5)->get();
-        $sellerJourney = [
-            ['label' => 'Submitted', 'count' => Lead::where('intent', 'seller')->whereIn('status', ['new', 'contacted'])->count()],
-            ['label' => 'Qualified', 'count' => Lead::where('intent', 'seller')->where('status', 'qualified')->count()],
-            ['label' => 'In Market', 'count' => Lead::where('intent', 'seller')->where('status', 'assigned')->count()],
-            ['label' => 'Closed', 'count' => Lead::where('intent', 'seller')->where('status', 'closed')->count()],
-        ];
+        $workspace = $this->sellerWorkspace();
 
-        return view('pages.dashboards.seller', [
-            'properties' => $properties,
-            'sellerRequests' => $sellerRequests,
-            'sellerJourney' => $sellerJourney,
-            'sellerStats' => [
-                'active_listings' => $properties->count(),
-                'open_inquiries' => Lead::where('intent', 'seller')->count(),
-                'price_updates' => 2,
-                'buyer_matches' => Lead::where('intent', 'buyer')->count(),
-            ],
+        return view('pages.dashboards.seller', $workspace + [
             'meta' => [
                 'title' => 'Seller Dashboard | OmniReferral',
-                'description' => 'Manage your property listings, prices, images, and inquiries in one seller dashboard.',
+                'description' => 'Track listing readiness, requests, and market visibility from one seller workspace.',
+            ],
+        ]);
+    }
+
+    public function sellerListings(): View
+    {
+        $workspace = $this->sellerWorkspace();
+
+        return view('pages.dashboards.seller-listings', $workspace + [
+            'marketplaceProperties' => Property::query()
+                ->withFavoriteSummary()
+                ->marketplaceVisible()
+                ->latest()
+                ->paginate(9),
+            'meta' => [
+                'title' => 'Seller Listings | OmniReferral',
+                'description' => 'Submit a new listing and review the latest active marketplace properties.',
+            ],
+        ]);
+    }
+
+    public function sellerRequests(): View
+    {
+        $workspace = $this->sellerWorkspace();
+
+        return view('pages.dashboards.seller-requests', $workspace + [
+            'requests' => Lead::where('intent', 'seller')->latest()->paginate(12),
+            'meta' => [
+                'title' => 'Seller Requests | OmniReferral',
+                'description' => 'Track seller request status and current lead movement.',
             ],
         ]);
     }
@@ -243,5 +258,67 @@ class DashboardController extends Controller
             ],
         ]);
     }
-}
 
+    private function buyerWorkspace(): array
+    {
+        $buyer = Auth::user();
+        $favoritePropertiesQuery = $buyer->favoriteProperties()
+            ->with('realtorProfile.user')
+            ->withFavoriteSummary($buyer)
+            ->marketplaceVisible();
+
+        $buyerRequests = Lead::where('intent', 'buyer')->latest()->take(6)->get();
+        $buyerJourney = [
+            ['label' => 'Submitted', 'count' => Lead::where('intent', 'buyer')->whereIn('status', ['new', 'contacted'])->count()],
+            ['label' => 'Qualified', 'count' => Lead::where('intent', 'buyer')->where('status', 'qualified')->count()],
+            ['label' => 'Agent Match', 'count' => Lead::where('intent', 'buyer')->where('status', 'assigned')->count()],
+            ['label' => 'Closed', 'count' => Lead::where('intent', 'buyer')->where('status', 'closed')->count()],
+        ];
+        $favoriteCount = $buyer->propertyFavorites()->count();
+
+        return [
+            'favoritePropertiesQuery' => clone $favoritePropertiesQuery,
+            'properties' => (clone $favoritePropertiesQuery)
+                ->orderByPivot('created_at', 'desc')
+                ->take(6)
+                ->get(),
+            'buyerRequests' => $buyerRequests,
+            'buyerJourney' => $buyerJourney,
+            'buyerStats' => [
+                'saved_listings' => $favoriteCount,
+                'favorites' => $favoriteCount,
+                'saved_searches' => 3,
+                'new_alerts' => Lead::where('intent', 'buyer')->count(),
+            ],
+        ];
+    }
+
+    private function sellerWorkspace(): array
+    {
+        $properties = Property::query()
+            ->withFavoriteSummary()
+            ->marketplaceVisible()
+            ->latest()
+            ->take(6)
+            ->get();
+        $sellerRequests = Lead::where('intent', 'seller')->latest()->take(6)->get();
+        $sellerJourney = [
+            ['label' => 'Submitted', 'count' => Lead::where('intent', 'seller')->whereIn('status', ['new', 'contacted'])->count()],
+            ['label' => 'Qualified', 'count' => Lead::where('intent', 'seller')->where('status', 'qualified')->count()],
+            ['label' => 'In Market', 'count' => Lead::where('intent', 'seller')->where('status', 'assigned')->count()],
+            ['label' => 'Closed', 'count' => Lead::where('intent', 'seller')->where('status', 'closed')->count()],
+        ];
+
+        return [
+            'properties' => $properties,
+            'sellerRequests' => $sellerRequests,
+            'sellerJourney' => $sellerJourney,
+            'sellerStats' => [
+                'active_listings' => $properties->count(),
+                'open_inquiries' => Lead::where('intent', 'seller')->count(),
+                'price_updates' => 2,
+                'buyer_matches' => Lead::where('intent', 'buyer')->count(),
+            ],
+        ];
+    }
+}

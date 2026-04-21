@@ -1,36 +1,36 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
+
+@section('dashboard_eyebrow', 'Lead Import')
+@section('dashboard_title', 'Import Preview')
+@section('dashboard_description', 'Review rows before commit. Duplicate records are flagged and skipped.')
+
+@section('dashboard_actions')
+    <a href="{{ route('admin.leads.index') }}" class="button button--ghost-blue">Back To Registry</a>
+@endsection
 
 @section('content')
-<section class="section dashboard-page lead-ops-page">
-    <div class="container">
-        <div class="lead-ops-header">
-            <div>
-                <span class="eyebrow">Lead Import</span>
-                <h1>Preview Before Import</h1>
-                <p>Qualified rows show in green, rejected rows show in red, and duplicate email or phone matches are skipped before insert.</p>
-            </div>
-            <div class="lead-ops-header__actions">
-                <a href="{{ route('admin.leads.index') }}" class="button button--ghost-blue">Back To Lead Ops</a>
-            </div>
-        </div>
+<div class="workspace-stack">
+    <section class="workspace-grid workspace-grid--3">
+        <article class="workspace-card workspace-kpi">
+            <span>Total Rows</span>
+            <strong>{{ number_format($totalRows) }}</strong>
+            <span>Detected from uploaded file</span>
+        </article>
+        <article class="workspace-card workspace-kpi">
+            <span>Ready To Import</span>
+            <strong>{{ number_format($newCount) }}</strong>
+            <span>Rows that will be inserted</span>
+        </article>
+        <article class="workspace-card workspace-kpi">
+            <span>Duplicates</span>
+            <strong>{{ number_format($duplicateCount) }}</strong>
+            <span>Rows skipped automatically</span>
+        </article>
+    </section>
 
-        <div class="lead-ops-stats-grid">
-            <div class="cockpit-table-card lead-ops-stat-card">
-                <strong>{{ $totalRows }}</strong>
-                <span>Total rows detected</span>
-            </div>
-            <div class="cockpit-table-card lead-ops-stat-card">
-                <strong>{{ $newCount }}</strong>
-                <span>Rows ready to import</span>
-            </div>
-            <div class="cockpit-table-card lead-ops-stat-card">
-                <strong>{{ $duplicateCount }}</strong>
-                <span>Duplicates to skip</span>
-            </div>
-        </div>
-
-        <div class="cockpit-table-card lead-ops-table-wrap">
-            <table class="cockpit-table lead-ops-table">
+    <section class="workspace-card">
+        <div class="workspace-table-wrap">
+            <table class="workspace-table">
                 <thead>
                     <tr>
                         <th>Lead</th>
@@ -46,7 +46,7 @@
                             $status = $row['status'] ?? 'new';
                             $statusTone = $status === 'qualified' ? 'qualified' : ($status === 'not_interested' ? 'rejected' : $status);
                             $statusLabel = $status === 'not_interested' ? 'Rejected' : ucfirst(str_replace('_', ' ', $status));
-                            $resultLabel = !empty($row['_duplicate']) ? 'Duplicate -> Skip' : 'New -> Insert';
+                            $resultLabel = !empty($row['_duplicate']) ? 'Duplicate → Skip' : 'New → Insert';
                             $resultTone = !empty($row['_duplicate']) ? 'rejected' : 'qualified';
                             $priceSummary = !empty($row['budget'])
                                 ? 'Budget $' . number_format((int) $row['budget'])
@@ -54,73 +54,58 @@
                         @endphp
                         <tr>
                             <td>
-                                <div class="lead-ops-cell-stack">
-                                    <strong>{{ $row['name'] ?? '' }}</strong>
-                                    <span class="cockpit-secondary-data">{{ $row['email'] ?? '' }} | {{ $row['phone'] ?? '' }}</span>
-                                    <span class="cockpit-secondary-data">{{ optional($row['source_timestamp'] ?? null)->format('M d, Y g:i A') ?: 'No timestamp' }}</span>
-                                </div>
+                                <strong>{{ $row['name'] ?? '' }}</strong>
+                                <div class="workspace-property__meta">{{ $row['email'] ?? '' }} · {{ $row['phone'] ?? '' }}</div>
                             </td>
                             <td>
-                                <div class="lead-ops-cell-stack">
-                                    <span class="status-pill status-pill--{{ $statusTone }}">{{ $statusLabel }}</span>
-                                    <span class="cockpit-secondary-data">{{ ucfirst($row['intent'] ?? 'buyer') }}</span>
-                                </div>
+                                <span class="status-pill status-pill--{{ $statusTone }}">{{ $statusLabel }}</span>
+                                <div class="workspace-property__meta">{{ ucfirst($row['intent'] ?? 'buyer') }}</div>
                             </td>
                             <td>
-                                <div class="lead-ops-cell-stack">
-                                    <strong>{{ $row['property_address'] ?? 'No address provided' }}</strong>
-                                    <span class="cockpit-secondary-data">{{ $row['zip_code'] ?? '' }} | {{ $row['state'] ?? 'State N/A' }}</span>
-                                    <span class="cockpit-secondary-data">{{ $row['beds_baths'] ?? 'Beds/Baths N/A' }} | {{ $priceSummary }}</span>
-                                </div>
+                                <strong>{{ $row['property_address'] ?? 'No address provided' }}</strong>
+                                <div class="workspace-property__meta">{{ $row['zip_code'] ?? '' }} · {{ $row['state'] ?? 'State N/A' }}</div>
+                                <div class="workspace-property__meta">{{ $priceSummary }}</div>
                             </td>
                             <td>
-                                <div class="lead-ops-cell-stack">
-                                    <span class="cockpit-secondary-data">Rep: {{ $row['rep_name'] ?? 'N/A' }}</span>
-                                    <span class="cockpit-secondary-data">Sent to: {{ $row['sent_to'] ?? 'N/A' }}</span>
-                                    <span class="cockpit-secondary-data">Assignment: {{ $row['assignment'] ?? 'Unassigned on import' }}</span>
-                                    <span class="cockpit-secondary-data">Reason: {{ $row['reason_in_house'] ?? 'N/A' }}</span>
-                                    <span class="cockpit-secondary-data">Response: {{ $row['realtor_response'] ?? 'Pending' }}</span>
-                                </div>
+                                <div class="workspace-property__meta">Rep: {{ $row['rep_name'] ?? 'N/A' }}</div>
+                                <div class="workspace-property__meta">Sent to: {{ $row['sent_to'] ?? 'N/A' }}</div>
+                                <div class="workspace-property__meta">Assignment: {{ $row['assignment'] ?? 'Unassigned on import' }}</div>
                             </td>
                             <td>
-                                <div class="lead-ops-cell-stack">
-                                    <span class="status-pill status-pill--{{ $resultTone }}">{{ $resultLabel }}</span>
-                                    @if(!empty($row['_duplicate_reason']))
-                                        <span class="cockpit-secondary-data">{{ $row['_duplicate_reason'] }}</span>
-                                    @endif
-                                </div>
+                                <span class="status-pill status-pill--{{ $resultTone }}">{{ $resultLabel }}</span>
+                                @if(!empty($row['_duplicate_reason']))
+                                    <div class="workspace-property__meta">{{ $row['_duplicate_reason'] }}</div>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
-
-            @if($totalRows > count($rows))
-                <p class="lead-ops-preview-note">Showing the first {{ count($rows) }} rows in preview. The full import will still process all {{ $totalRows }} rows.</p>
-            @endif
         </div>
 
-        <div class="lead-ops-preview-actions">
-            <form action="{{ route('admin.leads.import.commit') }}" method="POST" class="js-loading-form" data-loading-scope="lead-ops">
-                @csrf
-                <input type="hidden" name="preview_key" value="{{ $key }}">
-                <button type="submit" class="button button--orange js-loading-btn" data-loading-text="Importing Leads...">Confirm Import</button>
-            </form>
-            <a href="{{ route('admin.leads.index') }}" class="button button--ghost-blue">Cancel</a>
-        </div>
-    </div>
-</section>
+        @if($totalRows > count($rows))
+            <p class="workspace-property__meta" style="margin-top: 0.75rem;">Showing first {{ count($rows) }} rows in preview. Commit still processes all {{ $totalRows }} rows.</p>
+        @endif
+    </section>
+
+    <section class="workspace-actions">
+        <form action="{{ route('admin.leads.import.commit') }}" method="POST" class="js-loading-form">
+            @csrf
+            <input type="hidden" name="preview_key" value="{{ $key }}">
+            <button type="submit" class="button js-loading-btn">Confirm Import</button>
+        </form>
+        <a href="{{ route('admin.leads.index') }}" class="button button--ghost-blue">Cancel</a>
+    </section>
+</div>
 
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.js-loading-form').forEach(function (form) {
-        form.addEventListener('submit', function () {
-            const btn = form.querySelector('.js-loading-btn');
-
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = btn.dataset.loadingText || 'Processing...';
+        form.addEventListener('submit', function (event) {
+            const button = event.submitter || form.querySelector('.js-loading-btn');
+            if (button) {
+                button.disabled = true;
             }
         });
     });

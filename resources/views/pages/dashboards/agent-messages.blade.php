@@ -1,101 +1,86 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
+
+@section('dashboard_eyebrow', 'Agent Workspace')
+@section('dashboard_title', 'Message Inbox')
+@section('dashboard_description', 'All profile and listing inquiries are organized on a dedicated page for clear follow-up.')
+
+@section('dashboard_actions')
+    <a href="{{ route('dashboard.agent') }}" class="button button--ghost-blue">Overview</a>
+@endsection
 
 @section('content')
-<section class="page-hero dashboard-page-hero dashboard-page-hero--agent">
-    <div class="container page-hero__content">
-        <span class="eyebrow">Agent Messages</span>
-        <h1>Review every property and profile inquiry sent to you</h1>
-        <p>Website inquiries from your public agent page and listing pages now route directly into this inbox so nothing gets buried in the general contact form.</p>
-    </div>
-</section>
+<div class="workspace-stack">
+    <section class="workspace-grid workspace-grid--4">
+        <article class="workspace-card workspace-kpi">
+            <span>Total Messages</span>
+            <strong>{{ number_format($totalMessagesCount) }}</strong>
+            <span>All inbox conversations</span>
+        </article>
+        <article class="workspace-card workspace-kpi">
+            <span>Unread</span>
+            <strong>{{ number_format($unreadMessagesCount) }}</strong>
+            <span>Need immediate attention</span>
+        </article>
+        <article class="workspace-card workspace-kpi">
+            <span>Active Listings</span>
+            <strong>{{ number_format($activeListingCount) }}</strong>
+            <span>Listings that can receive messages</span>
+        </article>
+        <article class="workspace-card workspace-kpi">
+            <span>Assigned Leads</span>
+            <strong>{{ number_format($agentStats['leads_received']) }}</strong>
+            <span>Related lead workload</span>
+        </article>
+    </section>
 
-<section class="section dashboard-page agent-portal-shell">
-    <div class="container agent-portal-grid">
-        @include('pages.dashboards.partials.agent-portal-sidebar')
-
-        <div class="agent-portal-main">
-            <div class="cockpit-kpi-row">
-                <article class="cockpit-kpi-card">
-                    <span class="eyebrow">Total Messages</span>
-                    <strong>{{ $totalMessagesCount }}</strong>
-                    <p>All inquiries saved to your inbox</p>
-                </article>
-                <article class="cockpit-kpi-card">
-                    <span class="eyebrow">Unread</span>
-                    <strong>{{ $unreadMessagesCount }}</strong>
-                    <p>Messages waiting for first review</p>
-                </article>
-                <article class="cockpit-kpi-card">
-                    <span class="eyebrow">Listings</span>
-                    <strong>{{ $activeListingCount }}</strong>
-                    <p>Active listings generating conversations</p>
-                </article>
-                <article class="cockpit-kpi-card">
-                    <span class="eyebrow">Assigned Leads</span>
-                    <strong>{{ $agentStats['leads_received'] }}</strong>
-                    <p>Current lead workload beside inbox traffic</p>
-                </article>
-            </div>
-
-            <section class="cockpit-table-card agent-portal-section">
-                <div class="agent-portal-section__header">
-                    <div>
-                        <span class="eyebrow">Inbox</span>
-                        <h2>All direct inquiries</h2>
-                    </div>
-                </div>
-
-                <div class="agent-portal-message-grid">
-                    @forelse($messages as $message)
-                        <article class="agent-message-card">
-                            <div class="agent-message-card__header">
-                                <div>
-                                    <strong>{{ $message->subject ?: 'New inquiry' }}</strong>
-                                    <span>{{ $message->name }} &middot; {{ $message->email }}</span>
-                                </div>
-                                <span class="status-pill status-pill--{{ $message->message_status === 'new' ? 'assigned' : 'qualified' }}">
-                                    {{ ucfirst(str_replace('_', ' ', $message->message_status)) }}
-                                </span>
+    <section class="workspace-card">
+        @if($messages->isEmpty())
+            <div class="workspace-empty">No inbox messages yet.</div>
+        @else
+            <ul class="workspace-list">
+                @foreach($messages as $message)
+                    <li>
+                        <div class="workspace-actions" style="justify-content: space-between; align-items: flex-start;">
+                            <div>
+                                <strong>{{ $message->subject ?: 'New inquiry' }}</strong>
+                                <small>{{ $message->name }} · {{ $message->email }}</small>
                             </div>
-
-                            <div class="agent-message-card__meta">
-                                <span><strong>Phone:</strong> {{ $message->phone ?: 'Not provided' }}</span>
-                                <span><strong>Source:</strong> {{ ucfirst(str_replace('_', ' ', $message->source ?: 'website')) }}</span>
-                                <span><strong>Property:</strong> {{ $message->property?->title ?: 'Direct profile inquiry' }}</span>
-                                <span><strong>Received:</strong> {{ $message->created_at->format('M j, Y g:i A') }}</span>
-                            </div>
-
-                            <p>{{ $message->message }}</p>
-
-                            <div class="agent-message-card__actions">
-                                @if($message->property)
-                                    <a href="{{ route('properties.show', $message->property) }}" class="button button--ghost-blue">Open Listing</a>
-                                @endif
-                                <form action="{{ route('agent.messages.status', $message) }}" method="POST">
-                                    @csrf
-                                    <select name="message_status" onchange="this.form.submit()" aria-label="Update message status">
-                                        @foreach(['new', 'read', 'replied', 'archived'] as $status)
-                                            <option value="{{ $status }}" {{ $message->message_status === $status ? 'selected' : '' }}>
-                                                {{ ucfirst($status) }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </form>
-                            </div>
-                        </article>
-                    @empty
-                        <div class="cockpit-empty-state">
-                            <h3>No inbound messages yet</h3>
-                            <p class="text-gray-500">Once a user contacts you from a listing or agent profile page, the message will land here automatically.</p>
+                            <span class="status-pill status-pill--{{ $message->message_status === 'new' ? 'assigned' : 'qualified' }}">
+                                {{ ucfirst(str_replace('_', ' ', $message->message_status)) }}
+                            </span>
                         </div>
-                    @endforelse
-                </div>
 
-                <div class="agent-portal-pagination">
-                    {{ $messages->links() }}
-                </div>
-            </section>
+                        <div class="workspace-pill-row" style="margin-top: 0.5rem;">
+                            <span class="workspace-pill">Phone: {{ $message->phone ?: 'Not provided' }}</span>
+                            <span class="workspace-pill">Source: {{ ucfirst(str_replace('_', ' ', $message->source ?: 'website')) }}</span>
+                            <span class="workspace-pill workspace-pill--accent">Received: {{ $message->created_at->format('M j, Y g:i A') }}</span>
+                        </div>
+
+                        <p style="margin-top: 0.55rem;">{{ $message->message }}</p>
+
+                        <div class="workspace-actions" style="margin-top: 0.7rem;">
+                            @if($message->property)
+                                <a href="{{ route('properties.show', $message->property) }}" class="button button--ghost-blue">Open Listing</a>
+                            @endif
+                            <form action="{{ route('agent.messages.status', $message) }}" method="POST">
+                                @csrf
+                                <select name="message_status" onchange="this.form.submit()" aria-label="Update message status">
+                                    @foreach(['new', 'read', 'replied', 'archived'] as $status)
+                                        <option value="{{ $status }}" {{ $message->message_status === $status ? 'selected' : '' }}>
+                                            {{ ucfirst($status) }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </form>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+
+        <div class="workspace-pagination">
+            {{ $messages->links() }}
         </div>
-    </div>
-</section>
+    </section>
+</div>
 @endsection

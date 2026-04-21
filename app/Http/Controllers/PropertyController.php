@@ -121,7 +121,7 @@ class PropertyController extends Controller
 
         Property::create($validated);
 
-        return redirect()->route($user?->isAgent() ? 'agent.listings.index' : 'dashboard.seller')
+        return redirect()->route($user?->isAgent() ? 'agent.listings.index' : 'dashboard.seller.listings')
             ->with('success', $requiresApproval
                 ? 'Your property listing has been submitted for admin review.'
                 : 'Your property listing is live.');
@@ -171,7 +171,7 @@ class PropertyController extends Controller
 
         return redirect()->route(match (true) {
             $user?->isAgent() => 'agent.listings.index',
-            $user?->isSeller() => 'dashboard.seller',
+            $user?->isSeller() => 'dashboard.seller.listings',
             $user?->isStaff() => 'admin.dashboard',
             default => 'dashboard',
         })

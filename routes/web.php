@@ -140,10 +140,14 @@ Route::middleware(['auth'])->group(function () {
 
     Route::middleware(['role:buyer'])->group(function () {
         Route::get('/buyer/dashboard', [DashboardController::class, 'buyer'])->name('dashboard.buyer');
+        Route::get('/buyer/dashboard/saved-homes', [DashboardController::class, 'buyerSavedHomes'])->name('dashboard.buyer.saved');
+        Route::get('/buyer/dashboard/requests', [DashboardController::class, 'buyerRequests'])->name('dashboard.buyer.requests');
     });
 
     Route::middleware(['role:seller'])->group(function () {
         Route::get('/seller/dashboard', [DashboardController::class, 'seller'])->name('dashboard.seller');
+        Route::get('/seller/dashboard/listings', [DashboardController::class, 'sellerListings'])->name('dashboard.seller.listings');
+        Route::get('/seller/dashboard/requests', [DashboardController::class, 'sellerRequests'])->name('dashboard.seller.requests');
         Route::post('/seller/properties', [PropertyController::class, 'store'])->name('properties.store');
     });
 

@@ -1,183 +1,145 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
+
+@section('dashboard_eyebrow', 'Agent Workspace')
+@section('dashboard_title', 'Agent Listings')
+@section('dashboard_description', 'Create listings within your package limits and manage all listing states in one dedicated page.')
+
+@section('dashboard_actions')
+    <a href="{{ route('pricing') }}" class="button button--ghost-blue">Package Limits</a>
+@endsection
 
 @section('content')
-<section class="page-hero dashboard-page-hero dashboard-page-hero--agent">
-    <div class="container page-hero__content">
-        <span class="eyebrow">Listings Workspace</span>
-        <h1>Publish listings based on your active package access</h1>
-        <p>Your package controls how many active listings you can keep live at one time. Once a listing is sold or taken off market, that slot opens back up.</p>
-    </div>
-</section>
+<div class="workspace-stack">
+    <section class="workspace-grid workspace-grid--4">
+        <article class="workspace-card workspace-kpi">
+            <span>Plan</span>
+            <strong>{{ $activePlan?->name ?: 'No Plan' }}</strong>
+            <span>{{ $listingLimitLabel }}</span>
+        </article>
+        <article class="workspace-card workspace-kpi">
+            <span>Live Listings</span>
+            <strong>{{ number_format($activeListingCount) }}</strong>
+            <span>Approved and visible</span>
+        </article>
+        <article class="workspace-card workspace-kpi">
+            <span>Slots Left</span>
+            <strong>{{ number_format($remainingListingSlots) }}</strong>
+            <span>Available for new uploads</span>
+        </article>
+        <article class="workspace-card workspace-kpi">
+            <span>Pending Review</span>
+            <strong>{{ number_format($pendingReviewCount) }}</strong>
+            <span>Awaiting admin decision</span>
+        </article>
+    </section>
 
-<section class="section dashboard-page agent-portal-shell">
-    <div class="container agent-portal-grid">
-        @include('pages.dashboards.partials.agent-portal-sidebar')
+    <section class="workspace-card">
+        <span class="eyebrow">Publish Listing</span>
+        <h2>Add A Property</h2>
 
-        <div class="agent-portal-main">
-            <div class="cockpit-kpi-row">
-                <article class="cockpit-kpi-card">
-                    <span class="eyebrow">Package</span>
-                    <strong>{{ $activePlan?->name ?: 'No Plan' }}</strong>
-                    <p>{{ $listingLimitLabel }}</p>
-                </article>
-                <article class="cockpit-kpi-card">
-                    <span class="eyebrow">Live Listings</span>
-                    <strong>{{ $activeListingCount }}</strong>
-                    <p>Approved properties visible in the marketplace</p>
-                </article>
-                <article class="cockpit-kpi-card">
-                    <span class="eyebrow">Remaining Slots</span>
-                    <strong>{{ $remainingListingSlots }}</strong>
-                    <p>Available space before you hit your cap</p>
-                </article>
-                <article class="cockpit-kpi-card">
-                    <span class="eyebrow">Pending Review</span>
-                    <strong>{{ $pendingReviewCount }}</strong>
-                    <p>Listings waiting for admin approval</p>
-                </article>
+        @if(! $activePlan || $listingLimit < 1)
+            <div class="workspace-empty" style="margin-bottom: 0.9rem;">Your current package does not include listing access yet.</div>
+        @elseif(! $canCreateListings)
+            <div class="workspace-empty" style="margin-bottom: 0.9rem;">You have reached your listing cap. Mark a listing sold or off-market to free a slot.</div>
+        @endif
+
+        @if($pendingReviewCount > 0)
+            <div class="workspace-empty" style="margin-bottom: 0.9rem;">{{ $pendingReviewCount }} listing {{ $pendingReviewCount === 1 ? 'is' : 'are' }} waiting for admin review.</div>
+        @endif
+
+        <form method="POST" action="{{ route('agent.listings.store') }}" enctype="multipart/form-data">
+            @csrf
+            <fieldset {{ $canCreateListings ? '' : 'disabled' }}>
+                <div class="workspace-form-grid">
+                    <label class="workspace-field workspace-field--full">
+                        <span>Property Title</span>
+                        <input type="text" name="title" value="{{ old('title') }}" required>
+                    </label>
+                    <label class="workspace-field">
+                        <span>Location</span>
+                        <input type="text" name="location" value="{{ old('location') }}" required>
+                    </label>
+                    <label class="workspace-field">
+                        <span>ZIP Code</span>
+                        <input type="text" name="zip_code" value="{{ old('zip_code') }}" required>
+                    </label>
+                    <label class="workspace-field">
+                        <span>Property Type</span>
+                        <select name="property_type" required>
+                            @foreach(['house' => 'House', 'apartment' => 'Apartment', 'condo' => 'Condo', 'commercial' => 'Commercial'] as $value => $label)
+                                <option value="{{ $value }}" {{ old('property_type') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <label class="workspace-field">
+                        <span>Price</span>
+                        <input type="number" name="price" value="{{ old('price') }}" min="0" required>
+                    </label>
+                    <label class="workspace-field">
+                        <span>Beds</span>
+                        <input type="number" name="beds" value="{{ old('beds') }}" min="0">
+                    </label>
+                    <label class="workspace-field">
+                        <span>Baths</span>
+                        <input type="number" name="baths" value="{{ old('baths') }}" min="0" step="0.5">
+                    </label>
+                    <label class="workspace-field">
+                        <span>Square Feet</span>
+                        <input type="number" name="sqft" value="{{ old('sqft') }}" min="0">
+                    </label>
+                    <label class="workspace-field workspace-field--full">
+                        <span>Description</span>
+                        <textarea name="description">{{ old('description') }}</textarea>
+                    </label>
+                    <label class="workspace-field workspace-field--full">
+                        <span>Listing Image</span>
+                        <input type="file" name="image" accept="image/*">
+                    </label>
+                </div>
+            </fieldset>
+
+            <div class="workspace-actions" style="margin-top: 0.8rem;">
+                <button type="submit" class="button" {{ $canCreateListings ? '' : 'disabled' }}>Submit For Review</button>
             </div>
+        </form>
+    </section>
 
-            <div class="agent-portal-content-grid">
-                <section class="cockpit-table-card agent-portal-section">
-                    <div class="agent-portal-section__header">
-                        <div>
-                            <span class="eyebrow">Publish Listing</span>
-                            <h2>Add a property for admin review</h2>
-                        </div>
-                    </div>
-
-                    @if(! $activePlan || $listingLimit < 1)
-                        <div class="agent-portal-warning">
-                            <strong>No listing access yet.</strong>
-                            <p>Your current account does not include property publishing. Choose a lead package to unlock listing access.</p>
-                            <a href="{{ route('pricing') }}" class="button button--orange">View Packages</a>
-                        </div>
-                    @elseif(! $canCreateListings)
-                        <div class="agent-portal-warning">
-                            <strong>Listing cap reached.</strong>
-                            <p>You are currently using all {{ $listingLimit }} active listing slots in your {{ $activePlan->name }} package. Mark one sold or off-market to free up space.</p>
-                        </div>
-                    @endif
-
-                    @if($pendingReviewCount > 0)
-                        <div class="agent-portal-warning" style="margin-bottom: 1.25rem;">
-                            <strong>{{ $pendingReviewCount }} listing {{ $pendingReviewCount === 1 ? 'is' : 'are' }} awaiting review.</strong>
-                            <p>Admin approval is required before new submissions appear on the public listings page.</p>
-                        </div>
-                    @endif
-
-                    <form class="agent-portal-form" method="POST" action="{{ route('agent.listings.store') }}" enctype="multipart/form-data">
-                        @csrf
-                        <fieldset {{ $canCreateListings ? '' : 'disabled' }}>
-                            <div class="form-grid-2">
-                                <label class="form-full-row">
-                                    <span>Property Title</span>
-                                    <input type="text" name="title" value="{{ old('title') }}" required>
-                                </label>
-                                <label>
-                                    <span>Location</span>
-                                    <input type="text" name="location" value="{{ old('location') }}" required>
-                                </label>
-                                <label>
-                                    <span>ZIP Code</span>
-                                    <input type="text" name="zip_code" value="{{ old('zip_code') }}" required>
-                                </label>
-                                <label>
-                                    <span>Property Type</span>
-                                    <select name="property_type" required>
-                                        @foreach(['house' => 'House', 'apartment' => 'Apartment', 'condo' => 'Condo', 'commercial' => 'Commercial'] as $value => $label)
-                                            <option value="{{ $value }}" {{ old('property_type') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                                        @endforeach
-                                    </select>
-                                </label>
-                                <label>
-                                    <span>Price</span>
-                                    <input type="number" name="price" value="{{ old('price') }}" min="0" required>
-                                </label>
-                                <label>
-                                    <span>Beds</span>
-                                    <input type="number" name="beds" value="{{ old('beds') }}" min="0">
-                                </label>
-                                <label>
-                                    <span>Baths</span>
-                                    <input type="number" name="baths" value="{{ old('baths') }}" min="0" step="0.5">
-                                </label>
-                                <label>
-                                    <span>Square Feet</span>
-                                    <input type="number" name="sqft" value="{{ old('sqft') }}" min="0">
-                                </label>
-                                <label class="form-full-row">
-                                    <span>Description</span>
-                                    <textarea name="description" rows="5">{{ old('description') }}</textarea>
-                                </label>
-                                <label class="form-full-row">
-                                    <span>Listing Image</span>
-                                    <input type="file" name="image" accept="image/*">
-                                </label>
-                            </div>
-                        </fieldset>
-
-                        <div class="agent-portal-form__actions">
-                            <button type="submit" class="button" {{ $canCreateListings ? '' : 'disabled' }}>Submit For Review</button>
-                            <a href="{{ route('pricing') }}" class="button button--ghost-blue">Review Package Limits</a>
-                        </div>
-                    </form>
-                </section>
-
-                <section class="cockpit-table-card agent-portal-section">
-                    <div class="agent-portal-section__header">
-                        <div>
-                            <span class="eyebrow">Current Listings</span>
-                            <h2>Manage your published inventory</h2>
-                        </div>
-                    </div>
-
-                    <div class="agent-portal-listing-grid">
-                        @forelse($properties as $property)
-                            <article class="listing-card listing-card--showcase">
-                                <div class="listing-card__media">
-                                    <img src="{{ $property->image_url }}" alt="{{ $property->title }}" loading="lazy">
-                                    <span class="listing-badge">{{ $property->status }}</span>
-                                </div>
-                                <div class="listing-card__body">
-                                    <div class="listing-card__top">
-                                        <strong>${{ number_format($property->price) }}</strong>
-                                        <span class="listing-type">{{ $property->property_type }}</span>
-                                    </div>
-                                    <h3>{{ $property->title }}</h3>
-                                    <p class="listing-location">{{ $property->location }}</p>
-                                    <div class="listing-card__meta listing-card__meta--pills">
-                                        <span>{{ $property->beds }} bd</span>
-                                        <span>{{ $property->baths }} ba</span>
-                                        <span>{{ number_format($property->sqft) }} sqft</span>
-                                    </div>
-                                    <div class="agent-portal-listing-card__status" style="display:flex; gap:.5rem; flex-wrap:wrap; margin-top: .75rem;">
-                                        <span class="status-pill status-pill--{{ $property->approvalStatusTone() }}">{{ $property->approvalStatusLabel() }}</span>
-                                        <span class="status-pill status-pill--qualified">{{ number_format($property->favorites_count ?? 0) }} saves</span>
-                                        @if($property->approval_notes)
-                                            <span class="status-pill status-pill--pending">{{ \Illuminate\Support\Str::limit($property->approval_notes, 40) }}</span>
-                                        @endif
-                                    </div>
-                                    <div class="agent-portal-listing-card__actions">
-                                        <a href="{{ route('properties.show', $property) }}" class="button button--ghost-blue">View</a>
-                                        <a href="{{ route('properties.edit', $property) }}" class="button button--blue">Edit</a>
-                                    </div>
-                                </div>
-                            </article>
-                        @empty
-                            <div class="cockpit-empty-state">
-                                <h3>No listings yet</h3>
-                                <p class="text-gray-500">Your published properties will appear here after you add the first one.</p>
-                            </div>
-                        @endforelse
-                    </div>
-
-                    <div class="agent-portal-pagination">
-                        {{ $properties->links() }}
-                    </div>
-                </section>
+    <section class="workspace-card">
+        <div class="workspace-actions" style="justify-content: space-between; margin-bottom: 0.7rem;">
+            <div>
+                <span class="eyebrow">Listing Inventory</span>
+                <h2>Current Agent Properties</h2>
             </div>
         </div>
-    </div>
-</section>
+
+        @if($properties->isEmpty())
+            <div class="workspace-empty">No listings yet. Add your first property above.</div>
+        @else
+            <div class="workspace-property-grid">
+                @foreach($properties as $property)
+                    <article class="workspace-property">
+                        <img src="{{ $property->image_url }}" alt="{{ $property->title }}" loading="lazy">
+                        <div class="workspace-property__body">
+                            <h3>{{ $property->title }}</h3>
+                            <p class="workspace-property__meta">{{ $property->location }}</p>
+                            <div class="workspace-pill-row">
+                                <span class="workspace-pill">{{ $property->status }}</span>
+                                <span class="workspace-pill">{{ $property->approvalStatusLabel() }}</span>
+                                <span class="workspace-pill workspace-pill--accent">{{ number_format($property->favorites_count ?? 0) }} saves</span>
+                            </div>
+                            <div class="workspace-actions">
+                                <a href="{{ route('properties.show', $property) }}" class="button button--ghost-blue">View</a>
+                                <a href="{{ route('properties.edit', $property) }}" class="button">Edit</a>
+                            </div>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
+        @endif
+
+        <div class="workspace-pagination">
+            {{ $properties->links() }}
+        </div>
+    </section>
+</div>
 @endsection

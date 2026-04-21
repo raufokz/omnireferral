@@ -1,116 +1,95 @@
-@extends('layouts.app')
+@extends('layouts.dashboard')
+
+@section('dashboard_eyebrow', 'Agent Workspace')
+@section('dashboard_title', 'Lead Queue')
+@section('dashboard_description', 'Every assigned lead lives in this dedicated page so updates stay focused and fast.')
+
+@section('dashboard_actions')
+    <a href="{{ route('dashboard.agent') }}" class="button button--ghost-blue">Overview</a>
+@endsection
 
 @section('content')
-<section class="page-hero dashboard-page-hero dashboard-page-hero--agent">
-    <div class="container page-hero__content">
-        <span class="eyebrow">Assigned Leads</span>
-        <h1>Work every assigned lead from one focused queue</h1>
-        <p>Only leads assigned to you appear here, and every status change is saved immediately so the pipeline stays current.</p>
-    </div>
-</section>
+<div class="workspace-stack">
+    <section class="workspace-grid workspace-grid--4">
+        <article class="workspace-card workspace-kpi">
+            <span>Assigned</span>
+            <strong>{{ number_format($agentStats['leads_received']) }}</strong>
+            <span>Total leads in your queue</span>
+        </article>
+        <article class="workspace-card workspace-kpi">
+            <span>Qualified</span>
+            <strong>{{ number_format(data_get(collect($pipeline)->firstWhere('label', 'Qualified'), 'count', 0)) }}</strong>
+            <span>Leads ready for close</span>
+        </article>
+        <article class="workspace-card workspace-kpi">
+            <span>Closed</span>
+            <strong>{{ number_format($agentStats['closed_leads']) }}</strong>
+            <span>Deals marked closed</span>
+        </article>
+        <article class="workspace-card workspace-kpi">
+            <span>Response Rate</span>
+            <strong>{{ $agentStats['response_rate'] }}</strong>
+            <span>Current contact performance</span>
+        </article>
+    </section>
 
-<section class="section dashboard-page agent-portal-shell">
-    <div class="container agent-portal-grid">
-        @include('pages.dashboards.partials.agent-portal-sidebar')
-
-        <div class="agent-portal-main">
-            <div class="cockpit-kpi-row">
-                <article class="cockpit-kpi-card">
-                    <span class="eyebrow">Assigned</span>
-                    <strong>{{ $agentStats['leads_received'] }}</strong>
-                    <p>Total leads in your queue</p>
-                </article>
-                <article class="cockpit-kpi-card">
-                    <span class="eyebrow">Qualified</span>
-                    <strong>{{ data_get(collect($pipeline)->firstWhere('label', 'Qualified'), 'count', 0) }}</strong>
-                    <p>Leads marked qualified</p>
-                </article>
-                <article class="cockpit-kpi-card">
-                    <span class="eyebrow">Closed</span>
-                    <strong>{{ $agentStats['closed_leads'] }}</strong>
-                    <p>Deals closed from your queue</p>
-                </article>
-                <article class="cockpit-kpi-card">
-                    <span class="eyebrow">Response Rate</span>
-                    <strong>{{ $agentStats['response_rate'] }}</strong>
-                    <p>Based on contacted and progressed leads</p>
-                </article>
-            </div>
-
-            <section class="cockpit-table-card agent-portal-section">
-                <div class="agent-portal-section__header">
-                    <div>
-                        <span class="eyebrow">Lead Queue</span>
-                        <h2>All assigned opportunities</h2>
-                    </div>
-                </div>
-
-                <table class="cockpit-table">
-                    <thead>
+    <section class="workspace-card">
+        <div class="workspace-table-wrap">
+            <table class="workspace-table">
+                <thead>
+                    <tr>
+                        <th>Lead</th>
+                        <th>Location</th>
+                        <th>Package</th>
+                        <th>Status</th>
+                        <th>Update</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($leads as $lead)
                         <tr>
-                            <th>Lead Detail</th>
-                            <th>Location</th>
-                            <th>Package</th>
-                            <th>Status</th>
-                            <th>Action</th>
+                            <td>
+                                <strong>{{ $lead->name }}</strong>
+                                <div class="workspace-property__meta">{{ ucfirst($lead->intent) }} lead · {{ $lead->phone ?: 'No phone' }}</div>
+                            </td>
+                            <td>
+                                <strong>{{ $lead->zip_code ?: 'No ZIP' }}</strong>
+                                <div class="workspace-property__meta">{{ $lead->property_type ?: 'Property type pending' }}</div>
+                            </td>
+                            <td>
+                                <strong>{{ strtoupper($lead->package_type ?: 'N/A') }}</strong>
+                                <div class="workspace-property__meta">Lead ID {{ $lead->id }}</div>
+                            </td>
+                            <td>
+                                <span class="status-pill status-pill--{{ $lead->statusTone() }}">{{ $lead->statusLabel() }}</span>
+                            </td>
+                            <td>
+                                <form action="{{ route('agent.leads.status', $lead) }}" method="POST">
+                                    @csrf
+                                    <select name="status" onchange="this.form.submit()" aria-label="Update lead status">
+                                        @foreach(['new', 'contacted', 'in_progress', 'qualified', 'closed', 'not_interested'] as $status)
+                                            <option value="{{ $status }}" {{ $lead->status === $status ? 'selected' : '' }}>
+                                                {{ $status === 'not_interested' ? 'Rejected' : ucfirst(str_replace('_', ' ', $status)) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </form>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($leads as $lead)
-                            <tr>
-                                <td>
-                                    <div class="agent-lead-detail">
-                                        <strong>{{ $lead->name }}</strong>
-                                        <span>{{ ucfirst($lead->intent) }} lead &middot; {{ $lead->phone ?: 'No phone' }}</span>
-                                        <small>{{ $lead->email ?: 'No email provided' }}</small>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="agent-lead-detail">
-                                        <strong>{{ $lead->zip_code ?: 'No ZIP' }}</strong>
-                                        <span>{{ $lead->property_type ?: 'Property type pending' }}</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="agent-lead-detail">
-                                        <strong>{{ strtoupper($lead->package_type ?: 'N/A') }}</strong>
-                                        <span>Lead ID: {{ $lead->id }}</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="status-pill status-pill--{{ $lead->statusTone() }}">{{ $lead->statusLabel() }}</span>
-                                </td>
-                                <td>
-                                    <form action="{{ route('agent.leads.status', $lead) }}" method="POST">
-                                        @csrf
-                                        <select name="status" onchange="this.form.submit()" aria-label="Update lead status">
-                                            @foreach(['new', 'contacted', 'in_progress', 'qualified', 'closed', 'not_interested'] as $status)
-                                                <option value="{{ $status }}" {{ $lead->status === $status ? 'selected' : '' }}>
-                                                    {{ $status === 'not_interested' ? 'Rejected' : ucfirst(str_replace('_', ' ', $status)) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5">
-                                    <div class="cockpit-empty-state">
-                                        <h3>Your queue is clear</h3>
-                                        <p class="text-gray-500">Admin-assigned leads will appear here automatically.</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-
-                <div class="agent-portal-pagination">
-                    {{ $leads->links() }}
-                </div>
-            </section>
+                    @empty
+                        <tr>
+                            <td colspan="5">
+                                <div class="workspace-empty">No leads assigned yet.</div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-    </div>
-</section>
+
+        <div class="workspace-pagination">
+            {{ $leads->links() }}
+        </div>
+    </section>
+</div>
 @endsection
