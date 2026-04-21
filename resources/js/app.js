@@ -20,25 +20,51 @@ const showToast = (message, type = 'info', duration = 5000) => {
         document.body.appendChild(container);
     }
 
+    const normalizedDuration = Number.isFinite(duration) ? Math.max(0, duration) : 5000;
     const toast = document.createElement('div');
     toast.className = `toast toast--${type}`;
-    toast.innerHTML = `
-        <div class="toast__content">
-            <span class="toast__message">${message}</span>
-        </div>
-        <button class="toast__close" aria-label="Close">×</button>
-    `;
+    toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    toast.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+
+    if (normalizedDuration > 0) {
+        toast.style.setProperty('--toast-duration', `${normalizedDuration}ms`);
+    } else {
+        toast.classList.add('is-persistent');
+    }
+
+    const content = document.createElement('div');
+    content.className = 'toast__content';
+
+    const messageEl = document.createElement('span');
+    messageEl.className = 'toast__message';
+    messageEl.textContent = message;
+    content.appendChild(messageEl);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'toast__close';
+    closeBtn.setAttribute('aria-label', 'Close');
+    closeBtn.innerHTML = '&times;';
+
+    toast.append(content, closeBtn);
 
     container.appendChild(toast);
     setTimeout(() => toast.classList.add('is-visible'), 10);
 
+    let removeTimer = null;
     const remove = () => {
+        if (removeTimer) {
+            clearTimeout(removeTimer);
+            removeTimer = null;
+        }
         toast.classList.remove('is-visible');
         setTimeout(() => toast.remove(), 300);
     };
 
-    toast.querySelector('.toast__close').addEventListener('click', remove);
-    if (duration > 0) setTimeout(remove, duration);
+    closeBtn.addEventListener('click', remove);
+    if (normalizedDuration > 0) {
+        removeTimer = setTimeout(remove, normalizedDuration);
+    }
 };
 window.showToast = showToast;
 
