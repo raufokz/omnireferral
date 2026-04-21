@@ -412,14 +412,17 @@
                 <h2 id="how-it-works-heading">One coordinated workflow from cold outreach to closed deal</h2>
                 <p>OmniReferral gives every team a defined role, so buyers and sellers move through a cleaner experience and agents get more useful context at delivery.</p>
             </div>
-            <div class="timeline-flow homepage-timeline" data-stagger>
+            <div class="timeline-flow homepage-timeline homepage-workflow" data-stagger>
                 <div class="work-step" data-animate="up">
                     <div class="work-step__number">1</div>
                     <div class="work-step__visual">
                         <img src="{{ asset('images/how-it-works/verification.png') }}" alt="ISA team qualifying buyers and sellers" loading="lazy">
                     </div>
                     <div class="work-step__content">
-                        <span class="work-step__role">ISA Team</span>
+                        <div class="work-step__meta">
+                            <span class="work-step__eyebrow">Phase 01</span>
+                            <span class="work-step__role">ISA Team</span>
+                        </div>
                         <h3>Qualify every conversation</h3>
                         <p>Inside sales agents verify budget, location, intent, and timing before a lead ever reaches the next team, ensuring zero wasted effort.</p>
                         <div class="work-step__pills">
@@ -436,7 +439,10 @@
                         <img src="{{ asset('images/how-it-works/matching.png') }}" alt="Real estate dashboard matching leads to agents" loading="lazy">
                     </div>
                     <div class="work-step__content">
-                        <span class="work-step__role">Sales Team</span>
+                        <div class="work-step__meta">
+                            <span class="work-step__eyebrow">Phase 02</span>
+                            <span class="work-step__role">Sales Team</span>
+                        </div>
                         <h3>Match the right package</h3>
                         <p>Sales executives package each lead into the right Starter, Growth, or Elite path so the delivery matches the urgency and value of your team's capacity.</p>
                         <div class="work-step__pills">
@@ -453,7 +459,10 @@
                         <img src="{{ asset('images/how-it-works/conversion.png') }}" alt="Real estate closer handing over house keys" loading="lazy">
                     </div>
                     <div class="work-step__content">
-                        <span class="work-step__role">Agent Network</span>
+                        <div class="work-step__meta">
+                            <span class="work-step__eyebrow">Phase 03</span>
+                            <span class="work-step__role">Agent Network</span>
+                        </div>
                         <h3>Deliver and close faster</h3>
                         <p>Agents receive structured details inside their premium cockpit so they can act quickly, follow up with confidence, and keep momentum at the point of interest.</p>
                         <div class="work-step__pills">
