@@ -1,7 +1,10 @@
 @extends('layouts.app')
 @section('content')
 @php
-    $propertyCollection = (method_exists($properties, 'getCollection') ? $properties->getCollection() : collect($properties))
+    $propertyCollection = $properties instanceof \Illuminate\Contracts\Pagination\Paginator
+        ? collect($properties->items())
+        : collect($properties);
+    $propertyCollection = $propertyCollection
         ->filter(fn ($property) => $property->approval_status === \App\Models\Property::APPROVAL_APPROVED && $property->status === 'Active')
         ->values();
     $listingCount = $propertyCollection->count();
@@ -68,16 +71,21 @@
             <div class="listings-results-bar">
                 <div>
                     <h2 class="listings-results-bar__title">Featured Listings</h2>
-                    <p class="listings-results-bar__count" id="visibleCount">Showing {{ $propertyCollection->count() }} properties</p>
+                    <p class="listings-results-bar__count" id="visibleCount">Showing {{ $properties instanceof \Illuminate\Contracts\Pagination\Paginator ? $properties->total() : $propertyCollection->count() }} properties</p>
                 </div>
-                <div class="listings-sort-row">
+                <form method="GET" action="{{ route('listings') }}" class="listings-sort-row" style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+                    <input type="hidden" name="q" value="{{ $filters['q'] ?? '' }}">
+                    <input type="hidden" name="zip_code" value="{{ $filters['zip_code'] ?? '' }}">
+                    <input type="hidden" name="property_type" value="{{ $filters['property_type'] ?? '' }}">
+                    <input type="hidden" name="price_min" value="{{ $filters['price_min'] ?? '' }}">
+                    <input type="hidden" name="price_max" value="{{ $filters['price_max'] ?? '' }}">
                     <label for="listingSort">Sort:</label>
-                    <select id="listingSort" class="ls-sort-select">
-                        <option value="relevant">Most Relevant</option>
-                        <option value="price-asc">Price: Low to High</option>
-                        <option value="price-desc">Price: High to Low</option>
+                    <select id="listingSort" class="ls-sort-select" name="sort" onchange="this.form.submit()">
+                        <option value="" @selected(empty($filters['sort'] ?? null))>Most Relevant</option>
+                        <option value="price_asc" @selected(($filters['sort'] ?? '') === 'price_asc')>Price: Low to High</option>
+                        <option value="price_desc" @selected(($filters['sort'] ?? '') === 'price_desc')>Price: High to Low</option>
                     </select>
-                </div>
+                </form>
             </div>
 
             {{-- Cards grid --}}
@@ -151,6 +159,12 @@
                 @endforelse
             </div>
 
+            @if($properties instanceof \Illuminate\Contracts\Pagination\Paginator)
+                <div class="listings-pagination" style="margin-top:1.25rem;">
+                    {{ $properties->links() }}
+                </div>
+            @endif
+
             {{-- Empty state after filter --}}
             <div class="listing-empty-state" id="listingEmptyState" hidden>
                 <div class="listing-empty-state__icon">Search</div>
@@ -176,13 +190,24 @@
                         </div>
                     </div>
 
-                    <form class="lf-form" id="listingsFilterForm" novalidate>
+                    <form class="lf-form" id="listingsFilterForm" method="GET" action="{{ route('listings') }}">
+                        @if(!empty($filters['sort'] ?? null))
+                            <input type="hidden" name="sort" value="{{ $filters['sort'] }}">
+                        @endif
+                        <div class="lf-field">
+                            <label class="lf-label" for="filterKeywords">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                Keywords
+                            </label>
+                            <input type="text" id="filterKeywords" name="q" class="lf-input" placeholder="Title, location, description" value="{{ $filters['q'] ?? '' }}">
+                        </div>
+
                         <div class="lf-field">
                             <label class="lf-label" for="filterZip">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                                 ZIP Code
                             </label>
-                            <input type="text" id="filterZip" class="lf-input" placeholder="e.g. 75201, 90210" maxlength="10">
+                            <input type="text" id="filterZip" name="zip_code" class="lf-input" placeholder="e.g. 75201" maxlength="10" value="{{ $filters['zip_code'] ?? '' }}">
                         </div>
 
                         <div class="lf-field">
@@ -190,12 +215,12 @@
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                                 Property Type
                             </label>
-                            <select id="filterType" class="lf-input">
+                            <select id="filterType" name="property_type" class="lf-input">
                                 <option value="">Any type</option>
-                                <option value="house">House</option>
-                                <option value="apartment">Apartment</option>
-                                <option value="condo">Condo</option>
-                                <option value="commercial">Commercial</option>
+                                <option value="house" @selected(($filters['property_type'] ?? '') === 'house')>House</option>
+                                <option value="apartment" @selected(($filters['property_type'] ?? '') === 'apartment')>Apartment</option>
+                                <option value="condo" @selected(($filters['property_type'] ?? '') === 'condo')>Condo</option>
+                                <option value="commercial" @selected(($filters['property_type'] ?? '') === 'commercial')>Commercial</option>
                             </select>
                         </div>
 
@@ -205,34 +230,18 @@
                                 Price Range
                             </label>
                             <div class="lf-price-inputs">
-                                <input type="number" id="filterPriceMin" class="lf-input" placeholder="Min $" min="0" step="10000">
+                                <input type="number" id="filterPriceMin" name="price_min" class="lf-input" placeholder="Min $" min="0" step="10000" value="{{ $filters['price_min'] ?? '' }}">
                                 <span class="lf-price-sep">-</span>
-                                <input type="number" id="filterPriceMax" class="lf-input" placeholder="Max $" min="0" step="10000">
+                                <input type="number" id="filterPriceMax" name="price_max" class="lf-input" placeholder="Max $" min="0" step="10000" value="{{ $filters['price_max'] ?? '' }}">
                             </div>
                         </div>
-
-                        <div class="lf-field">
-                            <label class="lf-label">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-                                Min Bedrooms
-                            </label>
-                            <div class="lf-beds-row">
-                                <button type="button" class="lf-bed-btn" data-beds="0">Any</button>
-                                <button type="button" class="lf-bed-btn" data-beds="1">1+</button>
-                                <button type="button" class="lf-bed-btn" data-beds="2">2+</button>
-                                <button type="button" class="lf-bed-btn" data-beds="3">3+</button>
-                                <button type="button" class="lf-bed-btn" data-beds="4">4+</button>
-                            </div>
-                        </div>
-
-                        <input type="hidden" id="filterBedsVal" value="0">
 
                         <div class="lf-actions">
-                            <button class="button button--orange lf-btn-full" type="button" id="filterApply">
+                            <button class="button button--orange lf-btn-full" type="submit" id="filterApply">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                                 Apply Filters
                             </button>
-                            <button class="button button--ghost lf-btn-full" type="button" id="filterReset">Reset All</button>
+                            <a class="button button--ghost lf-btn-full" href="{{ route('listings') }}" id="filterReset">Reset All</a>
                         </div>
                     </form>
                 </div>
@@ -267,78 +276,6 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const cards = document.querySelectorAll('[data-listing-card]');
-    const emptyState = document.getElementById('listingEmptyState');
-    const countEl = document.getElementById('visibleCount');
-    const bedBtns = document.querySelectorAll('.lf-bed-btn');
-    const bedsInput = document.getElementById('filterBedsVal');
-    let activeBeds = 0;
-
-    bedBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            bedBtns.forEach(b => b.classList.remove('is-active'));
-            btn.classList.add('is-active');
-            activeBeds = parseInt(btn.dataset.beds, 10);
-            bedsInput.value = activeBeds;
-        });
-    });
-    bedBtns[0]?.classList.add('is-active');
-
-    document.getElementById('filterApply')?.addEventListener('click', () => {
-        const zip = document.getElementById('filterZip').value.trim().toLowerCase();
-        const type = document.getElementById('filterType').value.toLowerCase();
-        const minPrice = parseFloat(document.getElementById('filterPriceMin').value) || 0;
-        const maxPrice = parseFloat(document.getElementById('filterPriceMax').value) || Infinity;
-        const beds = parseInt(bedsInput.value, 10) || 0;
-
-        let visible = 0;
-        cards.forEach(card => {
-            const cardZip = (card.dataset.zip || '').toLowerCase();
-            const cardType = (card.dataset.type || '').toLowerCase();
-            const cardPrice = parseFloat(card.dataset.price) || 0;
-            const cardBeds = parseInt(card.dataset.beds, 10) || 0;
-
-            const matchZip = !zip || cardZip.includes(zip);
-            const matchType = !type || cardType.includes(type);
-            const matchPrice = cardPrice >= minPrice && cardPrice <= maxPrice;
-            const matchBeds = beds === 0 || cardBeds >= beds;
-
-            const show = matchZip && matchType && matchPrice && matchBeds;
-            card.style.display = show ? '' : 'none';
-            if (show) visible++;
-        });
-
-        if (emptyState) emptyState.hidden = visible > 0;
-        if (countEl) countEl.textContent = `Showing ${visible} propert${visible === 1 ? 'y' : 'ies'}`;
-    });
-
-    document.getElementById('filterReset')?.addEventListener('click', () => {
-        document.getElementById('filterZip').value = '';
-        document.getElementById('filterType').value = '';
-        document.getElementById('filterPriceMin').value = '';
-        document.getElementById('filterPriceMax').value = '';
-        activeBeds = 0;
-        bedsInput.value = 0;
-        bedBtns.forEach(b => b.classList.remove('is-active'));
-        bedBtns[0]?.classList.add('is-active');
-        cards.forEach(c => c.style.display = '');
-        if (emptyState) emptyState.hidden = true;
-        if (countEl) countEl.textContent = `Showing ${cards.length} properties`;
-    });
-
-    document.getElementById('listingSort')?.addEventListener('change', (e) => {
-        const grid = document.getElementById('listingGrid');
-        const items = [...grid.querySelectorAll('[data-listing-card]')];
-        items.sort((a, b) => {
-            const pa = parseFloat(a.dataset.price) || 0;
-            const pb = parseFloat(b.dataset.price) || 0;
-            if (e.target.value === 'price-asc') return pa - pb;
-            if (e.target.value === 'price-desc') return pb - pa;
-            return 0;
-        });
-        items.forEach(item => grid.appendChild(item));
-    });
-
     const sidebar = document.getElementById('filterSidebar');
     const headerH = document.getElementById('siteHeader')?.offsetHeight || 80;
     if (sidebar) {

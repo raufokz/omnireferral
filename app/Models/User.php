@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -10,11 +12,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
-use RuntimeException;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmailContract
 {
-    use HasFactory, Notifiable;
+    use HasFactory, MustVerifyEmail, Notifiable;
 
     protected $fillable = [
         'name',
@@ -124,6 +125,11 @@ class User extends Authenticatable
         return $this->hasMany(Testimonial::class, 'reviewed_by_user_id');
     }
 
+    public function ownedProperties(): HasMany
+    {
+        return $this->hasMany(Property::class, 'owner_user_id');
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
@@ -182,38 +188,7 @@ class User extends Authenticatable
             return false;
         }
 
-        try {
-            if (Hash::check($plainPassword, $storedPassword)) {
-                return true;
-            }
-        } catch (RuntimeException) {
-            // Legacy imports may still contain plain-text passwords.
-        }
-
-        return hash_equals($storedPassword, $plainPassword);
-    }
-
-    public function passwordIsStoredAsPlainText(): bool
-    {
-        $storedPassword = (string) $this->password;
-
-        if ($storedPassword === '') {
-            return false;
-        }
-
-        return (($info = password_get_info($storedPassword))['algoName'] ?? 'unknown') === 'unknown';
-    }
-
-    public function upgradePlainTextPassword(string $plainPassword): void
-    {
-        if (! $this->passwordIsStoredAsPlainText() || ! hash_equals((string) $this->password, $plainPassword)) {
-            return;
-        }
-
-        $this->forceFill([
-            'password' => $plainPassword,
-            'password_set_at' => now(),
-        ])->save();
+        return Hash::check($plainPassword, $storedPassword);
     }
 
     public function dashboardRoute(): string

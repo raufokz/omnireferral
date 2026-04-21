@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Package;
 use App\Services\StripeCheckoutService;
+use App\Support\PackageComparison;
 use App\Support\PricingContent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +22,9 @@ class PricingController extends Controller
             'leadPackages' => Package::active()->leadPlans()->orderBy('sort_order')->orderBy('one_time_price')->get(),
             'assistantPackages' => Package::active()->assistantPlans()->orderBy('sort_order')->orderBy('monthly_price')->get(),
             'pricingPlans' => PricingContent::plans(),
-            'comparison' => $this->comparisonMatrix(),
+            'comparison' => PackageComparison::fromLeadPackages(
+                Package::active()->leadPlans()->orderBy('sort_order')->orderBy('one_time_price')->get()
+            ),
             'packageEmbeds' => $packageEmbeds,
             'primaryActionUrl' => $primaryCta['url'],
             'primaryActionLabel' => $primaryCta['label'],
@@ -105,13 +108,48 @@ class PricingController extends Controller
         return redirect()->away($session->url);
     }
 
-    public function success(Package $package): View
+    public function success(Request $request, Package $package): View|RedirectResponse
     {
         $postPurchaseAction = $this->postPurchaseAction();
+        $sessionId = $request->string('session_id')->value();
+        $stripeSecret = (string) config('services.stripe.secret');
+
+        if ($stripeSecret !== '') {
+            if ($sessionId === '') {
+                return redirect()
+                    ->route('packages.checkout', $package)
+                    ->with('error', 'Missing payment confirmation. Please complete checkout again from the pricing page.');
+            }
+
+            try {
+                $stripe = new \Stripe\StripeClient($stripeSecret);
+                $session = $stripe->checkout->sessions->retrieve($sessionId);
+            } catch (\Stripe\Exception\ApiErrorException) {
+                return redirect()
+                    ->route('packages.checkout', $package)
+                    ->with('error', 'We could not verify that payment session with Stripe. Please try again or contact support.');
+            }
+
+            $paid = in_array($session->payment_status ?? '', ['paid', 'no_payment_required'], true)
+                || ($session->status ?? '') === 'complete';
+
+            if (! $paid) {
+                return redirect()
+                    ->route('packages.checkout', $package)
+                    ->with('error', 'That checkout session is not marked as paid yet.');
+            }
+
+            $sessionPackageId = (int) ($session->metadata->package_id ?? 0);
+            if ($sessionPackageId !== (int) $package->id) {
+                return redirect()
+                    ->route('pricing')
+                    ->with('error', 'The confirmed package does not match this success page.');
+            }
+        }
 
         return view('pages.package-success', [
             'package' => $package,
-            'sessionId' => request()->string('session_id')->value(),
+            'sessionId' => $sessionId,
             'postPurchaseActionUrl' => $postPurchaseAction['url'],
             'postPurchaseActionLabel' => $postPurchaseAction['label'],
             'meta' => [
@@ -148,43 +186,6 @@ class PricingController extends Controller
                 'title' => 'Full Social Media Package',
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/NiEcLMPWI084aKiAaNsi',
                 'description' => 'Full social media package onboarding form for monthly content and growth execution.',
-            ],
-        ];
-    }
-
-    private function comparisonMatrix(): array
-    {
-        return [
-            'headers' => [
-                'Starter ($399/mo)',
-                'Growth ($899/mo)',
-                'Elite ($1,999/mo)',
-            ],
-            'rows' => [
-                ['type' => 'group', 'label' => 'Lead Flow & Outreach'],
-                ['feature' => 'Qualified Referrals', 'values' => ['✔', '✔✔', '✔✔✔']],
-                ['feature' => 'AI + Human Outreach', 'values' => ['✔', '✔', '✔']],
-                ['feature' => 'Cold Calling ISA', 'values' => ['❌', '1 ISA', '2 ISAs']],
-                ['feature' => 'Territory Coverage', 'values' => ['2 Areas', '5 Areas', '10 Areas']],
-
-                ['type' => 'group', 'label' => 'Deals & Revenue'],
-                ['feature' => 'Wholesaler Access', 'values' => ['❌', '✔', '✔✔ Senior']],
-                ['feature' => 'JV Deal Opportunities', 'values' => ['❌', '✔', '✔✔ Advanced']],
-                ['feature' => 'Referral Fee', 'values' => ['15%', '7%', '5%']],
-                ['feature' => 'Live Call Transfers', 'values' => ['❌', '❌', '✔']],
-                ['feature' => 'Investor Access', 'values' => ['❌', '✔', '✔✔']],
-
-                ['type' => 'group', 'label' => 'Platform & Operations'],
-                ['feature' => 'Listings on Platform', 'values' => ['2', 'Up to 15', 'Unlimited']],
-                ['feature' => 'Featured Listings', 'values' => ['❌', '✔', '✔✔ Priority']],
-                ['feature' => 'CRM (GHL) Access', 'values' => ['❌', '❌', '✔ Full System']],
-                ['feature' => 'Virtual Assistant', 'values' => ['❌', '❌', '✔ Full-Time']],
-
-                ['type' => 'group', 'label' => 'Support & Performance'],
-                ['feature' => 'Account Manager', 'values' => ['✔', 'Senior', 'Senior Team + VA']],
-                ['feature' => 'Support Level', 'values' => ['Email', 'Priority', 'VIP']],
-                ['feature' => 'Strategy Calls', 'values' => ['Monthly', 'Weekly', 'Weekly + Monthly Planning']],
-                ['feature' => 'Performance Tracking', 'values' => ['Basic', 'Advanced', 'Dashboard + Forecasting']],
             ],
         ];
     }

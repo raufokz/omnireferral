@@ -43,6 +43,7 @@ class Property extends Model
         'reviewed_by_user_id',
         'reviewed_at',
         'realtor_profile_id',
+        'owner_user_id',
     ];
 
     protected $casts = [
@@ -63,6 +64,11 @@ class Property extends Model
     public function realtorProfile(): BelongsTo
     {
         return $this->belongsTo(RealtorProfile::class);
+    }
+
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_user_id');
     }
 
     public function reviewedBy(): BelongsTo

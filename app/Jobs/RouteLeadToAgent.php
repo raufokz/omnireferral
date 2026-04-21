@@ -26,15 +26,16 @@ class RouteLeadToAgent implements ShouldQueue
 
         if ($lead->assigned_agent_id) {
             Log::info("Lead {$lead->id} is already assigned.");
+
             return;
         }
 
-        $agent = $routingService->routeLead($lead);
+        $routingService->assignIfConfigured($lead);
 
-        if ($agent) {
-            Log::info("Lead {$lead->id} successfully routed to Agent User {$agent->id}.");
+        if ($lead->fresh()->assigned_agent_id) {
+            Log::info("Lead {$lead->id} was routed via auto-assignment rules.");
         } else {
-            Log::warning("No eligible agent found for Lead {$lead->id} during routing job.");
+            Log::info("Lead {$lead->id} remains unassigned (auto-assignment disabled or no eligible agents).");
         }
     }
 }

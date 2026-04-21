@@ -41,11 +41,14 @@ class AuthRegistrationTest extends TestCase
             'password' => 'super-secret-password',
             'password_confirmation' => 'super-secret-password',
             'profile_image' => $this->fakePngUpload('agent-profile.png'),
+            'terms_accepted' => true,
+            'communication_accepted' => true,
         ])
             ->assertRedirect(route('dashboard.agent'))
             ->assertSessionHas('success');
 
         $this->assertAuthenticated();
+        $this->get(route('dashboard.agent'))->assertRedirect(route('verification.notice'));
 
         $user = User::where('email', 'taylor@example.com')->firstOrFail();
 
@@ -90,8 +93,12 @@ class AuthRegistrationTest extends TestCase
             'password' => 'super-secret-password',
             'password_confirmation' => 'super-secret-password',
             'profile_image' => $this->fakePngUpload('buyer-profile.png'),
+            'terms_accepted' => true,
+            'communication_accepted' => true,
         ])
             ->assertRedirect(route('dashboard.buyer'));
+
+        $this->get(route('dashboard.buyer'))->assertRedirect(route('verification.notice'));
 
         $user = User::where('email', 'jamie@example.com')->firstOrFail();
 
@@ -106,6 +113,6 @@ class AuthRegistrationTest extends TestCase
             ->assertRedirect(route('login'));
 
         $this->get(route('client.form.submission', ['role' => 'agent']))
-            ->assertRedirect(route('login'));
+            ->assertOk();
     }
 }

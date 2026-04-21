@@ -13,9 +13,11 @@ class LeadRoutingTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_it_does_not_auto_assign_matching_zip_lead(): void
+    public function test_it_does_not_auto_assign_when_disabled(): void
     {
-        $agentUser = User::create([
+        config(['omnireferral.lead.auto_assignment_enabled' => false]);
+
+        User::create([
             'name' => 'Agent Test',
             'email' => 'agent@test.com',
             'password' => bcrypt('password'),
@@ -35,18 +37,17 @@ class LeadRoutingTest extends TestCase
             'source' => 'website',
         ]);
 
-        $service = new LeadRoutingService();
-        $assignedUser = $service->routeLead($lead);
-
-        $this->assertNull($assignedUser);
+        app(LeadRoutingService::class)->assignIfConfigured($lead);
 
         $lead->refresh();
         $this->assertSame('new', $lead->status);
         $this->assertNull($lead->assigned_agent_id);
     }
 
-    public function test_it_returns_existing_assigned_agent_without_reassigning(): void
+    public function test_it_keeps_existing_assignment_when_auto_routing_runs(): void
     {
+        config(['omnireferral.lead.auto_assignment_enabled' => true]);
+
         $agentUser = User::create([
             'name' => 'Agent Test 2',
             'email' => 'agent2@test.com',
@@ -58,17 +59,18 @@ class LeadRoutingTest extends TestCase
         $lead = Lead::create([
             'lead_number' => 'LD-' . Str::random(6),
             'intent' => 'buyer',
+            'package_type' => 'quick',
             'status' => 'assigned',
             'name' => 'Sue Buyer',
             'email' => 'sue@test.com',
             'phone' => '555-0102',
             'zip_code' => '75000',
             'assigned_agent_id' => $agentUser->id,
+            'source' => 'website',
         ]);
 
-        $service = new LeadRoutingService();
-        $routedUser = $service->routeLead($lead);
+        app(LeadRoutingService::class)->assignIfConfigured($lead);
 
-        $this->assertEquals($agentUser->id, $routedUser->id);
+        $this->assertEquals($agentUser->id, $lead->fresh()->assigned_agent_id);
     }
 }

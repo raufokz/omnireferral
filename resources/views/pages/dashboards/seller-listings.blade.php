@@ -60,6 +60,18 @@
                     <textarea name="description">{{ old('description') }}</textarea>
                 </label>
                 <label class="workspace-field workspace-field--full">
+                    <span>Listing agent partner <abbr title="Required">*</abbr></span>
+                    <select name="listing_realtor_profile_id" required>
+                        <option value="" disabled {{ old('listing_realtor_profile_id') ? '' : 'selected' }}>Select an OmniReferral agent</option>
+                        @foreach($listingAgents ?? [] as $agentProfile)
+                            <option value="{{ $agentProfile->id }}" @selected((string) old('listing_realtor_profile_id') === (string) $agentProfile->id)>
+                                {{ $agentProfile->user->name ?? 'Agent' }} — {{ $agentProfile->brokerage_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <small style="display:block;margin-top:0.35rem;color:#6b7280;">This listing is submitted under your seller account but represented by the agent you select.</small>
+                </label>
+                <label class="workspace-field workspace-field--full">
                     <span>Listing Image</span>
                     <input type="file" name="image" accept="image/*">
                 </label>

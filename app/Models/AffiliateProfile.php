@@ -26,4 +26,9 @@ class AffiliateProfile extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function referralClicks(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AffiliateReferralClick::class);
+    }
 }

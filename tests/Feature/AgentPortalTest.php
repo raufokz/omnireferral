@@ -61,6 +61,7 @@ class AgentPortalTest extends TestCase
                 'description' => 'Test listing',
                 'slug' => 'listing-' . $number,
                 'status' => 'Active',
+                'approval_status' => Property::APPROVAL_APPROVED,
                 'property_type' => 'house',
                 'price' => 300000 + $number,
                 'location' => 'Dallas, TX',
@@ -72,6 +73,7 @@ class AgentPortalTest extends TestCase
                 'is_featured' => false,
                 'published_at' => now(),
                 'realtor_profile_id' => $profile->id,
+                'owner_user_id' => $agent->id,
             ]);
         }
 
@@ -122,6 +124,7 @@ class AgentPortalTest extends TestCase
             'description' => 'Property description',
             'slug' => 'sunny-family-retreat',
             'status' => 'Active',
+            'approval_status' => Property::APPROVAL_APPROVED,
             'property_type' => 'house',
             'price' => 495000,
             'location' => 'Phoenix, AZ',
@@ -133,6 +136,7 @@ class AgentPortalTest extends TestCase
             'is_featured' => false,
             'published_at' => now(),
             'realtor_profile_id' => $profile->id,
+            'owner_user_id' => $agent->id,
         ]);
 
         $this->from(route('properties.show', $property))

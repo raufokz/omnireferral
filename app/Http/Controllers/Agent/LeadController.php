@@ -4,11 +4,17 @@ namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lead;
+use App\Services\LeadCustomerNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class LeadController extends Controller
 {
+    public function __construct(
+        protected LeadCustomerNotifier $leadCustomerNotifier,
+    ) {
+    }
+
     public function updateStatus(Request $request, Lead $lead): RedirectResponse
     {
         $user = $request->user();
@@ -19,6 +25,8 @@ class LeadController extends Controller
         $validated = $request->validate([
             'status' => ['required', 'in:new,contacted,in_progress,qualified,closed,not_interested'],
         ]);
+
+        $previousStatus = $lead->status;
 
         $lead->status = $validated['status'];
 
@@ -35,6 +43,8 @@ class LeadController extends Controller
         }
 
         $lead->save();
+
+        $this->leadCustomerNotifier->notifyStatusChangeIfNeeded($lead->fresh(), $previousStatus);
 
         return back()->with('success', 'Lead status updated to ' . $lead->statusLabel() . '.');
     }

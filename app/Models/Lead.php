@@ -195,4 +195,28 @@ class Lead extends Model
     {
         return $this->property_address ? 'Property address' : 'ZIP';
     }
+
+    public function scopeMatchingIdentityForUser($query, User $user)
+    {
+        $email = self::normalizeEmail($user->email);
+        $phone = self::normalizePhone($user->phone);
+
+        return $query->where(function ($q) use ($email, $phone) {
+            if ($email) {
+                $q->whereRaw('LOWER(TRIM(email)) = ?', [$email]);
+            }
+
+            if ($phone) {
+                $method = $email ? 'orWhereRaw' : 'whereRaw';
+                $q->{$method}(
+                    "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, '-', ''), '(', ''), ')', ''), ' ', ''), '+', '') LIKE ?",
+                    ['%' . $phone]
+                );
+            }
+
+            if (! $email && ! $phone) {
+                $q->whereRaw('1 = 0');
+            }
+        });
+    }
 }

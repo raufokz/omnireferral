@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AffiliateReferralClick;
+use App\Models\AffiliateProfile;
 use App\Models\Lead;
 use App\Models\Package;
 use App\Models\Property;
 use App\Models\RealtorProfile;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -131,7 +134,11 @@ class DashboardController extends Controller
         $workspace = $this->buyerWorkspace();
 
         return view('pages.dashboards.buyer-requests', $workspace + [
-            'requests' => Lead::where('intent', 'buyer')->latest()->paginate(12),
+            'requests' => Lead::query()
+                ->matchingIdentityForUser(Auth::user())
+                ->where('intent', 'buyer')
+                ->latest()
+                ->paginate(12),
             'meta' => [
                 'title' => 'Buyer Requests | OmniReferral',
                 'description' => 'Track your buyer request flow across every stage.',
@@ -156,6 +163,7 @@ class DashboardController extends Controller
         $workspace = $this->sellerWorkspace();
 
         return view('pages.dashboards.seller-listings', $workspace + [
+            'listingAgents' => RealtorProfile::query()->with('user')->orderBy('brokerage_name')->get(),
             'marketplaceProperties' => Property::query()
                 ->withFavoriteSummary()
                 ->marketplaceVisible()
@@ -173,55 +181,14 @@ class DashboardController extends Controller
         $workspace = $this->sellerWorkspace();
 
         return view('pages.dashboards.seller-requests', $workspace + [
-            'requests' => Lead::where('intent', 'seller')->latest()->paginate(12),
+            'requests' => Lead::query()
+                ->matchingIdentityForUser(Auth::user())
+                ->where('intent', 'seller')
+                ->latest()
+                ->paginate(12),
             'meta' => [
                 'title' => 'Seller Requests | OmniReferral',
                 'description' => 'Track seller request status and current lead movement.',
-            ],
-        ]);
-    }
-
-    public function agent(): View
-    {
-        $user = Auth::user();
-        $agentProfile = $user?->realtorProfile;
-        $agentUserId = $agentProfile?->user_id;
-        $agentLeadsQuery = Lead::query()->when(
-            $agentUserId,
-            fn ($query) => $query->where('assigned_agent_id', $agentUserId),
-            fn ($query) => $query->whereRaw('1 = 0')
-        );
-        $agentLeads = (clone $agentLeadsQuery)->latest()->take(8)->get();
-        $allPackages = Package::active()->leadPlans()->orderBy('sort_order')->orderBy('one_time_price')->get();
-        $assistantPackages = Package::active()->assistantPlans()->orderBy('sort_order')->orderBy('monthly_price')->take(2)->get();
-        $totalLeads = (clone $agentLeadsQuery)->count();
-        $contactedLeadCount = (clone $agentLeadsQuery)->whereIn('status', ['contacted', 'qualified', 'closed'])->count();
-        $qualifiedLeadCount = (clone $agentLeadsQuery)->where('status', 'qualified')->count();
-        $closedLeadCount = (clone $agentLeadsQuery)->where('status', 'closed')->count();
-        $pipeline = [
-            ['label' => 'New', 'count' => (clone $agentLeadsQuery)->where('status', 'new')->count()],
-            ['label' => 'Contacted', 'count' => (clone $agentLeadsQuery)->where('status', 'contacted')->count()],
-            ['label' => 'Qualified', 'count' => $qualifiedLeadCount],
-            ['label' => 'Closed', 'count' => $closedLeadCount],
-        ];
-
-        return view('pages.dashboards.agent', [
-            'agent' => $agentProfile,
-            'agentUser' => $user,
-            'leads' => $agentLeads,
-            'packages' => $allPackages,
-            'assistantPackages' => $assistantPackages,
-            'pipeline' => $pipeline,
-            'activePlan' => $user?->currentPlan,
-            'agentStats' => [
-                'score' => number_format((float) ($agentProfile?->rating ?? 4.9), 1),
-                'leads_received' => $totalLeads,
-                'response_rate' => $totalLeads > 0 ? round(($contactedLeadCount / $totalLeads) * 100) . '%' : '0%',
-                'rewards' => max(1, min(5, (int) ceil(($qualifiedLeadCount + $closedLeadCount) / 2))),
-            ],
-            'meta' => [
-                'title' => 'Agent Dashboard | OmniReferral',
-                'description' => 'Review leads, packages, analytics, onboarding status, and campaign tools in the OmniReferral agent dashboard.',
             ],
         ]);
     }
@@ -231,7 +198,7 @@ class DashboardController extends Controller
         $user = Auth::user();
 
         // Ensure user has an affiliate profile generated
-        $affiliateProfile = \App\Models\AffiliateProfile::firstOrCreate(
+        $affiliateProfile = AffiliateProfile::firstOrCreate(
             ['user_id' => $user->id],
             [
                 'slug' => \Illuminate\Support\Str::slug($user->name . '-' . \Illuminate\Support\Str::lower(\Illuminate\Support\Str::random(6))),
@@ -239,19 +206,26 @@ class DashboardController extends Controller
             ]
         );
 
-        // Make sure user record matches the generated affiliate code if it was missing
-        if (!$user->affiliate_code) {
+        if (! $user->affiliate_code) {
             $user->update(['affiliate_code' => $affiliateProfile->referral_code]);
         }
 
-        $referrals = \App\Models\User::where('referred_by_user_id', $user->id)->latest()->take(10)->get();
-        $conversions = \App\Models\Lead::whereHas('reviewedBy', function($q) use ($user) {
-            // Just an example placeholder logic for now. Actual conversions are users who bought packages.
-        })->count();
+        $referrals = User::where('referred_by_user_id', $user->id)->latest()->take(10)->get();
+        $referralSignupCount = User::where('referred_by_user_id', $user->id)->count();
+        $referralPaidPlanCount = User::where('referred_by_user_id', $user->id)->whereNotNull('current_plan_id')->count();
+        $recentClicks = AffiliateReferralClick::query()
+            ->where('affiliate_profile_id', $affiliateProfile->id)
+            ->latest()
+            ->take(8)
+            ->get();
 
         return view('pages.dashboards.affiliate', [
             'profile' => $affiliateProfile,
             'referrals' => $referrals,
+            'referralSignupCount' => $referralSignupCount,
+            'referralPaidPlanCount' => $referralPaidPlanCount,
+            'recentClicks' => $recentClicks,
+            'referralShareUrl' => url('/?ref=' . $affiliateProfile->referral_code),
             'meta' => [
                 'title' => 'Affiliate Hub | OmniReferral',
                 'description' => 'Manage your referral links, track clicks, and view commissions.',
@@ -267,12 +241,14 @@ class DashboardController extends Controller
             ->withFavoriteSummary($buyer)
             ->marketplaceVisible();
 
-        $buyerRequests = Lead::where('intent', 'buyer')->latest()->take(6)->get();
+        $buyerLeadScope = Lead::query()->matchingIdentityForUser($buyer)->where('intent', 'buyer');
+
+        $buyerRequests = (clone $buyerLeadScope)->latest()->take(6)->get();
         $buyerJourney = [
-            ['label' => 'Submitted', 'count' => Lead::where('intent', 'buyer')->whereIn('status', ['new', 'contacted'])->count()],
-            ['label' => 'Qualified', 'count' => Lead::where('intent', 'buyer')->where('status', 'qualified')->count()],
-            ['label' => 'Agent Match', 'count' => Lead::where('intent', 'buyer')->where('status', 'assigned')->count()],
-            ['label' => 'Closed', 'count' => Lead::where('intent', 'buyer')->where('status', 'closed')->count()],
+            ['label' => 'Submitted', 'count' => (clone $buyerLeadScope)->whereIn('status', ['new', 'contacted'])->count()],
+            ['label' => 'Qualified', 'count' => (clone $buyerLeadScope)->where('status', 'qualified')->count()],
+            ['label' => 'Agent Match', 'count' => (clone $buyerLeadScope)->where('status', 'assigned')->count()],
+            ['label' => 'Closed', 'count' => (clone $buyerLeadScope)->where('status', 'closed')->count()],
         ];
         $favoriteCount = $buyer->propertyFavorites()->count();
 
@@ -287,37 +263,53 @@ class DashboardController extends Controller
             'buyerStats' => [
                 'saved_listings' => $favoriteCount,
                 'favorites' => $favoriteCount,
-                'saved_searches' => 3,
-                'new_alerts' => Lead::where('intent', 'buyer')->count(),
+                'saved_searches' => 0,
+                'new_alerts' => (clone $buyerLeadScope)->whereIn('status', ['new', 'contacted'])->count(),
             ],
         ];
     }
 
     private function sellerWorkspace(): array
     {
+        $seller = Auth::user();
+
         $properties = Property::query()
             ->withFavoriteSummary()
             ->marketplaceVisible()
             ->latest()
             ->take(6)
             ->get();
-        $sellerRequests = Lead::where('intent', 'seller')->latest()->take(6)->get();
+
+        $sellerLeadScope = Lead::query()->matchingIdentityForUser($seller)->where('intent', 'seller');
+
+        $sellerRequests = (clone $sellerLeadScope)->latest()->take(6)->get();
         $sellerJourney = [
-            ['label' => 'Submitted', 'count' => Lead::where('intent', 'seller')->whereIn('status', ['new', 'contacted'])->count()],
-            ['label' => 'Qualified', 'count' => Lead::where('intent', 'seller')->where('status', 'qualified')->count()],
-            ['label' => 'In Market', 'count' => Lead::where('intent', 'seller')->where('status', 'assigned')->count()],
-            ['label' => 'Closed', 'count' => Lead::where('intent', 'seller')->where('status', 'closed')->count()],
+            ['label' => 'Submitted', 'count' => (clone $sellerLeadScope)->whereIn('status', ['new', 'contacted'])->count()],
+            ['label' => 'Qualified', 'count' => (clone $sellerLeadScope)->where('status', 'qualified')->count()],
+            ['label' => 'In Market', 'count' => (clone $sellerLeadScope)->where('status', 'assigned')->count()],
+            ['label' => 'Closed', 'count' => (clone $sellerLeadScope)->where('status', 'closed')->count()],
         ];
+
+        $ownedActiveCount = Property::query()
+            ->where('owner_user_id', $seller->id)
+            ->where('approval_status', '!=', Property::APPROVAL_REJECTED)
+            ->whereNotIn('status', ['Sold', 'Off-Market'])
+            ->count();
+
+        $recentOwnedUpdates = Property::query()
+            ->where('owner_user_id', $seller->id)
+            ->where('updated_at', '>=', now()->subDays(30))
+            ->count();
 
         return [
             'properties' => $properties,
             'sellerRequests' => $sellerRequests,
             'sellerJourney' => $sellerJourney,
             'sellerStats' => [
-                'active_listings' => $properties->count(),
-                'open_inquiries' => Lead::where('intent', 'seller')->count(),
-                'price_updates' => 2,
-                'buyer_matches' => Lead::where('intent', 'buyer')->count(),
+                'active_listings' => $ownedActiveCount,
+                'open_inquiries' => (clone $sellerLeadScope)->whereNotIn('status', ['closed', 'not_interested'])->count(),
+                'price_updates' => $recentOwnedUpdates,
+                'buyer_matches' => Lead::query()->matchingIdentityForUser($seller)->where('intent', 'buyer')->count(),
             ],
         ];
     }

@@ -104,7 +104,11 @@
     ];
 
     $homepageAverageRating = number_format((float) ($publishedTestimonials->avg('rating') ?: 5), 1);
-    $homepageMarketplaceProperties = collect($properties)
+    $homepageListingItems = $properties instanceof \Illuminate\Contracts\Pagination\Paginator
+        ? collect($properties->items())
+        : collect($properties);
+
+    $homepageMarketplaceProperties = $homepageListingItems
         ->filter(fn ($property) => $property->approval_status === \App\Models\Property::APPROVAL_APPROVED && $property->status === 'Active')
         ->values();
 
@@ -590,6 +594,11 @@
                     </article>
                 @endforeach
             </div>
+            @if(isset($properties) && $properties instanceof \Illuminate\Contracts\Pagination\Paginator && $properties->hasPages())
+                <div class="container" style="margin-top: 1.25rem;">
+                    {{ $properties->links() }}
+                </div>
+            @endif
         </div>
     </section>
 

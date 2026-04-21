@@ -336,6 +336,7 @@ class OmniReferralSeeder extends Seeder
                 'is_featured' => $index < 3,
                 'published_at' => now()->subDays($index + 1),
                 'realtor_profile_id' => $agents[$index % $agents->count()]->id,
+                'owner_user_id' => $agents[$index % $agents->count()]->user_id,
             ]);
         }
 

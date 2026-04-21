@@ -51,7 +51,8 @@ class PropertyController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $user = Auth::user();
-        $validated = $request->validate([
+
+        $rules = [
             'title' => ['required', 'string', 'max:255'],
             'location' => ['required', 'string', 'max:255'],
             'zip_code' => ['required', 'string', 'max:10'],
@@ -64,9 +65,16 @@ class PropertyController extends Controller
             'latitude' => ['nullable', 'numeric'],
             'longitude' => ['nullable', 'numeric'],
             'image' => ['nullable', 'image', 'max:4096'],
-        ], [
+        ];
+
+        if ($user?->isSeller()) {
+            $rules['listing_realtor_profile_id'] = ['required', 'integer', 'exists:realtor_profiles,id'];
+        }
+
+        $validated = $request->validate($rules, [
             'title.required' => 'Please add a title for the property listing.',
             'image.image' => 'Please upload a valid property image file.',
+            'listing_realtor_profile_id.required' => 'Choose the OmniReferral agent who will represent this listing.',
         ]);
 
         if ($user?->isAgent()) {
@@ -96,6 +104,13 @@ class PropertyController extends Controller
 
             $validated['source'] = 'Agent Dashboard Upload';
             $validated['realtor_profile_id'] = $profile->id;
+            $validated['owner_user_id'] = $user->id;
+        }
+
+        if ($user?->isSeller()) {
+            $validated['realtor_profile_id'] = (int) $validated['listing_realtor_profile_id'];
+            unset($validated['listing_realtor_profile_id']);
+            $validated['owner_user_id'] = $user->id;
         }
 
         if ($request->hasFile('image')) {
@@ -117,7 +132,12 @@ class PropertyController extends Controller
         $validated['is_featured'] = false;
         $validated['reviewed_by_user_id'] = $requiresApproval ? null : $user?->id;
         $validated['reviewed_at'] = $requiresApproval ? null : now();
-        $validated['realtor_profile_id'] = $validated['realtor_profile_id'] ?? ($user?->realtorProfile?->id ?: RealtorProfile::query()->value('id'));
+
+        if (! isset($validated['realtor_profile_id'])) {
+            return back()
+                ->withInput()
+                ->with('error', 'A listing agent profile is required before this property can be saved.');
+        }
 
         Property::create($validated);
 
@@ -249,6 +269,10 @@ class PropertyController extends Controller
         }
 
         if (in_array($user->role, ['admin', 'staff'])) {
+            return true;
+        }
+
+        if ($user->isSeller() && (int) $property->owner_user_id === (int) $user->id) {
             return true;
         }
 

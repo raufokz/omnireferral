@@ -17,7 +17,14 @@ class MustResetPassword
         }
 
         // Allow the user to reach the security page (and logout) even when forced.
-        if ($request->routeIs('account.security', 'account.password.update', 'logout')) {
+        if ($request->routeIs(
+            'account.security',
+            'account.password.update',
+            'logout',
+            'verification.notice',
+            'verification.verify',
+            'verification.send',
+        )) {
             return $next($request);
         }
 

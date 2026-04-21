@@ -23,6 +23,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Models\Property;
 use App\Models\RealtorProfile;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
 
 Route::get('/sitemap.xml', function () {
     $properties = Property::latest()->take(500)->get();
@@ -70,7 +72,7 @@ Route::get('/communication-policy', function () {
 Route::get('/resources', [HomeController::class, 'resources'])->name('resources');
 Route::get('/news', [HomeController::class, 'news'])->name('news');
 Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews');
-Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+Route::post('/reviews', [ReviewController::class, 'store'])->middleware('throttle:reviews')->name('reviews.store');
 Route::get('/careers', [HomeController::class, 'careers'])->name('careers');
 Route::get('/surveys-campaigns', [HomeController::class, 'surveys'])->name('surveys');
 Route::get('/listings', [HomeController::class, 'listings'])->name('listings');
@@ -100,21 +102,20 @@ Route::get('/client-submission-form7', [HomeController::class, 'clientFormSubmis
 Route::get('/client-form-submission7', [HomeController::class, 'clientFormSubmission']);
 Route::get('/form-submission', [HomeController::class, 'formSubmission'])->name('form.submission');
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
-Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
-Route::post('/lead-store', [LeadController::class, 'store'])->name('leads.store');
+Route::post('/contact', [ContactController::class, 'submit'])->middleware('throttle:contact')->name('contact.submit');
+Route::post('/lead-store', [LeadController::class, 'store'])->middleware('throttle:leads')->name('leads.store');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{blog}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/agents', [RealtorController::class, 'index'])->name('agents.index');
 Route::get('/agents/{realtor}', [RealtorController::class, 'show'])->name('agents.show');
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth-login');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth-register');
 Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
-Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware('throttle:auth-password-reset')->name('password.email');
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::post('/webhooks/gohighlevel/onboarding', [GoHighLevelWebhookController::class, 'onboardingCompleted'])
     ->withoutMiddleware([VerifyCsrfToken::class])
@@ -130,6 +131,26 @@ Route::post('/webhooks/stripe', StripeWebhookController::class)
     ->name('webhooks.stripe');
 
 Route::middleware(['auth'])->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    Route::get('/email/verify', function () {
+        return view('pages.auth.verify-email');
+    })->name('verification.notice');
+
+    Route::post('/email/verification-notification', function (Request $request) {
+        $request->user()->sendEmailVerificationNotification();
+
+        return back()->with('success', 'Verification link sent.');
+    })->middleware('throttle:6,1')->name('verification.send');
+});
+
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+
+    return redirect()->intended(route('dashboard'))->with('success', 'Your email has been verified.');
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/account/security', [SecurityController::class, 'show'])->name('account.security');
     Route::post('/account/password', [SecurityController::class, 'updatePassword'])->name('account.password.update');
     Route::post('/properties/{property}/favorite', [PropertyController::class, 'toggleFavorite'])->name('properties.favorite.toggle');

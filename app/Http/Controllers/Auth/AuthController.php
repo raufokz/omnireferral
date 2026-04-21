@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\SyncUserToGoHighLevel;
 use App\Models\RealtorProfile;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,7 +39,6 @@ class AuthController extends Controller
         $user = User::where('email', $credentials['email'])->first();
 
         if ($user && $user->passwordMatches((string) $credentials['password'])) {
-            $user->upgradePlainTextPassword((string) $credentials['password']);
             Auth::login($user, (bool) $request->boolean('remember'));
             $authenticated = true;
         }
@@ -153,11 +153,13 @@ class AuthController extends Controller
 
         SyncUserToGoHighLevel::dispatch($user->id);
 
+        event(new Registered($user));
+
         Auth::login($user);
 
         return redirect()
             ->to($user->dashboardRoute())
-            ->with('success', 'Welcome aboard! Your account is ready and your dashboard is now available.');
+            ->with('success', 'Welcome aboard! Check your email to verify your address, then your full dashboard unlocks automatically.');
     }
 
     public function showForgotPassword(): View

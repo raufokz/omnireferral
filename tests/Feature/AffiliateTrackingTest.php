@@ -57,8 +57,12 @@ class AffiliateTrackingTest extends TestCase
                      'buyer-profile.png',
                      base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+yF9sAAAAASUVORK5CYII=')
                  ),
+                 'terms_accepted' => true,
+                 'communication_accepted' => true,
              ])
-             ->assertRedirect(route('dashboard.buyer'));
+            ->assertRedirect(route('dashboard.buyer'));
+
+        $this->get(route('dashboard.buyer'))->assertRedirect(route('verification.notice'));
 
         $this->assertDatabaseHas('users', [
             'email' => 'buyer@test.com',

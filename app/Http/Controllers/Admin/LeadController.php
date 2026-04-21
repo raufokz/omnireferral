@@ -6,16 +6,24 @@ use App\Http\Controllers\Controller;
 use App\Models\Lead;
 use App\Models\User;
 use App\Notifications\NewLeadAssignedNotification;
+use App\Services\LeadCustomerNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class LeadController extends Controller
 {
+    public function __construct(
+        protected LeadCustomerNotifier $leadCustomerNotifier,
+    ) {
+    }
+
     public function status(Request $request, Lead $lead): RedirectResponse
     {
         $validated = $request->validate([
             'status' => ['required', 'in:new,contacted,in_progress,qualified,assigned,closed,not_interested'],
         ]);
+
+        $previousStatus = $lead->status;
 
         $updates = ['status' => $validated['status']];
 
@@ -33,6 +41,8 @@ class LeadController extends Controller
 
         $lead->update($updates);
 
+        $this->leadCustomerNotifier->notifyStatusChangeIfNeeded($lead->fresh(), $previousStatus);
+
         return back()->with('success', 'Lead status updated to ' . $lead->statusLabel() . '.');
     }
 
@@ -47,6 +57,8 @@ class LeadController extends Controller
             return back()->with('error', 'Selected user is not a valid agent.');
         }
 
+        $previousStatus = $lead->status;
+
         $lead->update([
             'assigned_agent_id' => $agent->id,
             'status' => 'assigned',
@@ -55,6 +67,8 @@ class LeadController extends Controller
         ]);
 
         $agent->notify(new NewLeadAssignedNotification($lead));
+
+        $this->leadCustomerNotifier->notifyStatusChangeIfNeeded($lead->fresh(), $previousStatus);
 
         return back()->with('success', 'Lead explicitly assigned to ' . $agent->name . '.');
     }

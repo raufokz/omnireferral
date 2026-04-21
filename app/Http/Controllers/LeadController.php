@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\SyncLeadToGoHighLevel;
 use App\Models\Lead;
+use App\Services\LeadRoutingService;
 use App\Models\Package;
 use App\Models\User;
 use App\Notifications\NewLeadCreatedNotification;
@@ -14,7 +15,7 @@ use Illuminate\Validation\Rule;
 
 class LeadController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, LeadRoutingService $leadRouting): RedirectResponse
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -105,7 +106,14 @@ class LeadController extends Controller
 
         SyncLeadToGoHighLevel::dispatch($lead->id);
 
-        return back()->with('success', 'Welcome aboard! Your request has been captured in the OmniReferral review queue and is currently unassigned until operations routes it.');
+        $leadRouting->assignIfConfigured($lead->fresh());
+
+        $lead = $lead->fresh();
+        $message = $lead?->assigned_agent_id
+            ? 'Welcome aboard! Your request is in our system and has been routed to a partner agent for follow-up.'
+            : 'Welcome aboard! Your request has been captured in the OmniReferral review queue and is awaiting routing.';
+
+        return back()->with('success', $message);
     }
 
     private function normalizeZipCode(?string $zipCode): ?string

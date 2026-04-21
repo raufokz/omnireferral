@@ -9,6 +9,7 @@ use App\Models\Package;
 use App\Models\RealtorProfile;
 use App\Models\User;
 use App\Notifications\AgentCredentialsNotification;
+use App\Services\LeadCustomerNotifier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -42,6 +43,7 @@ class GoHighLevelWebhookController extends Controller
             'ghl_contact_id' => $request->string('contact_id')->value() ?: data_get($request->all(), 'contact.id'),
             'onboarding_completed_at' => null,
             'must_reset_password' => $isNewUser ? true : (bool) $user->must_reset_password,
+            'email_verified_at' => $user->email_verified_at ?? now(),
         ]);
 
         if ($isNewUser) {
@@ -119,6 +121,7 @@ class GoHighLevelWebhookController extends Controller
             'status' => 'active',
             'ghl_contact_id' => $request->string('contact_id')->value() ?: data_get($request->all(), 'contact.id'),
             'onboarding_completed_at' => now(),
+            'email_verified_at' => $user->email_verified_at ?? now(),
         ]);
 
         if ($isNewUser) {
@@ -181,6 +184,8 @@ class GoHighLevelWebhookController extends Controller
             return response()->json(['message' => 'Lead not found'], 404);
         }
 
+        $previousStatus = $lead->status;
+
         $status = $request->string('status')->value();
         if ($status) {
             $lead->status = $status;
@@ -191,17 +196,20 @@ class GoHighLevelWebhookController extends Controller
         $lead->closed_at = $lead->status === 'closed' ? now() : $lead->closed_at;
         $lead->save();
 
+        app(LeadCustomerNotifier::class)->notifyStatusChangeIfNeeded($lead->fresh(), $previousStatus);
+
         return response()->json(['message' => 'Lead status synced.']);
     }
 
     private function isAuthorized(Request $request): bool
     {
-        $secret = config('services.gohighlevel.webhook_secret');
+        $secret = trim((string) config('services.gohighlevel.webhook_secret'));
+        $header = (string) $request->header('X-OmniReferral-Webhook', '');
 
-        if (! $secret) {
-            return true;
+        if ($secret === '') {
+            return app()->environment(['local', 'testing']);
         }
 
-        return hash_equals($secret, (string) $request->header('X-OmniReferral-Webhook'));
+        return hash_equals($secret, $header);
     }
 }

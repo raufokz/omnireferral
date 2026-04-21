@@ -10,6 +10,7 @@ use App\Models\RealtorProfile;
 use App\Models\TeamMember;
 use App\Models\Testimonial;
 use App\Support\PricingContent;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 
@@ -76,8 +77,7 @@ class HomeController extends Controller
                 ->withFavoriteSummary($viewer)
                 ->marketplaceVisible()
                 ->latest()
-                ->take(6)
-                ->get(),
+                ->paginate(6),
             'meta' => [
                 'title' => 'OmniReferral | Premium Real Estate Lead Generation for High-Performing Agents',
                 'description' => 'OmniReferral helps real estate teams grow with ISA-qualified buyer and seller leads, premium package options, and a polished referral workflow built for conversion.',
@@ -136,17 +136,61 @@ class HomeController extends Controller
         return view('pages.surveys', ['meta' => ['title' => 'Surveys & Campaigns | OmniReferral', 'description' => 'Collect feedback, capture leads, and launch automated outreach through OmniReferral surveys and campaigns.']]);
     }
 
-    public function listings(): View
+    public function listings(Request $request): View
     {
         $viewer = auth()->user();
 
+        $query = Property::query()
+            ->with('realtorProfile.user')
+            ->withFavoriteSummary($viewer)
+            ->marketplaceVisible();
+
+        if ($request->filled('q')) {
+            $term = '%' . str_replace(['%', '_'], ['\\%', '\\_'], (string) $request->string('q')) . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('title', 'like', $term)
+                    ->orWhere('location', 'like', $term)
+                    ->orWhere('description', 'like', $term);
+            });
+        }
+
+        if ($request->filled('zip_code')) {
+            $zip = trim((string) $request->input('zip_code'));
+            $query->where('zip_code', 'like', '%' . $zip . '%');
+        }
+
+        if ($request->filled('property_type')) {
+            $query->where('property_type', $request->string('property_type')->toString());
+        }
+
+        if ($request->filled('price_min')) {
+            $query->where('price', '>=', max(0, (int) $request->input('price_min')));
+        }
+
+        if ($request->filled('price_max')) {
+            $query->where('price', '<=', max(0, (int) $request->input('price_max')));
+        }
+
+        if ($request->filled('sort')) {
+            match ($request->string('sort')->toString()) {
+                'price_asc' => $query->orderBy('price'),
+                'price_desc' => $query->orderByDesc('price'),
+                default => $query->latest(),
+            };
+        } else {
+            $query->latest();
+        }
+
         return view('pages.listings', [
-            'properties' => Property::query()
-                ->with('realtorProfile.user')
-                ->withFavoriteSummary($viewer)
-                ->marketplaceVisible()
-                ->latest()
-                ->get(),
+            'properties' => $query->paginate(12)->withQueryString(),
+            'filters' => [
+                'q' => $request->string('q')->value(),
+                'zip_code' => $request->string('zip_code')->value(),
+                'property_type' => $request->string('property_type')->value(),
+                'price_min' => $request->input('price_min'),
+                'price_max' => $request->input('price_max'),
+                'sort' => $request->string('sort')->value(),
+            ],
             'meta' => [
                 'title' => 'Property Listings | OmniReferral',
                 'description' => 'Browse OmniReferral property listings by zip code, property type, and price range.',

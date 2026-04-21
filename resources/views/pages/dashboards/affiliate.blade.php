@@ -6,16 +6,26 @@
 
 @section('content')
 <div class="workspace-stack">
-    <section class="workspace-grid workspace-grid--3">
+    <section class="workspace-grid workspace-grid--3" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
         <article class="workspace-card workspace-kpi">
             <span>Link Clicks</span>
             <strong>{{ number_format($profile->click_count) }}</strong>
             <span>Total referral visits</span>
         </article>
         <article class="workspace-card workspace-kpi">
-            <span>Conversions</span>
+            <span>Signups</span>
+            <strong>{{ number_format($referralSignupCount ?? 0) }}</strong>
+            <span>Accounts created with your referral</span>
+        </article>
+        <article class="workspace-card workspace-kpi">
+            <span>Paid plans</span>
+            <strong>{{ number_format($referralPaidPlanCount ?? 0) }}</strong>
+            <span>Referred users with an active package</span>
+        </article>
+        <article class="workspace-card workspace-kpi">
+            <span>Legacy counter</span>
             <strong>{{ number_format($profile->conversion_count) }}</strong>
-            <span>Users converted through your link</span>
+            <span>Cookie signup conversions (kept for compatibility)</span>
         </article>
         <article class="workspace-card workspace-kpi">
             <span>Pending Payout</span>
@@ -48,18 +58,33 @@
             <h2>Affiliate Link</h2>
             <label class="workspace-field">
                 <span>Share URL</span>
-                <input type="text" readonly value="{{ url('/?ref=' . $profile->referral_code) }}">
+                <input type="text" readonly value="{{ $referralShareUrl ?? url('/?ref=' . $profile->referral_code) }}">
             </label>
             <div class="workspace-actions" style="margin-top: 0.8rem;">
                 <button
                     class="button"
                     type="button"
-                    onclick="navigator.clipboard.writeText('{{ url('/?ref=' . $profile->referral_code) }}'); this.textContent='Copied'; setTimeout(() => this.textContent='Copy Link', 1500);"
+                    onclick="navigator.clipboard.writeText('{{ $referralShareUrl ?? url('/?ref=' . $profile->referral_code) }}'); this.textContent='Copied'; setTimeout(() => this.textContent='Copy Link', 1500);"
                 >
                     Copy Link
                 </button>
             </div>
         </article>
+    </section>
+
+    <section class="workspace-card">
+        <span class="eyebrow">Click log</span>
+        <h2>Recent referral visits</h2>
+        <ul class="workspace-list">
+            @forelse($recentClicks ?? [] as $click)
+                <li>
+                    <strong>{{ $click->created_at->format('M j, g:i a') }}</strong>
+                    <small>Code {{ $click->referral_code }}</small>
+                </li>
+            @empty
+                <li><small>No logged clicks yet. Share your link with <code>?ref=</code> to start tracking.</small></li>
+            @endforelse
+        </ul>
     </section>
 </div>
 @endsection
