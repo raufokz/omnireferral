@@ -617,6 +617,138 @@
     line-height: 1.24;
 }
 
+/* =====================================================
+   HERO POLISH PASS
+   ===================================================== */
+.homepage-hero__copy {
+    background: linear-gradient(160deg, rgba(3, 20, 48, 0.88), rgba(9, 33, 74, 0.68));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 24px 58px rgba(4, 16, 38, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.homepage-hero__copy .eyebrow {
+    margin-bottom: 0.32rem;
+    color: rgba(255, 255, 255, 0.76);
+    letter-spacing: 0.08em;
+}
+
+.homepage-hero__copy h1 {
+    max-width: 17ch;
+    margin-bottom: 0.5rem;
+    font-size: clamp(1.78rem, 2.75vw, 2.35rem);
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+}
+
+.homepage-hero__copy p {
+    max-width: 50ch;
+    color: rgba(241, 245, 255, 0.9);
+    font-size: 0.9rem;
+}
+
+.hero__actions--spacious .button {
+    border-radius: 14px;
+}
+
+.homepage-hero .hero__actions--spacious .button--orange {
+    box-shadow: 0 12px 26px rgba(255, 102, 0, 0.28);
+}
+
+.homepage-hero .hero__actions--spacious .button--orange:hover {
+    box-shadow: 0 16px 30px rgba(255, 102, 0, 0.34);
+}
+
+.homepage-hero .hero__actions--spacious .button--ghost-light {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+}
+
+.homepage-hero .hero__actions--spacious .button--ghost-light:hover {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.42);
+}
+
+.hero-trust-chip {
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    background: rgba(255, 255, 255, 0.11);
+    color: rgba(255, 255, 255, 0.96);
+}
+
+.homepage-hero__form {
+    position: relative;
+    border: 1px solid rgba(17, 51, 102, 0.16);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 250, 255, 0.98));
+    box-shadow: 0 24px 56px rgba(7, 24, 51, 0.22);
+}
+
+.homepage-hero__form::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #ff6a00, #0f4da8 72%);
+}
+
+.homepage-hero__form .hero-search-card__header .eyebrow {
+    color: #315784;
+}
+
+.homepage-hero__form .hero-search-card__header h2 {
+    color: #14274a;
+}
+
+.homepage-hero__form .hero-search-card__header p {
+    color: #5f7597;
+}
+
+.homepage-hero__form .hero-tabs {
+    border: 1px solid rgba(15, 77, 168, 0.1);
+    background: #f4f7fd;
+}
+
+.homepage-hero__form .tab-switcher__button {
+    color: #4a6287;
+}
+
+.homepage-hero__form .tab-switcher__button.is-active {
+    color: #ffffff;
+    box-shadow: 0 8px 16px rgba(15, 77, 168, 0.24);
+}
+
+.homepage-hero__form .tab-panel {
+    scrollbar-width: none;
+}
+
+.homepage-hero__form .tab-panel::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.homepage-hero__form .hero-form--buyer-home .form-step,
+.homepage-hero__form .hero-form--seller-home .form-step {
+    border: 1px solid rgba(15, 77, 168, 0.1);
+    background:
+        radial-gradient(circle at top right, rgba(255, 122, 0, 0.08), transparent 34%),
+        linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+}
+
+.homepage-hero__form .hero-map {
+    border: 1px dashed rgba(34, 88, 166, 0.24);
+    background: linear-gradient(135deg, #eef4ff 0%, #e5edfb 46%, #f8fbff 100%);
+    color: #3f5d87;
+    font-weight: 700;
+}
+
+.homepage-hero__form .hero-map-overlay__item {
+    border: 1px solid rgba(33, 87, 164, 0.12);
+    background: rgba(255, 255, 255, 0.95);
+}
+
 .stat-strip__item {
     position: relative;
     overflow: hidden;

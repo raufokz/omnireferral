@@ -120,7 +120,7 @@
         <div class="container hero__content hero__content--premium homepage-hero__layout">
             <div class="hero__copy hero__copy--premium homepage-hero__copy" data-reveal="left">
                 <span class="eyebrow">Premium Real Estate Lead Engine</span>
-                <h1 id="hero-headline">Buyer & Seller Leads. Faster Closings.</h1>
+                <h1 id="hero-headline">Buyer &amp; Seller Leads.<br>Faster Closings.</h1>
                 <p>AI + ISA screening, smart routing, and conversion-first delivery built for modern teams.</p>
 
                 <div class="hero__actions hero__actions--spacious">
