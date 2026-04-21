@@ -127,37 +127,77 @@
     border-color: rgba(255, 255, 255, 0.32);
 }
 
-/* Keep the standard site header on auth pages; hide footer to reduce clutter. */
+/* Auth pages use a focused header variant; hide footer to reduce clutter. */
 .page-auth footer,
 .page-auth .site-footer {
     display: none !important;
 }
 
-.page-auth .site-header {
+.page-auth .site-header.site-header--auth {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
-    background: rgba(6, 21, 43, 0.85) !important;
+    background: rgba(6, 21, 43, 0.88) !important;
     border-bottom: 1px solid rgba(255, 255, 255, 0.16) !important;
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
 }
 
-.page-auth .site-header .main-nav a,
-.page-auth .site-header .nav-submenu-toggle {
-    color: rgba(255, 255, 255, 0.9);
+.page-auth .site-header--auth .nav-shell--auth {
+    min-height: var(--header-height, 80px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
 }
 
-.page-auth .site-header .main-nav a:hover,
-.page-auth .site-header .nav-submenu-toggle:hover {
-    color: #FFFFFF;
-    background: rgba(255, 255, 255, 0.12);
+.page-auth .site-header--auth .nav-brand--auth {
+    flex-shrink: 0;
 }
 
-.page-auth .site-header .main-nav a.is-active,
-.page-auth .site-header .nav-submenu-toggle.is-active {
+.page-auth .site-header--auth .auth-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-left: auto;
+}
+
+.page-auth .site-header--auth .auth-header-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0.45rem 0.78rem;
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.page-auth .site-header--auth .auth-header-link:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.24);
     color: #FFFFFF;
-    background: rgba(255, 96, 0, 0.25);
+    transform: translateY(-1px);
+}
+
+.page-auth .site-header--auth .auth-header-link:focus-visible,
+.page-auth .site-header--auth .auth-header-cta:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.35);
+    outline-offset: 2px;
+}
+
+.page-auth .site-header--auth .auth-header-cta {
+    min-height: 40px;
+    padding: 0.52rem 0.95rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    box-shadow: 0 8px 20px rgba(255, 96, 0, 0.25);
 }
 
 /* Main Modal Card */
@@ -660,6 +700,27 @@
         background: #0B192C; /* Solid for mobile */
     }
 
+    .page-auth .site-header--auth .nav-shell--auth {
+        min-height: var(--header-height-mobile, 64px);
+        gap: 0.6rem;
+    }
+
+    .page-auth .site-header--auth .auth-header-actions {
+        gap: 0.45rem;
+    }
+
+    .page-auth .site-header--auth .auth-header-link {
+        min-height: 36px;
+        padding: 0.38rem 0.65rem;
+        font-size: 0.76rem;
+    }
+
+    .page-auth .site-header--auth .auth-header-cta {
+        min-height: 36px;
+        padding: 0.42rem 0.78rem;
+        font-size: 0.78rem;
+    }
+
     .page-password #main-content {
         padding: calc(var(--header-height-mobile, 64px) + 1rem) 0.75rem 1.25rem;
         background: linear-gradient(180deg, #f3f8ff 0%, #edf4ff 100%);
@@ -704,5 +765,11 @@
 
     .btn-step {
         width: 100%;
+    }
+}
+
+@media (max-width: 640px) {
+    .page-auth .site-header--auth .auth-header-link {
+        display: none;
     }
 }
