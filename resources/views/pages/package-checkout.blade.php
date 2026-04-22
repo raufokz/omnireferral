@@ -2,8 +2,12 @@
 
 @section('content')
 @php
-    $startingPrice = $package->one_time_price ?? $package->monthly_price ?? 0;
+    $startingPrice = (int) ($packageDisplay['price'] ?? $package->one_time_price ?? $package->monthly_price ?? 0);
     $isFeatured    = (bool)($packageDisplay['is_featured'] ?? false);
+    $priceNote     = (string)($packageDisplay['price_note'] ?? '');
+    $priceNoteSlug = trim(ltrim($priceNote, '/ '));
+    $pricePeriod   = explode(' ', $priceNoteSlug)[0] ?? '';
+    $pricePeriod   = $pricePeriod !== '' ? $pricePeriod : 'month';
 @endphp
 
 {{-- ====================== HERO (matches pricing-hero-band) ====================== --}}
@@ -90,7 +94,7 @@
 
                 <div class="pricing-pkg-card__price">
                     <strong class="ppc-price-amount">${{ number_format($startingPrice) }}</strong>
-                    <span class="ppc-price-period">/{{ explode(' ', $packageDisplay['price_note'])[0] ?? 'month' }}</span>
+                    <span class="ppc-price-period">/{{ $pricePeriod }}</span>
                 </div>
             </div>
 

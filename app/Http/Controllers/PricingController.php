@@ -41,12 +41,17 @@ class PricingController extends Controller
         $packageEmbed = $this->packageEmbeds()[$package->slug] ?? null;
         $postPurchaseAction = $this->postPurchaseAction();
         $packageDisplay = [
+            'slug' => $pricingPlan['slug'] ?? $package->slug,
             'name' => $pricingPlan['name'] ?? $package->name,
             'tier' => $pricingPlan['tier'] ?? ($package->category === 'lead' ? 'Lead Package' : 'Virtual Assistance'),
             'summary' => $pricingPlan['summary'] ?? $package->description,
+            'price' => $pricingPlan['price'] ?? ($package->preferredCheckoutAmount() ?? 0),
             'price_note' => $pricingPlan['price_note'] ?? ($package->one_time_price ? '/ One-Time' : '/ Monthly'),
             'features' => $pricingPlan['features'] ?? ($package->features ?? []),
             'value_price' => $pricingPlan['value_price'] ?? null,
+            'cta_label' => $pricingPlan['cta_label'] ?? $package->cta_label,
+            'cta_url' => $pricingPlan['cta_url'] ?? null,
+            'is_featured' => $pricingPlan['is_featured'] ?? $package->is_featured,
         ];
         $packageEmbed = [
             'title' => $packageEmbed['title'] ?? $packageDisplay['name'],
