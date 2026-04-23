@@ -53,25 +53,25 @@
                                 : (!empty($row['asking_price']) ? 'Ask $' . number_format((int) $row['asking_price']) : 'No budget or ask');
                         @endphp
                         <tr>
-                            <td>
+                            <td data-label="Lead">
                                 <strong>{{ $row['name'] ?? '' }}</strong>
                                 <div class="workspace-property__meta">{{ $row['email'] ?? '' }} · {{ $row['phone'] ?? '' }}</div>
                             </td>
-                            <td>
+                            <td data-label="Status">
                                 <span class="status-pill status-pill--{{ $statusTone }}">{{ $statusLabel }}</span>
                                 <div class="workspace-property__meta">{{ ucfirst($row['intent'] ?? 'buyer') }}</div>
                             </td>
-                            <td>
+                            <td data-label="Market">
                                 <strong>{{ $row['property_address'] ?? 'No address provided' }}</strong>
                                 <div class="workspace-property__meta">{{ $row['zip_code'] ?? '' }} · {{ $row['state'] ?? 'State N/A' }}</div>
                                 <div class="workspace-property__meta">{{ $priceSummary }}</div>
                             </td>
-                            <td>
+                            <td data-label="Ops Data">
                                 <div class="workspace-property__meta">Rep: {{ $row['rep_name'] ?? 'N/A' }}</div>
                                 <div class="workspace-property__meta">Sent to: {{ $row['sent_to'] ?? 'N/A' }}</div>
                                 <div class="workspace-property__meta">Assignment: {{ $row['assignment'] ?? 'Unassigned on import' }}</div>
                             </td>
-                            <td>
+                            <td data-label="Result">
                                 <span class="status-pill status-pill--{{ $resultTone }}">{{ $resultLabel }}</span>
                                 @if(!empty($row['_duplicate_reason']))
                                     <div class="workspace-property__meta">{{ $row['_duplicate_reason'] }}</div>

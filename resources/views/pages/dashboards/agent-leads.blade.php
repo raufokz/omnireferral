@@ -48,22 +48,22 @@
                 <tbody>
                     @forelse($leads as $lead)
                         <tr>
-                            <td>
+                            <td data-label="Lead">
                                 <strong>{{ $lead->name }}</strong>
                                 <div class="workspace-property__meta">{{ ucfirst($lead->intent) }} lead · {{ $lead->phone ?: 'No phone' }}</div>
                             </td>
-                            <td>
+                            <td data-label="Location">
                                 <strong>{{ $lead->zip_code ?: 'No ZIP' }}</strong>
                                 <div class="workspace-property__meta">{{ $lead->property_type ?: 'Property type pending' }}</div>
                             </td>
-                            <td>
+                            <td data-label="Package">
                                 <strong>{{ strtoupper($lead->package_type ?: 'N/A') }}</strong>
                                 <div class="workspace-property__meta">Lead ID {{ $lead->id }}</div>
                             </td>
-                            <td>
+                            <td data-label="Status">
                                 <span class="status-pill status-pill--{{ $lead->statusTone() }}">{{ $lead->statusLabel() }}</span>
                             </td>
-                            <td>
+                            <td data-label="Update">
                                 <form action="{{ route('agent.leads.status', $lead) }}" method="POST">
                                     @csrf
                                     <select name="status" onchange="this.form.submit()" aria-label="Update lead status">

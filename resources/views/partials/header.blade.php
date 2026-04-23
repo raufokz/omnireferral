@@ -1,3 +1,25 @@
+@php
+    $isHome = request()->routeIs('home');
+    $isListings = request()->routeIs('listings') || request()->routeIs('properties.show');
+    $isPricing = request()->routeIs('pricing') || request()->routeIs('packages.*');
+    $isAgents = request()->routeIs('agents.*');
+    $isReviews = request()->routeIs('reviews');
+    $isWorkspace = request()->routeIs('dashboard', 'dashboard.*', 'admin.*');
+    $isLeadOps = request()->routeIs('admin.leads.*');
+    $isMoreActive = request()->routeIs(
+        'about',
+        'blog.*',
+        'faq',
+        'contact',
+        'resources',
+        'news',
+        'careers',
+        'surveys',
+        'scam.prevention',
+        'communication.policy'
+    );
+@endphp
+
 <header class="site-header" data-animate>
     <div class="container nav-shell">
         <a href="{{ route('home') }}" aria-label="OmniReferral home" class="nav-brand">
@@ -5,25 +27,25 @@
                 class="nav-logo" loading="eager" decoding="async">
         </a>
         <nav class="main-nav" id="mainNav" aria-label="Primary navigation">
-            <a class="{{ request()->routeIs('home') ? 'is-active' : '' }}" href="{{ route('home') }}#how-it-works"
-                data-nav-section="how-it-works">How It Works</a>
-            <a class="{{ request()->routeIs('listings') || request()->routeIs('properties.show') ? 'is-active' : '' }}"
-                href="{{ route('listings') }}">Listings</a>
-            <a class="{{ request()->routeIs('pricing') || request()->routeIs('packages.*') ? 'is-active' : '' }}"
-                href="{{ route('pricing') }}">Pricing</a>
-            <a class="{{ request()->routeIs('agents.*') ? 'is-active' : '' }}"
-                href="{{ route('agents.index') }}">Agents</a>
-            <a class="{{ request()->routeIs('reviews') ? 'is-active' : '' }}"
-                href="{{ route('reviews') }}">Testimonials</a>
-            <div class="nav-dropdown {{ request()->routeIs('about', 'blog.*', 'faq', 'resources', 'news', 'careers', 'surveys', 'scam.prevention', 'communication.policy') ? 'is-active' : '' }}"
+            <a class="{{ $isHome ? 'is-active' : '' }}" href="{{ route('home') }}#how-it-works"
+                data-nav-section="how-it-works" @if($isHome) aria-current="page" @endif>How It Works</a>
+            <a class="{{ $isListings ? 'is-active' : '' }}"
+                href="{{ route('listings') }}" @if($isListings) aria-current="page" @endif>Listings</a>
+            <a class="{{ $isPricing ? 'is-active' : '' }}"
+                href="{{ route('pricing') }}" @if($isPricing) aria-current="page" @endif>Pricing</a>
+            <a class="{{ $isAgents ? 'is-active' : '' }}"
+                href="{{ route('agents.index') }}" @if($isAgents) aria-current="page" @endif>Agents</a>
+            <a class="{{ $isReviews ? 'is-active' : '' }}"
+                href="{{ route('reviews') }}" @if($isReviews) aria-current="page" @endif>Testimonials</a>
+            <div class="nav-dropdown {{ $isMoreActive ? 'is-active' : '' }}"
                 data-nav-dropdown>
                 <button type="button"
-                    class="nav-submenu-toggle {{ request()->routeIs('about', 'blog.*', 'faq', 'resources', 'news', 'careers', 'surveys', 'scam.prevention', 'communication.policy') ? 'is-active' : '' }}"
-                    data-nav-submenu-toggle aria-expanded="false" aria-haspopup="true">
-                    More+
+                    class="nav-submenu-toggle {{ $isMoreActive ? 'is-active' : '' }}"
+                    data-nav-submenu-toggle aria-expanded="false" aria-haspopup="true" aria-controls="mainNavMoreSubmenu">
+                    More
                     <span class="nav-submenu-toggle__caret" aria-hidden="true"></span>
                 </button>
-                <div class="nav-submenu" data-nav-submenu>
+                <div class="nav-submenu" data-nav-submenu id="mainNavMoreSubmenu">
                     <a class="{{ request()->routeIs('about') ? 'is-active' : '' }}"
                         href="{{ route('about') }}">About</a>
                     <a class="{{ request()->routeIs('blog.*') ? 'is-active' : '' }}"
@@ -43,11 +65,11 @@
             </div>
             <!-- <a class="{{ request()->routeIs('contact') ? 'is-active' : '' }}" href="{{ route('contact') }}">Contact</a> -->
             @auth
-                <a class="{{ request()->routeIs('dashboard', 'dashboard.*', 'admin.*') ? 'is-active' : '' }}"
-                    href="{{ auth()->user()->dashboardRoute() }}">Workspace</a>
+                <a class="{{ $isWorkspace ? 'is-active' : '' }}"
+                    href="{{ auth()->user()->dashboardRoute() }}" @if($isWorkspace) aria-current="page" @endif>Workspace</a>
                 @if(auth()->user()->isStaff())
-                    <a class="{{ request()->routeIs('admin.leads.*') ? 'is-active' : '' }}"
-                        href="{{ route('admin.leads.index') }}">Lead Ops</a>
+                    <a class="{{ $isLeadOps ? 'is-active' : '' }}"
+                        href="{{ route('admin.leads.index') }}" @if($isLeadOps) aria-current="page" @endif>Lead Ops</a>
                 @endif
             @endauth
 

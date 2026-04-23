@@ -24,20 +24,20 @@
             <tbody>
                 @forelse($requests as $request)
                     <tr>
-                        <td>
+                        <td data-label="Request">
                             <strong>{{ $request->name }}</strong>
                             <div class="workspace-property__meta">{{ $request->email ?: 'No email provided' }}</div>
                         </td>
-                        <td>
+                        <td data-label="Market">
                             <strong>{{ $request->zip_code ?: 'No ZIP yet' }}</strong>
                             <div class="workspace-property__meta">{{ $request->property_type ?: 'Search preferences pending' }}</div>
                         </td>
-                        <td>
+                        <td data-label="Status">
                             <span class="status-pill status-pill--{{ \Illuminate\Support\Str::slug((string) $request->status, '_') }}">
                                 {{ $request->statusLabel() }}
                             </span>
                         </td>
-                        <td>{{ $request->created_at?->format('M j, Y g:i A') ?: 'Pending' }}</td>
+                        <td data-label="Submitted">{{ $request->created_at?->format('M j, Y g:i A') ?: 'Pending' }}</td>
                     </tr>
                 @empty
                     <tr>

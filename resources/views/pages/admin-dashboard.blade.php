@@ -133,21 +133,21 @@
                 <tbody>
                     @forelse($recentLeads as $lead)
                         <tr>
-                            <td>
+                            <td data-label="Lead">
                                 <strong>{{ $lead->name }}</strong>
                                 <div class="workspace-property__meta">{{ $lead->email ?: 'No email' }}</div>
                             </td>
-                            <td>
+                            <td data-label="Intent">
                                 <strong>{{ ucfirst($lead->intent ?: 'Unknown') }}</strong>
                                 <div class="workspace-property__meta">{{ $lead->zip_code ?: 'No ZIP' }}</div>
                             </td>
-                            <td>{{ strtoupper($lead->package_type ?: 'N/A') }}</td>
-                            <td>
+                            <td data-label="Package">{{ strtoupper($lead->package_type ?: 'N/A') }}</td>
+                            <td data-label="Status">
                                 <span class="status-pill status-pill--{{ \Illuminate\Support\Str::slug((string) $lead->status, '_') }}">
                                     {{ $lead->statusLabel() }}
                                 </span>
                             </td>
-                            <td>{{ $lead->assignedAgent?->name ?? 'Unassigned' }}</td>
+                            <td data-label="Assigned">{{ $lead->assignedAgent?->name ?? 'Unassigned' }}</td>
                         </tr>
                     @empty
                         <tr>
@@ -179,20 +179,20 @@
                     <tbody>
                         @forelse($userSubmittedListings as $property)
                             <tr>
-                                <td>
+                                <td data-label="Listing">
                                     <strong>{{ $property->title }}</strong>
                                     <div class="workspace-property__meta">{{ $property->location }}</div>
                                 </td>
-                                <td>{{ $property->source }}</td>
-                                <td>
+                                <td data-label="Source">{{ $property->source }}</td>
+                                <td data-label="Moderation">
                                     <span class="status-pill status-pill--{{ \Illuminate\Support\Str::slug($property->approval_status, '_') }}">
                                         {{ $property->approvalStatusLabel() }}
                                     </span>
                                 </td>
-                                <td>
+                                <td data-label="Owner">
                                     {{ $property->owner?->name ?? optional($property->realtorProfile?->user)->name ?? '—' }}
                                 </td>
-                                <td>
+                                <td data-label="Actions">
                                     <div class="workspace-actions" style="flex-wrap: wrap; gap: 0.35rem;">
                                         <a href="{{ route('properties.show', $property) }}" class="button button--ghost-blue">Preview</a>
                                         @if($property->approval_status === \App\Models\Property::APPROVAL_PENDING)

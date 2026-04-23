@@ -10,8 +10,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@500;600;700;800&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
     @include('partials.favicon')
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -47,11 +46,11 @@
     ])->filter()->implode(' ');
 @endphp
 <body class="antialiased {{ $bodyClass }}" data-google-maps-api-key="{{ config('services.google_maps.key') }}">
-
+    <a href="#main-content" class="skip-link">Skip to content</a>
 
     @include('partials.header')
 
-    <main id="main-content">
+    <main id="main-content" tabindex="-1">
         @if (session('info'))
             <div class="app-flash app-flash--info" role="alert">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 1010 10A10 10 0 0012 2z"></path></svg>
@@ -82,19 +81,6 @@
 
     @include('partials.footer')
 
-    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof AOS !== 'undefined') {
-                AOS.init({
-                    duration: 800,
-                    easing: 'ease-out-cubic',
-                    once: true,
-                    offset: 50
-                });
-            }
-        });
-    </script>
     @stack('scripts')
 </body>
 </html>

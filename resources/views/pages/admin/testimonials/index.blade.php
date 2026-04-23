@@ -49,16 +49,16 @@
                 <tbody>
                     @forelse($testimonials as $testimonial)
                         <tr>
-                            <td>
+                            <td data-label="Person">
                                 <strong>{{ $testimonial->name }}</strong>
                                 <div class="workspace-property__meta">{{ $testimonial->company ?: 'No role/company' }}</div>
                                 <div class="workspace-property__meta">{{ $testimonial->location ?: 'No location' }}</div>
                             </td>
-                            <td>
+                            <td data-label="Audience">
                                 <span class="status-pill status-pill--assigned">{{ $testimonial->audience_label }}</span>
                                 <div class="workspace-property__meta">{{ $testimonial->rating }}/5 rating</div>
                             </td>
-                            <td>
+                            <td data-label="Proof">
                                 @if($testimonial->has_video)
                                     <span class="status-pill status-pill--qualified">Video attached</span>
                                 @else
@@ -66,12 +66,12 @@
                                 @endif
                                 <div class="workspace-property__meta">{{ \Illuminate\Support\Str::limit($testimonial->quote, 90) }}</div>
                             </td>
-                            <td>
+                            <td data-label="Status">
                                 <span class="status-pill status-pill--{{ $testimonial->submissionStatusTone() }}">{{ $testimonial->submissionStatusLabel() }}</span>
                                 <div class="workspace-property__meta">{{ $testimonial->is_published ? 'Published' : 'Hidden' }}</div>
                                 <div class="workspace-property__meta">Sort: {{ $testimonial->sort_order }}</div>
                             </td>
-                            <td>
+                            <td data-label="Actions">
                                 <div class="workspace-actions">
                                     @if($testimonial->submission_status !== \App\Models\Testimonial::STATUS_APPROVED)
                                         <form action="{{ route('admin.testimonials.review', $testimonial) }}" method="POST">

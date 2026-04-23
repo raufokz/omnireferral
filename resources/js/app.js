@@ -10,6 +10,9 @@ Alpine.start();
 const HEADER_OFFSET = 24;
 const SCROLL_THRESHOLD = 24;
 const MOBILE_NAV_BREAKPOINT = 1024;
+const prefersReducedMotion = window.matchMedia
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    : false;
 
 const showToast = (message, type = 'info', duration = 5000) => {
     let container = document.getElementById('toast-container');
@@ -132,6 +135,7 @@ if (menuToggle && mainNav) {
         navDropdowns.forEach((dropdown) => {
             dropdown.classList.remove('is-open');
             dropdown.querySelector('[data-nav-submenu-toggle]')?.setAttribute('aria-expanded', 'false');
+            dropdown.querySelector('[data-nav-submenu]')?.setAttribute('aria-hidden', 'true');
         });
     };
 
@@ -145,6 +149,10 @@ if (menuToggle && mainNav) {
 
         if (!isOpen) {
             closeNavDropdowns();
+            menuToggle.focus?.();
+        } else {
+            const firstFocusable = mainNav.querySelector('a, button, input, select, textarea, [tabindex]:not([tabindex=\"-1\"])');
+            firstFocusable?.focus?.();
         }
     };
 
@@ -166,17 +174,24 @@ const initNavDropdowns = () => {
             if (dropdown === except) return;
             dropdown.classList.remove('is-open');
             dropdown.querySelector('[data-nav-submenu-toggle]')?.setAttribute('aria-expanded', 'false');
+            dropdown.querySelector('[data-nav-submenu]')?.setAttribute('aria-hidden', 'true');
         });
     };
 
     navDropdowns.forEach((dropdown) => {
         const toggle = dropdown.querySelector('[data-nav-submenu-toggle]');
+        const submenu = dropdown.querySelector('[data-nav-submenu]');
         if (!toggle) return;
 
         const setOpen = (open) => {
             dropdown.classList.toggle('is-open', open);
             toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (submenu) {
+                submenu.setAttribute('aria-hidden', open ? 'false' : 'true');
+            }
         };
+
+        setOpen(dropdown.classList.contains('is-open'));
 
         toggle.addEventListener('click', (event) => {
             event.preventDefault();
@@ -220,7 +235,7 @@ const scrollToHash = (hash) => {
     const offset = (siteHeader?.offsetHeight || 0) + HEADER_OFFSET;
     const top = target.getBoundingClientRect().top + window.scrollY - offset;
 
-    window.scrollTo({ top, behavior: 'smooth' });
+    window.scrollTo({ top, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
 };
 
 document.querySelectorAll('a[href*="#"]').forEach(link => {
@@ -268,7 +283,20 @@ const revealObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
 
 const initAnimations = () => {
-    document.querySelectorAll('[data-reveal], [data-animate], [data-stagger]').forEach(el => {
+    const targets = Array.from(document.querySelectorAll('[data-reveal], [data-animate], [data-stagger]'));
+
+    if (prefersReducedMotion) {
+        targets.forEach((el) => {
+            if (el.hasAttribute('data-stagger')) {
+                Array.from(el.children).forEach((child) => child.classList.add('is-visible'));
+            } else {
+                el.classList.add('is-visible');
+            }
+        });
+        return;
+    }
+
+    targets.forEach(el => {
         if (el.hasAttribute('data-stagger')) {
             Array.from(el.children).forEach((child, i) => {
                 child.dataset.reveal = child.dataset.reveal || '';

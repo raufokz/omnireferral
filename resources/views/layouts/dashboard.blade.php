@@ -72,6 +72,7 @@
     }
 @endphp
 <body class="antialiased dashboard-shell-body">
+    <a href="#main-content" class="skip-link">Skip to content</a>
     <div class="dashboard-shell" id="dashboardShell">
         <aside class="dashboard-shell__sidebar" id="dashboardSidebar" aria-label="Dashboard sidebar">
             <div class="dashboard-shell__brand">
@@ -89,7 +90,7 @@
                     @php
                         $isActive = collect($item['active'] ?? [])->contains(fn ($pattern) => request()->routeIs($pattern));
                     @endphp
-                    <a href="{{ $item['route'] }}" class="{{ $isActive ? 'is-active' : '' }}">
+                    <a href="{{ $item['route'] }}" class="{{ $isActive ? 'is-active' : '' }}" @if($isActive) aria-current="page" @endif>
                         <span>{{ $item['label'] }}</span>
                     </a>
                 @endforeach
@@ -132,7 +133,7 @@
                 </div>
             </header>
 
-            <main class="dashboard-shell__content">
+            <main id="main-content" class="dashboard-shell__content" tabindex="-1">
                 @if (session('info'))
                     <div class="app-flash app-flash--info" role="alert">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 1010 10A10 10 0 0012 2z"></path></svg>

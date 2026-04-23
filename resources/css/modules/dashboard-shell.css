@@ -587,7 +587,54 @@
         grid-column: auto;
     }
 
+    .workspace-table-wrap {
+        overflow-x: visible;
+    }
+
     .workspace-table {
-        min-width: 620px;
+        min-width: 0;
+    }
+
+    .workspace-table thead {
+        display: none;
+    }
+
+    .workspace-table tr {
+        display: block;
+        background: #fff;
+        border: 1px solid var(--dash-shell-border);
+        border-radius: 14px;
+        padding: 0.85rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .workspace-table tr:last-child {
+        margin-bottom: 0;
+    }
+
+    .workspace-table td {
+        display: block;
+        border: 0;
+        padding: 0.55rem 0;
+    }
+
+    .workspace-table td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 0.25rem;
+        color: #49607c;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        font-weight: 800;
+    }
+
+    .workspace-table td[data-label=""]::before,
+    .workspace-table td[colspan]::before {
+        content: none;
+    }
+
+    .workspace-table td[colspan] {
+        padding: 0;
     }
 }

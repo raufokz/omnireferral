@@ -99,14 +99,14 @@
                     <tbody>
                         @forelse($recentLeads as $lead)
                             <tr>
-                                <td>
+                                <td data-label="Lead">
                                     <strong>{{ $lead->name }}</strong>
                                     <div class="workspace-property__meta">{{ $lead->phone ?: 'No phone' }}</div>
                                 </td>
-                                <td>
+                                <td data-label="Status">
                                     <span class="status-pill status-pill--{{ $lead->statusTone() }}">{{ $lead->statusLabel() }}</span>
                                 </td>
-                                <td>{{ strtoupper($lead->package_type ?: 'N/A') }}</td>
+                                <td data-label="Package">{{ strtoupper($lead->package_type ?: 'N/A') }}</td>
                             </tr>
                         @empty
                             <tr>
