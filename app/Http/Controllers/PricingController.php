@@ -17,14 +17,13 @@ class PricingController extends Controller
     {
         $packageEmbeds = $this->packageEmbeds();
         $primaryCta = $this->primaryAction();
+        $pricingPlans = PricingContent::plans();
 
         return view('pages.pricing', [
             'leadPackages' => Package::active()->leadPlans()->orderBy('sort_order')->orderBy('one_time_price')->get(),
             'assistantPackages' => Package::active()->assistantPlans()->orderBy('sort_order')->orderBy('monthly_price')->get(),
-            'pricingPlans' => PricingContent::plans(),
-            'comparison' => PackageComparison::fromLeadPackages(
-                Package::active()->leadPlans()->orderBy('sort_order')->orderBy('one_time_price')->get()
-            ),
+            'pricingPlans' => $pricingPlans,
+            'comparison' => PackageComparison::fromPricingPlans($pricingPlans),
             'packageEmbeds' => $packageEmbeds,
             'primaryActionUrl' => $primaryCta['url'],
             'primaryActionLabel' => $primaryCta['label'],
@@ -59,22 +58,8 @@ class PricingController extends Controller
             'description' => $packageEmbed['description']
                 ?? ($packageDisplay['summary'] ?: 'Complete the follow-up setup form after payment to help OmniReferral provision your workspace correctly.'),
         ];
-        $billingOptions = collect([
-            $package->one_time_price ? [
-                'key' => 'one_time',
-                'label' => 'Pay One-Time',
-                'amount' => $package->one_time_price,
-                'note' => 'Secure one-time checkout for the selected package.',
-                'button' => 'button--orange',
-            ] : null,
-            $package->monthly_price ? [
-                'key' => 'monthly',
-                'label' => 'Subscribe Monthly',
-                'amount' => $package->monthly_price,
-                'note' => 'Recurring billing for ongoing access and support.',
-                'button' => 'button--ghost-blue',
-            ] : null,
-        ])->filter()->values();
+
+        $billingOptions = $this->billingOptions($package, $pricingPlan);
 
         return view('pages.package-checkout', [
             'package' => $package,
@@ -193,6 +178,52 @@ class PricingController extends Controller
                 'description' => 'Full social media package onboarding form for monthly content and growth execution.',
             ],
         ];
+    }
+
+    private function billingOptions(Package $package, ?array $pricingPlan): \Illuminate\Support\Collection
+    {
+        $planAmount = (int) ($pricingPlan['price'] ?? 0);
+        $planNote = (string) ($pricingPlan['price_note'] ?? '');
+
+        if ($planAmount > 0 && $planNote !== '') {
+            $noteLower = strtolower($planNote);
+            $billingKey = str_contains($noteLower, 'month') ? 'monthly' : 'one_time';
+            $label = match (true) {
+                $billingKey === 'monthly' => 'Subscribe Monthly',
+                str_contains($noteLower, 'year') => 'Pay Yearly',
+                default => 'Pay One-Time',
+            };
+            $note = match (true) {
+                $billingKey === 'monthly' => 'Recurring billing for ongoing access and support.',
+                str_contains($noteLower, 'year') => 'Secure yearly access checkout for the selected package.',
+                default => 'Secure one-time checkout for the selected package.',
+            };
+
+            return collect([[
+                'key' => $billingKey,
+                'label' => $label,
+                'amount' => $planAmount,
+                'note' => $note,
+                'button' => $billingKey === 'monthly' ? 'button--ghost-blue' : 'button--orange',
+            ]]);
+        }
+
+        return collect([
+            $package->one_time_price ? [
+                'key' => 'one_time',
+                'label' => 'Pay One-Time',
+                'amount' => $package->one_time_price,
+                'note' => 'Secure one-time checkout for the selected package.',
+                'button' => 'button--orange',
+            ] : null,
+            $package->monthly_price ? [
+                'key' => 'monthly',
+                'label' => 'Subscribe Monthly',
+                'amount' => $package->monthly_price,
+                'note' => 'Recurring billing for ongoing access and support.',
+                'button' => 'button--ghost-blue',
+            ] : null,
+        ])->filter()->values();
     }
 
     private function primaryAction(): array

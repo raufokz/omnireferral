@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PricingContent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -72,8 +73,27 @@ class Package extends Model
         return $query->where('category', 'virtual_assistant');
     }
 
+    public function displayName(): string
+    {
+        $pricingPlan = PricingContent::planBySlug($this->slug);
+
+        return (string) ($pricingPlan['name'] ?? $this->name);
+    }
+
     public function preferredCheckoutAmount(string $billing = 'auto'): ?int
     {
+        $pricingPlan = PricingContent::planBySlug($this->slug);
+        if ($pricingPlan) {
+            $planAmount = (int) ($pricingPlan['price'] ?? 0);
+            $planNote = strtolower((string) ($pricingPlan['price_note'] ?? ''));
+            $planBilling = str_contains($planNote, 'month') ? 'monthly' : 'one_time';
+
+            $requestedBilling = $billing === 'auto' ? $planBilling : $billing;
+            if ($planAmount > 0 && $requestedBilling === $planBilling) {
+                return $planAmount;
+            }
+        }
+
         return match ($billing) {
             'monthly' => $this->monthly_price,
             'one_time' => $this->one_time_price,
@@ -83,6 +103,15 @@ class Package extends Model
 
     public function preferredCheckoutMode(string $billing = 'auto'): string
     {
+        $pricingPlan = PricingContent::planBySlug($this->slug);
+        if ($pricingPlan) {
+            $planNote = strtolower((string) ($pricingPlan['price_note'] ?? ''));
+            $planBilling = str_contains($planNote, 'month') ? 'monthly' : 'one_time';
+            $requested = $billing === 'auto' ? $planBilling : $billing;
+
+            return $requested === 'monthly' ? 'subscription' : 'payment';
+        }
+
         $requested = $billing === 'auto'
             ? ($this->monthly_price && ! $this->one_time_price ? 'monthly' : 'one_time')
             : $billing;
@@ -94,6 +123,21 @@ class Package extends Model
     {
         if ($this->category !== 'lead') {
             return 0;
+        }
+
+        $pricingPlan = PricingContent::planBySlug($this->slug);
+        if ($pricingPlan) {
+            $features = (array) ($pricingPlan['features'] ?? []);
+            foreach ($features as $feature) {
+                $feature = (string) $feature;
+                if (stripos($feature, 'unlimited listings') !== false) {
+                    return 10000;
+                }
+
+                if (preg_match('/\\bList\\s+up\\s+to\\s+(\\d+)\\s+active\\s+listings\\b/i', $feature, $matches)) {
+                    return (int) $matches[1];
+                }
+            }
         }
 
         return match ($this->slug) {

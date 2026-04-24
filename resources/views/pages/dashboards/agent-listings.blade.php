@@ -13,7 +13,7 @@
     <section class="workspace-grid workspace-grid--4">
         <article class="workspace-card workspace-kpi">
             <span>Plan</span>
-            <strong>{{ $activePlan?->name ?: 'No Plan' }}</strong>
+            <strong>{{ $activePlan?->displayName() ?: 'No Plan' }}</strong>
             <span>{{ $listingLimitLabel }}</span>
         </article>
         <article class="workspace-card workspace-kpi">

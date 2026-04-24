@@ -425,14 +425,16 @@
                     <div class="work-step__content">
                         <div class="work-step__meta">
                             <span class="work-step__eyebrow">Phase 01</span>
-                            <span class="work-step__role">ISA Team</span>
+                            <span class="work-step__role">ISA Qualification Engine</span>
                         </div>
-                        <h3>Qualify every conversation</h3>
-                        <p>Inside sales agents verify budget, location, intent, and timing before a lead ever reaches the next team, ensuring zero wasted effort.</p>
+                        <h3>Every lead is verified before it reaches you</h3>
+                        <p>Our trained ISA teams engage, filter, and qualify every conversation—so you only deal with serious prospects ready to move forward.
+We don’t pass raw data.
+ We deliver intent-driven opportunities.</p>
                         <div class="work-step__pills">
-                            <span>Intent confirmed</span>
-                            <span>Budget & timeline verified</span>
-                            <span>Human quality review</span>
+                            <span>Budget, location & timeline confirmed</span>
+                            <span>Buyer/seller intent clearly identified</span>
+                            <span>Human-reviewed quality control</span>
                         </div>
                     </div>
                 </div>
@@ -445,14 +447,15 @@
                     <div class="work-step__content">
                         <div class="work-step__meta">
                             <span class="work-step__eyebrow">Phase 02</span>
-                            <span class="work-step__role">Sales Team</span>
+                            <span class="work-step__role">Smart Matching & Structuring</span>
                         </div>
-                        <h3>Match the right package</h3>
-                        <p>Sales executives package each lead into the right Starter, Growth, or Elite path so the delivery matches the urgency and value of your team's capacity.</p>
+                        <h3>The right opportunity goes to the right agent</h3>
+                        <p>Every qualified lead is analyzed and routed based on market, urgency, and deal potential—ensuring it lands with the right agent or team.
+We also align delivery with your capacity through structured tiers, so you’re never overwhelmed or underfed.</p>
                         <div class="work-step__pills">
-                            <span>Lead tier assigned</span>
-                            <span>ZIP & market fit checked</span>
-                            <span>Optional VA support layered</span>
+                            <span>Lead tiering based on intent & value</span>
+                            <span>ZIP code & market alignment</span>
+                            <span>Optional VA + follow-up support</span>
                         </div>
                     </div>
                 </div>
@@ -465,14 +468,15 @@
                     <div class="work-step__content">
                         <div class="work-step__meta">
                             <span class="work-step__eyebrow">Phase 03</span>
-                            <span class="work-step__role">Agent Network</span>
+                            <span class="work-step__role">Execution & Closing Power</span>
                         </div>
-                        <h3>Deliver and close faster</h3>
-                        <p>Agents receive structured details inside their premium cockpit so they can act quickly, follow up with confidence, and keep momentum at the point of interest.</p>
+                        <h3>You get everything you need to close—fast</h3>
+                        <p>Leads are delivered inside your premium cockpit with full context—so you know exactly who you’re speaking to, what they want, and what to do next.
+No confusion. No delays. Just momentum.</p>
                         <div class="work-step__pills">
-                            <span>Cockpit handoff</span>
-                            <span>Lead context at touch</span>
-                            <span>Clear next-step support</span>
+                            <span>Complete lead profile & conversation history</span>
+                            <span>Clear next steps for follow-up</span>
+                            <span>Faster response = higher closing ratio</span>
                         </div>
                     </div>
                 </div>

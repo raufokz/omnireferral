@@ -24,7 +24,7 @@
 
         <div class="agent-portal-profile-card__chips">
             <span class="status-pill status-pill--assigned">Agent</span>
-            <span class="status-pill status-pill--qualified">{{ $activePlan?->name ?: 'No active package' }}</span>
+            <span class="status-pill status-pill--qualified">{{ $activePlan?->displayName() ?: 'No active package' }}</span>
             @if($agentLocation)
                 <span class="status-pill status-pill--new">{{ $agentLocation }}</span>
             @endif
@@ -68,7 +68,7 @@
 
     <div class="cockpit-table-card agent-portal-access-card">
         <span class="eyebrow">Package Access</span>
-        <h3>{{ $activePlan?->name ?: 'No active lead package' }}</h3>
+        <h3>{{ $activePlan?->displayName() ?: 'No active lead package' }}</h3>
         <p>{{ $listingLimitLabel }}</p>
 
         <div class="agent-portal-access-card__stats">
