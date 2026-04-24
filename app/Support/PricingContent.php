@@ -24,7 +24,7 @@ class PricingContent
                         '15% Referral Fee Only on Closed Deals',
                         'Dedicated Account Manager (Weekly Updates & Follow-Ups)',
                         'Priority Support (Call + SMS + Email)',
-                        'List Up to 2 Active Listings on Our Platform 🏡',
+                        'List Up to 2 Active Listings on Our Platform ',
                         'Organic Exposure to Active Buyer Network',
                         'Basic Lead Nurturing & Follow-Up System',
                         'Monthly Performance Report',
