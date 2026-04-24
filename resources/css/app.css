@@ -9040,6 +9040,10 @@ small {
     box-shadow: 0 30px 70px rgba(9, 24, 47, 0.22);
 }
 
+.homepage-hero__form.hero-search-card--premium {
+    margin-top: clamp(0.75rem, 1.5vw, 1.5rem);
+}
+
 .hero-search-card__header h2 {
     font-size: clamp(1.55rem, 2vw, 2rem);
     line-height: 1.08;

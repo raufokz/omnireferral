@@ -40,12 +40,12 @@ class PackageComparison
                     $note = trim((string) ($plan['price_note'] ?? ''));
                     $note = trim(ltrim($note, '/ '));
 
-                    return $note !== '' ? $note : 'â€”';
+                    return $note !== '' ? $note : '—';
                 })->all(),
             ],
             [
                 'feature' => 'Value price',
-                'values' => $plans->map(fn (array $plan) => ! empty($plan['value_price']) ? '$' . number_format((int) $plan['value_price']) : 'â€”')->all(),
+                'values' => $plans->map(fn (array $plan) => ! empty($plan['value_price']) ? '$' . number_format((int) $plan['value_price']) : '—')->all(),
             ],
             [
                 'feature' => 'Referral fee',
@@ -168,7 +168,7 @@ class PackageComparison
             }
         }
 
-        return 'â€”';
+        return '—';
     }
 
     private static function extractListingAccess(array $features): string
@@ -184,7 +184,7 @@ class PackageComparison
             }
         }
 
-        return 'â€”';
+        return '—';
     }
 
     private static function extractTerritoryCoverage(array $features): string
@@ -196,6 +196,6 @@ class PackageComparison
             }
         }
 
-        return 'â€”';
+        return '—';
     }
 }

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Package;
 use App\Models\User;
+use App\Support\PricingContent;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Stripe\Checkout\Session;
@@ -30,6 +31,14 @@ class StripeCheckoutService
             return null;
         }
 
+        $pricingPlan = PricingContent::planBySlug($package->slug);
+        $productName = (string) ($pricingPlan['name'] ?? $package->name);
+        $productDescription = (string) ($pricingPlan['summary'] ?? ($package->description ?: ''));
+        $featureLines = (array) ($pricingPlan['features'] ?? ($package->features ?? []));
+        if ($productDescription === '' && ! empty($featureLines)) {
+            $productDescription = Str::limit(implode(', ', $featureLines), 150);
+        }
+
         $stripe = new StripeClient(config('services.stripe.secret'));
         $lineItem = $package->stripe_price_id
             ? ['price' => $package->stripe_price_id, 'quantity' => 1]
@@ -38,8 +47,8 @@ class StripeCheckoutService
                     'currency' => 'usd',
                     'unit_amount' => $amount * 100,
                     'product_data' => [
-                        'name' => $package->name,
-                        'description' => $package->description ?: Str::limit(implode(', ', $package->features ?? []), 150),
+                        'name' => $productName,
+                        'description' => $productDescription,
                     ],
                     'recurring' => $mode === 'subscription' ? ['interval' => 'month'] : null,
                 ],
