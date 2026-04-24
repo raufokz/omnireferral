@@ -124,7 +124,7 @@
             <img src="{{ asset('images/home/hero_backdrop_v2.png') }}" alt="Real Estate Background" class="hero__backdrop-img">
             <div class="hero__backdrop-overlay"></div>
         </div>
-        <div class="container hero__content hero__content--premium homepage-hero__layout">
+        <div class="container hero__content hero__content--premium homepage-hero__layout" style="margin-top: 32px;">
             <div class="hero__copy hero__copy--premium homepage-hero__copy" data-reveal="left">
                 <span class="eyebrow">Premium Real Estate Lead Engine</span>
                 <h1 id="hero-headline">Buyer &amp; Seller Leads.<br>Faster Closings.</h1>
