@@ -376,10 +376,15 @@
     {{-- Stats Strip --}}
     <div class="stat-strip" aria-label="Platform statistics">
         <div class="container stat-strip__grid">
-            <div class="stat-strip__item" data-counter="3200" data-suffix="+"><span class="stat-strip__number">3,200+</span><span class="stat-strip__label">Qualified leads delivered</span></div>
-            <div class="stat-strip__item" data-counter="450" data-suffix="+"><span class="stat-strip__number">450+</span><span class="stat-strip__label">Active agent partners</span></div>
-            <div class="stat-strip__item" data-counter="92" data-suffix="%"><span class="stat-strip__number">92%</span><span class="stat-strip__label">Client satisfaction</span></div>
-            <div class="stat-strip__item" data-counter="48" data-suffix=" hr"><span class="stat-strip__number">48 hr</span><span class="stat-strip__label">Average routing window</span></div>
+            <div class="stat-strip__item" data-counter="181,700,000" data-suffix="+"><span class="stat-strip__number">181.7
+M+</span><span class="stat-strip__label">LEAD POOL</span></div>
+            <div class="stat-strip__item" data-counter="1,060,000
+" data-suffix="+"><span class="stat-strip__number">1.06M
++</span><span class="stat-strip__label">PARKED LEADS</span></div>
+            <div class="stat-strip__item" data-counter="4,750
+" data-suffix="%"><span class="stat-strip__number">4,750
++</span><span class="stat-strip__label">DAILY NEW LEADS</span></div>
+            <div class="stat-strip__item" data-counter="7" data-suffix=" min"><span class="stat-strip__number">7 MIN</span><span class="stat-strip__label">AVERAGE LEAD ROUTING</span></div>
         </div>
     </div>
 
@@ -413,8 +418,8 @@
         <div class="container">
             <div class="section-heading homepage-section__heading" data-animate="left">
                 <span class="eyebrow">How It Works</span>
-                <h2 id="how-it-works-heading">One coordinated workflow from cold outreach to closed deal</h2>
-                <p>OmniReferral gives every team a defined role, so buyers and sellers move through a cleaner experience and agents get more useful context at delivery.</p>
+                <h2 id="how-it-works-heading">How We Turn Conversations Into Closings</h2>
+                <p>A simple, proven 3-step system designed to eliminate wasted leads and maximize every opportunity.</p>
             </div>
             <div class="timeline-flow homepage-timeline homepage-workflow" data-stagger>
                 <div class="work-step" data-animate="up">
