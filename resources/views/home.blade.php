@@ -494,8 +494,8 @@ No confusion. No delays. Just momentum.</p>
         <div class="container">
             <div class="section-heading homepage-section__heading" data-animate="right">
                 <span class="eyebrow">Built For Growth</span>
-                <h2 id="services-heading">Everything needed to keep lead quality high and operational friction low</h2>
-                <p>The platform is designed to feel premium on the front end and organized behind the scenes, so every role sees what matters next.</p>
+                <h2 id="services-heading">Built for Scale. Optimized for Closings.</h2>
+                <p>High-quality leads, clear workflows, and a system that keeps your team moving—without the chaos.</p>
             </div>
             <div class="why-grid homepage-why-grid" data-stagger>
                 <article class="feature-icon-card">
