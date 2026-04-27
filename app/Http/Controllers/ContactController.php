@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Contact;
 use App\Models\Property;
 use App\Models\RealtorProfile;
+use App\Models\User;
+use App\Notifications\NewPropertyListingInquiryNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class ContactController extends Controller
@@ -73,7 +76,7 @@ class ContactController extends Controller
                 : ($realtorProfile ? 'Inquiry for ' . ($realtorProfile->user->name ?? 'Agent') : 'General contact inquiry');
         }
 
-        Contact::create([
+        $contact = Contact::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
@@ -89,8 +92,31 @@ class ContactController extends Controller
             'message_status' => 'new',
         ]);
 
+        if ($property && $recipientUserId) {
+            $recipients = User::query()
+                ->whereIn('role', ['admin', 'staff'])
+                ->get();
+
+            $ownerId = (int) ($property->owner_user_id ?? 0);
+            if ($ownerId > 0) {
+                $owner = User::query()->find($ownerId);
+                if ($owner) {
+                    $recipients->push($owner);
+                }
+            }
+
+            $recipients = $recipients->unique('id')->values();
+
+            Notification::send(
+                $recipients,
+                new NewPropertyListingInquiryNotification($contact->fresh(['property', 'realtorProfile.user']))
+            );
+        }
+
         $successMessage = $recipientUserId
-            ? 'Your message has been sent directly to this agent.'
+            ? ($property
+                ? 'Your message has been sent to the listing agent. The property owner and OmniReferral operations have also been notified by email.'
+                : 'Your message has been sent directly to this agent.')
             : 'Thanks for reaching out. We will follow up with you shortly.';
 
         return back()->with('success', $successMessage);

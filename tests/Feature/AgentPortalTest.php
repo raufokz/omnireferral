@@ -7,7 +7,9 @@ use App\Models\Package;
 use App\Models\Property;
 use App\Models\RealtorProfile;
 use App\Models\User;
+use App\Notifications\NewPropertyListingInquiryNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class AgentPortalTest extends TestCase
@@ -95,6 +97,14 @@ class AgentPortalTest extends TestCase
 
     public function test_property_inquiry_is_saved_to_the_assigned_agents_message_inbox(): void
     {
+        Notification::fake();
+
+        $admin = User::factory()->create([
+            'email' => 'ops-admin@example.com',
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+
         $agent = User::factory()->create([
             'name' => 'Jordan Agent',
             'email' => 'jordan@example.com',
@@ -167,6 +177,11 @@ class AgentPortalTest extends TestCase
             ->assertSee('Taylor Buyer')
             ->assertSee('Sunny Family Retreat')
             ->assertSee('Inquiry about Sunny Family Retreat');
+
+        Notification::assertSentTo(
+            [$admin, $agent],
+            NewPropertyListingInquiryNotification::class
+        );
     }
 
     public function test_agent_can_open_each_portal_page(): void

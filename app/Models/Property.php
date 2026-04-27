@@ -86,6 +86,11 @@ class Property extends Model
         return $this->hasMany(PropertyFavorite::class);
     }
 
+    public function listingComments(): HasMany
+    {
+        return $this->hasMany(PropertyComment::class);
+    }
+
     public function favoritedByUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'property_favorites')
@@ -117,15 +122,35 @@ class Property extends Model
             ->where('status', 'Active');
     }
 
-    public function scopeWithFavoriteSummary($query, ?User $user = null)
+    public function scopeWithFavoriteSummary($query, ?User $user = null, ?string $listingDeviceId = null)
     {
+        $listingDeviceId ??= request()->attributes->get('listing_device_id');
+
         $query->withCount(['favorites as favorites_count']);
 
-        if ($user) {
-            $query->withExists([
-                'favorites as is_favorited' => fn ($favoriteQuery) => $favoriteQuery->where('user_id', $user->id),
-            ]);
-        }
+        $query->withExists([
+            'favorites as is_favorited' => function ($favoriteQuery) use ($user, $listingDeviceId) {
+                $favoriteQuery->where(function ($inner) use ($user, $listingDeviceId) {
+                    if ($listingDeviceId && $user) {
+                        $inner->where('device_fingerprint', $listingDeviceId)
+                            ->orWhere('user_id', $user->id);
+
+                        return;
+                    }
+                    if ($listingDeviceId) {
+                        $inner->where('device_fingerprint', $listingDeviceId);
+
+                        return;
+                    }
+                    if ($user) {
+                        $inner->where('user_id', $user->id);
+
+                        return;
+                    }
+                    $inner->whereRaw('1 = 0');
+                });
+            },
+        ]);
 
         return $query;
     }

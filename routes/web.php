@@ -12,6 +12,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\PricingController;
+use App\Http\Controllers\PropertyCommentController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\RealtorController;
 use App\Http\Controllers\ReviewController;
@@ -76,6 +77,12 @@ Route::get('/careers', [HomeController::class, 'careers'])->name('careers');
 Route::get('/surveys-campaigns', [HomeController::class, 'surveys'])->name('surveys');
 Route::get('/listings', [HomeController::class, 'listings'])->name('listings');
 Route::get('/listings/{property}', [PropertyController::class, 'show'])->name('properties.show');
+Route::post('/properties/{property}/favorite', [PropertyController::class, 'toggleFavorite'])
+    ->middleware('throttle:property-favorite')
+    ->name('properties.favorite.toggle');
+Route::post('/properties/{property}/comments', [PropertyCommentController::class, 'store'])
+    ->middleware('throttle:property-comments')
+    ->name('properties.comments.store');
 Route::get('/onboarding/{role}', function (string $role): RedirectResponse {
     abort_unless(in_array($role, ['buyer', 'seller', 'agent', 'admin'], true), 404);
 
@@ -136,7 +143,6 @@ Route::middleware(['auth', 'active.account'])->group(function () {
 Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(function () {
     Route::get('/account/security', [SecurityController::class, 'show'])->name('account.security');
     Route::post('/account/password', [SecurityController::class, 'updatePassword'])->name('account.password.update');
-    Route::post('/properties/{property}/favorite', [PropertyController::class, 'toggleFavorite'])->name('properties.favorite.toggle');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/affiliate', [DashboardController::class, 'affiliate'])->name('dashboard.affiliate');

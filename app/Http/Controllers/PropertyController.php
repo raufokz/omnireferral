@@ -13,7 +13,7 @@ use Illuminate\View\View;
 
 class PropertyController extends Controller
 {
-    public function show(Property $property): View
+    public function show(Request $request, Property $property): View
     {
         $viewer = Auth::user();
 
@@ -23,12 +23,25 @@ class PropertyController extends Controller
         );
 
         $property->load('realtorProfile.user')
+            ->load(['listingComments' => fn ($q) => $q->with('user')->latest()])
             ->loadCount(['favorites as favorites_count']);
 
-        $property->setAttribute(
-            'is_favorited',
-            $viewer ? $property->favorites()->where('user_id', $viewer->id)->exists() : false
-        );
+        $deviceId = $request->attributes->get('listing_device_id');
+        if ($deviceId && $viewer) {
+            $isFavorited = $property->favorites()
+                ->where(function ($q) use ($deviceId, $viewer) {
+                    $q->where('device_fingerprint', $deviceId)
+                        ->orWhere('user_id', $viewer->id);
+                })
+                ->exists();
+        } elseif ($deviceId) {
+            $isFavorited = $property->favorites()->where('device_fingerprint', $deviceId)->exists();
+        } elseif ($viewer) {
+            $isFavorited = $property->favorites()->where('user_id', $viewer->id)->exists();
+        } else {
+            $isFavorited = false;
+        }
+        $property->setAttribute('is_favorited', $isFavorited);
 
         return view('pages.property-details', [
             'property' => $property,
@@ -242,11 +255,12 @@ class PropertyController extends Controller
 
     public function toggleFavorite(Request $request, Property $property): RedirectResponse
     {
-        $user = $request->user();
-        abort_unless($user, 403);
         abort_unless($property->isApproved() && $property->status === 'Active', 404);
 
-        $favorite = $property->favorites()->where('user_id', $user->id)->first();
+        $deviceId = $request->attributes->get('listing_device_id');
+        abort_unless(is_string($deviceId) && $deviceId !== '', 400);
+
+        $favorite = $property->favorites()->where('device_fingerprint', $deviceId)->first();
 
         if ($favorite) {
             $favorite->delete();
@@ -255,7 +269,8 @@ class PropertyController extends Controller
         }
 
         $property->favorites()->create([
-            'user_id' => $user->id,
+            'user_id' => $request->user()?->id,
+            'device_fingerprint' => $deviceId,
         ]);
 
         return back()->with('success', 'Property added to favorites.');

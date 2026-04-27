@@ -34,6 +34,16 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->ip());
         });
 
+        RateLimiter::for('property-favorite', function (Request $request) {
+            $device = (string) $request->attributes->get('listing_device_id', '');
+
+            return Limit::perMinute(40)->by($device !== '' ? $device : $request->ip());
+        });
+
+        RateLimiter::for('property-comments', function (Request $request) {
+            return Limit::perMinute(8)->by($request->ip());
+        });
+
         RateLimiter::for('reviews', function (Request $request) {
             return Limit::perMinute(5)->by($request->ip());
         });

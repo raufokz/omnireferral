@@ -23,7 +23,22 @@
                             <h2>${{ number_format($property->price) }}</h2>
                             <p>{{ $property->location }}</p>
                         </div>
-                        <span class="listing-badge">{{ $property->status }}</span>
+                        <div class="property-headline-actions">
+                            <div class="listing-card__save-group">
+                                <form method="POST" action="{{ route('properties.favorite.toggle', $property) }}" class="listing-card__save-form">
+                                    @csrf
+                                    <button
+                                        type="submit"
+                                        class="listing-card__save {{ $property->is_favorited ? 'is-active' : '' }}"
+                                        aria-label="{{ $property->is_favorited ? 'Remove listing from favorites' : 'Add listing to favorites' }}"
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="{{ $property->is_favorited ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                                    </button>
+                                </form>
+                                <span class="listing-card__save-count">{{ number_format($property->favorites_count ?? 0) }}</span>
+                            </div>
+                            <span class="listing-badge">{{ $property->status }}</span>
+                        </div>
                     </div>
                     <div class="listing-card__meta listing-card__meta--pills">
                         <span>{{ $property->beds }} bd</span>
@@ -69,6 +84,40 @@
                 </div>
             </aside>
         </div>
+
+        <section class="card-panel property-comments-section" aria-labelledby="property-comments-heading">
+            <div class="section-heading" style="text-align:left; margin: 0 0 1.25rem;">
+                <span class="eyebrow">Community feedback</span>
+                <h2 id="property-comments-heading">Comments on this listing</h2>
+            </div>
+
+            <ul class="property-comment-list">
+                @forelse($property->listingComments as $comment)
+                    <li class="property-comment-item">
+                        <strong>{{ $comment->displayAuthor() }}</strong>
+                        <time datetime="{{ $comment->created_at->toAtomString() }}">{{ $comment->created_at->diffForHumans() }}</time>
+                        <p>{{ $comment->body }}</p>
+                    </li>
+                @empty
+                    <li class="property-comment-item">No comments yet. Be the first to leave feedback on this listing.</li>
+                @endforelse
+            </ul>
+
+            <form method="POST" action="{{ route('properties.comments.store', $property) }}" class="agent-contact-form" style="margin-top: 1.5rem;">
+                @csrf
+                @guest
+                    <label>
+                        <span>Your name</span>
+                        <input type="text" name="author_name" value="{{ old('author_name') }}" maxlength="120" required>
+                    </label>
+                @endguest
+                <label class="form-full-row">
+                    <span>Your comment</span>
+                    <textarea name="body" rows="4" required maxlength="2000">{{ old('body') }}</textarea>
+                </label>
+                <button type="submit" class="button">Post comment</button>
+            </form>
+        </section>
 
         @if($property->realtorProfile)
             <div class="property-contact-grid" id="property-contact">
