@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Package;
 use App\Services\StripeCheckoutService;
-use App\Support\PackageComparison;
 use App\Support\PricingContent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,13 +22,12 @@ class PricingController extends Controller
             'leadPackages' => Package::active()->leadPlans()->orderBy('sort_order')->orderBy('one_time_price')->get(),
             'assistantPackages' => Package::active()->assistantPlans()->orderBy('sort_order')->orderBy('monthly_price')->get(),
             'pricingPlans' => $pricingPlans,
-            'comparison' => PackageComparison::fromPricingPlans($pricingPlans),
             'packageEmbeds' => $packageEmbeds,
             'primaryActionUrl' => $primaryCta['url'],
             'primaryActionLabel' => $primaryCta['label'],
             'meta' => [
                 'title' => 'Pricing | OmniReferral Lead Packages and Virtual Assistant Plans',
-                'description' => 'Compare Starter, Growth, and Elite lead packages plus virtual assistant services built for busy real estate professionals.',
+                'description' => 'Compare Starter ($399/mo), Growth ($899/mo), and Elite ($1,999/mo) lead packages plus virtual assistant services for real estate professionals.',
             ],
         ]);
     }

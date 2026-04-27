@@ -134,48 +134,7 @@
     </div>
 </section>
 
-@if(!empty($comparison) && count($comparison))
-<section class="section pricing-comparison-section">
-    <div class="container">
-        <div class="section-heading" data-animate="up">
-            <span class="eyebrow">Compare Plans</span>
-            <h2>What is included in each package</h2>
-        </div>
-        <div class="pricing-comparison-wrap">
-            <table class="pricing-comparison-table">
-                <thead>
-                    <tr>
-                        <th>Feature</th>
-                        @foreach($comparison['headers'] ?? [] as $header)
-                        <th>{{ $header }}</th>
-                        @endforeach
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($comparison['rows'] ?? [] as $row)
-                        @if(($row['type'] ?? null) === 'group')
-                            <tr class="pricing-comparison-group">
-                                <td colspan="{{ count($comparison['headers'] ?? []) + 1 }}">{{ $row['label'] ?? '' }}</td>
-                            </tr>
-                        @else
-                            <tr>
-                                <td>{{ $row['feature'] }}</td>
-                                @foreach($row['values'] ?? [] as $val)
-                                <td class="pct-cell">
-                                    @if($val === true || $val === 'yes')<span class="pct-check">&#10003;</span>
-                                    @elseif($val === false || $val === 'no')<span class="pct-cross">--</span>
-                                    @else{{ $val }}@endif
-                                </td>
-                                @endforeach
-                            </tr>
-                        @endif
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
-@endif
+@include('partials.pricing-comparison-table-static')
 
 <section class="section pricing-final-cta">
     <div class="container">

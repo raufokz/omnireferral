@@ -639,8 +639,177 @@
     font-weight: 700;
 }
 
+/* ----- Static comparison: modern / split-section layout ----- */
+.pricing-comparison-wrap--modern {
+    border: 1px solid rgba(15, 33, 61, 0.08);
+    box-shadow: 0 8px 28px rgba(15, 33, 61, 0.06);
+    border-radius: 1rem;
+    background: #ffffff;
+}
+
+.pricing-comparison-table--modern {
+    min-width: 720px;
+    border: none;
+}
+
+.pricing-comparison-table--modern thead th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 600;
+    vertical-align: bottom;
+    border: none;
+    border-bottom: 1px solid rgba(15, 33, 61, 0.1);
+    background: #ffffff;
+    padding: 1.35rem 1.35rem 1.1rem;
+}
+
+.pricing-comparison-table--modern .pct-corner {
+    width: 30%;
+    min-width: 12.5rem;
+    text-align: left;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: rgba(15, 33, 61, 0.45);
+}
+
+.pricing-comparison-table--modern .pct-corner-label {
+    display: inline-block;
+}
+
+.pricing-comparison-table--modern .pct-plan-col {
+    width: 23.333%;
+    text-align: center;
+    font-weight: 600;
+    color: rgba(15, 33, 61, 0.55);
+}
+
+.pricing-comparison-table--modern .pct-plan-name {
+    display: block;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--color-heading);
+    margin-bottom: 0.2rem;
+}
+
+.pricing-comparison-table--modern .pct-plan-price {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: rgba(15, 33, 61, 0.5);
+}
+
+.pricing-comparison-table--modern tbody.pct-tbody + tbody.pct-tbody {
+    border-top: 1px solid rgba(15, 33, 61, 0.06);
+}
+
+.pricing-comparison-table--modern tbody.pct-tbody > tr.pct-section-row th {
+    text-align: left;
+    font-size: 1.0625rem;
+    font-weight: 800;
+    color: var(--color-secondary);
+    padding: 1.35rem 1.5rem 0.75rem;
+    border: none;
+    background: #ffffff;
+    letter-spacing: -0.01em;
+}
+
+.pricing-comparison-table--modern tbody.pct-tbody > tr.pct-section-row:first-child th {
+    padding-top: 1.1rem;
+}
+
+.pricing-comparison-table--modern tbody.pct-tbody > tr:not(.pct-section-row) th[scope="row"] {
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: rgba(15, 33, 61, 0.78);
+    border: none;
+    padding: 1rem 1.5rem;
+    vertical-align: middle;
+}
+
+.pricing-comparison-table--modern tbody.pct-tbody > tr:not(.pct-section-row) td {
+    border: none;
+    padding: 1rem 1.35rem;
+    vertical-align: middle;
+}
+
+/* First data row is nth-child(2) (even): white; then alternate */
+.pricing-comparison-table--modern tbody.pct-tbody > tr:nth-child(even):not(.pct-section-row) th[scope="row"],
+.pricing-comparison-table--modern tbody.pct-tbody > tr:nth-child(even):not(.pct-section-row) td {
+    background: #ffffff;
+}
+
+.pricing-comparison-table--modern tbody.pct-tbody > tr:nth-child(odd):not(.pct-section-row) th[scope="row"],
+.pricing-comparison-table--modern tbody.pct-tbody > tr:nth-child(odd):not(.pct-section-row) td {
+    background: #f4f7fb;
+}
+
+.pricing-comparison-table--modern tbody.pct-tbody > tr:not(.pct-section-row) td.pct-cell {
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: rgba(15, 33, 61, 0.82);
+}
+
+.pricing-comparison-table--modern .pct-cell--text {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgba(15, 33, 61, 0.72);
+}
+
+.pricing-comparison-table--modern .pct-marks {
+    display: inline-flex;
+    gap: 0.15em;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-right: 0.28rem;
+}
+
+.pricing-comparison-table--modern .pct-check {
+    color: #16a34a;
+    font-weight: 800;
+    font-size: 1.05rem;
+}
+
+.pricing-comparison-table--modern .pct-absent {
+    color: rgba(15, 33, 61, 0.22);
+    font-weight: 400;
+    font-size: 1.15rem;
+    letter-spacing: 0;
+}
+
+.pricing-comparison-table--modern caption.table-caption-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.pricing-comparison-intro {
+    max-width: 44rem;
+    margin: 0.35rem auto 0;
+    color: rgba(15, 33, 61, 0.72);
+    line-height: 1.55;
+}
+
 @media (max-width: 768px) {
     .pricing-comparison-wrap {
         border-radius: 0.9rem;
+    }
+
+    .pricing-comparison-table--modern thead th,
+    .pricing-comparison-table--modern tbody.pct-tbody > tr:not(.pct-section-row) th[scope="row"],
+    .pricing-comparison-table--modern tbody.pct-tbody > tr:not(.pct-section-row) td {
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
 }

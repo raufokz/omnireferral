@@ -13,8 +13,8 @@ class PricingContent
                     'name' => 'Starter',
                     'tier' => 'Starter Tier',
                     'value_price' => 999,
-                    'price' => 499,
-                    'price_note' => '/ month - Up to 5 Cities/ZIP Codes',
+                    'price' => 399,
+                    'price_note' => '/ month - 2 Areas',
                     'summary' => 'Launch package built for agents who want active referral flow, outreach support, and clean follow-up.',
                     'features' => [
                         'Qualified Buyer/Seller Referrals Per Month (Active Buyers & Sellers)',
@@ -37,8 +37,8 @@ class PricingContent
                     'name' => 'Growth',
                     'tier' => 'Growth Tier',
                     'value_price' => 1497,
-                    'price' => 797,
-                    'price_note' => '/ month - Up to 10 Cities/ZIP Codes',
+                    'price' => 899,
+                    'price_note' => '/ month - 5 Areas',
                     'summary' => 'Everything in Starter, plus warm opportunities, JV support, and stronger routing priority.',
                     'features' => [
                         'Direct Connection with Buyers, Sellers & Investors (Warm + Active Opportunities)',
@@ -63,8 +63,8 @@ class PricingContent
                     'name' => 'Elite',
                     'tier' => 'Elite Tier',
                     'value_price' => 3299,
-                    'price' => 2299,
-                    'price_note' => '/ month - Up to 15 Cities/ZIP Codes',
+                    'price' => 1999,
+                    'price_note' => '/ month - 10 Areas',
                     'summary' => 'Everything in Growth, plus full-team execution, live transfers, and front-of-queue referral access.',
                     'features' => [
                         'Dedicated Senior Wholesaler Assigned to Your Account',
