@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#002366">
+    <meta name="google-site-verification" content="_8tmldi5k1EqLZJqCFO79Vbl5jwYuhYSdgVi8AtbSo0" />
 
     <title>{{ $meta['title'] ?? 'OmniReferral | Top-Tier Real Estate Referral Platform' }}</title>
     <meta name="description" content="{{ $meta['description'] ?? 'Connect with elite real estate agents using the modern referral workflow trusted by top US teams. Premium ISA-qualified leads and automated routing.' }}">
