@@ -27,6 +27,10 @@ return [
         'key' => env('GOOGLE_MAPS_API_KEY'),
     ],
 
+    'google_analytics' => [
+        'measurement_id' => env('GOOGLE_ANALYTICS_MEASUREMENT_ID'),
+    ],
+
     'google_sheets' => [
         'leads_sheet_url' => env('GOOGLE_SHEETS_LEADS_URL'),
         'leads_csv_url' => env('GOOGLE_SHEETS_LEADS_CSV_URL'),
