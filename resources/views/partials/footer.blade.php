@@ -31,6 +31,7 @@
             </div>
         </div>
     </div>
+
     <div class="container footer-grid">
         <div>
             <h3>Platform</h3>
