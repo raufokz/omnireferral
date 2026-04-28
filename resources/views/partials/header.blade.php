@@ -23,9 +23,10 @@
 <header class="site-header" data-animate>
     <div class="container nav-shell">
         <a href="{{ route('home') }}" aria-label="OmniReferral home" class="nav-brand">
-            <img src="{{ asset('images/omnireferral-logo.png') }}" height="100" width="100" alt="OmniReferral Logo"
+            <img src="{{ asset('images/omnireferral-logo.png') }}" width="200" height="48" alt="OmniReferral Logo"
                 class="nav-logo" loading="eager" decoding="async">
         </a>
+        <div class="nav-offcanvas-slot">
         <nav class="main-nav" id="mainNav" aria-label="Primary navigation">
             <a class="{{ $isHome ? 'is-active' : '' }}" href="{{ route('home') }}#how-it-works"
                 data-nav-section="how-it-works" @if($isHome) aria-current="page" @endif>How It Works</a>
@@ -85,6 +86,7 @@
                 @endauth
             </div>
         </nav>
+        </div>
         <div class="nav-actions" id="navActions">
             @auth
                 <a href="{{ auth()->user()->dashboardRoute() }}"

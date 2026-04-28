@@ -1315,44 +1315,12 @@ p {
     transform: translateY(-6px) rotate(-45deg);
 }
 
-/* Mobile Navigation */
+/* Mobile Navigation — drawer layout lives in “Header Responsive Final” (below) */
 @media (max-width: 1024px) {
-    .main-nav {
-        position: fixed;
-        top: var(--header-height);
-        left: 0;
-        right: 0;
-        background: var(--color-surface);
-        border-bottom: 1px solid var(--color-border);
-        flex-direction: column;
-        align-items: stretch;
-        padding: var(--spacing-lg);
-        gap: var(--spacing-sm);
-        transform: translateY(-100%);
-        opacity: 0;
-        visibility: hidden;
-        transition: var(--transition-premium);
-        box-shadow: var(--shadow-lg);
-        z-index: var(--z-dropdown);
-    }
-
-    .main-nav.is-open {
-        transform: translateY(0);
-        opacity: 1;
-        visibility: visible;
-    }
-
     .main-nav a {
         padding: var(--spacing-md) var(--spacing-lg);
         border-radius: var(--radius-md);
         text-align: center;
-    }
-
-    .menu-toggle {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
     }
 
     .nav-actions {
@@ -3821,41 +3789,6 @@ summary {
 
     .testimonial-card {
         min-width: calc(50% - .6rem);
-    }
-
-    .main-nav,
-    .nav-actions {
-        display: none;
-    }
-
-    .menu-toggle {
-        display: block;
-    }
-
-    .main-nav.is-open {
-        position: fixed;
-        inset: 0;
-        z-index: 1100;
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        background: #fff;
-        padding: 4rem 1.25rem 1.25rem;
-        overflow-y: auto;
-        box-shadow: 0 32px 90px rgba(15, 23, 42, 0.18);
-    }
-
-    .main-nav.is-open a {
-        width: 100%;
-        padding: 1rem 1.15rem;
-        border-radius: 18px;
-        background: #f8fbff;
-        margin-bottom: 0.75rem;
-        color: #102a4c;
-    }
-
-    .main-nav.is-open a.is-active {
-        background: rgba(255, 148, 48, 0.12);
     }
 
     .mobile-nav-actions {
@@ -10747,21 +10680,34 @@ small {
     }
 }
 
-/* Global nav/footer refinement */
-.nav-shell {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 1rem;
-    min-height: 74px;
-}
+/* Global nav/footer refinement — desktop grid only (mobile uses flex in header block below) */
+@media (min-width: 1025px) {
+    .nav-shell {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 1rem;
+        min-height: 74px;
+    }
 
-.main-nav {
-    display: grid;
-    grid-auto-flow: column;
-    gap: 0.5rem;
-    justify-content: center;
-    align-items: center;
+    .main-nav {
+        display: grid;
+        grid-auto-flow: column;
+        gap: 0.5rem;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .nav-actions {
+        display: flex;
+        gap: 0.65rem;
+        align-items: center;
+    }
+
+    /* Wrapper is layout-transparent so .nav-shell grid still has three logical tracks */
+    .nav-offcanvas-slot {
+        display: contents;
+    }
 }
 
 .main-nav a {
@@ -10776,12 +10722,6 @@ small {
 .main-nav a.is-active {
     color: var(--color-primary);
     background: rgba(255, 140, 0, 0.12);
-}
-
-.nav-actions {
-    display: flex;
-    gap: 0.65rem;
-    align-items: center;
 }
 
 .menu-toggle span {
@@ -16345,7 +16285,7 @@ iframe {
 
 .homepage-testimonial-overview {
     display: grid;
-    grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.85fr);
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
     gap: 1rem;
     align-items: stretch;
 }
@@ -16394,7 +16334,7 @@ iframe {
 
 .homepage-testimonial-stage {
     display: grid;
-    grid-template-columns: minmax(280px, 0.92fr) minmax(0, 1.45fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
     gap: 1.1rem;
     align-items: start;
 }
@@ -17723,10 +17663,34 @@ iframe {
         -webkit-backdrop-filter: blur(16px);
     }
 
-    .site-header .nav-shell {
+    .site-header .nav-shell,
+    .site-header .container.nav-shell {
+        display: flex !important;
+        flex-wrap: nowrap;
+        align-items: center !important;
+        justify-content: space-between !important;
+        grid-template-columns: unset !important;
         min-height: var(--header-height-mobile) !important;
         height: var(--header-height-mobile) !important;
         gap: 0.65rem !important;
+        width: 100%;
+    }
+
+    .site-header .nav-brand {
+        flex: 0 1 auto;
+        min-width: 0;
+        max-width: min(78vw, calc(100% - 3.5rem));
+    }
+
+    /* Collapses flex/grid track so fixed .main-nav does not leave a blank “middle column” */
+    .nav-offcanvas-slot {
+        display: block;
+        flex: 0 0 0;
+        width: 0;
+        min-width: 0;
+        overflow: visible;
+        position: relative;
+        align-self: center;
     }
 
     .nav-logo {
@@ -17736,8 +17700,28 @@ iframe {
 
     .menu-toggle {
         display: inline-flex !important;
+        flex: 0 0 auto;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
+        gap: 0.2rem;
+        position: relative;
+        z-index: 100000;
+        min-width: 46px;
+        min-height: 46px;
+        border: 1px solid rgba(11, 54, 104, 0.22);
+        background: #ffffff;
+        box-shadow: 0 1px 2px rgba(7, 24, 51, 0.06);
+    }
+
+    .site-header .menu-toggle span {
+        display: block;
+        width: 1.35rem;
+        min-width: 1.35rem;
+        height: 2px;
+        margin: 0;
+        border-radius: 2px;
+        background: var(--color-heading);
     }
 
     .nav-actions {
