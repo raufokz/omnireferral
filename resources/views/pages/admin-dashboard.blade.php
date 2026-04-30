@@ -6,6 +6,7 @@
 
 @section('dashboard_actions')
     <a href="{{ route('admin.leads.index') }}" class="button">Lead Registry</a>
+    <a href="{{ route('admin.properties.index') }}" class="button button--ghost-blue">Properties</a>
     <a href="{{ route('admin.testimonials.index') }}" class="button button--ghost-blue">Testimonials</a>
 @endsection
 

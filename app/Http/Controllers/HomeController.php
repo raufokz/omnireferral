@@ -73,7 +73,7 @@ class HomeController extends Controller
             'blogs' => Blog::latest()->take(3)->get(),
             'team' => TeamMember::latest()->get(),
             'properties' => Property::query()
-                ->with('realtorProfile.user')
+                ->with(['realtorProfile.user', 'owner'])
                 ->withFavoriteSummary($viewer)
                 ->marketplaceVisible()
                 ->latest()
@@ -139,58 +139,94 @@ class HomeController extends Controller
     public function listings(Request $request): View
     {
         $viewer = auth()->user();
+        $filters = [
+            'q' => $request->string('q')->value(),
+            'zip_code' => $request->string('zip_code')->value(),
+            'property_type' => strtolower(trim((string) $request->input('property_type'))),
+            'price_min' => $request->input('price_min'),
+            'price_max' => $request->input('price_max'),
+            'beds_min' => $request->input('beds_min'),
+            'baths_min' => $request->input('baths_min'),
+            'area_min' => $request->input('area_min'),
+            'area_max' => $request->input('area_max'),
+            'listing_intent' => strtolower(trim((string) $request->input('listing_intent'))),
+            'sort' => $request->string('sort')->value() ?: 'newest',
+        ];
 
         $query = Property::query()
-            ->with('realtorProfile.user')
+            ->with(['realtorProfile.user', 'owner'])
             ->withFavoriteSummary($viewer)
             ->marketplaceVisible();
 
-        if ($request->filled('q')) {
-            $term = '%' . str_replace(['%', '_'], ['\\%', '\\_'], (string) $request->string('q')) . '%';
+        if ($filters['q'] !== '') {
+            $term = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $filters['q']) . '%';
             $query->where(function ($q) use ($term) {
                 $q->where('title', 'like', $term)
                     ->orWhere('location', 'like', $term)
+                    ->orWhere('street_address', 'like', $term)
+                    ->orWhere('city', 'like', $term)
+                    ->orWhere('state', 'like', $term)
+                    ->orWhere('zip_code', 'like', $term)
                     ->orWhere('description', 'like', $term);
             });
         }
 
-        if ($request->filled('zip_code')) {
-            $zip = trim((string) $request->input('zip_code'));
-            $query->where('zip_code', 'like', '%' . $zip . '%');
+        if ($filters['zip_code'] !== '') {
+            $query->where('zip_code', 'like', '%' . trim($filters['zip_code']) . '%');
         }
 
-        if ($request->filled('property_type')) {
-            $query->where('property_type', $request->string('property_type')->toString());
+        if ($filters['property_type'] !== '') {
+            $query->whereRaw('LOWER(property_type) = ?', [$filters['property_type']]);
         }
 
-        if ($request->filled('price_min')) {
-            $query->where('price', '>=', max(0, (int) $request->input('price_min')));
+        if ($filters['listing_intent'] !== '') {
+            $query->whereRaw('LOWER(price_type) = ?', [$filters['listing_intent']]);
         }
 
-        if ($request->filled('price_max')) {
-            $query->where('price', '<=', max(0, (int) $request->input('price_max')));
+        if (is_numeric($filters['price_min'])) {
+            $query->where('price', '>=', max(0, (int) $filters['price_min']));
         }
 
-        if ($request->filled('sort')) {
-            match ($request->string('sort')->toString()) {
-                'price_asc' => $query->orderBy('price'),
-                'price_desc' => $query->orderByDesc('price'),
-                default => $query->latest(),
-            };
-        } else {
-            $query->latest();
+        if (is_numeric($filters['price_max'])) {
+            $query->where('price', '<=', max(0, (int) $filters['price_max']));
         }
+
+        if (is_numeric($filters['beds_min'])) {
+            $query->where('beds', '>=', max(0, (int) $filters['beds_min']));
+        }
+
+        if (is_numeric($filters['baths_min'])) {
+            $query->where('baths', '>=', max(0, (float) $filters['baths_min']));
+        }
+
+        if (is_numeric($filters['area_min'])) {
+            $query->where('sqft', '>=', max(0, (int) $filters['area_min']));
+        }
+
+        if (is_numeric($filters['area_max'])) {
+            $query->where('sqft', '<=', max(0, (int) $filters['area_max']));
+        }
+
+        match ($filters['sort']) {
+            'price_asc' => $query->orderBy('price'),
+            'price_desc' => $query->orderByDesc('price'),
+            default => $query->latest('published_at')->latest(),
+        };
+
+        $propertyTypes = Property::query()
+            ->marketplaceVisible()
+            ->whereNotNull('property_type')
+            ->select('property_type')
+            ->distinct()
+            ->orderBy('property_type')
+            ->pluck('property_type')
+            ->filter()
+            ->values();
 
         return view('pages.listings', [
             'properties' => $query->paginate(12)->withQueryString(),
-            'filters' => [
-                'q' => $request->string('q')->value(),
-                'zip_code' => $request->string('zip_code')->value(),
-                'property_type' => $request->string('property_type')->value(),
-                'price_min' => $request->input('price_min'),
-                'price_max' => $request->input('price_max'),
-                'sort' => $request->string('sort')->value(),
-            ],
+            'filters' => $filters,
+            'propertyTypes' => $propertyTypes,
             'meta' => [
                 'title' => 'Property Listings | OmniReferral',
                 'description' => 'Browse OmniReferral property listings by zip code, property type, and price range.',

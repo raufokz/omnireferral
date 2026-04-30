@@ -567,6 +567,63 @@ const initCarousels = () => {
     });
 };
 
+const initPropertyDetailPage = () => {
+    document.querySelectorAll('[data-property-gallery]').forEach((gallery) => {
+        const mainImage = gallery.querySelector('[data-gallery-main]');
+        const thumbnails = Array.from(gallery.querySelectorAll('[data-gallery-thumb]'));
+        const prevButton = gallery.querySelector('[data-gallery-prev]');
+        const nextButton = gallery.querySelector('[data-gallery-next]');
+
+        if (!mainImage || thumbnails.length === 0) return;
+
+        let currentIndex = Math.max(thumbnails.findIndex((thumb) => thumb.classList.contains('is-active')), 0);
+
+        const showImage = (index) => {
+            currentIndex = (index + thumbnails.length) % thumbnails.length;
+            const activeThumb = thumbnails[currentIndex];
+            const nextSrc = activeThumb?.dataset.gallerySrc;
+
+            if (!nextSrc) return;
+
+            mainImage.style.opacity = '0';
+            window.setTimeout(() => {
+                mainImage.src = nextSrc;
+                mainImage.style.opacity = '1';
+            }, prefersReducedMotion ? 0 : 120);
+
+            thumbnails.forEach((thumb, thumbIndex) => {
+                const isActive = thumbIndex === currentIndex;
+                thumb.classList.toggle('is-active', isActive);
+                thumb.setAttribute('aria-current', isActive ? 'true' : 'false');
+            });
+        };
+
+        thumbnails.forEach((thumb, index) => {
+            thumb.addEventListener('click', () => showImage(index));
+        });
+
+        prevButton?.addEventListener('click', () => showImage(currentIndex - 1));
+        nextButton?.addEventListener('click', () => showImage(currentIndex + 1));
+    });
+
+    document.querySelectorAll('[data-expand-toggle]').forEach((button) => {
+        const text = button.closest('.pd-section-card')?.querySelector('[data-expandable-text]');
+        if (!text) return;
+
+        const collapsedLabel = button.dataset.collapsedLabel || 'Read more';
+        const expandedLabel = button.dataset.expandedLabel || 'Show less';
+
+        button.addEventListener('click', () => {
+            const shouldExpand = text.classList.contains('is-collapsed');
+            text.classList.toggle('is-collapsed', !shouldExpand);
+            button.textContent = shouldExpand ? expandedLabel : collapsedLabel;
+            button.setAttribute('aria-expanded', shouldExpand ? 'true' : 'false');
+        });
+
+        button.setAttribute('aria-expanded', 'false');
+    });
+};
+
 // --- Multi-Step Forms ---
 document.querySelectorAll('[data-multi-step]').forEach(form => {
     const steps = Array.from(form.querySelectorAll('.form-step'));
@@ -674,6 +731,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initAgentDirectoryFilters();
     initEmbedLoaders();
     initCarousels();
+    initPropertyDetailPage();
     if (window.initHomeMap) window.initHomeMap();
 
     // Lazy load images

@@ -22,7 +22,7 @@ class PropertyController extends Controller
             404
         );
 
-        $property->load('realtorProfile.user')
+        $property->load(['realtorProfile.user', 'owner'])
             ->load(['listingComments' => fn ($q) => $q->with('user')->latest()])
             ->loadCount(['favorites as favorites_count']);
 
@@ -46,7 +46,7 @@ class PropertyController extends Controller
         return view('pages.property-details', [
             'property' => $property,
             'relatedProperties' => Property::query()
-                ->with('realtorProfile.user')
+                ->with(['realtorProfile.user', 'owner'])
                 ->withFavoriteSummary($viewer)
                 ->marketplaceVisible()
                 ->whereKeyNot($property->id)

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LeadManagementController as AdminLeadManagementController;
+use App\Http\Controllers\Admin\PropertyManagementController as AdminPropertyManagementController;
 use App\Http\Controllers\Account\SecurityController;
 use App\Http\Controllers\Agent\LeadController as AgentLeadController;
 use App\Http\Controllers\Agent\PortalController as AgentPortalController;
@@ -186,6 +187,16 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::get('/admin/leads/import/preview', [AdminLeadManagementController::class, 'previewImport'])->name('admin.leads.import.preview');
         Route::post('/admin/leads/import/commit', [AdminLeadManagementController::class, 'commitImport'])->name('admin.leads.import.commit');
         Route::post('/admin/leads/sync/google-sheets', [AdminLeadManagementController::class, 'syncGoogleSheet'])->name('admin.leads.sync.google-sheets');
+        Route::resource('admin/properties', AdminPropertyManagementController::class)
+            ->except(['show'])
+            ->names([
+                'index' => 'admin.properties.index',
+                'create' => 'admin.properties.create',
+                'store' => 'admin.properties.store',
+                'edit' => 'admin.properties.edit',
+                'update' => 'admin.properties.update',
+                'destroy' => 'admin.properties.destroy',
+            ]);
 
         Route::resource('admin/blog', \App\Http\Controllers\Admin\BlogController::class)->names([
             'index' => 'admin.blog.index',

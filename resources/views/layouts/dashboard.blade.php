@@ -54,6 +54,7 @@
         'admin', 'staff' => [
             ['label' => 'Overview', 'route' => route('admin.dashboard'), 'active' => ['admin.dashboard']],
             ['label' => 'Lead Registry', 'route' => route('admin.leads.index'), 'active' => ['admin.leads.*']],
+            ['label' => 'Properties', 'route' => route('admin.properties.index'), 'active' => ['admin.properties.*']],
             ['label' => 'Blog', 'route' => route('admin.blog.index'), 'active' => ['admin.blog.*']],
             ['label' => 'Testimonials', 'route' => route('admin.testimonials.index'), 'active' => ['admin.testimonials.*']],
             ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show']],

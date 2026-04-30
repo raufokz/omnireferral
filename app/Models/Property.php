@@ -28,15 +28,33 @@ class Property extends Model
         'approval_notes',
         'property_type',
         'price',
+        'price_type',
         'location',
+        'street_address',
+        'city',
+        'state',
+        'country',
         'zip_code',
         'latitude',
         'longitude',
         'beds',
         'baths',
         'sqft',
+        'area_size',
+        'area_unit',
+        'year_built',
+        'parking_spaces',
+        'garage_spaces',
+        'furnishing_status',
+        'property_condition',
         'image',
         'images',
+        'video_tour_url',
+        'view_360_url',
+        'amenities',
+        'neighborhood_info',
+        'walk_score',
+        'location_highlights',
         'source',
         'is_featured',
         'published_at',
@@ -48,8 +66,10 @@ class Property extends Model
 
     protected $casts = [
         'images' => 'array',
+        'amenities' => 'array',
         'is_featured' => 'boolean',
         'is_favorited' => 'boolean',
+        'area_size' => 'decimal:2',
         'published_at' => 'datetime',
         'reviewed_at' => 'datetime',
     ];
@@ -59,6 +79,28 @@ class Property extends Model
     public function getRouteKeyName(): string
     {
         return 'slug';
+    }
+
+    public function getRouteKey(): mixed
+    {
+        $slug = (string) ($this->slug ?? '');
+
+        if ($slug !== '') {
+            return $slug;
+        }
+
+        return $this->getKey();
+    }
+
+    public function resolveRouteBinding($value, $field = null): ?Model
+    {
+        $query = $this->newQuery();
+        $routeField = $field ?? $this->getRouteKeyName();
+
+        return $query
+            ->where($routeField, $value)
+            ->orWhere($this->getKeyName(), $value)
+            ->first();
     }
 
     public function realtorProfile(): BelongsTo
@@ -184,14 +226,87 @@ class Property extends Model
             return asset('images/listings/listing-1.svg');
         }
 
-        if (Str::startsWith($this->image, ['http://', 'https://', '/storage/', 'storage/', 'images/'])) {
-            if (Str::startsWith($this->image, 'images/')) {
-                return asset($this->image);
-            }
+        return $this->imageUrlFor($this->image);
+    }
 
-            return Str::startsWith($this->image, 'storage/') ? '/' . $this->image : $this->image;
+    public function imageUrlFor(?string $path): string
+    {
+        $path = trim((string) $path);
+
+        if ($path === '') {
+            return asset('images/listings/listing-1.svg');
         }
 
-        return Storage::url($this->image);
+        if (Str::startsWith($path, ['http://', 'https://', '/storage/'])) {
+            return $path;
+        }
+
+        if (Str::startsWith($path, 'storage/')) {
+            return '/' . $path;
+        }
+
+        if (Str::startsWith($path, 'images/')) {
+            return asset($path);
+        }
+
+        return Storage::url($path);
+    }
+
+    public function galleryImageUrls()
+    {
+        $images = collect($this->images ?? [])
+            ->filter(fn ($image) => is_string($image) && trim($image) !== '');
+
+        if ($this->image && ! $images->contains($this->image)) {
+            $images->prepend($this->image);
+        }
+
+        return $images
+            ->map(fn ($image) => $this->imageUrlFor($image))
+            ->unique()
+            ->values()
+            ->whenEmpty(fn ($collection) => $collection->push($this->image_url));
+    }
+
+    public function listingIntentLabel(): string
+    {
+        return Str::lower((string) $this->price_type) === 'rent' ? 'For Rent' : 'For Sale';
+    }
+
+    public function formattedPrice(): string
+    {
+        $price = '$' . number_format((int) $this->price);
+
+        return Str::lower((string) $this->price_type) === 'rent'
+            ? $price . '/mo'
+            : $price;
+    }
+
+    public function listedByLabel(): string
+    {
+        $owner = $this->owner;
+
+        if (! $owner || in_array($owner->role, ['admin', 'staff'], true)) {
+            return 'OmniReferral';
+        }
+
+        return $owner->name ?: 'OmniReferral';
+    }
+
+    public function fullAddress(): string
+    {
+        $parts = array_filter([
+            $this->street_address,
+            $this->city,
+            $this->state,
+            $this->country,
+            $this->zip_code,
+        ], fn ($value) => is_string($value) && trim($value) !== '');
+
+        if (count($parts) > 0) {
+            return implode(', ', $parts);
+        }
+
+        return (string) $this->location;
     }
 }
