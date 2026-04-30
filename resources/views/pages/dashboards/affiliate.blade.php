@@ -7,27 +7,27 @@
 @section('content')
 <div class="workspace-stack">
     <section class="workspace-grid workspace-grid--3" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi" data-icon="↗" data-trend="Traffic">
             <span>Link Clicks</span>
             <strong>{{ number_format($profile->click_count) }}</strong>
             <span>Total referral visits</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi workspace-kpi--warm" data-icon="👥" data-trend="Growth">
             <span>Signups</span>
             <strong>{{ number_format($referralSignupCount ?? 0) }}</strong>
             <span>Accounts created with your referral</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi" data-icon="$" data-trend="Paid">
             <span>Paid plans</span>
             <strong>{{ number_format($referralPaidPlanCount ?? 0) }}</strong>
             <span>Referred users with an active package</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi workspace-kpi--violet" data-icon="✓" data-trend="Legacy">
             <span>Legacy counter</span>
             <strong>{{ number_format($profile->conversion_count) }}</strong>
             <span>Cookie signup conversions (kept for compatibility)</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi workspace-kpi--warm" data-icon="$" data-trend="Payout">
             <span>Pending Payout</span>
             <strong>${{ number_format($profile->pending_payout_cents / 100, 2) }}</strong>
             <span>Clears on payout cycle</span>

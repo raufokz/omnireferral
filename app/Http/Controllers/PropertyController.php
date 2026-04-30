@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Property;
 use App\Models\RealtorProfile;
+use App\Support\AdminAudit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -243,6 +244,10 @@ class PropertyController extends Controller
             'status' => $isApproval
                 ? (in_array($property->status, ['Sold', 'Off-Market'], true) ? $property->status : 'Active')
                 : 'Pending',
+        ]);
+
+        AdminAudit::log($request, 'property.review.' . $validated['decision'], 'property', $property->id, [
+            'title' => $property->title,
         ]);
 
         return back()->with(

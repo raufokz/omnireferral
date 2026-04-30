@@ -17,22 +17,22 @@
 
 <div class="workspace-stack">
     <section class="workspace-grid workspace-grid--4">
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi" data-icon="♥" data-trend="Shortlist">
             <span>Saved Listings</span>
             <strong>{{ number_format($buyerStats['saved_listings']) }}</strong>
             <span>Homes currently in your shortlist</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi workspace-kpi--warm" data-icon="★" data-trend="Priority">
             <span>Favorites</span>
             <strong>{{ number_format($buyerStats['favorites']) }}</strong>
             <span>Homes flagged for fast follow-up</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi" data-icon="↗" data-trend="Fresh">
             <span>Recent Requests</span>
             <strong>{{ number_format($buyerRequests->count()) }}</strong>
             <span>Latest buyer requests in queue</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi workspace-kpi--violet" data-icon="!" data-trend="Watchlist">
             <span>Market Alerts</span>
             <strong>{{ number_format($buyerStats['new_alerts']) }}</strong>
             <span>Signals tied to buyer intent</span>

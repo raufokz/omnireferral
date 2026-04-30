@@ -16,22 +16,22 @@
 
 <div class="workspace-stack">
     <section class="workspace-grid workspace-grid--4">
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi" data-icon="🏠" data-trend="Visible">
             <span>Active Listings</span>
             <strong>{{ number_format($sellerStats['active_listings']) }}</strong>
             <span>Approved properties visible in market</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi workspace-kpi--warm" data-icon="✉" data-trend="Open">
             <span>Open Inquiries</span>
             <strong>{{ number_format($sellerStats['open_inquiries']) }}</strong>
             <span>Seller-side lead activity</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi" data-icon="↔" data-trend="Demand">
             <span>Buyer Matches</span>
             <strong>{{ number_format($sellerStats['buyer_matches']) }}</strong>
             <span>Buyer demand signals in queue</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi workspace-kpi--violet" data-icon="$" data-trend="Pricing">
             <span>Price Updates</span>
             <strong>{{ number_format($sellerStats['price_updates']) }}</strong>
             <span>Recent listing adjustment prompts</span>

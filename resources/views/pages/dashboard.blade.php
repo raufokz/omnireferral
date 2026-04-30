@@ -7,22 +7,22 @@
 @section('content')
 <div class="workspace-stack">
     <section class="workspace-grid workspace-grid--4">
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi" data-icon="📈" data-trend="Platform-wide">
             <span>Total Leads</span>
             <strong>{{ number_format($leadCount ?? 0) }}</strong>
             <span>Across all workspace flows</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi workspace-kpi--warm" data-icon="◈" data-trend="Plans">
             <span>Packages</span>
             <strong>{{ number_format($packageCount ?? 0) }}</strong>
             <span>Active plans on platform</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi" data-icon="🏠" data-trend="Inventory">
             <span>Properties</span>
             <strong>{{ number_format($propertyCount ?? 0) }}</strong>
             <span>Total listing records</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi workspace-kpi--violet" data-icon="👤" data-trend="Network">
             <span>Agents</span>
             <strong>{{ number_format($agentCount ?? 0) }}</strong>
             <span>Partner profiles in network</span>

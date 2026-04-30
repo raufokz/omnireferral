@@ -16,22 +16,22 @@
 
 <div class="workspace-stack">
     <section class="workspace-grid workspace-grid--4">
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi" data-icon="📈" data-trend="Assigned">
             <span>Assigned Leads</span>
             <strong>{{ number_format($agentStats['leads_received']) }}</strong>
             <span>Total opportunities assigned to you</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi workspace-kpi--warm" data-icon="%" data-trend="Contact pace">
             <span>Response Rate</span>
             <strong>{{ $agentStats['response_rate'] }}</strong>
             <span>Lead progression pace</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi" data-icon="✉" data-trend="Inbox">
             <span>Unread Messages</span>
             <strong>{{ number_format($unreadMessagesCount) }}</strong>
             <span>Inbox items awaiting action</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi workspace-kpi--violet" data-icon="🏠" data-trend="Capacity">
             <span>Listing Slots Left</span>
             <strong>{{ number_format($remainingListingSlots) }}</strong>
             <span>{{ $listingLimitLabel }}</span>

@@ -34,6 +34,7 @@
 
                 <div class="flex items-center justify-between gap-3" style="margin-top: 0.5rem;">
                     <button type="submit" class="button button--orange">Save password</button>
+                    <a class="button button--ghost-blue" href="{{ route('account.profile') }}">Profile &amp; account</a>
                     <a class="button button--ghost-blue" href="{{ route('dashboard') }}">Back to dashboard</a>
                 </div>
             </form>

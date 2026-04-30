@@ -624,6 +624,252 @@ const initPropertyDetailPage = () => {
     });
 };
 
+const initDashboardExperience = () => {
+    const shell = document.getElementById('dashboardShell');
+    if (!shell) return;
+
+    const root = document.documentElement;
+    const themeToggle = document.querySelector('[data-dashboard-theme-toggle]');
+    let storedTheme = null;
+
+    try {
+        storedTheme = window.localStorage?.getItem('omnireferral-dashboard-theme');
+    } catch {
+        storedTheme = null;
+    }
+
+    const initialTheme = storedTheme || 'light';
+
+    root.dataset.dashboardTheme = initialTheme;
+    themeToggle?.setAttribute('aria-pressed', initialTheme === 'dark' ? 'true' : 'false');
+
+    themeToggle?.addEventListener('click', () => {
+        const nextTheme = root.dataset.dashboardTheme === 'dark' ? 'light' : 'dark';
+        root.dataset.dashboardTheme = nextTheme;
+        themeToggle.setAttribute('aria-pressed', nextTheme === 'dark' ? 'true' : 'false');
+
+        try {
+            window.localStorage?.setItem('omnireferral-dashboard-theme', nextTheme);
+        } catch {
+            root.dataset.dashboardTheme = nextTheme;
+        }
+    });
+
+    document.querySelectorAll('[data-dashboard-notifications]').forEach((wrap) => {
+        const trigger = wrap.querySelector('[data-dashboard-notifications-toggle]');
+        trigger?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const isOpen = wrap.classList.toggle('is-open');
+            trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!wrap.contains(event.target)) {
+                wrap.classList.remove('is-open');
+                trigger?.setAttribute('aria-expanded', 'false');
+            }
+        });
+    });
+
+    const numberFormatter = new Intl.NumberFormat();
+    const currencyFormatter = new Intl.NumberFormat(undefined, {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0,
+    });
+
+    const updateDashboardLineChart = (key, points = []) => {
+        const chart = document.querySelector(`[data-dashboard-chart="${key}"]`);
+        const legend = document.querySelector(`[data-dashboard-legend="${key}"]`);
+        if (!chart || !legend || !points.length) return;
+
+        chart.replaceChildren(...points.map((point) => {
+            const bar = document.createElement('span');
+            const value = Number(point.amount ?? point.count ?? 0);
+            bar.dataset.chartPoint = '';
+            bar.style.setProperty('--chart-value', `${Math.max(6, Number(point.percent || 0))}%`);
+            bar.title = `${point.label}: ${currencyFormatter.format(value)}`;
+            return bar;
+        }));
+
+        legend.replaceChildren(...points.map((point) => {
+            const item = document.createElement('span');
+            item.textContent = `${point.label} ${currencyFormatter.format(Number(point.amount ?? 0))}`;
+            return item;
+        }));
+    };
+
+    const updateDashboardBarChart = (key, points = []) => {
+        const chart = document.querySelector(`[data-dashboard-chart="${key}"]`);
+        if (!chart || !points.length) return;
+
+        chart.replaceChildren(...points.map((point) => {
+            const column = document.createElement('div');
+            const bar = document.createElement('div');
+            const label = document.createElement('span');
+            const value = document.createElement('span');
+
+            column.className = 'admin-chart__col';
+            column.dataset.chartColumn = '';
+            bar.className = 'admin-chart__bar';
+            bar.style.height = `${Math.max(8, Number(point.percent || 0))}px`;
+            label.className = 'admin-chart__label';
+            label.textContent = point.label;
+            value.className = 'admin-chart__value';
+            value.textContent = numberFormatter.format(Number(point.count ?? 0));
+
+            column.append(bar, label, value);
+            return column;
+        }));
+    };
+
+    document.querySelectorAll('[data-dashboard-chart-filter]').forEach((group) => {
+        let analytics = {};
+        try {
+            analytics = JSON.parse(group.dataset.dashboardAnalytics || '{}');
+        } catch {
+            analytics = {};
+        }
+
+        const applyPeriod = (period) => {
+            const data = analytics[period] || analytics.monthly;
+            if (!data) return;
+
+            updateDashboardLineChart('revenue', data.revenue);
+            updateDashboardBarChart('users', data.users);
+            updateDashboardBarChart('enquiries', data.enquiries);
+        };
+
+        group.querySelectorAll('button').forEach((button) => {
+            button.addEventListener('click', () => {
+                group.querySelectorAll('button').forEach((item) => item.classList.remove('is-active'));
+                button.classList.add('is-active');
+                applyPeriod(button.dataset.dashboardPeriod || 'monthly');
+            });
+        });
+    });
+
+    document.querySelectorAll('.workspace-table').forEach((table) => {
+        const tbody = table.tBodies[0];
+        const headerCells = Array.from(table.querySelectorAll('thead th'));
+        let rows = tbody ? Array.from(tbody.rows) : [];
+        const hostCard = table.closest('.workspace-card');
+
+        if (!tbody || rows.length < 2 || !hostCard || hostCard.dataset.tableEnhanced === 'true') return;
+        hostCard.dataset.tableEnhanced = 'true';
+
+        const toolbar = document.createElement('div');
+        toolbar.className = 'dashboard-table-toolbar';
+
+        const search = document.createElement('input');
+        search.type = 'search';
+        search.className = 'dashboard-table-search';
+        search.placeholder = 'Search this table...';
+        search.setAttribute('aria-label', 'Search dashboard table');
+
+        const resultCount = document.createElement('span');
+        resultCount.className = 'dashboard-table-count';
+
+        const pagination = document.createElement('div');
+        pagination.className = 'dashboard-table-pagination';
+
+        const previousPage = document.createElement('button');
+        previousPage.type = 'button';
+        previousPage.textContent = 'Prev';
+
+        const pageLabel = document.createElement('span');
+
+        const nextPage = document.createElement('button');
+        nextPage.type = 'button';
+        nextPage.textContent = 'Next';
+
+        pagination.append(previousPage, pageLabel, nextPage);
+        toolbar.append(search, resultCount, pagination);
+        hostCard.insertBefore(toolbar, table.closest('.workspace-table-wrap') || table);
+
+        const pageSize = 8;
+        let currentPage = 1;
+        let filteredRows = [...rows];
+
+        const renderTableRows = () => {
+            const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+            currentPage = Math.min(currentPage, totalPages);
+            const startIndex = (currentPage - 1) * pageSize;
+            const visibleRows = filteredRows.slice(startIndex, startIndex + pageSize);
+
+            rows.forEach((row) => {
+                row.hidden = true;
+            });
+            visibleRows.forEach((row) => {
+                row.hidden = false;
+            });
+
+            resultCount.textContent = `${filteredRows.length} ${filteredRows.length === 1 ? 'row' : 'rows'}`;
+            pageLabel.textContent = `${currentPage} / ${totalPages}`;
+            previousPage.disabled = currentPage === 1;
+            nextPage.disabled = currentPage === totalPages;
+            pagination.hidden = filteredRows.length <= pageSize;
+        };
+
+        search.addEventListener('input', () => {
+            const query = search.value.trim().toLowerCase();
+            filteredRows = rows.filter((row) => !query || row.textContent.toLowerCase().includes(query));
+            currentPage = 1;
+            renderTableRows();
+        });
+
+        previousPage.addEventListener('click', () => {
+            currentPage -= 1;
+            renderTableRows();
+        });
+
+        nextPage.addEventListener('click', () => {
+            currentPage += 1;
+            renderTableRows();
+        });
+
+        headerCells.forEach((cell, index) => {
+            cell.tabIndex = 0;
+            cell.setAttribute('role', 'button');
+            cell.setAttribute('aria-sort', 'none');
+            cell.classList.add('is-sortable');
+
+            const sortColumn = () => {
+                const current = cell.getAttribute('aria-sort') === 'ascending' ? 'descending' : 'ascending';
+                headerCells.forEach((other) => other.setAttribute('aria-sort', 'none'));
+                cell.setAttribute('aria-sort', current);
+
+                const sortedRows = [...rows].sort((left, right) => {
+                    const leftValue = left.cells[index]?.textContent.trim() || '';
+                    const rightValue = right.cells[index]?.textContent.trim() || '';
+                    const leftNumber = Number(leftValue.replace(/[^0-9.-]/g, ''));
+                    const rightNumber = Number(rightValue.replace(/[^0-9.-]/g, ''));
+                    const result = Number.isFinite(leftNumber) && Number.isFinite(rightNumber) && leftValue.match(/\d/) && rightValue.match(/\d/)
+                        ? leftNumber - rightNumber
+                        : leftValue.localeCompare(rightValue, undefined, { numeric: true, sensitivity: 'base' });
+
+                    return current === 'ascending' ? result : -result;
+                });
+
+                rows = sortedRows;
+                filteredRows = [...filteredRows].sort((left, right) => sortedRows.indexOf(left) - sortedRows.indexOf(right));
+                sortedRows.forEach((row) => tbody.appendChild(row));
+                renderTableRows();
+            };
+
+            cell.addEventListener('click', sortColumn);
+            cell.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    sortColumn();
+                }
+            });
+        });
+
+        renderTableRows();
+    });
+};
+
 // --- Multi-Step Forms ---
 document.querySelectorAll('[data-multi-step]').forEach(form => {
     const steps = Array.from(form.querySelectorAll('.form-step'));
@@ -732,6 +978,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initEmbedLoaders();
     initCarousels();
     initPropertyDetailPage();
+    initDashboardExperience();
     if (window.initHomeMap) window.initHomeMap();
 
     // Lazy load images

@@ -11,22 +11,22 @@
 @section('content')
 <div class="workspace-stack">
     <section class="workspace-grid workspace-grid--4">
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi" data-icon="◈" data-trend="Package">
             <span>Plan</span>
             <strong>{{ $activePlan?->displayName() ?: 'No Plan' }}</strong>
             <span>{{ $listingLimitLabel }}</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi workspace-kpi--warm" data-icon="🏠" data-trend="Live">
             <span>Live Listings</span>
             <strong>{{ number_format($activeListingCount) }}</strong>
             <span>Approved and visible</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi" data-icon="+" data-trend="Capacity">
             <span>Slots Left</span>
             <strong>{{ number_format($remainingListingSlots) }}</strong>
             <span>Available for new uploads</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi workspace-kpi--violet" data-icon="⏳" data-trend="Review">
             <span>Pending Review</span>
             <strong>{{ number_format($pendingReviewCount) }}</strong>
             <span>Awaiting admin decision</span>

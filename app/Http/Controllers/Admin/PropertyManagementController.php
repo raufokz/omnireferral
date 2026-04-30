@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Property;
 use App\Models\User;
+use App\Support\AdminAudit;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -165,7 +166,12 @@ class PropertyManagementController extends Controller
         $validated = $this->validatePayload($request, true);
         $prepared = $this->preparePayload($validated, $request, null);
 
-        Property::create($prepared);
+        $property = Property::create($prepared);
+
+        AdminAudit::log($request, 'property.created', 'property', $property->id, [
+            'title' => $property->title,
+            'status' => $property->status,
+        ]);
 
         return redirect()
             ->route('admin.properties.index')
@@ -199,6 +205,12 @@ class PropertyManagementController extends Controller
 
         $property->update($prepared);
 
+        AdminAudit::log($request, 'property.updated', 'property', $property->id, [
+            'title' => $property->title,
+            'status' => $property->status,
+            'approval_status' => $property->approval_status,
+        ]);
+
         return redirect()
             ->route('admin.properties.index')
             ->with('success', 'Property listing updated successfully.');
@@ -220,6 +232,10 @@ class PropertyManagementController extends Controller
         foreach ($existingImages as $path) {
             $this->deleteImageIfStoredLocally($path);
         }
+
+        AdminAudit::log($request, 'property.deleted', 'property', $property->id, [
+            'title' => $property->title,
+        ]);
 
         $property->delete();
 

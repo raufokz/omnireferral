@@ -5,11 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Contact;
 use App\Models\Property;
 use App\Models\RealtorProfile;
-use App\Models\User;
-use App\Notifications\NewPropertyListingInquiryNotification;
+use App\Services\EnquiryFromContactService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\View\View;
 
 class ContactController extends Controller
@@ -93,23 +91,9 @@ class ContactController extends Controller
         ]);
 
         if ($property && $recipientUserId) {
-            $recipients = User::query()
-                ->whereIn('role', ['admin', 'staff'])
-                ->get();
-
-            $ownerId = (int) ($property->owner_user_id ?? 0);
-            if ($ownerId > 0) {
-                $owner = User::query()->find($ownerId);
-                if ($owner) {
-                    $recipients->push($owner);
-                }
-            }
-
-            $recipients = $recipients->unique('id')->values();
-
-            Notification::send(
-                $recipients,
-                new NewPropertyListingInquiryNotification($contact->fresh(['property', 'realtorProfile.user']))
+            EnquiryFromContactService::createFromContact(
+                $contact->fresh(['property', 'realtorProfile.user']),
+                $request->user()?->id
             );
         }
 

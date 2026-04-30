@@ -17,6 +17,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
+        'display_name',
         'email',
         'password',
         'must_reset_password',
@@ -27,6 +28,11 @@ class User extends Authenticatable
         'city',
         'state',
         'zip_code',
+        'social_facebook_url',
+        'social_linkedin_url',
+        'notify_email',
+        'notify_marketing',
+        'two_factor_enabled',
         'role',
         'staff_team',
         'status',
@@ -52,9 +58,19 @@ class User extends Authenticatable
             'password' => 'hashed',
             'must_reset_password' => 'boolean',
             'password_set_at' => 'datetime',
+            'notify_email' => 'boolean',
+            'notify_marketing' => 'boolean',
+            'two_factor_enabled' => 'boolean',
             'onboarding_completed_at' => 'datetime',
             'last_synced_at' => 'datetime',
         ];
+    }
+
+    public function publicDisplayName(): string
+    {
+        $display = trim((string) ($this->display_name ?? ''));
+
+        return $display !== '' ? $display : (string) $this->name;
     }
 
     public function realtorProfile(): HasOne

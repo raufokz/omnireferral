@@ -2,13 +2,19 @@
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LeadManagementController as AdminLeadManagementController;
+use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\EnquiryController as AdminEnquiryController;
+use App\Http\Controllers\Admin\PlatformSearchController;
 use App\Http\Controllers\Admin\PropertyManagementController as AdminPropertyManagementController;
+use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Account\ProfileController;
 use App\Http\Controllers\Account\SecurityController;
 use App\Http\Controllers\Agent\LeadController as AgentLeadController;
 use App\Http\Controllers\Agent\PortalController as AgentPortalController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\Dashboard\EnquiryController as DashboardEnquiryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LeadController;
@@ -142,11 +148,25 @@ Route::middleware(['auth', 'active.account'])->group(function () {
 });
 
 Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(function () {
+    Route::get('/account/profile', [ProfileController::class, 'show'])->name('account.profile');
+    Route::put('/account/profile', [ProfileController::class, 'update'])
+        ->middleware('throttle:account-profile')
+        ->name('account.profile.update');
     Route::get('/account/security', [SecurityController::class, 'show'])->name('account.security');
     Route::post('/account/password', [SecurityController::class, 'updatePassword'])->name('account.password.update');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/affiliate', [DashboardController::class, 'affiliate'])->name('dashboard.affiliate');
+
+    Route::middleware(['role:buyer,seller,agent'])->group(function () {
+        Route::get('/dashboard/enquiries', [DashboardEnquiryController::class, 'index'])->name('dashboard.enquiries.index');
+        Route::get('/dashboard/enquiries/{enquiry}', [DashboardEnquiryController::class, 'show'])->name('dashboard.enquiries.show');
+        Route::post('/dashboard/enquiries/{enquiry}/replies', [DashboardEnquiryController::class, 'storeReply'])
+            ->middleware('throttle:enquiry-replies')
+            ->name('dashboard.enquiries.replies.store');
+        Route::patch('/dashboard/enquiries/{enquiry}/status', [DashboardEnquiryController::class, 'updateStatus'])
+            ->name('dashboard.enquiries.status');
+    });
 
     Route::middleware(['role:buyer'])->group(function () {
         Route::get('/buyer/dashboard', [DashboardController::class, 'buyer'])->name('dashboard.buyer');
@@ -181,6 +201,20 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
 
     Route::middleware(['role:admin,staff'])->group(function () {
         Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+        Route::get('/admin/search', PlatformSearchController::class)->name('admin.search');
+        Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users.index');
+        Route::put('/admin/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
+        Route::get('/admin/users/export/csv', [UserManagementController::class, 'exportCsv'])->name('admin.users.export.csv');
+        Route::get('/admin/users/export/xlsx', [UserManagementController::class, 'exportXlsx'])->name('admin.users.export.xlsx');
+        Route::get('/admin/enquiries', [AdminEnquiryController::class, 'index'])->name('admin.enquiries.index');
+        Route::get('/admin/enquiries/export/csv', [AdminEnquiryController::class, 'exportCsv'])->name('admin.enquiries.export.csv');
+        Route::get('/admin/enquiries/export/xlsx', [AdminEnquiryController::class, 'exportXlsx'])->name('admin.enquiries.export.xlsx');
+        Route::get('/admin/enquiries/{enquiry}', [AdminEnquiryController::class, 'show'])->name('admin.enquiries.show');
+        Route::post('/admin/enquiries/{enquiry}/replies', [AdminEnquiryController::class, 'storeReply'])
+            ->middleware('throttle:enquiry-replies')
+            ->name('admin.enquiries.replies.store');
+        Route::patch('/admin/enquiries/{enquiry}/status', [AdminEnquiryController::class, 'updateStatus'])->name('admin.enquiries.status');
+        Route::get('/admin/activity', [ActivityLogController::class, 'index'])->name('admin.activity.index');
         Route::get('/admin/leads', [AdminLeadManagementController::class, 'index'])->name('admin.leads.index');
         Route::get('/admin/leads/export/csv', [AdminLeadManagementController::class, 'exportCsv'])->name('admin.leads.export.csv');
         Route::post('/admin/leads/import/csv', [AdminLeadManagementController::class, 'importCsv'])->name('admin.leads.import.csv');

@@ -34,37 +34,54 @@
     $dashboardNavItems = match ($role) {
         'buyer' => [
             ['label' => 'Overview', 'route' => route('dashboard.buyer'), 'active' => ['dashboard.buyer']],
+            ['label' => 'Profile', 'route' => route('account.profile'), 'active' => ['account.profile']],
+            ['label' => 'Enquiries', 'route' => route('dashboard.enquiries.index'), 'active' => ['dashboard.enquiries.*']],
             ['label' => 'Saved Homes', 'route' => route('dashboard.buyer.saved'), 'active' => ['dashboard.buyer.saved']],
             ['label' => 'Requests', 'route' => route('dashboard.buyer.requests'), 'active' => ['dashboard.buyer.requests']],
             ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show']],
         ],
         'seller' => [
             ['label' => 'Overview', 'route' => route('dashboard.seller'), 'active' => ['dashboard.seller']],
+            ['label' => 'Profile', 'route' => route('account.profile'), 'active' => ['account.profile']],
+            ['label' => 'Enquiries', 'route' => route('dashboard.enquiries.index'), 'active' => ['dashboard.enquiries.*']],
             ['label' => 'Listings', 'route' => route('dashboard.seller.listings'), 'active' => ['dashboard.seller.listings', 'properties.edit']],
             ['label' => 'Requests', 'route' => route('dashboard.seller.requests'), 'active' => ['dashboard.seller.requests']],
             ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show']],
         ],
         'agent' => [
             ['label' => 'Overview', 'route' => route('dashboard.agent'), 'active' => ['dashboard.agent']],
-            ['label' => 'Profile', 'route' => route('agent.profile'), 'active' => ['agent.profile']],
+            ['label' => 'Profile', 'route' => route('account.profile'), 'active' => ['account.profile']],
+            ['label' => 'Agent profile', 'route' => route('agent.profile'), 'active' => ['agent.profile']],
             ['label' => 'Leads', 'route' => route('agent.leads.index'), 'active' => ['agent.leads.*']],
             ['label' => 'Listings', 'route' => route('agent.listings.index'), 'active' => ['agent.listings.*', 'properties.edit']],
+            ['label' => 'Enquiries', 'route' => route('dashboard.enquiries.index'), 'active' => ['dashboard.enquiries.*']],
             ['label' => 'Messages', 'route' => route('agent.messages.index'), 'active' => ['agent.messages.*']],
         ],
-        'admin', 'staff' => [
-            ['label' => 'Overview', 'route' => route('admin.dashboard'), 'active' => ['admin.dashboard']],
-            ['label' => 'Lead Registry', 'route' => route('admin.leads.index'), 'active' => ['admin.leads.*']],
-            ['label' => 'Properties', 'route' => route('admin.properties.index'), 'active' => ['admin.properties.*']],
-            ['label' => 'Blog', 'route' => route('admin.blog.index'), 'active' => ['admin.blog.*']],
-            ['label' => 'Testimonials', 'route' => route('admin.testimonials.index'), 'active' => ['admin.testimonials.*']],
-            ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show']],
-        ],
+        'admin', 'staff' => array_values(array_filter(array_merge(
+            [
+                ['label' => 'Overview', 'route' => route('admin.dashboard'), 'active' => ['admin.dashboard']],
+                ['label' => 'Profile', 'route' => route('account.profile'), 'active' => ['account.profile']],
+                ['label' => 'Search', 'route' => route('admin.search'), 'active' => ['admin.search']],
+                ['label' => 'Users', 'route' => route('admin.users.index'), 'active' => ['admin.users.*']],
+                ['label' => 'Enquiries', 'route' => route('admin.enquiries.index'), 'active' => ['admin.enquiries.*']],
+                ['label' => 'Lead registry', 'route' => route('admin.leads.index'), 'active' => ['admin.leads.*']],
+                ['label' => 'Properties', 'route' => route('admin.properties.index'), 'active' => ['admin.properties.*']],
+                ['label' => 'Blog', 'route' => route('admin.blog.index'), 'active' => ['admin.blog.*']],
+                ['label' => 'Testimonials', 'route' => route('admin.testimonials.index'), 'active' => ['admin.testimonials.*']],
+                ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show']],
+            ],
+            ($workspaceUser?->role === 'admin')
+                ? [['label' => 'Audit log', 'route' => route('admin.activity.index'), 'active' => ['admin.activity.*']]]
+                : []
+        ))),
         default => [
             ['label' => 'Dashboard Home', 'route' => route('dashboard'), 'active' => ['dashboard']],
+            ['label' => 'Profile', 'route' => route('account.profile'), 'active' => ['account.profile']],
         ],
     };
 
     $settingsLinks = [
+        ['label' => 'Profile & account', 'route' => route('account.profile')],
         ['label' => 'Account Security', 'route' => route('account.security')],
         ['label' => 'Help Center', 'route' => route('contact')],
     ];
@@ -72,8 +89,33 @@
     if ($role === 'agent') {
         $settingsLinks[] = ['label' => 'Edit Agent Profile', 'route' => route('agent.profile')];
     }
+
+    $dashboardNotices = match ($role) {
+        'admin', 'staff' => [
+            ['title' => 'Review operational queues', 'copy' => 'Check enquiries, properties, users, and lead registry health.', 'route' => route('admin.dashboard')],
+            ['title' => 'Open platform search', 'copy' => 'Find users, listings, enquiries, and records quickly.', 'route' => route('admin.search')],
+            ['title' => 'Monitor listing review', 'copy' => 'Approve or reject user-submitted property inventory.', 'route' => route('admin.properties.index')],
+        ],
+        'agent' => [
+            ['title' => 'Prioritize new messages', 'copy' => 'Keep listing and profile conversations moving.', 'route' => route('agent.messages.index')],
+            ['title' => 'Check lead queue', 'copy' => 'Update contact status while intent is fresh.', 'route' => route('agent.leads.index')],
+            ['title' => 'Manage inventory', 'copy' => 'Review listing capacity and pending approvals.', 'route' => route('agent.listings.index')],
+        ],
+        'seller' => [
+            ['title' => 'Keep listings current', 'copy' => 'Submit or review property visibility in the seller workspace.', 'route' => route('dashboard.seller.listings')],
+            ['title' => 'Review seller requests', 'copy' => 'Track qualified demand and in-market activity.', 'route' => route('dashboard.seller.requests')],
+        ],
+        'buyer' => [
+            ['title' => 'Review saved homes', 'copy' => 'Compare your shortlist and contact agents from listings.', 'route' => route('dashboard.buyer.saved')],
+            ['title' => 'Track buyer requests', 'copy' => 'Follow request movement from submitted to matched.', 'route' => route('dashboard.buyer.requests')],
+        ],
+        default => [
+            ['title' => 'Open marketplace', 'copy' => 'Browse active property listings and agent-backed opportunities.', 'route' => route('listings')],
+            ['title' => 'Contact support', 'copy' => 'Ask for help configuring your workspace.', 'route' => route('contact')],
+        ],
+    };
 @endphp
-<body class="antialiased dashboard-shell-body">
+<body class="antialiased dashboard-shell-body" data-dashboard-role="{{ $role ?: 'guest' }}">
     <a href="#main-content" class="skip-link">Skip to content</a>
     <div class="dashboard-shell" id="dashboardShell">
         <aside class="dashboard-shell__sidebar" id="dashboardSidebar" aria-label="Dashboard sidebar">
@@ -85,6 +127,10 @@
                         <span>{{ $roleLabel }}</span>
                     </div>
                 </a>
+                <div class="dashboard-shell__system-chip">
+                    <span></span>
+                    Live workspace
+                </div>
             </div>
 
             <nav class="dashboard-shell__nav">
@@ -107,7 +153,41 @@
                     <span></span>
                 </button>
 
+                <div class="dashboard-shell__header-copy">
+                    <span>{{ now()->format('l, M j') }}</span>
+                    <strong>{{ $roleLabel }} command center</strong>
+                </div>
+
                 <div class="dashboard-shell__actions">
+                    <a href="{{ route('listings') }}" class="dashboard-shell__quick-link">Marketplace</a>
+
+                    <button type="button" class="dashboard-shell__icon-button" data-dashboard-theme-toggle aria-label="Toggle dashboard dark mode" aria-pressed="false">
+                        <span class="dashboard-shell__theme-light">☾</span>
+                        <span class="dashboard-shell__theme-dark">☀</span>
+                    </button>
+
+                    <div class="dashboard-shell__notifications" data-dashboard-notifications>
+                        <button type="button" class="dashboard-shell__icon-button" data-dashboard-notifications-toggle aria-label="Open notifications panel" aria-expanded="false">
+                            <span>•</span>
+                        </button>
+                        <div class="dashboard-shell__notifications-panel">
+                            <div>
+                                <span class="eyebrow">Alerts</span>
+                                <h2>Action Center</h2>
+                            </div>
+                            <ul>
+                                @foreach($dashboardNotices as $notice)
+                                    <li>
+                                        <a href="{{ $notice['route'] }}">
+                                            <strong>{{ $notice['title'] }}</strong>
+                                            <span>{{ $notice['copy'] }}</span>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+
                     <a href="{{ route('dashboard') }}" class="dashboard-shell__avatar" aria-label="Go to dashboard home">
                         <img src="{{ $avatarUrl }}" alt="{{ $workspaceUser?->name ?? 'User' }} avatar" loading="lazy">
                         <span>{{ $initials ?: 'OU' }}</span>

@@ -7,7 +7,7 @@ use App\Models\Package;
 use App\Models\Property;
 use App\Models\RealtorProfile;
 use App\Models\User;
-use App\Notifications\NewPropertyListingInquiryNotification;
+use App\Notifications\EnquiryCreatedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -178,9 +178,15 @@ class AgentPortalTest extends TestCase
             ->assertSee('Sunny Family Retreat')
             ->assertSee('Inquiry about Sunny Family Retreat');
 
+        $this->assertDatabaseHas('enquiries', [
+            'property_id' => $property->id,
+            'receiver_user_id' => $agent->id,
+            'sender_email' => 'buyer@example.com',
+        ]);
+
         Notification::assertSentTo(
             [$admin, $agent],
-            NewPropertyListingInquiryNotification::class
+            EnquiryCreatedNotification::class
         );
     }
 

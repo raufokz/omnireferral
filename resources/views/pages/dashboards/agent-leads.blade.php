@@ -11,22 +11,22 @@
 @section('content')
 <div class="workspace-stack">
     <section class="workspace-grid workspace-grid--4">
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi" data-icon="📥" data-trend="Queue">
             <span>Assigned</span>
             <strong>{{ number_format($agentStats['leads_received']) }}</strong>
             <span>Total leads in your queue</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi workspace-kpi--warm" data-icon="✓" data-trend="Ready">
             <span>Qualified</span>
             <strong>{{ number_format(data_get(collect($pipeline)->firstWhere('label', 'Qualified'), 'count', 0)) }}</strong>
             <span>Leads ready for close</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi" data-icon="$" data-trend="Closed">
             <span>Closed</span>
             <strong>{{ number_format($agentStats['closed_leads']) }}</strong>
             <span>Deals marked closed</span>
         </article>
-        <article class="workspace-card workspace-kpi">
+        <article class="workspace-card workspace-kpi workspace-kpi--violet" data-icon="%" data-trend="Performance">
             <span>Response Rate</span>
             <strong>{{ $agentStats['response_rate'] }}</strong>
             <span>Current contact performance</span>
