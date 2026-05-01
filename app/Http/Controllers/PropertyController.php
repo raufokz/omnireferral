@@ -8,6 +8,8 @@ use App\Support\AdminAudit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -78,7 +80,14 @@ class PropertyController extends Controller
             'description' => ['nullable', 'string'],
             'latitude' => ['nullable', 'numeric'],
             'longitude' => ['nullable', 'numeric'],
-            'image' => ['nullable', 'image', 'max:4096'],
+            'images' => ['nullable', 'array'],
+            'images.*' => ['image', 'max:6144'],
+            'image' => ['nullable', 'image', 'max:6144'],
+            'featured_image' => ['nullable', 'string', 'max:512'],
+            'new_upload_tokens' => ['nullable', 'array'],
+            'new_upload_tokens.*' => ['string', 'max:128'],
+            'gallery_order' => ['nullable', 'array'],
+            'gallery_order.*' => ['string', 'max:512'],
         ];
 
         if ($user?->isSeller()) {
@@ -127,10 +136,16 @@ class PropertyController extends Controller
             $validated['owner_user_id'] = $user->id;
         }
 
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('properties/listings', 'public');
-            $validated['images'] = [$validated['image']];
+        [$gallery, $featuredPath] = $this->prepareGalleryPayload($request, null, $validated);
+
+        if ($gallery->isEmpty()) {
+            return back()
+                ->withInput()
+                ->withErrors(['images' => 'Please upload at least one property image.']);
         }
+
+        $validated['images'] = $gallery->all();
+        $validated['image'] = $featuredPath ?? $gallery->first();
 
         $validated['slug'] = Str::slug($validated['title']) . '-' . Str::lower(Str::random(6));
         $requiresApproval = $user?->isAgent() || $user?->isSeller();
@@ -188,6 +203,18 @@ class PropertyController extends Controller
             'price' => ['required', 'integer'],
             'status' => ['required', 'string', Rule::in($statusOptions)],
             'description' => ['nullable', 'string'],
+            'existing_images' => ['nullable', 'array'],
+            'existing_images.*' => ['string'],
+            'remove_images' => ['nullable', 'array'],
+            'remove_images.*' => ['string'],
+            'images' => ['nullable', 'array'],
+            'images.*' => ['image', 'max:6144'],
+            'image' => ['nullable', 'image', 'max:6144'],
+            'featured_image' => ['nullable', 'string', 'max:512'],
+            'new_upload_tokens' => ['nullable', 'array'],
+            'new_upload_tokens.*' => ['string', 'max:128'],
+            'gallery_order' => ['nullable', 'array'],
+            'gallery_order.*' => ['string', 'max:512'],
         ]);
 
         $shouldResubmit = ! $user?->isStaff() && $property->approval_status !== Property::APPROVAL_APPROVED;
@@ -200,6 +227,17 @@ class PropertyController extends Controller
             $validated['reviewed_at'] = null;
             $validated['published_at'] = null;
         }
+
+        [$gallery, $featuredPath] = $this->prepareGalleryPayload($request, $property, $validated);
+
+        if ($gallery->isEmpty()) {
+            return back()
+                ->withInput()
+                ->withErrors(['images' => 'Keep at least one property image in the gallery.']);
+        }
+
+        $validated['images'] = $gallery->all();
+        $validated['image'] = $featuredPath ?? $gallery->first();
 
         $property->update($validated);
 
@@ -279,6 +317,135 @@ class PropertyController extends Controller
         ]);
 
         return back()->with('success', 'Property added to favorites.');
+    }
+
+    private function prepareGalleryPayload(Request $request, ?Property $property, array $validated): array
+    {
+        $existingGallery = collect($property?->images ?? [])
+            ->filter(fn ($path) => is_string($path) && trim($path) !== '')
+            ->values();
+
+        if ($property?->image && ! $existingGallery->contains($property->image)) {
+            $existingGallery->prepend($property->image);
+        }
+
+        $existingToKeep = collect($validated['existing_images'] ?? [])
+            ->filter(fn ($path) => is_string($path) && trim($path) !== '')
+            ->values();
+
+        if ($existingToKeep->isNotEmpty()) {
+            $existingToKeep = $existingToKeep
+                ->filter(fn ($path) => $existingGallery->contains($path))
+                ->values();
+        } else {
+            $existingToKeep = $existingGallery;
+        }
+
+        $removeImages = collect($validated['remove_images'] ?? [])
+            ->filter(fn ($path) => is_string($path) && trim($path) !== '')
+            ->values();
+
+        foreach ($removeImages as $path) {
+            $this->deleteImageIfStoredLocally($path);
+        }
+
+        $keptExisting = $existingToKeep
+            ->reject(fn ($path) => $removeImages->contains($path))
+            ->values();
+
+        $newImages = collect();
+        $newUploadTokens = collect($validated['new_upload_tokens'] ?? [])
+            ->filter(fn ($token) => is_string($token) && trim($token) !== '')
+            ->values();
+
+        foreach ($request->file('images', []) as $image) {
+            $newImages->push($image->store('properties/listings', 'public'));
+        }
+
+        if ($request->hasFile('image')) {
+            $newImages->push($request->file('image')->store('properties/listings', 'public'));
+            $newUploadTokens->push('legacy::single-image');
+        }
+
+        $galleryTokenMap = $keptExisting
+            ->mapWithKeys(fn (string $path) => ['existing::' . $path => $path])
+            ->merge(
+                $newImages->mapWithKeys(fn (string $path, int $index) => [
+                    (string) ($newUploadTokens->get($index) ?: 'new::' . $index) => $path,
+                ])
+            );
+
+        $gallery = $this->applyGalleryOrder(
+            $galleryTokenMap,
+            collect($validated['gallery_order'] ?? [])
+        );
+
+        $featuredPath = $this->resolveFeaturedImagePath(
+            (string) ($validated['featured_image'] ?? ''),
+            $galleryTokenMap,
+            $gallery,
+            $property?->image
+        );
+
+        return [$gallery, $featuredPath];
+    }
+
+    private function applyGalleryOrder(Collection $galleryTokenMap, Collection $galleryOrder): Collection
+    {
+        $galleryOrder = $galleryOrder
+            ->filter(fn ($token) => is_string($token) && trim($token) !== '')
+            ->values();
+
+        if ($galleryOrder->isEmpty()) {
+            return $galleryTokenMap->values()->unique()->values();
+        }
+
+        $ordered = $galleryOrder
+            ->map(fn (string $token) => $galleryTokenMap->get($token))
+            ->filter(fn ($path) => is_string($path) && trim($path) !== '');
+
+        $remaining = $galleryTokenMap
+            ->reject(fn (string $path, string $token) => $galleryOrder->contains($token))
+            ->values();
+
+        return $ordered
+            ->merge($remaining)
+            ->unique()
+            ->values();
+    }
+
+    private function resolveFeaturedImagePath(string $featuredToken, Collection $galleryTokenMap, Collection $gallery, ?string $currentFeatured): ?string
+    {
+        $featuredToken = trim($featuredToken);
+
+        if ($featuredToken !== '' && $galleryTokenMap->has($featuredToken)) {
+            return $galleryTokenMap->get($featuredToken);
+        }
+
+        if ($featuredToken !== '' && $gallery->contains($featuredToken)) {
+            return $featuredToken;
+        }
+
+        if ($currentFeatured && $gallery->contains($currentFeatured)) {
+            return $currentFeatured;
+        }
+
+        return $gallery->first();
+    }
+
+    private function deleteImageIfStoredLocally(string $path): void
+    {
+        $path = trim($path);
+
+        if (
+            $path === ''
+            || Str::startsWith($path, ['http://', 'https://', '/storage/', 'storage/', 'images/'])
+            || ! Storage::disk('public')->exists($path)
+        ) {
+            return;
+        }
+
+        Storage::disk('public')->delete($path);
     }
 
     protected function canManage(Property $property): bool

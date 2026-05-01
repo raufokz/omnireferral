@@ -19,7 +19,14 @@
             </div>
         @endif
 
-        <form action="{{ route('properties.update', $property) }}" method="POST">
+        @php
+            $existingGallery = collect($property->images ?? [])->filter()->values();
+            if ($property->image && ! $existingGallery->contains($property->image)) {
+                $existingGallery->prepend($property->image);
+            }
+        @endphp
+
+        <form action="{{ route('properties.update', $property) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
@@ -51,6 +58,10 @@
                     <span>Description</span>
                     <textarea name="description">{{ old('description', $property->description) }}</textarea>
                 </label>
+                @include('partials.property-image-manager', [
+                    'existingImages' => old('existing_images', $existingGallery->all()),
+                    'featuredImage' => $property->image,
+                ])
             </div>
 
             <div class="workspace-actions" style="margin-top: 0.9rem;">

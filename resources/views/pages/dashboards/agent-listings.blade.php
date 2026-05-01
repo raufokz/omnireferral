@@ -91,10 +91,10 @@
                         <span>Description</span>
                         <textarea name="description">{{ old('description') }}</textarea>
                     </label>
-                    <label class="workspace-field workspace-field--full">
-                        <span>Listing Image</span>
-                        <input type="file" name="image" accept="image/*">
-                    </label>
+                    @include('partials.property-image-manager', [
+                        'existingImages' => [],
+                        'featuredImage' => '',
+                    ])
                 </div>
             </fieldset>
 

@@ -239,32 +239,11 @@
     <span class="eyebrow">Media</span>
     <h2>Gallery, Video, 360°</h2>
 
-    @if($existingImages->isNotEmpty())
-        <div class="workspace-grid workspace-grid--4" style="margin-bottom: 0.9rem;">
-            @foreach($existingImages as $imagePath)
-                @php
-                    $imageUrl = \Illuminate\Support\Str::startsWith($imagePath, ['http://', 'https://', '/storage/'])
-                        ? $imagePath
-                        : (\Illuminate\Support\Str::startsWith($imagePath, 'storage/')
-                            ? '/' . $imagePath
-                            : asset('storage/' . ltrim($imagePath, '/')));
-                @endphp
-                <article class="workspace-card" style="padding: 0.65rem;">
-                    <img src="{{ $imageUrl }}" alt="Property image" style="width: 100%; height: 120px; object-fit: cover; border-radius: 12px;">
-                    <label class="workspace-field" style="margin-top: 0.5rem;">
-                        <span style="font-size: 0.8rem;">Remove image</span>
-                        <input type="checkbox" name="remove_images[]" value="{{ $imagePath }}">
-                    </label>
-                </article>
-            @endforeach
-        </div>
-    @endif
-
     <div class="workspace-form-grid">
-        <label class="workspace-field workspace-field--full">
-            <span>{{ $isEdit ? 'Add More Images' : 'Upload Images' }} (up to 10)</span>
-            <input type="file" name="images[]" accept="image/*" multiple {{ $isEdit ? '' : 'required' }}>
-        </label>
+        @include('partials.property-image-manager', [
+            'existingImages' => $existingImages->all(),
+            'featuredImage' => $property->image,
+        ])
         <label class="workspace-field workspace-field--full">
             <span>Video Tour URL (optional)</span>
             <input type="url" name="video_tour_url" value="{{ old('video_tour_url', $property->video_tour_url) }}" placeholder="https://youtube.com/...">

@@ -10,8 +10,10 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PropertyManagementController extends Controller
 {
@@ -166,6 +168,12 @@ class PropertyManagementController extends Controller
         $validated = $this->validatePayload($request, true);
         $prepared = $this->preparePayload($validated, $request, null);
 
+        if (empty($prepared['images'])) {
+            throw ValidationException::withMessages([
+                'images' => 'Please upload at least one property image.',
+            ]);
+        }
+
         $property = Property::create($prepared);
 
         AdminAudit::log($request, 'property.created', 'property', $property->id, [
@@ -202,6 +210,12 @@ class PropertyManagementController extends Controller
 
         $validated = $this->validatePayload($request, false, $workspaceUser->isAdmin());
         $prepared = $this->preparePayload($validated, $request, $property, $workspaceUser->isAdmin());
+
+        if (empty($prepared['images'])) {
+            throw ValidationException::withMessages([
+                'images' => 'Keep at least one property image in the gallery.',
+            ]);
+        }
 
         $property->update($prepared);
 
@@ -292,10 +306,17 @@ class PropertyManagementController extends Controller
                 'mosques',
             ])],
             'is_featured' => ['nullable', 'boolean'],
-            'images' => [$isCreate ? 'required' : 'nullable', 'array', 'max:10'],
+            'existing_images' => ['nullable', 'array'],
+            'existing_images.*' => ['string'],
+            'images' => [$isCreate ? 'required' : 'nullable', 'array'],
             'images.*' => ['image', 'max:6144'],
             'remove_images' => ['nullable', 'array'],
             'remove_images.*' => ['string'],
+            'featured_image' => ['nullable', 'string', 'max:512'],
+            'new_upload_tokens' => ['nullable', 'array'],
+            'new_upload_tokens.*' => ['string', 'max:128'],
+            'gallery_order' => ['nullable', 'array'],
+            'gallery_order.*' => ['string', 'max:512'],
         ];
 
         if ($canManageListedBy) {
@@ -318,6 +339,18 @@ class PropertyManagementController extends Controller
             $existingImages->push($property->image);
         }
 
+        $existingToKeep = collect($validated['existing_images'] ?? [])
+            ->filter(fn ($path) => is_string($path) && trim($path) !== '')
+            ->values();
+
+        if ($existingToKeep->isNotEmpty()) {
+            $existingToKeep = $existingToKeep
+                ->filter(fn ($path) => $existingImages->contains($path))
+                ->values();
+        } else {
+            $existingToKeep = $existingImages;
+        }
+
         $removeImages = collect($validated['remove_images'] ?? [])
             ->filter(fn ($path) => is_string($path) && $path !== '')
             ->values();
@@ -326,20 +359,38 @@ class PropertyManagementController extends Controller
             $this->deleteImageIfStoredLocally($path);
         }
 
-        $keptImages = $existingImages
+        $keptImages = $existingToKeep
             ->reject(fn ($path) => $removeImages->contains($path))
             ->values();
 
         $newImages = collect();
+        $newUploadTokens = collect($validated['new_upload_tokens'] ?? [])
+            ->filter(fn ($token) => is_string($token) && trim($token) !== '')
+            ->values();
+
         foreach ($request->file('images', []) as $image) {
             $newImages->push($image->store('properties/listings', 'public'));
         }
 
-        $gallery = $keptImages
-            ->merge($newImages)
-            ->unique()
-            ->take(10)
-            ->values();
+        $galleryTokenMap = $keptImages
+            ->mapWithKeys(fn (string $path) => ['existing::' . $path => $path])
+            ->merge(
+                $newImages->mapWithKeys(fn (string $path, int $index) => [
+                    (string) ($newUploadTokens->get($index) ?: 'new::' . $index) => $path,
+                ])
+            );
+
+        $gallery = $this->applyGalleryOrder(
+            $galleryTokenMap,
+            collect($validated['gallery_order'] ?? [])
+        );
+
+        $featuredImage = $this->resolveFeaturedImagePath(
+            (string) ($validated['featured_image'] ?? ''),
+            $galleryTokenMap,
+            $gallery,
+            $property?->image
+        );
 
         $payload = [
             'title' => $validated['title'],
@@ -376,7 +427,7 @@ class PropertyManagementController extends Controller
                 ? ($property?->approval_notes ?? 'Rejected from admin listing registry.')
                 : null,
             'is_featured' => (bool) ($validated['is_featured'] ?? false),
-            'image' => $gallery->first(),
+            'image' => $featuredImage ?? $gallery->first(),
             'images' => $gallery->all(),
             'published_at' => $validated['approval_status'] === Property::APPROVAL_APPROVED ? ($property?->published_at ?? now()) : null,
             'reviewed_by_user_id' => $request->user()?->id,
@@ -396,6 +447,49 @@ class PropertyManagementController extends Controller
         }
 
         return $payload;
+    }
+
+    protected function applyGalleryOrder(Collection $galleryTokenMap, Collection $galleryOrder): Collection
+    {
+        $galleryOrder = $galleryOrder
+            ->filter(fn ($token) => is_string($token) && trim($token) !== '')
+            ->values();
+
+        if ($galleryOrder->isEmpty()) {
+            return $galleryTokenMap->values()->unique()->values();
+        }
+
+        $ordered = $galleryOrder
+            ->map(fn (string $token) => $galleryTokenMap->get($token))
+            ->filter(fn ($path) => is_string($path) && trim($path) !== '');
+
+        $remaining = $galleryTokenMap
+            ->reject(fn (string $path, string $token) => $galleryOrder->contains($token))
+            ->values();
+
+        return $ordered
+            ->merge($remaining)
+            ->unique()
+            ->values();
+    }
+
+    protected function resolveFeaturedImagePath(string $featuredToken, Collection $galleryTokenMap, Collection $gallery, ?string $currentFeatured): ?string
+    {
+        $featuredToken = trim($featuredToken);
+
+        if ($featuredToken !== '' && $galleryTokenMap->has($featuredToken)) {
+            return $galleryTokenMap->get($featuredToken);
+        }
+
+        if ($featuredToken !== '' && $gallery->contains($featuredToken)) {
+            return $featuredToken;
+        }
+
+        if ($currentFeatured && $gallery->contains($currentFeatured)) {
+            return $currentFeatured;
+        }
+
+        return $gallery->first();
     }
 
     protected function listingUsers()

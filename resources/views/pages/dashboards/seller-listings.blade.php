@@ -71,10 +71,10 @@
                     </select>
                     <small style="display:block;margin-top:0.35rem;color:#6b7280;">This listing is submitted under your seller account but represented by the agent you select.</small>
                 </label>
-                <label class="workspace-field workspace-field--full">
-                    <span>Listing Image</span>
-                    <input type="file" name="image" accept="image/*">
-                </label>
+                @include('partials.property-image-manager', [
+                    'existingImages' => [],
+                    'featuredImage' => '',
+                ])
             </div>
 
             <div class="workspace-actions" style="margin-top: 0.8rem;">
