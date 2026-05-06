@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
@@ -16,7 +16,9 @@ class Property extends Model
     use HasFactory, SoftDeletes;
 
     public const APPROVAL_PENDING = 'pending';
+
     public const APPROVAL_APPROVED = 'approved';
+
     public const APPROVAL_REJECTED = 'rejected';
 
     protected $fillable = [
@@ -62,6 +64,7 @@ class Property extends Model
         'reviewed_at',
         'realtor_profile_id',
         'owner_user_id',
+        'listed_by_id',
     ];
 
     protected $casts = [
@@ -111,6 +114,93 @@ class Property extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_user_id');
+    }
+
+    public function listedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'listed_by_id');
+    }
+
+    public function resolveListedByUser(): ?User
+    {
+        if ($this->listed_by_id) {
+            $resolved = $this->relationLoaded('listedBy')
+                ? $this->listedBy
+                : $this->listedBy()->first();
+
+            if ($resolved) {
+                return $resolved;
+            }
+        }
+
+        if ($this->relationLoaded('realtorProfile')) {
+            $realtorProfile = $this->realtorProfile;
+        } elseif ($this->realtor_profile_id) {
+            $realtorProfile = $this->realtorProfile()->first();
+        } else {
+            $realtorProfile = null;
+        }
+
+        if (! $realtorProfile) {
+            return null;
+        }
+
+        if ($realtorProfile->relationLoaded('user')) {
+            return $realtorProfile->user;
+        }
+
+        return $realtorProfile->user()->first();
+    }
+
+    /**
+     * @return array{
+     *   user_id: int|null,
+     *   name: string,
+     *   role_badge: string,
+     *   avatar_url: string|null,
+     *   avatar_initials: string,
+     *   brokerage_name: string|null,
+     *   city_state: string
+     * }
+     */
+    public function listedByPresentation(): array
+    {
+        $realtorProfile = $this->relationLoaded('realtorProfile')
+            ? $this->realtorProfile
+            : ($this->realtor_profile_id ? $this->realtorProfile()->first() : null);
+
+        $user = $this->resolveListedByUser();
+
+        if ($user) {
+            $cityState = $realtorProfile
+                ? collect([$realtorProfile->city, $realtorProfile->state])
+                    ->filter(fn ($p) => is_string($p) && trim($p) !== '')
+                    ->implode(', ')
+                : '';
+
+            return [
+                'user_id' => (int) $user->id,
+                'name' => $user->publicDisplayName(),
+                'role_badge' => $user->listedByRoleBadge(),
+                'avatar_url' => $user->profilePhotoPublicUrl(),
+                'avatar_initials' => $user->profileInitials(),
+                'brokerage_name' => $realtorProfile?->brokerage_name,
+                'city_state' => $cityState,
+            ];
+        }
+
+        $platform = (string) config('app.name', 'OmniReferral');
+        $label = $platform !== '' ? $platform : 'OmniReferral';
+
+        return [
+            'user_id' => null,
+            'name' => $label,
+            'role_badge' => 'Network',
+            'avatar_url' => null,
+            'avatar_initials' => User::initialsFromDisplayString($label),
+            'brokerage_name' => null,
+            'city_state' => '',
+        ];
     }
 
     public function reviewedBy(): BelongsTo
@@ -242,7 +332,7 @@ class Property extends Model
         }
 
         if (Str::startsWith($path, 'storage/')) {
-            return '/' . $path;
+            return '/'.$path;
         }
 
         if (Str::startsWith($path, 'images/')) {
@@ -275,22 +365,16 @@ class Property extends Model
 
     public function formattedPrice(): string
     {
-        $price = '$' . number_format((int) $this->price);
+        $price = '$'.number_format((int) $this->price);
 
         return Str::lower((string) $this->price_type) === 'rent'
-            ? $price . '/mo'
+            ? $price.'/mo'
             : $price;
     }
 
     public function listedByLabel(): string
     {
-        $owner = $this->owner;
-
-        if (! $owner || in_array($owner->role, ['admin', 'staff'], true)) {
-            return 'OmniReferral';
-        }
-
-        return $owner->name ?: 'OmniReferral';
+        return $this->listedByPresentation()['name'];
     }
 
     public function fullAddress(): string

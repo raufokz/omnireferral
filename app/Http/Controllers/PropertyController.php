@@ -7,9 +7,9 @@ use App\Models\RealtorProfile;
 use App\Support\AdminAudit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -25,7 +25,7 @@ class PropertyController extends Controller
             404
         );
 
-        $property->load(['realtorProfile.user', 'owner'])
+        $property->load(['realtorProfile.user', 'owner', 'listedBy'])
             ->load(['listingComments' => fn ($q) => $q->with('user')->latest()])
             ->loadCount(['favorites as favorites_count']);
 
@@ -49,7 +49,7 @@ class PropertyController extends Controller
         return view('pages.property-details', [
             'property' => $property,
             'relatedProperties' => Property::query()
-                ->with(['realtorProfile.user', 'owner'])
+                ->with(['realtorProfile.user', 'owner', 'listedBy'])
                 ->withFavoriteSummary($viewer)
                 ->marketplaceVisible()
                 ->whereKeyNot($property->id)
@@ -58,8 +58,8 @@ class PropertyController extends Controller
                 ->take(3)
                 ->get(),
             'meta' => [
-                'title' => $property->title . ' | OmniReferral Listing',
-                'description' => 'View property details, pricing, location, and connected agent information for ' . $property->title . '.',
+                'title' => $property->title.' | OmniReferral Listing',
+                'description' => 'View property details, pricing, location, and connected agent information for '.$property->title.'.',
             ],
         ]);
     }
@@ -122,18 +122,21 @@ class PropertyController extends Controller
             if ($activeListingCount >= $listingLimit) {
                 return redirect()
                     ->route('agent.listings.index')
-                    ->with('error', 'You have reached the active listing limit for your ' . $activePlan->name . ' package.');
+                    ->with('error', 'You have reached the active listing limit for your '.$activePlan->name.' package.');
             }
 
             $validated['source'] = 'Agent Dashboard Upload';
             $validated['realtor_profile_id'] = $profile->id;
             $validated['owner_user_id'] = $user->id;
+            $validated['listed_by_id'] = $user->id;
         }
 
         if ($user?->isSeller()) {
             $validated['realtor_profile_id'] = (int) $validated['listing_realtor_profile_id'];
             unset($validated['listing_realtor_profile_id']);
             $validated['owner_user_id'] = $user->id;
+            $listingAgent = RealtorProfile::query()->find($validated['realtor_profile_id']);
+            $validated['listed_by_id'] = $listingAgent?->user_id;
         }
 
         [$gallery, $featuredPath] = $this->prepareGalleryPayload($request, null, $validated);
@@ -147,7 +150,7 @@ class PropertyController extends Controller
         $validated['images'] = $gallery->all();
         $validated['image'] = $featuredPath ?? $gallery->first();
 
-        $validated['slug'] = Str::slug($validated['title']) . '-' . Str::lower(Str::random(6));
+        $validated['slug'] = Str::slug($validated['title']).'-'.Str::lower(Str::random(6));
         $requiresApproval = $user?->isAgent() || $user?->isSeller();
         $validated['status'] = $requiresApproval ? 'Pending' : 'Active';
         $validated['approval_status'] = $requiresApproval ? Property::APPROVAL_PENDING : Property::APPROVAL_APPROVED;
@@ -284,7 +287,7 @@ class PropertyController extends Controller
                 : 'Pending',
         ]);
 
-        AdminAudit::log($request, 'property.review.' . $validated['decision'], 'property', $property->id, [
+        AdminAudit::log($request, 'property.review.'.$validated['decision'], 'property', $property->id, [
             'title' => $property->title,
         ]);
 
@@ -368,10 +371,10 @@ class PropertyController extends Controller
         }
 
         $galleryTokenMap = $keptExisting
-            ->mapWithKeys(fn (string $path) => ['existing::' . $path => $path])
+            ->mapWithKeys(fn (string $path) => ['existing::'.$path => $path])
             ->merge(
                 $newImages->mapWithKeys(fn (string $path, int $index) => [
-                    (string) ($newUploadTokens->get($index) ?: 'new::' . $index) => $path,
+                    (string) ($newUploadTokens->get($index) ?: 'new::'.$index) => $path,
                 ])
             );
 
@@ -451,7 +454,7 @@ class PropertyController extends Controller
     protected function canManage(Property $property): bool
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -475,7 +478,7 @@ class PropertyController extends Controller
         return $user->realtorProfile ?: RealtorProfile::firstOrCreate(
             ['user_id' => $user->id],
             [
-                'slug' => Str::slug($user->name . '-' . Str::lower(Str::random(6))),
+                'slug' => Str::slug($user->name.'-'.Str::lower(Str::random(6))),
                 'brokerage_name' => 'OmniReferral Partner',
                 'license_number' => 'Pending',
                 'address_line_1' => $user->address_line_1,
@@ -485,7 +488,7 @@ class PropertyController extends Controller
                 'zip_code' => $user->zip_code ?: '75201',
                 'specialties' => 'Buyer Representation, Seller Strategy, Lead Conversion',
                 'bio' => 'Agent profile created in the OmniReferral workspace.',
-                'headshot' => $user->avatar ? 'storage/' . ltrim($user->avatar, '/') : 'images/realtors/3.png',
+                'headshot' => $user->avatar ? 'storage/'.ltrim($user->avatar, '/') : 'images/realtors/3.png',
             ]
         );
     }

@@ -21,7 +21,7 @@ class OmniReferralSeeder extends Seeder
     public function run(): void
     {
         $realtorImages = collect(glob(public_path('images/realtors/*.png')))
-            ->map(fn ($path) => 'images/realtors/' . basename($path))
+            ->map(fn ($path) => 'images/realtors/'.basename($path))
             ->filter(fn ($path) => ! str_contains($path, 'admin-ajax'))
             ->values();
 
@@ -205,16 +205,16 @@ class OmniReferralSeeder extends Seeder
             $user = User::updateOrCreate(['email' => $agent['email']], [
                 'name' => $agent['name'],
                 'password' => 'password',
-                'phone' => '80055510' . ($index + 20),
+                'phone' => '80055510'.($index + 20),
                 'role' => 'agent',
                 'status' => 'active',
                 'current_plan_id' => $agent['plan'],
-                'affiliate_code' => strtoupper('AGN' . str_pad((string) ($index + 1), 5, '0', STR_PAD_LEFT)),
+                'affiliate_code' => strtoupper('AGN'.str_pad((string) ($index + 1), 5, '0', STR_PAD_LEFT)),
                 'onboarding_completed_at' => now()->subDays(10 - $index),
             ]);
 
             AffiliateProfile::updateOrCreate(['user_id' => $user->id], [
-                'slug' => Str::slug($agent['name']) . '-partner',
+                'slug' => Str::slug($agent['name']).'-partner',
                 'referral_code' => $user->affiliate_code,
                 'payout_email' => $user->email,
                 'commission_rate' => 10 + $index,
@@ -261,7 +261,7 @@ class OmniReferralSeeder extends Seeder
                 'location' => $location,
                 'rating' => 5,
                 'quote' => $quote,
-                'photo' => $logo ?: 'images/reviews/review-' . (($index % 4) + 1) . '.svg',
+                'photo' => $logo ?: 'images/reviews/review-'.(($index % 4) + 1).'.svg',
                 'is_featured' => $isFeatured,
                 'is_published' => true,
                 'sort_order' => $index + 1,
@@ -285,10 +285,10 @@ class OmniReferralSeeder extends Seeder
                 'title' => $title,
                 'author' => $author,
                 'category' => $category,
-                'image' => 'images/blogs/blog-' . ($index + 1) . '.svg',
+                'image' => 'images/blogs/blog-'.($index + 1).'.svg',
                 'excerpt' => 'Actionable advice for buyers, sellers, and real estate professionals who want better workflows and better conversion.',
                 'content' => "OmniReferral combines human-first outreach with clear systems for qualification, routing, and follow-up.\n\nThis article explains practical ways to improve real estate referral workflows while building more trust with clients and agent partners.",
-                'meta_title' => $title . ' | OmniReferral',
+                'meta_title' => $title.' | OmniReferral',
                 'meta_description' => 'Read OmniReferral insights on lead generation, agent growth, and real estate referral systems.',
             ]);
         }
@@ -327,16 +327,17 @@ class OmniReferralSeeder extends Seeder
                     'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800',
                     'https://images.unsplash.com/photo-1568605114967-8130f3a36994?auto=format&fit=crop&q=80&w=800',
                     'https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&q=80&w=800',
-                    'https://images.unsplash.com/photo-1600566753190-17f0bb2a6c3e?auto=format&fit=crop&q=80&w=800'
+                    'https://images.unsplash.com/photo-1600566753190-17f0bb2a6c3e?auto=format&fit=crop&q=80&w=800',
                 ][$index],
                 'images' => [
-                    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800'
+                    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800',
                 ],
                 'source' => 'OmniReferral Listings',
                 'is_featured' => $index < 3,
                 'published_at' => now()->subDays($index + 1),
                 'realtor_profile_id' => $agents[$index % $agents->count()]->id,
                 'owner_user_id' => $agents[$index % $agents->count()]->user_id,
+                'listed_by_id' => $agents[$index % $agents->count()]->user_id,
             ]);
         }
 
@@ -349,7 +350,7 @@ class OmniReferralSeeder extends Seeder
             $package = $packages->firstWhere('id', $packageId);
 
             return Lead::updateOrCreate(['email' => $email], [
-                'lead_number' => 'OMNI-20260401-' . str_pad((string) ($index + 1), 4, '0', STR_PAD_LEFT),
+                'lead_number' => 'OMNI-20260401-'.str_pad((string) ($index + 1), 4, '0', STR_PAD_LEFT),
                 'intent' => $intent,
                 'package_type' => $package ? str($package->slug)->before('-')->toString() : ['quick', 'power', 'prime'][$index],
                 'package_id' => $packageId,

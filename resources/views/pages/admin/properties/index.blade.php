@@ -76,8 +76,8 @@
                     <span>Listed By</span>
                     <select name="listed_by">
                         <option value="">All owners</option>
-                        <option value="omnireferral" {{ $filters['listed_by'] === 'omnireferral' ? 'selected' : '' }}>OmniReferral/Admin</option>
-                        <option value="user" {{ $filters['listed_by'] === 'user' ? 'selected' : '' }}>User</option>
+                        <option value="omnireferral" {{ $filters['listed_by'] === 'omnireferral' ? 'selected' : '' }}>Platform (no attributed user)</option>
+                        <option value="user" {{ $filters['listed_by'] === 'user' ? 'selected' : '' }}>Attributed user</option>
                     </select>
                 </label>
                 <label class="workspace-field">
@@ -128,7 +128,6 @@
                     if ($property->image && ! $gallery->contains($property->image)) {
                         $gallery->prepend($property->image);
                     }
-                    $listedBy = $property->listedByLabel();
                     $shareUrl = route('properties.show', $property);
                 @endphp
                 <article class="workspace-card zillow-card">
@@ -150,7 +149,10 @@
                             <span>{{ number_format((int) $property->sqft) }} sqft</span>
                             <span>{{ $gallery->count() }} photos</span>
                         </div>
-                        <div class="workspace-property__meta" style="margin-top: 0.55rem;">Listed by {{ $listedBy }}</div>
+                        <div class="workspace-property__meta workspace-property__listed-by" style="margin-top: 0.55rem;">
+                            <span style="display:block;font-size:0.72rem;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.25rem;">Listed by</span>
+                            @include('partials.property.listed-by', ['property' => $property, 'variant' => 'admin'])
+                        </div>
                         <div class="workspace-actions" style="margin-top: 0.8rem; flex-wrap: wrap;">
                             <a href="{{ route('admin.properties.edit', $property) }}" class="button button--ghost-blue">Edit</a>
                             <a href="{{ $shareUrl }}" class="button button--ghost-blue">View</a>

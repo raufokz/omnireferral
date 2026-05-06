@@ -9,8 +9,8 @@ use App\Support\AdminAudit;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -38,16 +38,16 @@ class PropertyManagementController extends Controller
         ];
 
         $query = Property::query()
-            ->with(['owner', 'realtorProfile.user', 'reviewedBy']);
+            ->with(['owner', 'realtorProfile.user', 'listedBy', 'reviewedBy']);
 
         if ($filters['search'] !== '') {
             $search = $filters['search'];
             $query->where(function ($builder) use ($search) {
-                $builder->where('title', 'like', '%' . $search . '%')
-                    ->orWhere('location', 'like', '%' . $search . '%')
-                    ->orWhere('city', 'like', '%' . $search . '%')
-                    ->orWhere('zip_code', 'like', '%' . $search . '%')
-                    ->orWhere('source', 'like', '%' . $search . '%');
+                $builder->where('title', 'like', '%'.$search.'%')
+                    ->orWhere('location', 'like', '%'.$search.'%')
+                    ->orWhere('city', 'like', '%'.$search.'%')
+                    ->orWhere('zip_code', 'like', '%'.$search.'%')
+                    ->orWhere('source', 'like', '%'.$search.'%');
             });
         }
 
@@ -64,9 +64,9 @@ class PropertyManagementController extends Controller
         }
 
         if ($filters['listed_by'] === 'omnireferral') {
-            $query->whereNull('owner_user_id');
+            $query->whereNull('listed_by_id');
         } elseif ($filters['listed_by'] === 'user') {
-            $query->whereNotNull('owner_user_id');
+            $query->whereNotNull('listed_by_id');
         }
 
         if (is_numeric($filters['price_min'])) {
@@ -123,7 +123,7 @@ class PropertyManagementController extends Controller
                 'total' => Property::count(),
                 'active' => Property::where('status', 'Active')->count(),
                 'pendingReview' => Property::pendingReview()->count(),
-                'userListed' => Property::whereNotNull('owner_user_id')->count(),
+                'userListed' => Property::whereNotNull('listed_by_id')->count(),
             ],
             'mapPins' => $properties->map(function (Property $property) {
                 return [
@@ -373,10 +373,10 @@ class PropertyManagementController extends Controller
         }
 
         $galleryTokenMap = $keptImages
-            ->mapWithKeys(fn (string $path) => ['existing::' . $path => $path])
+            ->mapWithKeys(fn (string $path) => ['existing::'.$path => $path])
             ->merge(
                 $newImages->mapWithKeys(fn (string $path, int $index) => [
-                    (string) ($newUploadTokens->get($index) ?: 'new::' . $index) => $path,
+                    (string) ($newUploadTokens->get($index) ?: 'new::'.$index) => $path,
                 ])
             );
 
@@ -436,14 +436,17 @@ class PropertyManagementController extends Controller
 
         if ($canManageListedBy) {
             if (($validated['listed_by_type'] ?? 'omnireferral') === 'user') {
-                $payload['owner_user_id'] = (int) $validated['listed_by_user_id'];
+                $uid = (int) $validated['listed_by_user_id'];
+                $payload['owner_user_id'] = $uid;
+                $payload['listed_by_id'] = $uid;
             } else {
                 $payload['owner_user_id'] = null;
+                $payload['listed_by_id'] = null;
             }
         }
 
         if (! $property) {
-            $payload['slug'] = Str::slug($validated['title']) . '-' . Str::lower(Str::random(6));
+            $payload['slug'] = Str::slug($validated['title']).'-'.Str::lower(Str::random(6));
         }
 
         return $payload;

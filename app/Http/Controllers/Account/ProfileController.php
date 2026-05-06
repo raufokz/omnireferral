@@ -49,6 +49,7 @@ class ProfileController extends Controller
             'notify_email' => ['nullable', Rule::in(['0', '1'])],
             'notify_marketing' => ['nullable', Rule::in(['0', '1'])],
             'two_factor_enabled' => ['nullable', Rule::in(['0', '1'])],
+            'remove_avatar' => ['nullable', 'boolean'],
         ];
 
         if ($changingPassword) {
@@ -89,6 +90,9 @@ class ProfileController extends Controller
         if ($request->hasFile('avatar')) {
             $this->deleteStoredAvatar($user->avatar);
             $payload['avatar'] = $request->file('avatar')->store('avatars', 'public');
+        } elseif ($request->boolean('remove_avatar')) {
+            $this->deleteStoredAvatar($user->avatar);
+            $payload['avatar'] = null;
         }
 
         if ($changingPassword) {

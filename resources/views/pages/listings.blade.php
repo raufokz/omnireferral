@@ -86,85 +86,22 @@
                     <label for="listingSort">Sort</label>
                     <select id="listingSort" class="ls-sort-select" name="sort" onchange="this.form.submit()">
                         <option value="newest" @selected(($filters['sort'] ?? 'newest') === 'newest')>Newest</option>
-                        <option value="price_asc" @selected(($filters['sort'] ?? '') === 'price_asc')>Price Low → High</option>
-                        <option value="price_desc" @selected(($filters['sort'] ?? '') === 'price_desc')>Price High → Low</option>
+                        <option value="price_asc" @selected(($filters['sort'] ?? '') === 'price_asc')>Price Low to High</option>
+                        <option value="price_desc" @selected(($filters['sort'] ?? '') === 'price_desc')>Price High to Low</option>
                     </select>
                 </form>
             </div>
 
             <div class="listing-cards-grid listing-cards-grid--marketplace" id="listingGrid" data-stagger>
                 @forelse($propertyCollection as $property)
-                    @php
-                        $locationLine = $property->city
-                            ? trim($property->city . ', ' . ($property->state ?: '') . ' ' . $property->zip_code)
-                            : trim($property->location . ($property->zip_code ? ' · ' . $property->zip_code : ''));
-                    @endphp
-                    <article
-                        class="lc-card lc-card--marketplace"
-                        data-listing-card
-                        data-zip="{{ $property->zip_code }}"
-                        data-type="{{ strtolower($property->property_type) }}"
-                        data-price="{{ $property->price }}"
-                        data-beds="{{ (int) ($property->beds ?? 0) }}"
-                        data-baths="{{ (float) ($property->baths ?? 0) }}"
-                        data-area="{{ (int) ($property->sqft ?? 0) }}"
-                    >
-                        <a href="{{ route('properties.show', $property) }}" class="lc-card__media" aria-label="View {{ $property->title }}">
-                            <img src="{{ $property->image_url }}" alt="{{ $property->title }}" loading="lazy" decoding="async">
-                            <span class="lc-card__status">{{ $property->listingIntentLabel() }}</span>
-                            @if($property->is_featured)
-                                <span class="lc-card__featured">Featured</span>
-                            @endif
-                            <div class="lc-card__price">{{ $property->formattedPrice() }}</div>
-                        </a>
-                        <div class="lc-card__save-group">
-                            <form method="POST" action="{{ route('properties.favorite.toggle', $property) }}" class="lc-card__save-form">
-                                @csrf
-                                <button
-                                    type="submit"
-                                    class="lc-card__save {{ $property->is_favorited ? 'is-active' : '' }}"
-                                    aria-label="{{ $property->is_favorited ? 'Remove listing from favorites' : 'Add listing to favorites' }}"
-                                >
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="{{ $property->is_favorited ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-                                </button>
-                            </form>
-                            <span class="lc-card__save-count">{{ number_format($property->favorites_count ?? 0) }}</span>
-                        </div>
-                        <div class="lc-card__body">
-                            <div class="lc-card__type-row">
-                                <span class="lc-card__type">{{ \Illuminate\Support\Str::headline($property->property_type) }}</span>
-                                @if($property->zip_code)
-                                    <span class="lc-card__zip">ZIP {{ $property->zip_code }}</span>
-                                @endif
-                            </div>
-                            <h3 class="lc-card__title">{{ $property->title }}</h3>
-                            <p class="lc-card__location">{{ $locationLine }}</p>
-                            <div class="lc-card__meta" aria-label="Property facts">
-                                <div class="lc-meta-item">
-                                    <strong>{{ $property->beds ?? '-' }}</strong>
-                                    <span>Beds</span>
-                                </div>
-                                <div class="lc-meta-item">
-                                    <strong>{{ $property->baths ?? '-' }}</strong>
-                                    <span>Baths</span>
-                                </div>
-                                <div class="lc-meta-item">
-                                    <strong>{{ $property->sqft ? number_format($property->sqft) : '-' }}</strong>
-                                    <span>Sqft</span>
-                                </div>
-                            </div>
-                            <div class="lc-card__footer">
-                                <span class="lc-card__agent" title="Listed by {{ $property->listedByLabel() }}">Listed by {{ $property->listedByLabel() }}</span>
-                                <div class="lc-card__actions">
-                                    <a href="{{ route('properties.show', $property) }}" class="button button--ghost-blue">Details</a>
-                                    <a href="{{ route('properties.show', $property) }}#property-contact" class="button button--orange">Contact</a>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
+                    @include('partials.property.listing-card', [
+                        'property' => $property,
+                        'variant' => 'marketplace',
+                        'withFilters' => true,
+                    ])
                 @empty
                     <div class="listing-empty-state">
-                        <div class="listing-empty-state__icon">⌂</div>
+                        <div class="listing-empty-state__icon">Home</div>
                         <h3>No listings available yet</h3>
                         <p>Check back soon. New properties are added regularly.</p>
                         <a href="{{ route('contact') }}" class="button button--orange">Request a Match</a>
@@ -277,7 +214,7 @@
                 </div>
 
                 <div class="lf-card lf-card--cta">
-                    <div class="lf-cta__icon">↗</div>
+                    <div class="lf-cta__icon">+</div>
                     <h4>Want a stronger match?</h4>
                     <p>Tell us the market, budget, and timing. We will route you to the right agent.</p>
                     <a href="{{ route('contact') }}" class="button button--orange lf-btn-full">Request a Match</a>

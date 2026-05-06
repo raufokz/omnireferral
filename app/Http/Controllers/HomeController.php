@@ -37,8 +37,8 @@ class HomeController extends Controller
                 return [
                     'path' => $realtor->headshot,
                     'name' => $realtor->user->name,
-                    'role' => 'Realtor | ' . ($realtor->brokerage_name ?: 'OmniReferral Partner Network'),
-                    'location' => $realtor->city . ', ' . $realtor->state,
+                    'role' => 'Realtor | '.($realtor->brokerage_name ?: 'OmniReferral Partner Network'),
+                    'location' => $realtor->city.', '.$realtor->state,
                     'quote' => $testimonialQuotes[$index % count($testimonialQuotes)],
                 ];
             });
@@ -58,7 +58,7 @@ class HomeController extends Controller
 
                 return [
                     'name' => $readable,
-                    'path' => 'images/companies-logos/' . $file->getFilename(),
+                    'path' => 'images/companies-logos/'.$file->getFilename(),
                 ];
             });
 
@@ -73,7 +73,7 @@ class HomeController extends Controller
             'blogs' => Blog::latest()->take(3)->get(),
             'team' => TeamMember::latest()->get(),
             'properties' => Property::query()
-                ->with(['realtorProfile.user', 'owner'])
+                ->with(['realtorProfile.user', 'owner', 'listedBy'])
                 ->withFavoriteSummary($viewer)
                 ->marketplaceVisible()
                 ->latest()
@@ -154,12 +154,12 @@ class HomeController extends Controller
         ];
 
         $query = Property::query()
-            ->with(['realtorProfile.user', 'owner'])
+            ->with(['realtorProfile.user', 'owner', 'listedBy'])
             ->withFavoriteSummary($viewer)
             ->marketplaceVisible();
 
         if ($filters['q'] !== '') {
-            $term = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $filters['q']) . '%';
+            $term = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $filters['q']).'%';
             $query->where(function ($q) use ($term) {
                 $q->where('title', 'like', $term)
                     ->orWhere('location', 'like', $term)
@@ -172,7 +172,7 @@ class HomeController extends Controller
         }
 
         if ($filters['zip_code'] !== '') {
-            $query->where('zip_code', 'like', '%' . trim($filters['zip_code']) . '%');
+            $query->where('zip_code', 'like', '%'.trim($filters['zip_code']).'%');
         }
 
         if ($filters['property_type'] !== '') {
@@ -250,7 +250,7 @@ class HomeController extends Controller
             'dashboardRoute' => $dashboardRoute,
             'onboardingFormSrc' => 'https://api.leadconnectorhq.com/widget/form/1KzI6i1lZ4rDTDZF02ot',
             'meta' => [
-                'title' => ucfirst($role) . ' Onboarding | OmniReferral',
+                'title' => ucfirst($role).' Onboarding | OmniReferral',
                 'description' => 'Complete your OmniReferral onboarding and get your dashboard ready.',
             ],
         ]);

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -19,6 +20,7 @@ class User extends Authenticatable
         'name',
         'display_name',
         'email',
+        'email_verified_at',
         'password',
         'must_reset_password',
         'password_set_at',
@@ -144,6 +146,21 @@ class User extends Authenticatable
         return $this->hasMany(Property::class, 'owner_user_id');
     }
 
+    public function listedProperties(): HasMany
+    {
+        return $this->hasMany(Property::class, 'listed_by_id');
+    }
+
+    public function enquiriesReceived(): HasMany
+    {
+        return $this->hasMany(Enquiry::class, 'receiver_user_id');
+    }
+
+    public function enquiriesSent(): HasMany
+    {
+        return $this->hasMany(Enquiry::class, 'sender_user_id');
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
@@ -236,5 +253,63 @@ class User extends Authenticatable
             'buyer' => 'Buyer',
             default => ucfirst((string) $this->role),
         };
+    }
+
+    /**
+     * Short role label for marketplace “Listed By” badges (Agent / Partner / Network / Admin / Referral).
+     */
+    public function listedByRoleBadge(): string
+    {
+        return match ($this->role) {
+            'agent' => 'Agent',
+            'seller' => 'Partner',
+            'admin' => 'Admin',
+            'staff' => 'Network',
+            'buyer' => 'Referral',
+            default => Str::title((string) $this->role),
+        };
+    }
+
+    /**
+     * Public URL for the user's profile photo (users.avatar only). Null when no upload.
+     */
+    public function profilePhotoPublicUrl(): ?string
+    {
+        $avatar = $this->avatar ? trim((string) $this->avatar) : '';
+        if ($avatar === '') {
+            return null;
+        }
+
+        if (str_starts_with($avatar, 'http://') || str_starts_with($avatar, 'https://')) {
+            return $avatar;
+        }
+
+        return asset('storage/'.ltrim($avatar, '/'));
+    }
+
+    /**
+     * Two-letter initials for avatar placeholders (display_name / name).
+     */
+    public function profileInitials(): string
+    {
+        return self::initialsFromDisplayString($this->publicDisplayName());
+    }
+
+    public static function initialsFromDisplayString(string $name): string
+    {
+        $name = trim($name);
+        if ($name === '') {
+            return '?';
+        }
+
+        $parts = preg_split('/\s+/u', $name, -1, PREG_SPLIT_NO_EMPTY);
+        if (count($parts) >= 2) {
+            $first = mb_substr($parts[0], 0, 1);
+            $last = mb_substr($parts[count($parts) - 1], 0, 1);
+
+            return mb_strtoupper($first.$last);
+        }
+
+        return mb_strtoupper(mb_substr($name, 0, min(2, mb_strlen($name))));
     }
 }

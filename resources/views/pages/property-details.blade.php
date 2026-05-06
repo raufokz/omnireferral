@@ -18,12 +18,7 @@
             'ZIP-focused market guidance from OmniReferral',
             'Neighborhood context available on request'
         ));
-    $agentName = optional(optional($property->realtorProfile)->user)->name ?? 'OmniReferral Partner';
-    $agentBrokerage = optional($property->realtorProfile)->brokerage_name ?: 'OmniReferral Network';
-    $agentHeadshot = optional($property->realtorProfile)->headshot ?: 'images/realtors/3.png';
-    $agentHeadshotUrl = \Illuminate\Support\Str::startsWith($agentHeadshot, ['http://', 'https://'])
-        ? $agentHeadshot
-        : asset($agentHeadshot);
+    $listed = $property->listedByPresentation();
 @endphp
 
 <section class="property-detail-hero">
@@ -228,17 +223,28 @@
             <section class="pd-agent-card" id="property-contact">
                 <span class="eyebrow">Listed By</span>
                 <div class="pd-agent-card__profile">
-                    <img src="{{ $agentHeadshotUrl }}" alt="{{ $agentName }}" loading="lazy" decoding="async">
+                    @if(!empty($listed['avatar_url']))
+                        <img src="{{ $listed['avatar_url'] }}" alt="" class="pd-agent-card__profile-img" loading="lazy" decoding="async" width="76" height="76">
+                    @else
+                        <span class="listed-by-placeholder listed-by-placeholder--xl" role="img" aria-label="{{ $listed['name'] }}">{{ $listed['avatar_initials'] }}</span>
+                    @endif
                     <div>
-                        <h2>{{ $agentName }}</h2>
-                        <p>{{ $agentBrokerage }}</p>
-                        <small>{{ optional($property->realtorProfile)->city }}{{ optional($property->realtorProfile)->city ? ', ' : '' }}{{ optional($property->realtorProfile)->state }}</small>
+                        <h2>{{ $listed['name'] }}</h2>
+                        <p class="pd-listed-by-badge-row"><span class="pd-listed-by-badge">{{ $listed['role_badge'] }}</span></p>
+                        @if(!empty($listed['brokerage_name']))
+                            <p>{{ $listed['brokerage_name'] }}</p>
+                        @endif
+                        @if($listed['city_state'] !== '')
+                            <small>{{ $listed['city_state'] }}</small>
+                        @endif
                     </div>
                 </div>
-                <div class="pd-listed-by">
-                    <span>Listing owner</span>
-                    <strong>{{ $property->listedByLabel() }}</strong>
-                </div>
+                @if($property->owner && $listed['user_id'] && (int) $property->owner_user_id !== (int) $listed['user_id'])
+                    <div class="pd-listed-by pd-listed-by--secondary">
+                        <span>Listing owner</span>
+                        <strong>{{ $property->owner->publicDisplayName() }}</strong>
+                    </div>
+                @endif
 
                 @if($property->realtorProfile)
                     <form action="{{ route('contact.submit') }}" method="POST" class="agent-contact-form pd-agent-card__form">
@@ -268,8 +274,35 @@
                         <input type="hidden" name="subject" value="{{ old('subject', 'Inquiry about ' . $property->title) }}">
                         <button type="submit" class="button button--orange">Contact Agent</button>
                     </form>
+                @elseif(!empty($listed['user_id']))
+                    <form action="{{ route('contact.submit') }}" method="POST" class="agent-contact-form pd-agent-card__form">
+                        @csrf
+                        <input type="hidden" name="property_id" value="{{ $property->id }}">
+                        <input type="hidden" name="recipient_user_id" value="{{ $listed['user_id'] }}">
+                        <input type="hidden" name="source" value="website_property_inquiry">
+
+                        <label>
+                            <span>Full Name</span>
+                            <input type="text" name="name" value="{{ old('name', auth()->user()?->name) }}" required>
+                        </label>
+                        <label>
+                            <span>Email</span>
+                            <input type="email" name="email" value="{{ old('email', auth()->user()?->email) }}" required>
+                        </label>
+                        <label>
+                            <span>Phone</span>
+                            <input type="text" name="phone" value="{{ old('phone', auth()->user()?->phone) }}">
+                        </label>
+                        <label>
+                            <span>Message</span>
+                            <textarea name="message" rows="4" required>{{ old('message', 'Hi, I would like more information about ' . $property->title . '.') }}</textarea>
+                        </label>
+                        <input type="hidden" name="role" value="{{ old('role', auth()->user()?->role ?: 'buyer') }}">
+                        <input type="hidden" name="subject" value="{{ old('subject', 'Inquiry about ' . $property->title) }}">
+                        <button type="submit" class="button button--orange">Contact</button>
+                    </form>
                 @else
-                    <a href="{{ route('contact') }}?property={{ urlencode($property->title) }}" class="button button--orange">Contact OmniReferral</a>
+                    <a href="{{ route('contact') }}?property={{ urlencode($property->title) }}" class="button button--orange">Contact support</a>
                 @endif
 
                 <form method="POST" action="{{ route('properties.favorite.toggle', $property) }}" class="pd-agent-card__favorite">

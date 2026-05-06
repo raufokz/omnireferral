@@ -8,7 +8,7 @@
         $existingImages->prepend($property->image);
     }
 
-    $listedByType = old('listed_by_type', $property->owner_user_id ? 'user' : 'omnireferral');
+    $listedByType = old('listed_by_type', ($property->listed_by_id || $property->owner_user_id) ? 'user' : 'omnireferral');
 @endphp
 
 <div class="workspace-card">
@@ -191,8 +191,8 @@
             <label class="workspace-field">
                 <span>Listing Owner Type</span>
                 <select name="listed_by_type" data-listed-by-type>
-                    <option value="omnireferral" {{ $listedByType === 'omnireferral' ? 'selected' : '' }}>OmniReferral/Admin</option>
-                    <option value="user" {{ $listedByType === 'user' ? 'selected' : '' }}>Specific User</option>
+                    <option value="omnireferral" {{ $listedByType === 'omnireferral' ? 'selected' : '' }}>Platform (no attributed user)</option>
+                    <option value="user" {{ $listedByType === 'user' ? 'selected' : '' }}>Specific user (Listed By)</option>
                 </select>
             </label>
             <label class="workspace-field workspace-field--full" data-listed-by-user-wrap style="{{ $listedByType === 'user' ? '' : 'display:none;' }}">
@@ -200,7 +200,7 @@
                 <select name="listed_by_user_id">
                     <option value="">Select user...</option>
                     @foreach($listingUsers as $user)
-                        <option value="{{ $user->id }}" {{ (int) old('listed_by_user_id', $property->owner_user_id) === (int) $user->id ? 'selected' : '' }}>
+                        <option value="{{ $user->id }}" {{ (int) old('listed_by_user_id', $property->listed_by_id ?? $property->owner_user_id) === (int) $user->id ? 'selected' : '' }}>
                             {{ $user->name }} ({{ ucfirst($user->role) }}) - {{ $user->email }}
                         </option>
                     @endforeach

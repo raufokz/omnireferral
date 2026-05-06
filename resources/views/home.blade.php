@@ -546,61 +546,13 @@ No confusion. No delays. Just momentum.</p>
                 <h2 id="featured-listings-heading">Marketplace-style property discovery with better visual clarity</h2>
                 <p>Pricing, property type, location, and the next action are surfaced immediately so users can browse faster and with more confidence.</p>
             </div>
-            <div class="listing-grid listing-grid--showcase homepage-featured-listings" data-stagger>
+            <div class="property-card-grid property-card-grid--home homepage-featured-listings" data-stagger>
                 @foreach($homepageMarketplaceProperties as $property)
-                    <article class="listing-card listing-card--showcase homepage-listing-card" data-animate>
-                        <div class="listing-card__media">
-                            <img src="{{ $property->image_url }}" alt="{{ $property->title }} property image" loading="lazy">
-                            <span class="listing-card__badge">{{ $property->status ?? 'New Listing' }}</span>
-                            <div class="listing-card__price-badge">${{ number_format($property->price) }}</div>
-                            <div class="listing-card__save-group">
-                                <form method="POST" action="{{ route('properties.favorite.toggle', $property) }}" class="listing-card__save-form">
-                                    @csrf
-                                    <button
-                                        type="submit"
-                                        class="listing-card__save {{ $property->is_favorited ? 'is-active' : '' }}"
-                                        aria-label="{{ $property->is_favorited ? 'Remove property from favorites' : 'Add property to favorites' }}"
-                                    >
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="{{ $property->is_favorited ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-                                    </button>
-                                </form>
-                                <span class="listing-card__save-count">{{ number_format($property->favorites_count ?? 0) }}</span>
-                            </div>
-                        </div>
-                        <div class="listing-card__body">
-                            <span class="listing-card__type">{{ $property->property_type ?? 'Property' }}</span>
-                            <h3>{{ $property->title }}</h3>
-                            <p class="listing-location">{{ $property->location }}</p>
-
-                            <div class="listing-card__meta-grid">
-                                <div class="listing-meta-chip">
-                                    <strong>{{ $property->beds ?? '3' }}</strong>
-                                    <span>Beds</span>
-                                </div>
-                                <div class="listing-meta-chip">
-                                    <strong>{{ $property->baths ?? '2' }}</strong>
-                                    <span>Baths</span>
-                                </div>
-                                <div class="listing-meta-chip">
-                                    <strong>{{ $property->sqft ? number_format($property->sqft) : '1,200' }}</strong>
-                                    <span>Sqft</span>
-                                </div>
-                            </div>
-
-                            <div class="listing-card__footer">
-                                <div class="listing-agent-mini">
-                                    <div>
-                                        <small>Listed by</small>
-                                        <p title="{{ optional(optional($property->realtorProfile)->user)->name ?? 'OmniReferral Partner' }}">{{ optional(optional($property->realtorProfile)->user)->name ?? 'OmniReferral Partner' }}</p>
-                                    </div>
-                                </div>
-                                <div class="listing-card__actions">
-                                    <a href="{{ route('properties.show', $property) }}" class="button button--ghost-blue">Details</a>
-                                    <a href="{{ route('properties.show', $property) }}#property-contact" class="button button--orange">Contact Agent</a>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
+                    @include('partials.property.listing-card', [
+                        'property' => $property,
+                        'variant' => 'home',
+                        'animate' => true,
+                    ])
                 @endforeach
             </div>
             @if(isset($properties) && $properties instanceof \Illuminate\Contracts\Pagination\Paginator && $properties->hasPages())

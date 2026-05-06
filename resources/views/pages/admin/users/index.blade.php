@@ -29,7 +29,7 @@
             <div class="workspace-form-grid">
                 <label class="workspace-field workspace-field--full">
                     <span>Keyword</span>
-                    <input type="text" name="search" value="{{ $filters['search'] }}" placeholder="Name or email">
+                    <input type="text" name="search" value="{{ $filters['search'] }}" placeholder="Name, email, phone, affiliate code">
                 </label>
                 <label class="workspace-field">
                     <span>Role</span>
@@ -50,9 +50,19 @@
                     </select>
                 </label>
                 <label class="workspace-field">
+                    <span>Joined from</span>
+                    <input type="date" name="date_from" value="{{ $filters['date_from'] }}">
+                </label>
+                <label class="workspace-field">
+                    <span>Joined to</span>
+                    <input type="date" name="date_to" value="{{ $filters['date_to'] }}">
+                </label>
+                <label class="workspace-field">
                     <span>Sort</span>
                     <select name="sort">
-                        <option value="latest" {{ $filters['sort'] === 'latest' ? 'selected' : '' }}>Latest</option>
+                        <option value="latest" {{ $filters['sort'] === 'latest' ? 'selected' : '' }}>Newest join</option>
+                        <option value="oldest" {{ $filters['sort'] === 'oldest' ? 'selected' : '' }}>Oldest join</option>
+                        <option value="updated" {{ $filters['sort'] === 'updated' ? 'selected' : '' }}>Recently updated</option>
                         <option value="name" {{ $filters['sort'] === 'name' ? 'selected' : '' }}>Name A–Z</option>
                         <option value="email" {{ $filters['sort'] === 'email' ? 'selected' : '' }}>Email A–Z</option>
                     </select>
@@ -70,6 +80,7 @@
             <table class="workspace-table">
                 <thead>
                     <tr>
+                        <th></th>
                         <th>User</th>
                         <th>Role</th>
                         <th>Status</th>
@@ -80,12 +91,20 @@
                 <tbody>
                     @forelse($users as $u)
                         <tr>
+                            <td class="admin-users-table__avatar">
+                                @if($u->profilePhotoPublicUrl())
+                                    <img src="{{ $u->profilePhotoPublicUrl() }}" alt="" width="40" height="40" loading="lazy">
+                                @else
+                                    <span class="listed-by-placeholder listed-by-placeholder--sm">{{ $u->profileInitials() }}</span>
+                                @endif
+                            </td>
                             <td data-label="User">
                                 <strong>{{ $u->name }}</strong>
                                 <div class="workspace-property__meta">{{ $u->email }}</div>
                                 @if($u->display_name)
                                     <div class="workspace-property__meta">Display: {{ $u->display_name }}</div>
                                 @endif
+                                <a href="{{ route('admin.users.show', $u) }}" class="admin-users-table__link">View profile →</a>
                             </td>
                             <td data-label="Role">{{ ucfirst($u->role) }}</td>
                             <td data-label="Status">
@@ -94,9 +113,9 @@
                             <td data-label="Joined">{{ $u->created_at?->format('M j, Y') }}</td>
                             <td data-label="Actions">
                                 @if($canManage && $u->id !== auth()->id() && $u->role !== 'admin')
-                                    <form method="POST" action="{{ route('admin.users.update', $u) }}" class="workspace-stack" style="gap:0.4rem;">
+                                    <form method="POST" action="{{ route('admin.users.quick-update', $u) }}" class="workspace-stack" style="gap:0.4rem;">
                                         @csrf
-                                        @method('PUT')
+                                        @method('PATCH')
                                         <label class="workspace-field" style="margin:0;">
                                             <span style="font-size:0.75rem;">Role</span>
                                             <select name="role">
@@ -126,7 +145,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5"><div class="workspace-empty">No users match these filters.</div></td>
+                            <td colspan="6"><div class="workspace-empty">No users match these filters.</div></td>
                         </tr>
                     @endforelse
                 </tbody>

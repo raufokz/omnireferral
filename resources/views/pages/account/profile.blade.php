@@ -11,9 +11,7 @@
 @section('content')
 @php
     $u = $user;
-    $avatarPreview = $u->avatar
-        ? asset('storage/' . ltrim($u->avatar, '/'))
-        : asset('images/realtors/3.png');
+    $avatarPreviewUrl = $u->profilePhotoPublicUrl();
 @endphp
 
 <div class="workspace-stack profile-mgmt">
@@ -32,14 +30,24 @@
             <div class="profile-mgmt__hero-grid">
                 <div class="profile-mgmt__avatar-block">
                     <div class="profile-mgmt__avatar-wrap">
-                        <img src="{{ $avatarPreview }}" alt="Profile photo preview" width="120" height="120" id="avatarPreview">
+                        @if($avatarPreviewUrl)
+                            <img src="{{ $avatarPreviewUrl }}" alt="" width="120" height="120" id="avatarPreview" class="profile-mgmt__avatar-img">
+                            <span id="avatarPlaceholder" class="listed-by-placeholder listed-by-placeholder--profile-hero" hidden>{{ $u->profileInitials() }}</span>
+                        @else
+                            <span id="avatarPlaceholder" class="listed-by-placeholder listed-by-placeholder--profile-hero">{{ $u->profileInitials() }}</span>
+                            <img src="" alt="" width="120" height="120" id="avatarPreview" class="profile-mgmt__avatar-img" hidden>
+                        @endif
                     </div>
                     <div class="profile-mgmt__avatar-actions">
                         <label class="button profile-mgmt__file-btn">
                             <input type="file" name="avatar" id="avatarInput" accept="image/jpeg,image/png,image/webp,image/gif" class="profile-mgmt__file-input">
                             Change photo
                         </label>
-                        <p class="profile-mgmt__hint">JPG, PNG, WebP or GIF · up to 3&nbsp;MB. Image is stored securely on our servers.</p>
+                        <label class="profile-mgmt__remove-photo">
+                            <input type="checkbox" name="remove_avatar" value="1" id="removeAvatarCheck">
+                            Remove photo
+                        </label>
+                        <p class="profile-mgmt__hint">JPG, PNG, WebP or GIF · up to 3&nbsp;MB · saved to <code>storage/app/public/avatars/</code>.</p>
                     </div>
                 </div>
                 <div class="profile-mgmt__hero-copy">
@@ -204,17 +212,35 @@ document.addEventListener('DOMContentLoaded', function () {
     const pwLabel = document.getElementById('pwStrengthLabel');
     const emailInput = document.querySelector('[data-profile-email]');
 
+    const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+    const removeAvatarCheck = document.getElementById('removeAvatarCheck');
+
     if (avatarInput && avatarPreview) {
         avatarInput.addEventListener('change', function () {
             const file = avatarInput.files && avatarInput.files[0];
             if (!file) return;
+            if (removeAvatarCheck) removeAvatarCheck.checked = false;
             const reader = new FileReader();
             reader.onload = function (e) {
                 avatarPreview.src = e.target.result;
+                avatarPreview.hidden = false;
+                if (avatarPlaceholder) avatarPlaceholder.hidden = true;
             };
             reader.readAsDataURL(file);
         });
     }
+
+    removeAvatarCheck?.addEventListener('change', function () {
+        if (removeAvatarCheck.checked) {
+            avatarInput && (avatarInput.value = '');
+            if (avatarPlaceholder) {
+                avatarPlaceholder.hidden = false;
+            }
+            if (avatarPreview) {
+                avatarPreview.hidden = true;
+            }
+        }
+    });
 
     function scorePassword(value) {
         let score = 0;

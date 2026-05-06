@@ -1,14 +1,16 @@
 <?php
 
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\LeadManagementController as AdminLeadManagementController;
-use App\Http\Controllers\Admin\ActivityLogController;
-use App\Http\Controllers\Admin\EnquiryController as AdminEnquiryController;
-use App\Http\Controllers\Admin\PlatformSearchController;
-use App\Http\Controllers\Admin\PropertyManagementController as AdminPropertyManagementController;
-use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Account\ProfileController;
 use App\Http\Controllers\Account\SecurityController;
+use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\EnquiryController as AdminEnquiryController;
+use App\Http\Controllers\Admin\LeadManagementController as AdminLeadManagementController;
+use App\Http\Controllers\Admin\PlatformSearchController;
+use App\Http\Controllers\Admin\PropertyManagementController as AdminPropertyManagementController;
+use App\Http\Controllers\Admin\TestimonialController;
+use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Admin\UserModerationController;
 use App\Http\Controllers\Agent\LeadController as AgentLeadController;
 use App\Http\Controllers\Agent\PortalController as AgentPortalController;
 use App\Http\Controllers\Auth\AuthController;
@@ -25,13 +27,12 @@ use App\Http\Controllers\RealtorController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\Webhooks\GoHighLevelWebhookController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
+use App\Models\Property;
+use App\Models\RealtorProfile;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Models\Property;
-use App\Models\RealtorProfile;
-use App\Http\Controllers\Admin\UserModerationController;
 
 Route::get('/sitemap.xml', function () {
     $properties = Property::latest()->take(500)->get();
@@ -39,7 +40,7 @@ Route::get('/sitemap.xml', function () {
 
     return response()->view('sitemap', [
         'properties' => $properties,
-        'agents' => $agents
+        'agents' => $agents,
     ])->header('Content-Type', 'text/xml');
 })->name('sitemap');
 
@@ -203,9 +204,13 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('/admin/search', PlatformSearchController::class)->name('admin.search');
         Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users.index');
-        Route::put('/admin/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
         Route::get('/admin/users/export/csv', [UserManagementController::class, 'exportCsv'])->name('admin.users.export.csv');
         Route::get('/admin/users/export/xlsx', [UserManagementController::class, 'exportXlsx'])->name('admin.users.export.xlsx');
+        Route::get('/admin/users/{user}/edit', [UserManagementController::class, 'edit'])->name('admin.users.edit');
+        Route::get('/admin/users/{user}', [UserManagementController::class, 'show'])->name('admin.users.show');
+        Route::put('/admin/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
+        Route::patch('/admin/users/{user}/quick', [UserManagementController::class, 'quickUpdate'])->name('admin.users.quick-update');
+        Route::delete('/admin/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
         Route::get('/admin/enquiries', [AdminEnquiryController::class, 'index'])->name('admin.enquiries.index');
         Route::get('/admin/enquiries/export/csv', [AdminEnquiryController::class, 'exportCsv'])->name('admin.enquiries.export.csv');
         Route::get('/admin/enquiries/export/xlsx', [AdminEnquiryController::class, 'exportXlsx'])->name('admin.enquiries.export.xlsx');
@@ -232,7 +237,7 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
                 'destroy' => 'admin.properties.destroy',
             ]);
 
-        Route::resource('admin/blog', \App\Http\Controllers\Admin\BlogController::class)->names([
+        Route::resource('admin/blog', App\Http\Controllers\Admin\BlogController::class)->names([
             'index' => 'admin.blog.index',
             'create' => 'admin.blog.create',
             'store' => 'admin.blog.store',
@@ -241,7 +246,7 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
             'update' => 'admin.blog.update',
             'destroy' => 'admin.blog.destroy',
         ]);
-        Route::resource('admin/testimonials', \App\Http\Controllers\Admin\TestimonialController::class)
+        Route::resource('admin/testimonials', TestimonialController::class)
             ->except(['show'])
             ->names([
                 'index' => 'admin.testimonials.index',
@@ -251,11 +256,11 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
                 'update' => 'admin.testimonials.update',
                 'destroy' => 'admin.testimonials.destroy',
             ]);
-        Route::post('admin/testimonials/{testimonial}/review', [\App\Http\Controllers\Admin\TestimonialController::class, 'review'])->name('admin.testimonials.review');
+        Route::post('admin/testimonials/{testimonial}/review', [TestimonialController::class, 'review'])->name('admin.testimonials.review');
 
-        Route::post('admin/leads/{lead}/status', [\App\Http\Controllers\Admin\LeadController::class, 'status'])->name('admin.leads.status');
-        Route::post('admin/leads/{lead}/assign', [\App\Http\Controllers\Admin\LeadController::class, 'assign'])->name('admin.leads.assign');
-        Route::post('admin/leads/{lead}/activity', [\App\Http\Controllers\Admin\LeadController::class, 'activity'])->name('admin.leads.activity');
+        Route::post('admin/leads/{lead}/status', [App\Http\Controllers\Admin\LeadController::class, 'status'])->name('admin.leads.status');
+        Route::post('admin/leads/{lead}/assign', [App\Http\Controllers\Admin\LeadController::class, 'assign'])->name('admin.leads.assign');
+        Route::post('admin/leads/{lead}/activity', [App\Http\Controllers\Admin\LeadController::class, 'activity'])->name('admin.leads.activity');
         Route::post('admin/properties/{property}/review', [PropertyController::class, 'review'])->name('admin.properties.review');
         Route::post('admin/users/{user}/review', [UserModerationController::class, 'review'])->name('admin.users.review');
     });

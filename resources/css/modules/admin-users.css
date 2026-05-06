@@ -1,0 +1,169 @@
+/* Admin user management — record view & directory */
+
+.admin-user-show__hero {
+    padding: 1.5rem 1.75rem;
+}
+
+.admin-user-show__hero-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1.25rem 2rem;
+}
+
+.admin-user-show__avatar img,
+.admin-user-edit__avatar-preview img,
+.admin-user-edit__avatar-preview .listed-by-placeholder--profile-hero {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+}
+
+.admin-user-show__hero-main {
+    flex: 1;
+    min-width: 200px;
+}
+
+.admin-user-show__hero-main h2 {
+    margin: 0.35rem 0 0.25rem;
+    font-size: 1.45rem;
+}
+
+.admin-user-show__muted {
+    margin: 0;
+    color: var(--color-text-secondary);
+}
+
+.admin-user-show__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.75rem;
+}
+
+.admin-user-show__pill {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(11, 54, 104, 0.09);
+    color: var(--color-secondary);
+}
+
+.admin-user-show__hero-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+}
+
+.admin-user-show__dl {
+    margin: 0.75rem 0 0;
+    display: grid;
+    gap: 0.65rem;
+}
+
+.admin-user-show__dl dt {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-secondary);
+    margin: 0;
+}
+
+.admin-user-show__dl dd {
+    margin: 0.1rem 0 0;
+    color: var(--color-heading);
+    font-weight: 500;
+}
+
+.admin-user-show__card h3 {
+    margin: 0.25rem 0 0;
+    font-size: 1.05rem;
+}
+
+.admin-user-show__counts {
+    margin-top: 0.75rem;
+}
+
+.admin-user-show__tables {
+    display: grid;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+@media (min-width: 900px) {
+    .admin-user-show__tables {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.admin-user-show__table-title {
+    margin: 0 0 0.5rem;
+    font-size: 0.95rem;
+}
+
+.admin-user-show__flash {
+    padding: 0.85rem 1.1rem;
+    border-radius: 14px;
+    font-size: 0.92rem;
+}
+
+.admin-user-show__flash--ok {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.admin-user-show__flash--err {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.admin-user-edit__hero {
+    padding: 1.35rem 1.5rem;
+}
+
+.admin-user-edit__avatar-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    align-items: flex-start;
+}
+
+.admin-user-edit__avatar-preview img {
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.admin-user-edit__remove {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.88rem;
+    margin-top: 0.5rem;
+}
+
+.admin-users-table__avatar {
+    width: 48px;
+    vertical-align: middle;
+}
+
+.admin-users-table__avatar img,
+.admin-users-table__avatar .listed-by-placeholder--sm {
+    display: block;
+    margin: 0 auto;
+}
+
+.admin-users-table__link {
+    display: inline-block;
+    margin-top: 0.35rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+}

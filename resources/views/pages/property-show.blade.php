@@ -1,11 +1,12 @@
 @extends('layouts.app')
 
 @section('content')
+@php($listed = $property->listedByPresentation())
 <section class="page-hero property-hero">
     <div class="container property-hero__content">
         <span class="eyebrow">Property Details</span>
         <h1>{{ $property->title }}</h1>
-        <p>{{ $property->location }} · {{ $property->zip_code }} · {{ $property->property_type }}</p>
+        <p>{{ $property->location }} ï¿½ {{ $property->zip_code }} ï¿½ {{ $property->property_type }}</p>
     </div>
 </section>
 
@@ -46,17 +47,30 @@
             </article>
 
             <aside class="card-panel property-sidebar">
-                <span class="eyebrow">Assigned Realtor</span>
+                <span class="eyebrow">Listed By</span>
                 <div class="property-sidebar__agent">
-                    <img
-                        src="{{ asset(optional($property->realtorProfile)->headshot ?: 'images/realtors/3.png') }}"
-                        alt="{{ optional(optional($property->realtorProfile)->user)->name ?? 'OmniReferral partner agent' }}"
-                        loading="lazy"
-                    >
+                    @if(!empty($listed['avatar_url']))
+                        <img
+                            src="{{ $listed['avatar_url'] }}"
+                            alt=""
+                            class="property-sidebar__agent-img"
+                            loading="lazy"
+                            decoding="async"
+                            width="80"
+                            height="80"
+                        >
+                    @else
+                        <span class="listed-by-placeholder listed-by-placeholder--sidebar" role="img" aria-label="{{ $listed['name'] }}">{{ $listed['avatar_initials'] }}</span>
+                    @endif
                     <div>
-                        <h3>{{ optional(optional($property->realtorProfile)->user)->name ?? 'OmniReferral Partner' }}</h3>
-                        <p>{{ optional($property->realtorProfile)->brokerage_name ?? 'OmniReferral Network' }}</p>
-                        <span>{{ optional($property->realtorProfile)->city }}{{ optional($property->realtorProfile)->city ? ',' : '' }} {{ optional($property->realtorProfile)->state }}</span>
+                        <h3>{{ $listed['name'] }}</h3>
+                        <p><span class="pd-listed-by-badge">{{ $listed['role_badge'] }}</span></p>
+                        @if(!empty($listed['brokerage_name']))
+                            <p>{{ $listed['brokerage_name'] }}</p>
+                        @endif
+                        @if($listed['city_state'] !== '')
+                            <span>{{ $listed['city_state'] }}</span>
+                        @endif
                     </div>
                 </div>
                 <ul class="feature-list compact">
