@@ -20607,3 +20607,25 @@ iframe {
         transform: translateY(0);
     }
 }
+
+/* Final listing-card grid rules: keep page-specific card counts stable. */
+.homepage-featured-listings.property-card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.listing-cards-grid.listing-cards-grid--marketplace {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 1024px) {
+    .homepage-featured-listings.property-card-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .homepage-featured-listings.property-card-grid,
+    .listing-cards-grid.listing-cards-grid--marketplace {
+        grid-template-columns: 1fr;
+    }
+}
