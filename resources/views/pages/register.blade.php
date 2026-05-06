@@ -18,7 +18,7 @@
                 today.</p>
         </div>
 
-        <div class="auth-col-right" x-data="{ userType: '{{ old('role', 'agent') }}' }">
+        <div class="auth-col-right" x-data="{ userType: @js($selectedWorkspace ?? '') }">
             <h2>Create Your Account</h2>
             <p class="auth-subtitle">Build a complete profile so your workspace is ready from day one.</p>
 
@@ -37,8 +37,6 @@
                 novalidate class="auth-form">
                 @csrf
 
-                <input type="hidden" name="role" x-model="userType">
-
                 <div class="form-progress">
                     <div class="form-progress-bar"></div>
                 </div>
@@ -49,31 +47,21 @@
                         <strong>Account Basics</strong>
                     </div>
 
-                    <span class="user-type-label">Choose a user type</span>
-                    <div class="user-type-grid user-type-grid--register">
-                        <div class="ut-card" :class="{ 'active': userType === 'agent' }" @click="userType = 'agent'">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path d="M12 6a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm-7 9h14M5 15v6h14v-6M5 15l-1-7h16l-1 7" />
-                            </svg>
-                            <span>Agent</span>
-                        </div>
-                        <div class="ut-card" :class="{ 'active': userType === 'buyer' }" @click="userType = 'buyer'">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path
-                                    d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
-                            </svg>
-                            <span>Buyer</span>
-                        </div>
-                        <div class="ut-card" :class="{ 'active': userType === 'seller' }" @click="userType = 'seller'">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                <path d="M3 21v-8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8M10 21V9m4 12V9M3 9l9-7 9 7" />
-                            </svg>
-                            <span>Seller</span>
-                        </div>
-                    </div>
-                    <p class="auth-role-helper" x-text="userType === 'agent'
-                        ? 'Agents complete brokerage and license details now so their profile is ready immediately.'
-                        : 'Buyers and sellers complete their core profile now so follow-up and onboarding stay smooth.'"></p>
+                    @include('partials.auth.workspace-selector', [
+                        'fieldId' => 'register-workspace',
+                        'label' => 'Choose a user type',
+                        'description' => 'Select the workspace that matches how you will use OmniReferral.',
+                        'selected' => $selectedWorkspace ?? '',
+                        'workspaces' => $workspaces ?? [],
+                    ])
+
+                    <p class="auth-role-helper" x-text="!userType
+                        ? 'Select a workspace to personalize the next setup steps.'
+                        : userType === 'agent'
+                            ? 'Agents complete brokerage and license details now so their profile is ready immediately.'
+                            : userType === 'buyer'
+                                ? 'Buyers complete their core profile now so property matching and follow-up stay smooth.'
+                                : 'Sellers complete their core profile now so listing support and enquiry routing stay smooth.'"></p>
 
                     <div class="auth-form-grid auth-form-grid--two">
                         <div class="form-group">

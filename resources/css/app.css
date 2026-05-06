@@ -19626,13 +19626,15 @@ iframe {
     box-shadow: 0 0 0 6px rgba(53, 211, 153, 0.12);
 }
 
-.dashboard-shell__nav a {
+.dashboard-shell__nav-link,
+.dashboard-shell__nav-trigger {
     position: relative;
     overflow: hidden;
     min-height: 44px;
 }
 
-.dashboard-shell__nav a::before {
+.dashboard-shell__nav-link::before,
+.dashboard-shell__nav-trigger::before {
     content: "";
     position: absolute;
     inset: 0 auto 0 0;
@@ -19643,8 +19645,10 @@ iframe {
     transition: transform 0.18s ease;
 }
 
-.dashboard-shell__nav a:hover::before,
-.dashboard-shell__nav a.is-active::before {
+.dashboard-shell__nav-link:hover::before,
+.dashboard-shell__nav-link.is-active::before,
+.dashboard-shell__nav-trigger:hover::before,
+.dashboard-shell__nav-trigger.is-active::before {
     transform: scaleY(1);
 }
 

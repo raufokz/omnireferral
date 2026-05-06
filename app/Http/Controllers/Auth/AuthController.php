@@ -16,9 +16,14 @@ use Illuminate\View\View;
 
 class AuthController extends Controller
 {
-    public function showLogin(): View
+    public function showLogin(Request $request): View
     {
-        return view('pages.login');
+        $workspaces = $this->loginWorkspaces();
+
+        return view('pages.login', [
+            'workspaces' => $workspaces,
+            'selectedWorkspace' => $this->selectedWorkspace($request, $workspaces),
+        ]);
     }
 
     public function login(Request $request): RedirectResponse
@@ -30,9 +35,12 @@ class AuthController extends Controller
             'remember' => ['nullable', 'boolean'],
         ], [
             'role.required' => 'Choose the workspace you want to enter.',
+            'role.in' => 'Choose a valid OmniReferral workspace.',
             'email.required' => 'Oops, looks like you missed your email!',
             'password.required' => 'Enter your password to continue.',
         ]);
+
+        $this->rememberSelectedWorkspace($request, $credentials['role']);
 
         $authenticated = false;
         $user = User::where('email', $credentials['email'])->first();
@@ -85,9 +93,14 @@ class AuthController extends Controller
         ])->onlyInput('email', 'role');
     }
 
-    public function showRegister(): View
+    public function showRegister(Request $request): View
     {
-        return view('pages.register');
+        $workspaces = $this->registrationWorkspaces();
+
+        return view('pages.register', [
+            'workspaces' => $workspaces,
+            'selectedWorkspace' => $this->selectedWorkspace($request, $workspaces),
+        ]);
     }
 
     public function register(Request $request): RedirectResponse
@@ -109,6 +122,8 @@ class AuthController extends Controller
             'terms_accepted' => ['accepted'],
             'communication_accepted' => ['accepted'],
         ], [
+            'role.required' => 'Choose the workspace you want us to create.',
+            'role.in' => 'Choose a valid signup workspace.',
             'name.required' => 'Tell us your name so we can personalize your setup.',
             'email.required' => 'Oops, looks like you missed your email!',
             'email.unique' => 'That email is already connected to an OmniReferral account.',
@@ -124,6 +139,8 @@ class AuthController extends Controller
             'terms_accepted.accepted' => 'Please accept the Terms and Privacy Policy before continuing.',
             'communication_accepted.accepted' => 'Please agree to onboarding communication so we can activate your account.',
         ]);
+
+        $this->rememberSelectedWorkspace($request, $request->string('role')->value());
 
         $avatarPath = $request->hasFile('profile_image')
             ? $request->file('profile_image')->store('avatars', 'public')
@@ -248,5 +265,84 @@ class AuthController extends Controller
     protected function redirectBasedOnRole(User $user): RedirectResponse
     {
         return redirect()->to($user->dashboardRoute());
+    }
+
+    private function loginWorkspaces(): array
+    {
+        return [
+            [
+                'value' => 'agent',
+                'label' => 'Agent',
+                'description' => 'Manage listings, leads, referrals, and revenue.',
+                'icon' => 'agent',
+            ],
+            [
+                'value' => 'buyer',
+                'label' => 'Buyer',
+                'description' => 'Track favorites, saved homes, and enquiries.',
+                'icon' => 'buyer',
+            ],
+            [
+                'value' => 'seller',
+                'label' => 'Seller',
+                'description' => 'Review your properties, enquiries, and performance.',
+                'icon' => 'seller',
+            ],
+            [
+                'value' => 'admin',
+                'label' => 'Admin',
+                'description' => 'Control users, properties, revenue, and analytics.',
+                'icon' => 'admin',
+            ],
+            [
+                'value' => 'staff',
+                'label' => 'Staff',
+                'description' => 'Handle assigned tasks, support, and operations.',
+                'icon' => 'staff',
+            ],
+        ];
+    }
+
+    private function registrationWorkspaces(): array
+    {
+        return [
+            [
+                'value' => 'agent',
+                'label' => 'Agent',
+                'description' => 'Create a partner profile with brokerage credentials.',
+                'icon' => 'agent',
+            ],
+            [
+                'value' => 'buyer',
+                'label' => 'Buyer',
+                'description' => 'Save homes and send property enquiries faster.',
+                'icon' => 'buyer',
+            ],
+            [
+                'value' => 'seller',
+                'label' => 'Seller',
+                'description' => 'List properties and monitor inbound buyer activity.',
+                'icon' => 'seller',
+            ],
+        ];
+    }
+
+    private function selectedWorkspace(Request $request, array $workspaces): string
+    {
+        $workspaceValues = array_column($workspaces, 'value');
+        $selected = $request->old('role', $request->session()->get('selected_workspace'));
+
+        if (is_string($selected) && in_array($selected, $workspaceValues, true)) {
+            return $selected;
+        }
+
+        return count($workspaceValues) === 1 ? (string) $workspaceValues[0] : '';
+    }
+
+    private function rememberSelectedWorkspace(Request $request, string $workspace): void
+    {
+        if ($workspace !== '') {
+            $request->session()->put('selected_workspace', $workspace);
+        }
     }
 }

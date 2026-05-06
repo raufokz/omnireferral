@@ -21,6 +21,25 @@ class AuthRegistrationTest extends TestCase
         return UploadedFile::fake()->createWithContent($name, $png);
     }
 
+    public function test_auth_pages_render_the_workspace_selector(): void
+    {
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('Select your workspace')
+            ->assertSee('Select Workspace')
+            ->assertSee('Staff')
+            ->assertSee('<select id="login-workspace"', false)
+            ->assertDontSee('workspace-option');
+
+        $this->get(route('register'))
+            ->assertOk()
+            ->assertSee('Choose a user type')
+            ->assertSee('Select Workspace')
+            ->assertSee('Seller')
+            ->assertSee('<select id="register-workspace"', false)
+            ->assertDontSee('workspace-option');
+    }
+
     public function test_agent_registration_requires_full_profile_details_and_creates_a_realtor_profile(): void
     {
         Storage::fake('public');
@@ -97,6 +116,7 @@ class AuthRegistrationTest extends TestCase
             'communication_accepted' => true,
         ])
             ->assertRedirect(route('login'))
+            ->assertSessionHas('selected_workspace', 'buyer')
             ->assertSessionHas('success');
 
         $this->assertGuest();
@@ -107,6 +127,42 @@ class AuthRegistrationTest extends TestCase
         $this->assertSame('buyer', $user->role);
         $this->assertNull($user->realtorProfile);
         Queue::assertPushed(SyncUserToGoHighLevel::class);
+    }
+
+    public function test_workspace_selection_is_required_for_login_and_registration(): void
+    {
+        Storage::fake('public');
+
+        $this->post(route('login'), [
+            'email' => 'missing-workspace@example.com',
+            'password' => 'super-secret-password',
+        ])->assertSessionHasErrors('role');
+
+        $this->post(route('register'), [
+            'name' => 'Workspace Missing',
+            'email' => 'workspace-missing@example.com',
+            'phone' => '(555) 222-3333',
+            'address_line_1' => '100 Main Street',
+            'city' => 'Dallas',
+            'state' => 'TX',
+            'zip_code' => '75201',
+            'password' => 'super-secret-password',
+            'password_confirmation' => 'super-secret-password',
+            'profile_image' => $this->fakePngUpload('workspace-missing.png'),
+            'terms_accepted' => true,
+            'communication_accepted' => true,
+        ])->assertSessionHasErrors('role');
+    }
+
+    public function test_login_workspace_selection_is_remembered_during_the_session(): void
+    {
+        $this->post(route('login'), [
+            'role' => 'staff',
+            'email' => 'not-found@example.com',
+            'password' => 'super-secret-password',
+        ])
+            ->assertSessionHas('selected_workspace', 'staff')
+            ->assertSessionHasErrors('email');
     }
 
     public function test_pending_user_cannot_sign_in_until_an_admin_activates_the_account(): void

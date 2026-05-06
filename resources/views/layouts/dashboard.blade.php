@@ -31,53 +31,101 @@
         ->take(2)
         ->implode('');
 
+    $accountNavItems = [
+        ['label' => 'Profile', 'route' => route('account.profile'), 'active' => ['account.profile'], 'icon' => 'profile'],
+        ['label' => 'Security', 'route' => route('account.security'), 'active' => ['account.security'], 'icon' => 'security'],
+    ];
+
     $dashboardNavItems = match ($role) {
         'buyer' => [
-            ['label' => 'Overview', 'route' => route('dashboard.buyer'), 'active' => ['dashboard.buyer']],
-            ['label' => 'Profile', 'route' => route('account.profile'), 'active' => ['account.profile']],
-            ['label' => 'Enquiries', 'route' => route('dashboard.enquiries.index'), 'active' => ['dashboard.enquiries.*']],
-            ['label' => 'Saved Homes', 'route' => route('dashboard.buyer.saved'), 'active' => ['dashboard.buyer.saved']],
-            ['label' => 'Requests', 'route' => route('dashboard.buyer.requests'), 'active' => ['dashboard.buyer.requests']],
-            ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show']],
+            ['label' => 'Overview', 'route' => route('dashboard.buyer'), 'active' => ['dashboard.buyer'], 'icon' => 'dashboard'],
+            [
+                'label' => 'Property Activity',
+                'icon' => 'properties',
+                'children' => [
+                    ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show'], 'icon' => 'marketplace'],
+                    ['label' => 'Saved Homes', 'route' => route('dashboard.buyer.saved'), 'active' => ['dashboard.buyer.saved'], 'icon' => 'saved'],
+                    ['label' => 'Requests', 'route' => route('dashboard.buyer.requests'), 'active' => ['dashboard.buyer.requests'], 'icon' => 'requests'],
+                ],
+            ],
+            ['label' => 'Enquiries', 'route' => route('dashboard.enquiries.index'), 'active' => ['dashboard.enquiries.*'], 'icon' => 'enquiries'],
+            ['label' => 'Account', 'icon' => 'profile', 'children' => $accountNavItems],
         ],
         'seller' => [
-            ['label' => 'Overview', 'route' => route('dashboard.seller'), 'active' => ['dashboard.seller']],
-            ['label' => 'Profile', 'route' => route('account.profile'), 'active' => ['account.profile']],
-            ['label' => 'Enquiries', 'route' => route('dashboard.enquiries.index'), 'active' => ['dashboard.enquiries.*']],
-            ['label' => 'Listings', 'route' => route('dashboard.seller.listings'), 'active' => ['dashboard.seller.listings', 'properties.edit']],
-            ['label' => 'Requests', 'route' => route('dashboard.seller.requests'), 'active' => ['dashboard.seller.requests']],
-            ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show']],
+            ['label' => 'Overview', 'route' => route('dashboard.seller'), 'active' => ['dashboard.seller'], 'icon' => 'dashboard'],
+            [
+                'label' => 'Listing Management',
+                'icon' => 'listings',
+                'children' => [
+                    ['label' => 'My Listings', 'route' => route('dashboard.seller.listings'), 'active' => ['dashboard.seller.listings', 'properties.edit'], 'icon' => 'listings'],
+                    ['label' => 'Requests', 'route' => route('dashboard.seller.requests'), 'active' => ['dashboard.seller.requests'], 'icon' => 'requests'],
+                    ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show'], 'icon' => 'marketplace'],
+                ],
+            ],
+            ['label' => 'Enquiries', 'route' => route('dashboard.enquiries.index'), 'active' => ['dashboard.enquiries.*'], 'icon' => 'enquiries'],
+            ['label' => 'Account', 'icon' => 'profile', 'children' => $accountNavItems],
         ],
         'agent' => [
-            ['label' => 'Overview', 'route' => route('dashboard.agent'), 'active' => ['dashboard.agent']],
-            ['label' => 'Profile', 'route' => route('account.profile'), 'active' => ['account.profile']],
-            ['label' => 'Agent profile', 'route' => route('agent.profile'), 'active' => ['agent.profile']],
-            ['label' => 'Leads', 'route' => route('agent.leads.index'), 'active' => ['agent.leads.*']],
-            ['label' => 'Listings', 'route' => route('agent.listings.index'), 'active' => ['agent.listings.*', 'properties.edit']],
-            ['label' => 'Enquiries', 'route' => route('dashboard.enquiries.index'), 'active' => ['dashboard.enquiries.*']],
-            ['label' => 'Messages', 'route' => route('agent.messages.index'), 'active' => ['agent.messages.*']],
+            ['label' => 'Overview', 'route' => route('dashboard.agent'), 'active' => ['dashboard.agent'], 'icon' => 'dashboard'],
+            ['label' => 'Leads', 'route' => route('agent.leads.index'), 'active' => ['agent.leads.*'], 'icon' => 'leads'],
+            ['label' => 'Listings', 'route' => route('agent.listings.index'), 'active' => ['agent.listings.*', 'properties.edit'], 'icon' => 'listings'],
+            [
+                'label' => 'Messages & Enquiries',
+                'icon' => 'messages',
+                'children' => [
+                    ['label' => 'Messages', 'route' => route('agent.messages.index'), 'active' => ['agent.messages.*'], 'icon' => 'messages'],
+                    ['label' => 'Enquiries', 'route' => route('dashboard.enquiries.index'), 'active' => ['dashboard.enquiries.*'], 'icon' => 'enquiries'],
+                ],
+            ],
+            [
+                'label' => 'Profile & Account',
+                'icon' => 'profile',
+                'children' => array_merge([
+                    ['label' => 'Agent Profile', 'route' => route('agent.profile'), 'active' => ['agent.profile'], 'icon' => 'agent'],
+                ], $accountNavItems),
+            ],
         ],
         'admin', 'staff' => array_values(array_filter(array_merge(
             [
-                ['label' => 'Overview', 'route' => route('admin.dashboard'), 'active' => ['admin.dashboard']],
-                ['label' => 'Profile', 'route' => route('account.profile'), 'active' => ['account.profile']],
-                ['label' => 'Search', 'route' => route('admin.search'), 'active' => ['admin.search']],
-                ['label' => 'Users', 'route' => route('admin.users.index'), 'active' => ['admin.users.*']],
-                ['label' => 'Enquiries', 'route' => route('admin.enquiries.index'), 'active' => ['admin.enquiries.*']],
-                ['label' => 'Lead registry', 'route' => route('admin.leads.index'), 'active' => ['admin.leads.*']],
-                ['label' => 'Properties', 'route' => route('admin.properties.index'), 'active' => ['admin.properties.*']],
-                ['label' => 'Blog', 'route' => route('admin.blog.index'), 'active' => ['admin.blog.*']],
-                ['label' => 'Testimonials', 'route' => route('admin.testimonials.index'), 'active' => ['admin.testimonials.*']],
-                ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show']],
+                ['label' => 'Overview', 'route' => route('admin.dashboard'), 'active' => ['admin.dashboard'], 'icon' => 'dashboard'],
+                ['label' => 'Search', 'route' => route('admin.search'), 'active' => ['admin.search'], 'icon' => 'search'],
+                [
+                    'label' => 'Operations',
+                    'icon' => 'operations',
+                    'children' => [
+                        ['label' => 'Users', 'route' => route('admin.users.index'), 'active' => ['admin.users.*'], 'icon' => 'users'],
+                        ['label' => 'Properties', 'route' => route('admin.properties.index'), 'active' => ['admin.properties.*'], 'icon' => 'properties'],
+                        ['label' => 'Enquiries', 'route' => route('admin.enquiries.index'), 'active' => ['admin.enquiries.*'], 'icon' => 'enquiries'],
+                        ['label' => 'Lead Registry', 'route' => route('admin.leads.index'), 'active' => ['admin.leads.*'], 'icon' => 'leads'],
+                    ],
+                ],
+                [
+                    'label' => 'Content',
+                    'icon' => 'content',
+                    'children' => [
+                        ['label' => 'Blog', 'route' => route('admin.blog.index'), 'active' => ['admin.blog.*'], 'icon' => 'content'],
+                        ['label' => 'Testimonials', 'route' => route('admin.testimonials.index'), 'active' => ['admin.testimonials.*'], 'icon' => 'saved'],
+                    ],
+                ],
+                ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show'], 'icon' => 'marketplace'],
+                ['label' => 'Account', 'icon' => 'profile', 'children' => $accountNavItems],
             ],
             ($workspaceUser?->role === 'admin')
-                ? [['label' => 'Audit log', 'route' => route('admin.activity.index'), 'active' => ['admin.activity.*']]]
+                ? [['label' => 'Audit Log', 'route' => route('admin.activity.index'), 'active' => ['admin.activity.*'], 'icon' => 'audit']]
                 : []
         ))),
         default => [
-            ['label' => 'Dashboard Home', 'route' => route('dashboard'), 'active' => ['dashboard']],
-            ['label' => 'Profile', 'route' => route('account.profile'), 'active' => ['account.profile']],
+            ['label' => 'Dashboard Home', 'route' => route('dashboard'), 'active' => ['dashboard'], 'icon' => 'dashboard'],
+            ['label' => 'Account', 'icon' => 'profile', 'children' => $accountNavItems],
         ],
+    };
+
+    $isNavItemActive = null;
+    $isNavItemActive = function (array $item) use (&$isNavItemActive): bool {
+        $selfActive = collect($item['active'] ?? [])->contains(fn ($pattern) => request()->routeIs($pattern));
+        $childActive = collect($item['children'] ?? [])->contains(fn ($child) => $isNavItemActive($child));
+
+        return $selfActive || $childActive;
     };
 
     $settingsLinks = [
@@ -133,14 +181,13 @@
                 </div>
             </div>
 
-            <nav class="dashboard-shell__nav">
+            <nav class="dashboard-shell__nav" aria-label="{{ $roleLabel }} navigation" data-dashboard-nav>
                 @foreach ($dashboardNavItems as $item)
-                    @php
-                        $isActive = collect($item['active'] ?? [])->contains(fn ($pattern) => request()->routeIs($pattern));
-                    @endphp
-                    <a href="{{ $item['route'] }}" class="{{ $isActive ? 'is-active' : '' }}" @if($isActive) aria-current="page" @endif>
-                        <span>{{ $item['label'] }}</span>
-                    </a>
+                    @include('partials.dashboard.nav-item', [
+                        'item' => $item,
+                        'isNavItemActive' => $isNavItemActive,
+                        'level' => 0,
+                    ])
                 @endforeach
             </nav>
         </aside>
@@ -270,6 +317,7 @@
             const sidebarToggle = document.querySelector('[data-sidebar-toggle]');
             const settingsWrap = document.querySelector('[data-settings-menu]');
             const settingsToggle = document.querySelector('[data-settings-toggle]');
+            const subnavGroups = document.querySelectorAll('[data-dashboard-subnav]');
 
             if (sidebarToggle && shell && sidebar) {
                 sidebarToggle.addEventListener('click', () => {
@@ -292,6 +340,27 @@
                     }
                 });
             }
+
+            subnavGroups.forEach((group) => {
+                const toggle = group.querySelector('[data-dashboard-subnav-toggle]');
+                const panel = group.querySelector('[data-dashboard-subnav-panel]');
+                if (!toggle || !panel) {
+                    return;
+                }
+
+                const setOpen = (open) => {
+                    group.classList.toggle('is-open', open);
+                    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+                    panel.inert = !open;
+                };
+
+                setOpen(group.classList.contains('is-open'));
+
+                toggle.addEventListener('click', () => {
+                    setOpen(!group.classList.contains('is-open'));
+                });
+            });
         });
     </script>
     @stack('scripts')
