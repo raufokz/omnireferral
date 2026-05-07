@@ -21,8 +21,7 @@ return new class extends Migration
                     ->nullable()
                     ->after('approved_at')
                     ->constrained('users')
-                    ->nullOnDelete()
-                    ->index();
+                    ->nullOnDelete();
             }
             if (! Schema::hasColumn('realtor_profiles', 'rejected_at')) {
                 $table->timestamp('rejected_at')->nullable()->after('approved_by_user_id')->index();
@@ -32,8 +31,7 @@ return new class extends Migration
                     ->nullable()
                     ->after('rejected_at')
                     ->constrained('users')
-                    ->nullOnDelete()
-                    ->index();
+                    ->nullOnDelete();
             }
             if (! Schema::hasColumn('realtor_profiles', 'approval_notes')) {
                 $table->string('approval_notes', 1000)->nullable()->after('rejected_by_user_id');
