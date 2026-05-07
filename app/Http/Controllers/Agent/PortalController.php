@@ -259,12 +259,14 @@ class PortalController extends Controller
 
     private function ensureAgentProfile(User $user): RealtorProfile
     {
+        abort_unless($user->isAgent(), 403);
+
         return RealtorProfile::firstOrCreate(
             ['user_id' => $user->id],
             [
                 'slug' => Str::slug($user->name . '-' . Str::lower(Str::random(6))),
                 'brokerage_name' => 'OmniReferral Partner',
-                'license_number' => 'Pending',
+                'license_number' => null,
                 'address_line_1' => $user->address_line_1,
                 'address_line_2' => $user->address_line_2,
                 'city' => $user->city ?: 'Dallas',

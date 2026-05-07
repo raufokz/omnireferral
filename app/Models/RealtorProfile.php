@@ -12,7 +12,27 @@ class RealtorProfile extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'slug', 'brokerage_name', 'license_number', 'address_line_1', 'address_line_2', 'city', 'state', 'zip_code', 'rating', 'review_count', 'leads_closed', 'specialties', 'bio', 'headshot',
+        'user_id',
+        'slug',
+        'brokerage_name',
+        'license_number',
+        'address_line_1',
+        'address_line_2',
+        'city',
+        'state',
+        'zip_code',
+        'rating',
+        'review_count',
+        'leads_closed',
+        'specialties',
+        'bio',
+        'headshot',
+    ];
+
+    protected $casts = [
+        'rating' => 'decimal:2',
+        'review_count' => 'integer',
+        'leads_closed' => 'integer',
     ];
 
     public function getRouteKeyName(): string
@@ -33,5 +53,15 @@ class RealtorProfile extends Model
     public function contacts(): HasMany
     {
         return $this->hasMany(Contact::class);
+    }
+
+    /**
+     * Public directory scope: only active agent users.
+     */
+    public function scopePublicDirectory($query)
+    {
+        return $query->whereHas('user', function ($q) {
+            $q->where('role', 'agent')->where('status', 'active');
+        });
     }
 }

@@ -14,6 +14,8 @@ class RealtorController extends Controller
             'agents' => User::query()
                 ->select(['id', 'name', 'display_name', 'email', 'phone', 'role', 'status', 'avatar', 'created_at'])
                 ->where('role', 'agent')
+                ->where('status', 'active')
+                ->whereHas('realtorProfile')
                 ->with([
                     'realtorProfile' => fn ($query) => $query->select([
                         'id',
@@ -48,6 +50,13 @@ class RealtorController extends Controller
                 ->marketplaceVisible()
                 ->latest(),
         ]);
+
+        abort_unless(
+            $realtor->user
+            && $realtor->user->role === 'agent'
+            && $realtor->user->status === 'active',
+            404
+        );
 
         return view('pages.agent-show', [
             'agent' => $realtor,
