@@ -42,7 +42,7 @@ class LeadMultiFormatImportService
 
             $lead = new Lead();
             $lead->fill([
-                'lead_number' => 'OMNI-' . now()->format('Ymd') . '-' . str_pad((string) (Lead::withTrashed()->count() + 1), 4, '0', STR_PAD_LEFT),
+                'lead_number' => Lead::generateLeadNumber(),
                 'source' => (string) ($row['_source'] ?? 'file_import'),
                 'source_timestamp' => $row['source_timestamp'] ?? null,
                 'package_type' => 'quick',

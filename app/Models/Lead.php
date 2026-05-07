@@ -124,6 +124,30 @@ class Lead extends Model
         return Storage::url($this->property_image);
     }
 
+    /**
+     * Generate a unique human-friendly lead number.
+     *
+     * Format: OMNI-YYYYMMDD-XXXXXX (random uppercase base32-ish).
+     * Avoids race conditions from count()+1 while staying readable.
+     */
+    public static function generateLeadNumber(?\DateTimeInterface $date = null): string
+    {
+        $stamp = ($date ? \Illuminate\Support\Carbon::instance(\Illuminate\Support\Carbon::parse($date)) : now())->format('Ymd');
+
+        // Retry a few times in the extremely unlikely event of collision.
+        for ($i = 0; $i < 8; $i++) {
+            $suffix = strtoupper(Str::random(6));
+            $leadNumber = "OMNI-{$stamp}-{$suffix}";
+
+            if (! self::withTrashed()->where('lead_number', $leadNumber)->exists()) {
+                return $leadNumber;
+            }
+        }
+
+        // Final fallback: longer suffix.
+        return "OMNI-{$stamp}-" . strtoupper(Str::random(10));
+    }
+
     public static function normalizeEmail(?string $email): ?string
     {
         $email = Str::lower(trim((string) $email));

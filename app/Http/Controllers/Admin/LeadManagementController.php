@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SyncGoogleSheetRequest;
 use App\Models\Lead;
 use App\Models\Property;
 use App\Models\RealtorProfile;
@@ -227,13 +228,8 @@ class LeadManagementController extends Controller
             ->with('success', "Import complete. Added {$result['created']} new leads, skipped {$result['skipped']} duplicate rows.");
     }
 
-    public function syncGoogleSheet(Request $request, LeadMultiFormatImportService $importService): RedirectResponse
+    public function syncGoogleSheet(SyncGoogleSheetRequest $request, LeadMultiFormatImportService $importService): RedirectResponse
     {
-        $request->validate([
-            'sheet_url' => ['nullable', 'string', 'max:2000'],
-            'sheet_csv_url' => ['nullable', 'string', 'max:2000'],
-        ]);
-
         $sheetUrl = trim((string) (
             $request->input('sheet_url')
             ?: $request->input('sheet_csv_url')
@@ -250,7 +246,10 @@ class LeadManagementController extends Controller
             return back()->with('error', 'Please provide a valid Google Sheets link or CSV export URL.');
         }
 
-        $response = Http::timeout(20)->get($sheetCsvUrl);
+        $response = Http::timeout(20)
+            ->withoutRedirecting()
+            ->accept('text/csv')
+            ->get($sheetCsvUrl);
         if (! $response->successful()) {
             return back()->with('error', 'Failed to fetch Google Sheets CSV.');
         }
@@ -354,6 +353,7 @@ class LeadManagementController extends Controller
             return null;
         }
 
+        $scheme = Str::lower((string) ($parts['scheme'] ?? ''));
         $host = Str::lower((string) ($parts['host'] ?? ''));
         $path = (string) ($parts['path'] ?? '');
         $query = [];
@@ -361,8 +361,19 @@ class LeadManagementController extends Controller
         parse_str((string) ($parts['query'] ?? ''), $query);
         parse_str((string) ($parts['fragment'] ?? ''), $fragment);
 
-        if (! str_contains($host, 'docs.google.com') || ! str_contains($path, '/spreadsheets/d/')) {
-            return $sheetUrl;
+        // SSRF hardening: only allow HTTPS Google Sheets exports.
+        if ($scheme !== 'https') {
+            return null;
+        }
+
+        // Allow only docs.google.com (and its subdomains).
+        if ($host !== 'docs.google.com' && ! str_ends_with($host, '.docs.google.com')) {
+            return null;
+        }
+
+        // Accept direct export URLs too, but only on docs.google.com.
+        if (str_contains($path, '/spreadsheets/d/') === false) {
+            return null;
         }
 
         if (preg_match('#/spreadsheets/d/([a-zA-Z0-9-_]+)#', $path, $matches) !== 1) {

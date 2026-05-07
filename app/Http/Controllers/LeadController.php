@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreLeadRequest;
 use App\Jobs\SyncLeadToGoHighLevel;
 use App\Models\Lead;
 use App\Services\LeadRoutingService;
@@ -11,47 +12,12 @@ use App\Notifications\NewLeadCreatedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Validation\Rule;
 
 class LeadController extends Controller
 {
-    public function store(Request $request, LeadRoutingService $leadRouting): RedirectResponse
+    public function store(StoreLeadRequest $request, LeadRoutingService $leadRouting): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email'],
-            'phone' => ['required', 'string', 'max:30'],
-            'intent' => ['required', 'in:buyer,seller,investor,other'],
-            'zip_code' => [
-                Rule::requiredIf(fn () => $request->input('intent') === 'buyer'),
-                'nullable',
-                'string',
-                'max:10',
-                'regex:/^\d{5}(?:-\d{4})?$/',
-            ],
-            'property_address' => [
-                Rule::requiredIf(fn () => $request->input('intent') === 'seller'),
-                'nullable',
-                'string',
-                'max:255',
-            ],
-            'property_type' => ['nullable', 'string', 'max:100'],
-            'budget' => ['nullable', 'integer'],
-            'asking_price' => ['nullable', 'integer'],
-            'timeline' => ['nullable', 'string', 'max:100'],
-            'financing_status' => ['nullable', 'string', 'max:100'],
-            'contact_preference' => ['nullable', 'string', 'max:50'],
-            'package_slug' => ['nullable', 'string', 'exists:packages,slug'],
-            'property_image' => ['nullable', 'image', 'max:4096'],
-            'preferences' => ['nullable', 'string'],
-        ], [
-            'email.required' => 'Oops, looks like you missed your email!',
-            'name.required' => 'We need your name so we know who to help.',
-            'property_image.image' => 'Please upload a valid property photo.',
-            'zip_code.required' => 'Add the ZIP code where you want to buy so we can route the request.',
-            'zip_code.regex' => 'Enter a valid ZIP code using 5 digits or ZIP+4 format.',
-            'property_address.required' => 'Add the full property address so we can review the seller opportunity properly.',
-        ]);
+        $validated = $request->validated();
 
         if (($validated['intent'] ?? null) === 'buyer') {
             $validated['zip_code'] = $this->normalizeZipCode($validated['zip_code'] ?? null);
@@ -81,7 +47,7 @@ class LeadController extends Controller
 
         $lead = Lead::create([
             ...$validated,
-            'lead_number' => 'OMNI-' . now()->format('Ymd') . '-' . str_pad((string) (Lead::withTrashed()->count() + 1), 4, '0', STR_PAD_LEFT),
+            'lead_number' => Lead::generateLeadNumber(),
             'package_type' => $package ? str($package->slug)->before('-')->toString() : 'quick',
             'package_id' => $package?->id,
             'status' => 'new',
