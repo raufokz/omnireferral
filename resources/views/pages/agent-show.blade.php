@@ -2,13 +2,19 @@
 
 @section('content')
 @php
-    $agentHeadshot = $agent->headshot;
-    $agentImage = $agentHeadshot
-        ? (\Illuminate\Support\Str::startsWith($agentHeadshot, ['http://', 'https://', '/storage/', 'storage/']) ? $agentHeadshot : asset($agentHeadshot))
-        : ($agent->user?->avatar ? asset('storage/' . ltrim($agent->user->avatar, '/')) : asset('images/realtors/3.png'));
+    /** @var \App\Models\User $user */
+    /** @var \App\Models\RealtorProfile $profile */
+    $displayName = $user->publicDisplayName();
+    $userAvatar = $user->profilePhotoPublicUrl();
+    $headshot = $profile->headshot;
+    $agentImage = $userAvatar
+        ?: ($headshot
+            ? (\Illuminate\Support\Str::startsWith($headshot, ['http://', 'https://', '/storage/', 'storage/']) ? $headshot : asset(ltrim($headshot, '/')))
+            : asset('images/realtors/3.png'));
 
-    $agentLocation = collect([$agent->service_city, $agent->service_state, $agent->service_zip_code])->filter()->implode(', ');
-    $specialties = collect(explode(',', (string) $agent->specialties))
+    $serviceArea = collect([$profile->service_city, $profile->service_state, $profile->service_zip_code])->filter()->implode(', ');
+    $accountLocation = collect([$user->city, $user->state, $user->zip_code])->filter()->implode(', ');
+    $specialties = collect(explode(',', (string) $profile->specialties))
         ->map(fn ($item) => trim($item))
         ->filter()
         ->take(4);
@@ -18,18 +24,22 @@
     <div class="container page-hero__split">
         <div class="page-hero__copy agent-public-hero__copy">
             <span class="eyebrow">Agent Profile</span>
-            <h1>{{ $agent->user->name }}</h1>
+            <h1>{{ $displayName }}</h1>
             <p>
-                {{ $agent->brokerage_name ?: 'OmniReferral Partner Network' }}
-                @if($agentLocation)
-                    <span>&middot;</span> {{ $agentLocation }}
+                {{ $profile->brokerage_name ?: 'OmniReferral Partner Network' }}
+                @if($serviceArea)
+                    <span>&middot;</span> Service area: {{ $serviceArea }}
                 @endif
             </p>
+            @if($accountLocation)
+                <p class="text-muted" style="font-size:0.95rem;">Account location: {{ $accountLocation }}</p>
+            @endif
 
             <div class="agent-public-hero__chips">
-                <span>{{ number_format((float) $agent->rating, 1) }} rating</span>
-                <span>{{ $agent->review_count }} reviews</span>
-                <span>{{ $agent->properties->count() }} active listings</span>
+                <span>{{ number_format((float) $profile->rating, 1) }} rating</span>
+                <span>{{ $profile->review_count }} reviews</span>
+                <span>{{ $profile->leads_closed }} closed leads</span>
+                <span>{{ $profile->properties->count() }} active listings</span>
             </div>
 
             <div class="hero__actions">
@@ -40,30 +50,30 @@
 
         <div class="card-panel agent-public-hero__panel">
             <div class="agent-public-hero__panel-head">
-                <img src="{{ $agentImage }}" alt="{{ $agent->user->name }} headshot" loading="lazy">
+                <img src="{{ $agentImage }}" alt="{{ $displayName }} headshot" loading="lazy">
                 <div>
                     <span class="eyebrow">Profile Snapshot</span>
-                    <h2>{{ $agent->user->name }}</h2>
-                    <p>{{ $agent->brokerage_name ?: 'OmniReferral Partner' }}</p>
+                    <h2>{{ $displayName }}</h2>
+                    <p>{{ $profile->brokerage_name ?: 'OmniReferral Partner' }}</p>
                 </div>
             </div>
 
             <div class="agent-public-hero__stats">
                 <div>
                     <span>Rating</span>
-                    <strong>{{ number_format((float) $agent->rating, 1) }}</strong>
+                    <strong>{{ number_format((float) $profile->rating, 1) }}</strong>
                 </div>
                 <div>
                     <span>Reviews</span>
-                    <strong>{{ $agent->review_count }}</strong>
+                    <strong>{{ $profile->review_count }}</strong>
                 </div>
                 <div>
                     <span>Closed Leads</span>
-                    <strong>{{ $agent->leads_closed }}</strong>
+                    <strong>{{ $profile->leads_closed }}</strong>
                 </div>
                 <div>
                     <span>Listings</span>
-                    <strong>{{ $agent->properties->count() }}</strong>
+                    <strong>{{ $profile->properties->count() }}</strong>
                 </div>
             </div>
 
@@ -80,10 +90,10 @@
         <article class="card-panel agent-public-profile">
             <div class="section-heading agent-public-section-heading">
                 <span class="eyebrow">About</span>
-                <h2>Meet {{ $agent->user->name }}</h2>
+                <h2>Meet {{ $displayName }}</h2>
             </div>
 
-            <p>{{ $agent->bio ?: 'This OmniReferral partner agent is ready to support buyers and sellers with a more responsive, qualification-first workflow.' }}</p>
+            <p>{{ $profile->bio ?: 'This OmniReferral partner agent is ready to support buyers and sellers with a more responsive, qualification-first workflow.' }}</p>
 
             @if($specialties->isNotEmpty())
                 <div class="agent-public-specialties">
@@ -96,22 +106,34 @@
             <div class="agent-public-profile__meta">
                 <div>
                     <dt>Brokerage</dt>
-                    <dd>{{ $agent->brokerage_name ?: 'OmniReferral Partner Network' }}</dd>
+                    <dd>{{ $profile->brokerage_name ?: 'OmniReferral Partner Network' }}</dd>
                 </div>
                 <div>
-                    <dt>Service Area</dt>
-                    <dd>{{ $agentLocation ?: 'Area pending update' }}</dd>
+                    <dt>License</dt>
+                    <dd>{{ $profile->license_number ?: '—' }}</dd>
+                </div>
+                <div>
+                    <dt>Public profile slug</dt>
+                    <dd><code>{{ $profile->slug }}</code></dd>
+                </div>
+                <div>
+                    <dt>Service area</dt>
+                    <dd>{{ $serviceArea ?: 'Area pending update' }}</dd>
                 </div>
                 <div>
                     <dt>Specialties</dt>
-                    <dd>{{ $agent->specialties ?: 'Buyer representation, seller strategy, relocation, lead conversion' }}</dd>
+                    <dd>{{ $profile->specialties ?: 'Buyer representation, seller strategy, relocation, lead conversion' }}</dd>
+                </div>
+                <div>
+                    <dt>Approved</dt>
+                    <dd>{{ optional($profile->approved_at)->format('M j, Y') ?? '—' }}</dd>
                 </div>
                 <div>
                     <dt>Contact</dt>
                     <dd>
-                        {{ $agent->user->email }}
-                        @if($agent->user->phone)
-                            <span>&middot;</span> {{ $agent->user->phone }}
+                        {{ $user->email }}
+                        @if($user->phone)
+                            <span>&middot;</span> {{ $user->phone }}
                         @endif
                     </dd>
                 </div>
@@ -120,13 +142,13 @@
 
         <aside class="card-panel agent-public-contact" id="agent-contact">
             <span class="eyebrow">Direct Inquiry</span>
-            <h2>Send a message to {{ $agent->user->name }}</h2>
+            <h2>Send a message to {{ $displayName }}</h2>
             <p>Your message will go directly into this agent's inbox inside OmniReferral.</p>
 
             <form action="{{ route('contact.submit') }}" method="POST" class="agent-contact-form">
                 @csrf
-                <input type="hidden" name="realtor_profile_id" value="{{ $agent->id }}">
-                <input type="hidden" name="recipient_user_id" value="{{ $agent->user_id }}">
+                <input type="hidden" name="realtor_profile_id" value="{{ $profile->id }}">
+                <input type="hidden" name="recipient_user_id" value="{{ $user->id }}">
                 <input type="hidden" name="source" value="website_agent_profile">
 
                 <label>
@@ -151,7 +173,7 @@
                 </label>
                 <label>
                     <span>Subject</span>
-                    <input type="text" name="subject" value="{{ old('subject', 'Inquiry for ' . $agent->user->name) }}">
+                    <input type="text" name="subject" value="{{ old('subject', 'Inquiry for ' . $displayName) }}">
                 </label>
                 <label>
                     <span>Message</span>
@@ -173,12 +195,12 @@
     <div class="container">
         <div class="section-heading agent-public-section-heading">
             <span class="eyebrow">Current Listings</span>
-            <h2>Properties represented by {{ $agent->user->name }}</h2>
+            <h2>Properties represented by {{ $displayName }}</h2>
             <p>Explore active inventory connected to this agent profile and continue the conversation from the listing details page.</p>
         </div>
 
         <div class="listing-grid listing-grid--showcase agent-public-listing-grid">
-            @forelse($agent->properties as $property)
+            @forelse($profile->properties as $property)
                 <article class="listing-card listing-card--showcase agent-public-listing-card">
                     <div class="listing-card__media">
                         <img src="{{ $property->image_url }}" alt="{{ $property->title }}" loading="lazy">

@@ -87,6 +87,19 @@ class User extends Authenticatable
         return $this->hasOne(RealtorProfile::class);
     }
 
+    /**
+     * Public agent directory: active agent accounts with an approved realtor profile extension.
+     */
+    public function scopePublicDirectoryAgents($query)
+    {
+        return $query
+            ->where('role', 'agent')
+            ->where('status', 'active')
+            ->whereHas('realtorProfile', function ($q) {
+                $q->whereNotNull('approved_at');
+            });
+    }
+
     public function assignedLeads(): HasMany
     {
         return $this->hasMany(Lead::class, 'assigned_agent_id');

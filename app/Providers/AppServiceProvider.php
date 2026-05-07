@@ -15,6 +15,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -61,6 +62,47 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(User::class, UserPolicy::class);
 
         User::observe(UserObserver::class);
+
+        Route::bind('realtor', function (string $value) {
+            return User::query()
+                ->publicDirectoryAgents()
+                ->whereHas('realtorProfile', fn ($q) => $q->where('slug', $value))
+                ->with([
+                    'realtorProfile' => fn ($q) => $q->select([
+                        'id',
+                        'user_id',
+                        'slug',
+                        'brokerage_name',
+                        'license_number',
+                        'service_city',
+                        'service_state',
+                        'service_zip_code',
+                        'rating',
+                        'review_count',
+                        'leads_closed',
+                        'specialties',
+                        'bio',
+                        'headshot',
+                        'approved_at',
+                    ]),
+                ])
+                ->select([
+                    'id',
+                    'name',
+                    'display_name',
+                    'email',
+                    'phone',
+                    'avatar',
+                    'city',
+                    'state',
+                    'zip_code',
+                    'role',
+                    'status',
+                    'created_at',
+                    'updated_at',
+                ])
+                ->firstOrFail();
+        });
 
         RateLimiter::for('leads', function (Request $request) {
             return Limit::perMinute(5)->by($request->ip());

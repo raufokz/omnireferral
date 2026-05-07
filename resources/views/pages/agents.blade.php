@@ -41,7 +41,7 @@
             <div class="agent-directory-hero__stats">
                 <div class="agent-directory-hero__stat">
                     <strong>{{ method_exists($agents, 'total') ? number_format($agents->total()) : number_format($agents->count()) }}</strong>
-                    <span>Agent profiles</span>
+                    <span>Active partner agents</span>
                 </div>
                 <div class="agent-directory-hero__stat">
                     <strong>{{ $agentCityCount }}</strong>
@@ -66,36 +66,49 @@
             </div>
 
             <div class="agent-directory-toolbar__panel">
-                <div class="agent-directory-filters">
+                <form method="get" action="{{ route('agents.index') }}" class="agent-directory-filters" id="agentDirectorySearchForm">
                     <label>
-                        <span>City</span>
-                        <select id="agentCityFilter">
+                        <span>Search</span>
+                        <input type="search" name="q" value="{{ request('q') }}" placeholder="Name, email, city, brokerage…" autocomplete="off">
+                    </label>
+                    <label>
+                        <span>Service city</span>
+                        <select name="city" id="directoryCityFilter">
                             <option value="">All cities</option>
-                            @foreach($agentCollection->map(fn ($agent) => $agent->realtorProfile?->service_city)->filter()->unique()->sort()->values() as $city)
-                                <option value="{{ strtolower($city) }}">{{ $city }}</option>
+                            @foreach($filterCities ?? [] as $cityOption)
+                                <option value="{{ $cityOption }}" @selected(mb_strtolower((string) request('city')) === mb_strtolower((string) $cityOption))>{{ $cityOption }}</option>
                             @endforeach
                         </select>
                     </label>
 
                     <label>
                         <span>Specialty</span>
-                        <select id="agentSpecialtyFilter">
+                        <select name="specialty" id="directorySpecialtyFilter">
                             <option value="">All specialties</option>
-                            @foreach($agentCollection->map(fn ($agent) => $agent->realtorProfile?->specialties)->filter()->unique()->sort()->values() as $specialty)
-                                <option value="{{ strtolower($specialty) }}">{{ $specialty }}</option>
+                            @foreach($filterSpecialties ?? [] as $specialtyOption)
+                                <option value="{{ $specialtyOption }}" @selected(mb_strtolower((string) request('specialty')) === mb_strtolower((string) $specialtyOption))>{{ $specialtyOption }}</option>
                             @endforeach
                         </select>
                     </label>
-                </div>
+
+                    <div class="agent-directory-filters__actions">
+                        <button type="submit" class="button button--orange">Apply filters</button>
+                        <a href="{{ route('agents.index') }}" class="button button--ghost-blue">Reset</a>
+                    </div>
+                </form>
 
                 <div class="agent-directory-toolbar__footer">
-                    <p class="agent-directory-results" id="agentDirectoryCount">Showing {{ $agents->count() }} agents on this page</p>
-                    <button type="button" class="button button--ghost-blue agent-directory-reset" id="agentFilterReset">Reset filters</button>
+                    <p class="agent-directory-results" id="agentDirectoryCount">
+                        Showing {{ $agents->count() }} of {{ method_exists($agents, 'total') ? $agents->total() : $agents->count() }} agents
+                        @if(request()->filled('q') || request()->filled('city') || request()->filled('specialty'))
+                            <span class="text-muted">(filtered)</span>
+                        @endif
+                    </p>
                 </div>
             </div>
         </div>
 
-        <div class="agent-directory agent-directory--grid" id="agentDirectoryGrid" data-stagger>
+        <div class="agent-directory agent-directory--grid" id="agentDirectoryGrid" data-stagger data-server-filtered="1">
             @foreach($agents as $agent)
                 @php
                     $profile = $agent->realtorProfile;
@@ -114,7 +127,6 @@
                     $brokerage = $profile?->brokerage_name ?: 'OmniReferral Agent Network';
                     $marketLabel = trim(collect([$profile?->service_city, $profile?->service_state])->filter()->implode(', '));
                     $bio = $profile?->bio ?: 'Verified OmniReferral agent account ready for buyer, seller, and listing opportunities.';
-                    $statusLabel = \Illuminate\Support\Str::title($agent->status ?: 'Pending');
                     $profileRoute = $profile ? route('agents.show', $profile) : null;
                 @endphp
                 <article
@@ -146,7 +158,12 @@
                         <div class="agent-card__stats">
                             <span>{{ $agent->email }}</span>
                             <span>{{ $agent->phone ?: 'Phone not added' }}</span>
-                            <span>Status: {{ $statusLabel }}</span>
+                            @php
+                                $acctLoc = trim(collect([$agent->city, $agent->state, $agent->zip_code])->filter()->implode(', '));
+                            @endphp
+                            @if($acctLoc !== '')
+                                <span>Account: {{ $acctLoc }}</span>
+                            @endif
                         </div>
 
                         <p class="agent-card__bio">{{ \Illuminate\Support\Str::limit($bio, 120) }}</p>
@@ -167,10 +184,22 @@
 
         <div class="agent-directory-empty-state" id="agentDirectoryEmpty" @if($agents->count() > 0) hidden @endif>
             <span class="agent-directory-empty-state__icon">No Match</span>
-            <h3>{{ $agents->count() > 0 ? 'No agents match this filter yet' : 'No Agents Found' }}</h3>
-            <p>{{ $agents->count() > 0 ? 'Try another city or specialty to see more vetted partners from this page of the directory.' : 'Agent accounts will appear here once users with the Agent role are added to the platform.' }}</p>
-            @if($agents->count() > 0)
-                <button type="button" class="button button--orange" id="agentEmptyReset">Clear filters</button>
+            @php
+                $hasServerFilters = request()->filled('q') || request()->filled('city') || request()->filled('specialty');
+                $totalAgents = method_exists($agents, 'total') ? $agents->total() : $agents->count();
+            @endphp
+            <h3>{{ $totalAgents === 0 && $hasServerFilters ? 'No agents match your filters' : ($totalAgents === 0 ? 'No Agents Found' : 'No agents on this page') }}</h3>
+            <p>
+                @if($totalAgents === 0 && ! $hasServerFilters)
+                    Approved agent profiles will appear here once partner agents are active on the platform.
+                @elseif($totalAgents === 0 && $hasServerFilters)
+                    Try clearing search or choosing a different city or specialty.
+                @else
+                    Try another page or adjust filters — more partners may be on other directory pages.
+                @endif
+            </p>
+            @if($hasServerFilters)
+                <a href="{{ route('agents.index') }}" class="button button--orange">Clear filters</a>
             @endif
         </div>
 

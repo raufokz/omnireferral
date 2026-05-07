@@ -34,6 +34,7 @@ class AgentDirectoryTest extends TestCase
             'specialties' => 'Buyer Representation',
             'bio' => 'Local agent bio.',
             'headshot' => 'images/realtors/1.png',
+            'approved_at' => now(),
         ]);
 
         User::factory()->create([
@@ -55,10 +56,37 @@ class AgentDirectoryTest extends TestCase
             ->assertSee('Taylor Agent')
             ->assertSee('taylor.agent@example.com')
             ->assertSee('(555) 123-4567')
-            ->assertSee('Status: Active')
+            ->assertSee('Dallas')
             ->assertSee('Premier Realty')
             ->assertDontSee('Bailey Buyer')
             ->assertDontSee('Admin User');
+    }
+
+    public function test_agent_profile_page_resolves_by_slug_and_requires_approval(): void
+    {
+        $agent = User::factory()->create([
+            'name' => 'Public Agent',
+            'role' => 'agent',
+            'status' => 'active',
+        ]);
+
+        RealtorProfile::updateOrCreate(['user_id' => $agent->id], [
+            'slug' => 'public-agent-slug',
+            'brokerage_name' => 'Test Brokerage',
+            'approved_at' => now(),
+            'service_city' => 'Austin',
+            'service_state' => 'TX',
+        ]);
+
+        $this->get(route('agents.show', ['realtor' => 'public-agent-slug']))
+            ->assertOk()
+            ->assertSee('Public Agent')
+            ->assertSee('Test Brokerage');
+
+        RealtorProfile::where('user_id', $agent->id)->update(['approved_at' => null]);
+
+        $this->get(route('agents.show', ['realtor' => 'public-agent-slug']))
+            ->assertNotFound();
     }
 
     public function test_agents_page_shows_empty_state_when_no_agent_users_exist(): void

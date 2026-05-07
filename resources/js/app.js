@@ -384,6 +384,10 @@ const initAgentDirectoryFilters = () => {
 
     if (!grid || !cityFilter || !specialtyFilter) return;
 
+    if (grid.dataset.serverFiltered === '1') {
+        return;
+    }
+
     const cards = Array.from(grid.querySelectorAll('[data-agent-card]'));
 
     const updateFilters = () => {
