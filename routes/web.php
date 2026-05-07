@@ -26,6 +26,7 @@ use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\RealtorController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\Webhooks\GoHighLevelWebhookController;
+use App\Http\Controllers\Webhooks\GoHighLevelEventWebhookController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Models\Property;
 use App\Models\RealtorProfile;
@@ -143,6 +144,11 @@ Route::post('/webhooks/gohighlevel/lead-status', [GoHighLevelWebhookController::
 Route::post('/webhooks/stripe', StripeWebhookController::class)
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('webhooks.stripe');
+
+Route::post('/webhooks/gohighlevel/events', GoHighLevelEventWebhookController::class)
+    ->withoutMiddleware([VerifyCsrfToken::class])
+    ->middleware('throttle:30,1')
+    ->name('webhooks.gohighlevel.events');
 
 Route::middleware(['auth', 'active.account'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
