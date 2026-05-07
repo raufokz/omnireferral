@@ -133,9 +133,9 @@ class PropertyManagementController extends Controller
                     'url' => route('admin.properties.edit', $property),
                 ];
             }),
-            'canCreate' => $workspaceUser->isAdmin(),
-            'canDelete' => $workspaceUser->isAdmin(),
-            'isStaffView' => $workspaceUser->role === 'staff',
+            'canCreate' => $workspaceUser->can('properties.create'),
+            'canDelete' => $workspaceUser->can('properties.delete'),
+            'isStaffView' => $workspaceUser->can('admin.access') && ! $workspaceUser->can('settings.manage'),
             'meta' => [
                 'title' => 'Property Registry | OmniReferral',
                 'description' => 'Manage marketplace listings, media, ownership, and moderation in one responsive admin module.',
@@ -197,9 +197,9 @@ class PropertyManagementController extends Controller
 
         return view('pages/admin/properties/edit', [
             'property' => $property,
-            'listingUsers' => $workspaceUser->isAdmin() ? $this->listingUsers() : collect(),
-            'canDelete' => $workspaceUser->isAdmin(),
-            'canManageListedBy' => $workspaceUser->isAdmin(),
+            'listingUsers' => $workspaceUser->can('users.view') ? $this->listingUsers() : collect(),
+            'canDelete' => $workspaceUser->can('properties.delete'),
+            'canManageListedBy' => $workspaceUser->can('users.update'),
             'meta' => [
                 'title' => 'Edit Property Listing | OmniReferral',
                 'description' => 'Update listing details, media gallery, address data, and moderation state.',
@@ -213,8 +213,9 @@ class PropertyManagementController extends Controller
         abort_unless($workspaceUser, 403);
         $this->authorize('update', $property);
 
-        $validated = $this->validatePayload($request, false, $workspaceUser->isAdmin());
-        $prepared = $this->preparePayload($validated, $request, $property, $workspaceUser->isAdmin());
+        $isAdminLike = $workspaceUser->can('settings.manage');
+        $validated = $this->validatePayload($request, false, $isAdminLike);
+        $prepared = $this->preparePayload($validated, $request, $property, $isAdminLike);
 
         if (empty($prepared['images'])) {
             throw ValidationException::withMessages([

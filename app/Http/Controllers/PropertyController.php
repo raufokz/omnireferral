@@ -104,6 +104,9 @@ class PropertyController extends Controller
                             ->where('users.role', 'agent')
                             ->where('users.status', 'active');
                     });
+
+                    // Ensure agent is approved for public/seller selection.
+                    $query->whereNotNull('realtor_profiles.approved_at');
                 }),
             ];
         }

@@ -6,9 +6,9 @@
 
 @section('dashboard_actions')
     <a href="{{ route('admin.dashboard') }}" class="button button--ghost-blue">Overview</a>
-    @if($canCreate)
+    @can('properties.create')
         <a href="{{ route('admin.properties.create') }}" class="button">Add Property</a>
-    @endif
+    @endcan
 @endsection
 
 @section('content')

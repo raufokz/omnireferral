@@ -80,8 +80,8 @@ class EnquiryController extends Controller
         return view('pages.admin.enquiries.index', [
             'enquiries' => $enquiries,
             'filters' => $filters,
-            'canExport' => $request->user()->isAdmin(),
-            'isStaffView' => $request->user()->role === 'staff',
+            'canExport' => $request->user()->can('enquiries.export'),
+            'isStaffView' => $request->user()->can('admin.access') && ! $request->user()->can('settings.manage'),
             'meta' => [
                 'title' => 'Enquiries & conversations | OmniReferral',
                 'description' => 'Property listing enquiries with threaded replies between senders, owners, and operations.',
@@ -103,7 +103,7 @@ class EnquiryController extends Controller
 
         return view('pages.admin.enquiries.show', [
             'enquiry' => $enquiry,
-            'isStaffView' => $request->user()->role === 'staff',
+            'isStaffView' => $request->user()->can('admin.access') && ! $request->user()->can('settings.manage'),
             'canReply' => true,
             'replyUrl' => route('admin.enquiries.replies.store', $enquiry),
             'statusUrl' => route('admin.enquiries.status', $enquiry),

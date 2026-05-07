@@ -6,10 +6,10 @@
 
 @section('dashboard_actions')
     <a href="{{ route('admin.dashboard') }}" class="button button--ghost-blue">Overview</a>
-    @if($canManage)
+    @can('users.export')
         <a href="{{ route('admin.users.export.csv') }}" class="button">Export CSV</a>
         <a href="{{ route('admin.users.export.xlsx') }}" class="button button--ghost-blue">Export Excel</a>
-    @endif
+    @endcan
 @endsection
 
 @section('content')
@@ -112,7 +112,8 @@
                             </td>
                             <td data-label="Joined">{{ $u->created_at?->format('M j, Y') }}</td>
                             <td data-label="Actions">
-                                @if($canManage && $u->id !== auth()->id() && $u->role !== 'admin')
+                                @can('users.update')
+                                @if($u->id !== auth()->id() && $u->role !== 'admin')
                                     <form method="POST" action="{{ route('admin.users.quick-update', $u) }}" class="workspace-stack" style="gap:0.4rem;">
                                         @csrf
                                         @method('PATCH')
@@ -134,13 +135,14 @@
                                         </label>
                                         <button type="submit" class="button button--ghost-blue">Save</button>
                                     </form>
-                                @elseif($canManage && $u->role === 'admin')
+                                @elseif($u->role === 'admin')
                                     <span class="workspace-property__meta">Protected account</span>
-                                @elseif(! $canManage)
-                                    <span class="workspace-property__meta">View only</span>
                                 @else
                                     <span class="workspace-property__meta">—</span>
                                 @endif
+                                @else
+                                    <span class="workspace-property__meta">View only</span>
+                                @endcan
                             </td>
                         </tr>
                     @empty

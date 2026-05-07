@@ -8,9 +8,11 @@ use App\Http\Controllers\Admin\EnquiryController as AdminEnquiryController;
 use App\Http\Controllers\Admin\LeadManagementController as AdminLeadManagementController;
 use App\Http\Controllers\Admin\PlatformSearchController;
 use App\Http\Controllers\Admin\PropertyManagementController as AdminPropertyManagementController;
+use App\Http\Controllers\Admin\PackageController as AdminPackageController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\UserModerationController;
+use App\Http\Controllers\Admin\WebhookEventController as AdminWebhookEventController;
 use App\Http\Controllers\Agent\LeadController as AgentLeadController;
 use App\Http\Controllers\Agent\PortalController as AgentPortalController;
 use App\Http\Controllers\Auth\AuthController;
@@ -33,16 +35,33 @@ use App\Models\RealtorProfile;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/sitemap.xml', function () {
-    $properties = Property::latest()->take(500)->get();
-    $agents = RealtorProfile::latest()->take(500)->get();
+    $xml = Cache::remember('public:sitemap.xml', now()->addHours(6), function () {
+        $properties = Property::query()
+            ->marketplaceVisible()
+            ->latest('updated_at')
+            ->take(500)
+            ->get(['slug', 'updated_at']);
 
-    return response()->view('sitemap', [
-        'properties' => $properties,
-        'agents' => $agents,
-    ])->header('Content-Type', 'text/xml');
+        $agents = RealtorProfile::query()
+            ->publicDirectory()
+            ->latest('updated_at')
+            ->take(500)
+            ->get(['slug', 'updated_at']);
+
+        return response()
+            ->view('sitemap', [
+                'properties' => $properties,
+                'agents' => $agents,
+            ])
+            ->header('Content-Type', 'text/xml')
+            ->getContent();
+    });
+
+    return response($xml, 200)->header('Content-Type', 'text/xml');
 })->name('sitemap');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -206,7 +225,7 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::delete('/properties/{property}', [PropertyController::class, 'destroy'])->name('properties.destroy');
     });
 
-    Route::middleware(['role:admin,staff'])->group(function () {
+    Route::middleware(['can:admin.access'])->group(function () {
         Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('/admin/search', PlatformSearchController::class)->name('admin.search');
         Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users.index');
@@ -263,6 +282,20 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
                 'destroy' => 'admin.testimonials.destroy',
             ]);
         Route::post('admin/testimonials/{testimonial}/review', [TestimonialController::class, 'review'])->name('admin.testimonials.review');
+
+        Route::resource('admin/packages', AdminPackageController::class)
+            ->except(['show'])
+            ->names([
+                'index' => 'admin.packages.index',
+                'create' => 'admin.packages.create',
+                'store' => 'admin.packages.store',
+                'edit' => 'admin.packages.edit',
+                'update' => 'admin.packages.update',
+                'destroy' => 'admin.packages.destroy',
+            ]);
+
+        Route::get('admin/webhook-events', [AdminWebhookEventController::class, 'index'])->name('admin.webhook-events.index');
+        Route::get('admin/webhook-events/{webhookEvent}', [AdminWebhookEventController::class, 'show'])->name('admin.webhook-events.show');
 
         Route::post('admin/leads/{lead}/status', [App\Http\Controllers\Admin\LeadController::class, 'status'])->name('admin.leads.status');
         Route::post('admin/leads/{lead}/assign', [App\Http\Controllers\Admin\LeadController::class, 'assign'])->name('admin.leads.assign');

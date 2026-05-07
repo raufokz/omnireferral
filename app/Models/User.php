@@ -11,10 +11,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use App\Support\HasRolesShim;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRolesShim;
 
     protected $fillable = [
         'name',
@@ -65,7 +66,13 @@ class User extends Authenticatable
             'two_factor_enabled' => 'boolean',
             'onboarding_completed_at' => 'datetime',
             'last_synced_at' => 'datetime',
+            'is_super_admin' => 'boolean',
         ];
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return (bool) ($this->is_super_admin ?? false);
     }
 
     public function publicDisplayName(): string

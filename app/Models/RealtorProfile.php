@@ -31,6 +31,8 @@ class RealtorProfile extends Model
         'rating' => 'decimal:2',
         'review_count' => 'integer',
         'leads_closed' => 'integer',
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
     ];
 
     public function getRouteKeyName(): string
@@ -58,7 +60,9 @@ class RealtorProfile extends Model
      */
     public function scopePublicDirectory($query)
     {
-        return $query->whereHas('user', function ($q) {
+        return $query
+            ->whereNotNull('approved_at')
+            ->whereHas('user', function ($q) {
             $q->where('role', 'agent')->where('status', 'active');
         });
     }

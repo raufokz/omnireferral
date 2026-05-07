@@ -6,10 +6,10 @@
 
 @section('dashboard_actions')
     <a href="{{ route('admin.dashboard') }}" class="button button--ghost-blue">Overview</a>
-    @if($canExport)
+    @can('enquiries.export')
         <a href="{{ route('admin.enquiries.export.csv') }}" class="button">Export CSV</a>
         <a href="{{ route('admin.enquiries.export.xlsx') }}" class="button button--ghost-blue">Export Excel</a>
-    @endif
+    @endcan
 @endsection
 
 @section('content')

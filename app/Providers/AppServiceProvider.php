@@ -36,6 +36,25 @@ class AppServiceProvider extends ServiceProvider
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
 
+        Gate::before(function (?User $user, string $ability) {
+            if (! $user) {
+                return null;
+            }
+
+            // Break-glass access: a super-admin can do anything.
+            // (Still keep normal Policies/Gates for all other users.)
+            if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+                return true;
+            }
+
+            // If Spatie roles are enabled and this user is a Super Admin, allow all.
+            if (method_exists($user, 'hasRole') && $user->hasRole('Super Admin')) {
+                return true;
+            }
+
+            return null;
+        });
+
         Gate::policy(Property::class, PropertyPolicy::class);
         Gate::policy(Enquiry::class, EnquiryPolicy::class);
         Gate::policy(Lead::class, LeadPolicy::class);

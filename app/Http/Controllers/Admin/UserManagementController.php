@@ -76,8 +76,8 @@ class UserManagementController extends Controller
             'filters' => $filters,
             'roles' => ['buyer', 'seller', 'agent', 'admin', 'staff'],
             'statuses' => ['pending', 'active', 'suspended'],
-            'canManage' => $request->user()->isAdmin(),
-            'isStaffView' => $request->user()->role === 'staff',
+            'canManage' => $request->user()->can('users.update'),
+            'isStaffView' => $request->user()->can('admin.access') && ! $request->user()->can('settings.manage'),
             'meta' => [
                 'title' => 'User Management | OmniReferral',
                 'description' => 'View and manage registered users, roles, and account status across the platform.',

@@ -130,7 +130,7 @@ class DashboardController extends Controller
             'percent' => (int) round(($row['count'] / $propertyTypeTotal) * 100),
         ]);
 
-        $recentAudit = $workspaceUser?->isAdmin()
+        $recentAudit = $workspaceUser?->can('audit.view')
             ? AdminActivityLog::query()
                 ->with('actor:id,name')
                 ->latest('created_at')
@@ -188,7 +188,7 @@ class DashboardController extends Controller
             'analyticsTrends' => $analyticsTrends,
             'propertyTypeDistribution' => $propertyTypeDistribution,
             'recentAudit' => $recentAudit,
-            'canViewFullAudit' => $workspaceUser?->isAdmin() ?? false,
+            'canViewFullAudit' => $workspaceUser?->can('audit.view') ?? false,
             'meta' => [
                 'title' => $isStaffView ? 'Staff Dashboard | OmniReferral' : 'Admin Dashboard | OmniReferral',
                 'description' => $isStaffView

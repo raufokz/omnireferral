@@ -15,7 +15,7 @@ class RealtorController extends Controller
                 ->select(['id', 'name', 'display_name', 'email', 'phone', 'role', 'status', 'avatar', 'created_at'])
                 ->where('role', 'agent')
                 ->where('status', 'active')
-                ->whereHas('realtorProfile')
+                ->whereHas('realtorProfile', fn ($q) => $q->whereNotNull('approved_at'))
                 ->with([
                     'realtorProfile' => fn ($query) => $query->select([
                         'id',
@@ -25,6 +25,7 @@ class RealtorController extends Controller
                         'service_city',
                         'service_state',
                         'service_zip_code',
+                        'approved_at',
                         'rating',
                         'specialties',
                         'bio',
@@ -58,6 +59,8 @@ class RealtorController extends Controller
             && $realtor->user->status === 'active',
             404
         );
+
+        abort_unless(! is_null($realtor->approved_at), 404);
 
         return view('pages.agent-show', [
             'agent' => $realtor,

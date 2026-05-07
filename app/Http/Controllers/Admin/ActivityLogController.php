@@ -11,7 +11,7 @@ class ActivityLogController extends Controller
 {
     public function index(Request $request): View
     {
-        abort_unless($request->user()?->isAdmin(), 403);
+        abort_unless($request->user()?->can('audit.view'), 403);
 
         $filters = [
             'action' => trim((string) $request->query('action', '')),
