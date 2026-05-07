@@ -3,7 +3,7 @@
 @php
     $agentCollection = $agents->getCollection();
     $agentCityCount = $agentCollection
-        ->map(fn ($agent) => $agent->realtorProfile?->city)
+        ->map(fn ($agent) => $agent->realtorProfile?->service_city)
         ->filter()
         ->unique()
         ->count();
@@ -71,7 +71,7 @@
                         <span>City</span>
                         <select id="agentCityFilter">
                             <option value="">All cities</option>
-                            @foreach($agentCollection->map(fn ($agent) => $agent->realtorProfile?->city)->filter()->unique()->sort()->values() as $city)
+                            @foreach($agentCollection->map(fn ($agent) => $agent->realtorProfile?->service_city)->filter()->unique()->sort()->values() as $city)
                                 <option value="{{ strtolower($city) }}">{{ $city }}</option>
                             @endforeach
                         </select>
@@ -112,7 +112,7 @@
                     $ratingValue = $profile?->rating ? number_format($profile->rating, 1) : 'New';
                     $specialty = $profile?->specialties ?: 'Agent';
                     $brokerage = $profile?->brokerage_name ?: 'OmniReferral Agent Network';
-                    $marketLabel = trim(collect([$profile?->city, $profile?->state])->filter()->implode(', '));
+                    $marketLabel = trim(collect([$profile?->service_city, $profile?->service_state])->filter()->implode(', '));
                     $bio = $profile?->bio ?: 'Verified OmniReferral agent account ready for buyer, seller, and listing opportunities.';
                     $statusLabel = \Illuminate\Support\Str::title($agent->status ?: 'Pending');
                     $profileRoute = $profile ? route('agents.show', $profile) : null;
@@ -120,7 +120,7 @@
                 <article
                     class="agent-card agent-card--profile"
                     data-agent-card
-                    data-city="{{ strtolower($profile?->city ?? '') }}"
+                    data-city="{{ strtolower($profile?->service_city ?? '') }}"
                     data-specialty="{{ strtolower($specialty) }}"
                 >
                     <div class="agent-card__media">

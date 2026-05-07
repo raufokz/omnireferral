@@ -44,6 +44,9 @@ class GoHighLevelWebhookController extends Controller
             'onboarding_completed_at' => null,
             'must_reset_password' => $isNewUser ? true : (bool) $user->must_reset_password,
             'email_verified_at' => $user->email_verified_at ?? now(),
+            'city' => $request->string('city')->value() ?: $user->city,
+            'state' => strtoupper($request->string('state')->value() ?: $user->state),
+            'zip_code' => $request->string('zip_code')->value() ?: $user->zip_code,
         ]);
 
         if ($isNewUser) {
@@ -68,9 +71,9 @@ class GoHighLevelWebhookController extends Controller
         RealtorProfile::updateOrCreate(['user_id' => $user->id], [
             'slug' => RealtorProfile::where('user_id', $user->id)->value('slug') ?: Str::slug($user->name . '-' . Str::lower(Str::random(6))),
             'brokerage_name' => $request->string('brokerage_name')->value() ?: 'OmniReferral Partner',
-            'city' => $request->string('city')->value() ?: 'Dallas',
-            'state' => strtoupper($request->string('state')->value() ?: 'TX'),
-            'zip_code' => $request->string('zip_code')->value() ?: '75201',
+            'service_city' => $request->string('city')->value() ?: ($user->city ?: 'Dallas'),
+            'service_state' => strtoupper($request->string('state')->value() ?: ($user->state ?: 'TX')),
+            'service_zip_code' => $request->string('zip_code')->value() ?: ($user->zip_code ?: '75201'),
             'specialties' => $request->string('specialties')->value() ?: 'Buyer Representation, Seller Strategy, Lead Conversion',
             'bio' => $request->string('bio')->value() ?: 'Agent profile created after package purchase.',
             'headshot' => 'images/realtors/3.png',
@@ -122,6 +125,9 @@ class GoHighLevelWebhookController extends Controller
             'ghl_contact_id' => $request->string('contact_id')->value() ?: data_get($request->all(), 'contact.id'),
             'onboarding_completed_at' => now(),
             'email_verified_at' => $user->email_verified_at ?? now(),
+            'city' => $request->string('city')->value() ?: $user->city,
+            'state' => strtoupper($request->string('state')->value() ?: $user->state),
+            'zip_code' => $request->string('zip_code')->value() ?: $user->zip_code,
         ]);
 
         if ($isNewUser) {
@@ -146,9 +152,9 @@ class GoHighLevelWebhookController extends Controller
             RealtorProfile::updateOrCreate(['user_id' => $user->id], [
                 'slug' => RealtorProfile::where('user_id', $user->id)->value('slug') ?: Str::slug($user->name . '-' . Str::lower(Str::random(6))),
                 'brokerage_name' => $request->string('brokerage_name')->value() ?: 'OmniReferral Partner',
-                'city' => $request->string('city')->value() ?: 'Dallas',
-                'state' => strtoupper($request->string('state')->value() ?: 'TX'),
-                'zip_code' => $request->string('zip_code')->value() ?: '75201',
+                'service_city' => $request->string('city')->value() ?: ($user->city ?: 'Dallas'),
+                'service_state' => strtoupper($request->string('state')->value() ?: ($user->state ?: 'TX')),
+                'service_zip_code' => $request->string('zip_code')->value() ?: ($user->zip_code ?: '75201'),
                 'specialties' => $request->string('specialties')->value() ?: 'Buyer Representation, Seller Strategy, Lead Conversion',
                 'bio' => $request->string('bio')->value() ?: 'Agent profile generated from GoHighLevel onboarding.',
                 'headshot' => 'images/realtors/3.png',

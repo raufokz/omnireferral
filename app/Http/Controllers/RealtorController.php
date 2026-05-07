@@ -22,8 +22,9 @@ class RealtorController extends Controller
                         'user_id',
                         'slug',
                         'brokerage_name',
-                        'city',
-                        'state',
+                        'service_city',
+                        'service_state',
+                        'service_zip_code',
                         'rating',
                         'specialties',
                         'bio',
@@ -62,7 +63,7 @@ class RealtorController extends Controller
             'agent' => $realtor,
             'meta' => [
                 'title' => $realtor->user->name . ' | OmniReferral Agent Profile',
-                'description' => 'Meet ' . $realtor->user->name . ', a trusted OmniReferral real estate partner serving ' . $realtor->city . ', ' . $realtor->state . '.',
+                'description' => 'Meet ' . $realtor->user->name . ', a trusted OmniReferral real estate partner serving ' . ($realtor->service_city ?: 'your market') . ( $realtor->service_state ? ', ' . $realtor->service_state : '' ) . '.',
             ],
         ]);
     }

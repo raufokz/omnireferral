@@ -38,17 +38,18 @@ class AgentPortalTest extends TestCase
             'role' => 'agent',
             'status' => 'active',
             'current_plan_id' => $package->id,
-        ]);
-
-        $profile = RealtorProfile::create([
-            'user_id' => $agent->id,
-            'slug' => 'agent-portal-test',
-            'brokerage_name' => 'Prime Brokerage',
-            'license_number' => 'TX-111111',
-            'address_line_1' => '100 Main Street',
             'city' => 'Dallas',
             'state' => 'TX',
             'zip_code' => '75201',
+        ]);
+
+        $profile = RealtorProfile::updateOrCreate(['user_id' => $agent->id], [
+            'slug' => 'agent-portal-test',
+            'brokerage_name' => 'Prime Brokerage',
+            'license_number' => 'TX-111111',
+            'service_city' => 'Dallas',
+            'service_state' => 'TX',
+            'service_zip_code' => '75201',
             'rating' => 4.9,
             'review_count' => 10,
             'leads_closed' => 3,
@@ -110,17 +111,18 @@ class AgentPortalTest extends TestCase
             'email' => 'jordan@example.com',
             'role' => 'agent',
             'status' => 'active',
-        ]);
-
-        $profile = RealtorProfile::create([
-            'user_id' => $agent->id,
-            'slug' => 'jordan-agent',
-            'brokerage_name' => 'North Star Realty',
-            'license_number' => 'AZ-222222',
-            'address_line_1' => '50 Desert Ave',
             'city' => 'Phoenix',
             'state' => 'AZ',
             'zip_code' => '85001',
+        ]);
+
+        $profile = RealtorProfile::updateOrCreate(['user_id' => $agent->id], [
+            'slug' => 'jordan-agent',
+            'brokerage_name' => 'North Star Realty',
+            'license_number' => 'AZ-222222',
+            'service_city' => 'Phoenix',
+            'service_state' => 'AZ',
+            'service_zip_code' => '85001',
             'rating' => 4.8,
             'review_count' => 14,
             'leads_closed' => 6,
@@ -219,15 +221,13 @@ class AgentPortalTest extends TestCase
             'zip_code' => '75201',
         ]);
 
-        RealtorProfile::create([
-            'user_id' => $agent->id,
+        RealtorProfile::updateOrCreate(['user_id' => $agent->id], [
             'slug' => 'portal-agent',
             'brokerage_name' => 'Portal Realty',
             'license_number' => 'TX-333333',
-            'address_line_1' => '10 Oak Street',
-            'city' => 'Dallas',
-            'state' => 'TX',
-            'zip_code' => '75201',
+            'service_city' => 'Dallas',
+            'service_state' => 'TX',
+            'service_zip_code' => '75201',
             'rating' => 4.7,
             'review_count' => 9,
             'leads_closed' => 4,

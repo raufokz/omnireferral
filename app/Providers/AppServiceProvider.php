@@ -6,6 +6,7 @@ use App\Models\Enquiry;
 use App\Models\Lead;
 use App\Models\Property;
 use App\Models\User;
+use App\Observers\UserObserver;
 use App\Policies\EnquiryPolicy;
 use App\Policies\LeadPolicy;
 use App\Policies\PropertyPolicy;
@@ -39,6 +40,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Enquiry::class, EnquiryPolicy::class);
         Gate::policy(Lead::class, LeadPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
+
+        User::observe(UserObserver::class);
 
         RateLimiter::for('leads', function (Request $request) {
             return Limit::perMinute(5)->by($request->ip());

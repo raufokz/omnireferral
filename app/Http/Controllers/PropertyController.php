@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -92,7 +93,19 @@ class PropertyController extends Controller
         ];
 
         if ($user?->isSeller()) {
-            $rules['listing_realtor_profile_id'] = ['required', 'integer', 'exists:realtor_profiles,id'];
+            $rules['listing_realtor_profile_id'] = [
+                'required',
+                'integer',
+                Rule::exists('realtor_profiles', 'id')->where(function ($query) {
+                    $query->whereExists(function ($sub) {
+                        $sub->select(DB::raw(1))
+                            ->from('users')
+                            ->whereColumn('users.id', 'realtor_profiles.user_id')
+                            ->where('users.role', 'agent')
+                            ->where('users.status', 'active');
+                    });
+                }),
+            ];
         }
 
         $validated = $request->validate($rules, [
@@ -465,11 +478,9 @@ class PropertyController extends Controller
                 'slug' => Str::slug($user->name.'-'.Str::lower(Str::random(6))),
                 'brokerage_name' => 'OmniReferral Partner',
                 'license_number' => null,
-                'address_line_1' => $user->address_line_1,
-                'address_line_2' => $user->address_line_2,
-                'city' => $user->city ?: 'Dallas',
-                'state' => $user->state ?: 'TX',
-                'zip_code' => $user->zip_code ?: '75201',
+                'service_city' => $user->city ?: 'Dallas',
+                'service_state' => $user->state ?: 'TX',
+                'service_zip_code' => $user->zip_code ?: '75201',
                 'specialties' => 'Buyer Representation, Seller Strategy, Lead Conversion',
                 'bio' => 'Agent profile created in the OmniReferral workspace.',
                 'headshot' => $user->avatar ? 'storage/'.ltrim($user->avatar, '/') : 'images/realtors/3.png',

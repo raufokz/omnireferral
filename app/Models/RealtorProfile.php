@@ -14,13 +14,11 @@ class RealtorProfile extends Model
     protected $fillable = [
         'user_id',
         'slug',
+        'service_city',
+        'service_state',
+        'service_zip_code',
         'brokerage_name',
         'license_number',
-        'address_line_1',
-        'address_line_2',
-        'city',
-        'state',
-        'zip_code',
         'rating',
         'review_count',
         'leads_closed',
@@ -63,5 +61,12 @@ class RealtorProfile extends Model
         return $query->whereHas('user', function ($q) {
             $q->where('role', 'agent')->where('status', 'active');
         });
+    }
+
+    public function serviceAreaLabel(): string
+    {
+        return collect([$this->service_city, $this->service_state, $this->service_zip_code])
+            ->filter(fn ($p) => is_string($p) && trim($p) !== '')
+            ->implode(', ');
     }
 }

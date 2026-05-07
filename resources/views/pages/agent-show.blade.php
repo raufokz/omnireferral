@@ -7,7 +7,7 @@
         ? (\Illuminate\Support\Str::startsWith($agentHeadshot, ['http://', 'https://', '/storage/', 'storage/']) ? $agentHeadshot : asset($agentHeadshot))
         : ($agent->user?->avatar ? asset('storage/' . ltrim($agent->user->avatar, '/')) : asset('images/realtors/3.png'));
 
-    $agentLocation = collect([$agent->city, $agent->state, $agent->zip_code])->filter()->implode(', ');
+    $agentLocation = collect([$agent->service_city, $agent->service_state, $agent->service_zip_code])->filter()->implode(', ');
     $specialties = collect(explode(',', (string) $agent->specialties))
         ->map(fn ($item) => trim($item))
         ->filter()

@@ -86,11 +86,9 @@ class AuthRegistrationTest extends TestCase
         $this->assertNotNull($profile);
         $this->assertSame('Premier Realty Group', $profile->brokerage_name);
         $this->assertSame('TX-1234567', $profile->license_number);
-        $this->assertSame('123 Main Street', $profile->address_line_1);
-        $this->assertSame('Suite 400', $profile->address_line_2);
-        $this->assertSame('Dallas', $profile->city);
-        $this->assertSame('TX', $profile->state);
-        $this->assertSame('75201', $profile->zip_code);
+        $this->assertSame('Dallas', $profile->service_city);
+        $this->assertSame('TX', $profile->service_state);
+        $this->assertSame('75201', $profile->service_zip_code);
 
         Queue::assertPushed(SyncUserToGoHighLevel::class);
     }

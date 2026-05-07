@@ -53,23 +53,23 @@
                 </label>
                 <label class="workspace-field workspace-field--full">
                     <span>Address Line 1</span>
-                    <input type="text" name="address_line_1" value="{{ old('address_line_1', $agentUser->address_line_1 ?: $agentProfile->address_line_1) }}" required>
+                    <input type="text" name="address_line_1" value="{{ old('address_line_1', $agentUser->address_line_1) }}" required>
                 </label>
                 <label class="workspace-field workspace-field--full">
                     <span>Address Line 2</span>
-                    <input type="text" name="address_line_2" value="{{ old('address_line_2', $agentUser->address_line_2 ?: $agentProfile->address_line_2) }}">
+                    <input type="text" name="address_line_2" value="{{ old('address_line_2', $agentUser->address_line_2) }}">
                 </label>
                 <label class="workspace-field">
                     <span>City</span>
-                    <input type="text" name="city" value="{{ old('city', $agentProfile->city ?: $agentUser->city) }}" required>
+                    <input type="text" name="city" value="{{ old('city', $agentProfile->service_city ?: $agentUser->city) }}" required>
                 </label>
                 <label class="workspace-field">
                     <span>State</span>
-                    <input type="text" name="state" value="{{ old('state', $agentProfile->state ?: $agentUser->state) }}" maxlength="2" required>
+                    <input type="text" name="state" value="{{ old('state', $agentProfile->service_state ?: $agentUser->state) }}" maxlength="2" required>
                 </label>
                 <label class="workspace-field">
                     <span>ZIP Code</span>
-                    <input type="text" name="zip_code" value="{{ old('zip_code', $agentProfile->zip_code ?: $agentUser->zip_code) }}" required>
+                    <input type="text" name="zip_code" value="{{ old('zip_code', $agentProfile->service_zip_code ?: $agentUser->zip_code) }}" required>
                 </label>
                 <label class="workspace-field">
                     <span>Profile Image</span>
@@ -97,9 +97,9 @@
                 <h3>{{ old('name', $agentUser->name) }}</h3>
                 <p class="workspace-property__meta">{{ old('brokerage_name', $agentProfile->brokerage_name ?: 'Brokerage info pending') }}</p>
                 <div class="workspace-pill-row">
-                    <span class="workspace-pill">{{ old('city', $agentProfile->city ?: $agentUser->city) ?: 'City' }}</span>
-                    <span class="workspace-pill">{{ strtoupper(old('state', $agentProfile->state ?: $agentUser->state) ?: 'NA') }}</span>
-                    <span class="workspace-pill workspace-pill--accent">{{ old('zip_code', $agentProfile->zip_code ?: $agentUser->zip_code) ?: 'ZIP' }}</span>
+                    <span class="workspace-pill">{{ old('city', $agentProfile->service_city ?: $agentUser->city) ?: 'City' }}</span>
+                    <span class="workspace-pill">{{ strtoupper(old('state', $agentProfile->service_state ?: $agentUser->state) ?: 'NA') }}</span>
+                    <span class="workspace-pill workspace-pill--accent">{{ old('zip_code', $agentProfile->service_zip_code ?: $agentUser->zip_code) ?: 'ZIP' }}</span>
                 </div>
             </div>
         </article>

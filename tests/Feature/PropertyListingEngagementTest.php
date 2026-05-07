@@ -19,17 +19,18 @@ class PropertyListingEngagementTest extends TestCase
         $agent = User::factory()->create([
             'role' => 'agent',
             'status' => 'active',
-        ]);
-
-        $profile = RealtorProfile::create([
-            'user_id' => $agent->id,
-            'slug' => 'engage-agent',
-            'brokerage_name' => 'Engage Realty',
-            'license_number' => 'TX-999999',
-            'address_line_1' => '1 Test Way',
             'city' => 'Dallas',
             'state' => 'TX',
             'zip_code' => '75201',
+        ]);
+
+        $profile = RealtorProfile::updateOrCreate(['user_id' => $agent->id], [
+            'slug' => 'engage-agent',
+            'brokerage_name' => 'Engage Realty',
+            'license_number' => 'TX-999999',
+            'service_city' => 'Dallas',
+            'service_state' => 'TX',
+            'service_zip_code' => '75201',
             'rating' => 4.9,
             'review_count' => 1,
             'leads_closed' => 1,

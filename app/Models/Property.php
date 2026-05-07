@@ -173,7 +173,7 @@ class Property extends Model
 
         if ($user) {
             $cityState = $realtorProfile
-                ? collect([$realtorProfile->city, $realtorProfile->state])
+                ? collect([$realtorProfile->service_city, $realtorProfile->service_state])
                     ->filter(fn ($p) => is_string($p) && trim($p) !== '')
                     ->implode(', ')
                 : '';

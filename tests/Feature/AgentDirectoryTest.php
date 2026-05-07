@@ -19,17 +19,18 @@ class AgentDirectoryTest extends TestCase
             'phone' => '(555) 123-4567',
             'role' => 'agent',
             'status' => 'active',
-        ]);
-
-        RealtorProfile::create([
-            'user_id' => $agent->id,
-            'slug' => 'taylor-agent',
-            'brokerage_name' => 'Premier Realty',
-            'license_number' => 'TX-123456',
-            'address_line_1' => '100 Main Street',
             'city' => 'Dallas',
             'state' => 'TX',
             'zip_code' => '75201',
+        ]);
+
+        RealtorProfile::updateOrCreate(['user_id' => $agent->id], [
+            'slug' => 'taylor-agent',
+            'brokerage_name' => 'Premier Realty',
+            'license_number' => 'TX-123456',
+            'service_city' => 'Dallas',
+            'service_state' => 'TX',
+            'service_zip_code' => '75201',
             'specialties' => 'Buyer Representation',
             'bio' => 'Local agent bio.',
             'headshot' => 'images/realtors/1.png',

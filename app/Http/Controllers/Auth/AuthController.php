@@ -163,16 +163,14 @@ class AuthController extends Controller
         ]);
 
         if ($user->isAgent()) {
-            RealtorProfile::create([
-                'user_id' => $user->id,
-                'slug' => Str::slug($user->name . '-' . Str::lower(Str::random(6))),
+            RealtorProfile::updateOrCreate(['user_id' => $user->id], [
+                'slug' => RealtorProfile::where('user_id', $user->id)->value('slug')
+                    ?: Str::slug($user->name . '-' . Str::lower(Str::random(6))),
+                'service_city' => $request->city,
+                'service_state' => strtoupper($request->state),
+                'service_zip_code' => $request->zip_code,
                 'brokerage_name' => $request->brokerage_name,
                 'license_number' => $request->license_number,
-                'address_line_1' => $request->address_line_1,
-                'address_line_2' => $request->address_line_2,
-                'city' => $request->city,
-                'state' => strtoupper($request->state),
-                'zip_code' => $request->zip_code,
                 'specialties' => 'Buyer Representation, Seller Strategy, Referral Conversion',
                 'bio' => 'New OmniReferral partner profile created through the onboarding funnel.',
                 'headshot' => $avatarPath ? 'storage/' . $avatarPath : 'images/realtors/3.png',

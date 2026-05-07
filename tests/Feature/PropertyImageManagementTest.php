@@ -44,17 +44,18 @@ class PropertyImageManagementTest extends TestCase
             'role' => 'agent',
             'status' => 'active',
             'current_plan_id' => $package->id,
-        ]);
-
-        $profile = RealtorProfile::create([
-            'user_id' => $agent->id,
-            'slug' => 'image-manager-agent',
-            'brokerage_name' => 'Gallery Realty',
-            'license_number' => 'TX-121212',
-            'address_line_1' => '10 Main Street',
             'city' => 'Dallas',
             'state' => 'TX',
             'zip_code' => '75201',
+        ]);
+
+        $profile = RealtorProfile::updateOrCreate(['user_id' => $agent->id], [
+            'slug' => 'image-manager-agent',
+            'brokerage_name' => 'Gallery Realty',
+            'license_number' => 'TX-121212',
+            'service_city' => 'Dallas',
+            'service_state' => 'TX',
+            'service_zip_code' => '75201',
             'rating' => 4.8,
             'review_count' => 12,
             'leads_closed' => 4,
@@ -63,7 +64,10 @@ class PropertyImageManagementTest extends TestCase
             'headshot' => 'images/realtors/3.png',
         ]);
 
-        return [$agent, $profile];
+        $agent->unsetRelation('realtorProfile');
+        $agent->load('realtorProfile');
+
+        return [$agent, $agent->realtorProfile ?? $profile];
     }
 
     public function test_agent_can_create_listing_with_reordered_gallery_and_featured_image(): void
