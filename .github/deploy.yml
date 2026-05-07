@@ -5,61 +5,136 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  APP_DIR: /home/u867057961/omnireferral
+  DOMAIN_DIR: /home/u867057961/domains/omnireferrals.com
+  DOMAIN_PUBLIC: /home/u867057961/domains/omnireferrals.com/public_html
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up PHP
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: mbstring, intl, gd, pdo_mysql
-          tools: composer
+          extensions: mbstring, intl, gd, pdo_mysql, zip
+          tools: composer:v2
 
-      - name: Install deps
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies and build
         run: |
-          composer install --no-dev --prefer-dist --no-interaction --no-progress
+          composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
           npm ci
           npm run build
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
+          rm -rf node_modules
 
-      - name: Add SSH key
+      - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p $SSH_PORT $SSH_HOST >> ~/.ssh/known_hosts
+          ssh-keyscan -H -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
 
-      - name: Rsync to server
+      - name: Test SSH
         run: |
-          rsync -az --delete \
-            --exclude ".git" \
-            --exclude "node_modules" \
-            --exclude "storage/logs/*.log" \
-            -e "ssh -p $SSH_PORT" \
-            ./ $SSH_USER@$SSH_HOST:$DEPLOY_PATH
+          ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "echo Connected successfully"
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
-          DEPLOY_PATH: /home/u60320363/domains/omnireferral.us/public_html
+
+      - name: Ensure target directories exist
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
+            mkdir -p $APP_DIR &&
+            mkdir -p $APP_DIR/storage/app/public &&
+            mkdir -p $APP_DIR/storage/framework/cache &&
+            mkdir -p $APP_DIR/storage/framework/sessions &&
+            mkdir -p $APP_DIR/storage/framework/views &&
+            mkdir -p $APP_DIR/storage/logs &&
+            mkdir -p $APP_DIR/bootstrap/cache &&
+            mkdir -p $DOMAIN_DIR
+          "
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+
+      - name: Deploy via Rsync
+        run: |
+          rsync -avz --delete \
+            --exclude ".git" \
+            --exclude ".github" \
+            --exclude "node_modules" \
+            --exclude ".env" \
+            --exclude "storage" \
+            --exclude "bootstrap/cache/*.php" \
+            --exclude "*.log" \
+            -e "ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT -o StrictHostKeyChecking=no" \
+            ./ "$SSH_USER@$SSH_HOST:$APP_DIR/"
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
 
       - name: Post-deploy commands
         run: |
-          ssh -p $SSH_PORT $SSH_USER@$SSH_HOST <<'EOF'
-            cd /home/u60320363/domains/omnireferral.us/public_html
-            php artisan migrate --force
+          ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" << EOF
+            set -e
+
+            APP_DIR="$APP_DIR"
+            DOMAIN_DIR="$DOMAIN_DIR"
+            DOMAIN_PUBLIC="$DOMAIN_PUBLIC"
+
+            cd "\$APP_DIR"
+
+            mkdir -p storage/app/public
+            mkdir -p storage/framework/cache
+            mkdir -p storage/framework/sessions
+            mkdir -p storage/framework/views
+            mkdir -p storage/logs
+            mkdir -p bootstrap/cache
+
+            if [ ! -f ".env" ]; then
+              echo "ERROR: .env file is missing on server."
+              echo "Create it at: \$APP_DIR/.env"
+              exit 1
+            fi
+
+            rm -rf public/storage
+            ln -s "\$APP_DIR/storage/app/public" "\$APP_DIR/public/storage" || true
+
+            if [ -d "\$DOMAIN_PUBLIC" ] && [ ! -L "\$DOMAIN_PUBLIC" ]; then
+              mv "\$DOMAIN_PUBLIC" "\$DOMAIN_PUBLIC.backup.\$(date +%s)"
+            fi
+
+            ln -sfn "\$APP_DIR/public" "\$DOMAIN_PUBLIC"
+
+            find . -type f -exec chmod 644 {} \;
+            find . -type d -exec chmod 755 {} \;
+            chmod -R 775 storage bootstrap/cache
+
+            php artisan optimize:clear
             php artisan config:cache
             php artisan route:cache
+            php artisan view:cache
+            php artisan migrate --force
+
+            echo "Deployment finished for omnireferrals.com"
           EOF
         env:
           SSH_USER: ${{ secrets.SSH_USER }}

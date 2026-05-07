@@ -273,7 +273,7 @@
                     </div>
                     <div>
                         <span>Official website</span>
-                        <strong><a href="{{ route('home') }}">omnireferral.us</a></strong>
+                        <strong><a href="{{ route('home') }}">omnireferrals.com</a></strong>
                     </div>
                 </div>
             </article>

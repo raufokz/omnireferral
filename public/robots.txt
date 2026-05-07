@@ -10,4 +10,4 @@ Disallow: /client-form-submission7
 Allow: /
 Allow: /sitemap.xml
 
-Sitemap: https://omnireferral.us/sitemap.xml
+Sitemap: https://omnireferrals.com/sitemap.xml

@@ -37,11 +37,11 @@
             <div class="legal-page-hero__summary">
                 <div>
                     <span>Support</span>
-                    <strong><a href="mailto:support@omnireferral.us">support@omnireferral.us</a></strong>
+                    <strong><a href="mailto:support@omnireferrals.com">support@omnireferrals.com</a></strong>
                 </div>
                 <div>
                     <span>Cancellations</span>
-                    <strong><a href="mailto:cancellations@omnireferral.us">cancellations@omnireferral.us</a></strong>
+                    <strong><a href="mailto:cancellations@omnireferrals.com">cancellations@omnireferrals.com</a></strong>
                 </div>
             </div>
         </div>
@@ -103,7 +103,7 @@
             <article class="legal-card cockpit-table-card" id="refund-request">
                 <span class="eyebrow">Refund Request Process</span>
                 <h2>How a refund request should be submitted</h2>
-                <p>To request a refund, the policy states that the agent should email <a href="mailto:support@omnireferral.us">support@omnireferral.us</a> with the subject line <strong>"Refund Request"</strong>.</p>
+                <p>To request a refund, the policy states that the agent should email <a href="mailto:support@omnireferrals.com">support@omnireferrals.com</a> with the subject line <strong>"Refund Request"</strong>.</p>
                 <ul class="legal-list">
                     <li>Include your full name.</li>
                     <li>Include your contact details.</li>
@@ -152,10 +152,10 @@
             <article class="legal-card cockpit-table-card" id="cancellation">
                 <span class="eyebrow">Cancellation Process</span>
                 <h2>How to cancel a referral agreement</h2>
-                <p>To cancel your referral agreement, send the cancellation request to <a href="mailto:cancellations@omnireferral.us">cancellations@omnireferral.us</a>.</p>
+                <p>To cancel your referral agreement, send the cancellation request to <a href="mailto:cancellations@omnireferrals.com">cancellations@omnireferrals.com</a>.</p>
                 <p>All cancellations are processed in accordance with OmniReferral's Terms of Service and any applicable agreement terms tied to your plan or enrollment offer.</p>
                 <div class="legal-action-row">
-                    <a href="mailto:cancellations@omnireferral.us" class="button button--orange">Email Cancellation Request</a>
+                    <a href="mailto:cancellations@omnireferrals.com" class="button button--orange">Email Cancellation Request</a>
                     <a href="{{ route('terms') }}" class="button button--ghost-blue">Read Terms of Service</a>
                 </div>
             </article>
@@ -167,11 +167,11 @@
                 <div class="legal-contact-grid">
                     <div>
                         <span>Refund Requests</span>
-                        <strong><a href="mailto:support@omnireferral.us">support@omnireferral.us</a></strong>
+                        <strong><a href="mailto:support@omnireferrals.com">support@omnireferrals.com</a></strong>
                     </div>
                     <div>
                         <span>Cancellations</span>
-                        <strong><a href="mailto:cancellations@omnireferral.us">cancellations@omnireferral.us</a></strong>
+                        <strong><a href="mailto:cancellations@omnireferrals.com">cancellations@omnireferrals.com</a></strong>
                     </div>
                 </div>
             </article>

@@ -21,7 +21,7 @@
             <h1>How to recognize and avoid OmniReferral impersonation scams</h1>
             <p>Like many companies, OmniReferral and its employees and agents may be targeted by bad actors using fraudulent schemes that impersonate our brand in an attempt to collect personal or financial information from consumers.</p>
             <div class="legal-page-hero__chips">
-                <span>Official website: omnireferral.us</span>
+                <span>Official website: omnireferrals.com</span>
                 <span>Verify new payment requests before sending money</span>
                 <span>Report suspicious activity to {{ config('omnireferral.company.support_email') }}</span>
             </div>
@@ -34,7 +34,7 @@
             <div class="legal-page-hero__summary">
                 <div>
                     <span>Official site</span>
-                    <strong><a href="{{ route('home') }}">omnireferral.us</a></strong>
+                    <strong><a href="{{ route('home') }}">omnireferrals.com</a></strong>
                 </div>
                 <div>
                     <span>Fraud reporting</span>
@@ -69,11 +69,11 @@
             <article class="legal-card cockpit-table-card" id="official-site">
                 <span class="eyebrow">Official Website</span>
                 <h2>OmniReferral's official consumer-facing website</h2>
-                <p><strong>OmniReferral.us is our only official consumer-facing website.</strong> Scammers may operate fake or copycat websites, including domains ending in <strong>.com</strong> or other variations, that falsely claim to represent OmniReferral.</p>
+                <p><strong>omnireferrals.com is our only official consumer-facing website.</strong> Scammers may operate fake or copycat websites, including lookalike domains or other variations, that falsely claim to represent OmniReferral.</p>
                 <ul class="legal-list">
                     <li>These websites may closely resemble our official site and may display phone numbers, logos, or branding that appears legitimate.</li>
-                    <li>Any website not hosted on <strong>omnireferral.us</strong> is unauthorized.</li>
-                    <li>Our official website will be reflected as <strong>omnireferral.us</strong> or <strong>www.omnireferral.us</strong>.</li>
+                    <li>Any website not hosted on <strong>omnireferrals.com</strong> is unauthorized.</li>
+                    <li>Our official website will be reflected as <strong>omnireferrals.com</strong> or <strong>www.omnireferrals.com</strong>.</li>
                 </ul>
                 <p>If you encounter a suspicious or copycat website, notify us immediately at <a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a>.</p>
             </article>
@@ -84,7 +84,7 @@
                 <p>Scammers posing as OmniReferral agents may contact prospective buyers, sellers, or renters and request payment through Zelle, Venmo, wire transfer, or other peer-to-peer methods using unfamiliar phone numbers or email addresses.</p>
                 <div class="legal-callout">
                     <strong>Do not respond or click embedded links in suspicious payment requests.</strong>
-                    <p>Instead, verify the request using the official contact information published on <a href="{{ route('home') }}">omnireferral.us</a>. Clicking suspicious links or replying to a scammer may expose you to phishing, malware, or additional fraud attempts.</p>
+                    <p>Instead, verify the request using the official contact information published on <a href="{{ route('home') }}">omnireferrals.com</a>. Clicking suspicious links or replying to a scammer may expose you to phishing, malware, or additional fraud attempts.</p>
                 </div>
                 <p>OmniReferral does not request upfront payments through unofficial channels or from unverified contact details.</p>
             </article>
@@ -95,7 +95,7 @@
                 <p>Some OmniReferral agents may maintain their own independent websites, while others direct clients to their official presence on OmniReferral. Scammers may create fake agent websites using stolen photos, logos, or branding copied from legitimate agents or social media profiles.</p>
                 <ul class="legal-list">
                     <li>These copycat sites are often minimally developed, unstable, or frequently offline.</li>
-                    <li>If you are unsure whether an agent or website is legitimate, verify the agent's contact details directly through <a href="{{ route('home') }}">omnireferral.us</a>.</li>
+                    <li>If you are unsure whether an agent or website is legitimate, verify the agent's contact details directly through <a href="{{ route('home') }}">omnireferrals.com</a>.</li>
                     <li>Be especially cautious when an outside website asks for payment, identity documents, or account credentials before you have verified the person through official OmniReferral channels.</li>
                 </ul>
             </article>
@@ -105,12 +105,12 @@
                 <h2>Practical ways to reduce fraud risk</h2>
                 <ul class="legal-list">
                     <li>Do not share your password or one-time verification codes with anyone.</li>
-                    <li>If you have already engaged an agent and receive communication from a new phone number or email address, verify that change using previously known contact details or through omnireferral.us.</li>
-                    <li>If you receive a request for payment by wire transfer, money order, Zelle, or Venmo from an unfamiliar source, confirm the request using official contact information listed on omnireferral.us.</li>
+                    <li>If you have already engaged an agent and receive communication from a new phone number or email address, verify that change using previously known contact details or through omnireferrals.com.</li>
+                    <li>If you receive a request for payment by wire transfer, money order, Zelle, or Venmo from an unfamiliar source, confirm the request using official contact information listed on omnireferrals.com.</li>
                     <li>Be cautious of messages that create an unexpected sense of urgency. Scammers often rely on panic to pressure victims into acting before verifying legitimacy.</li>
                     <li>Only click links from trusted senders. Malware and phishing attacks are often embedded in unverified links.</li>
                     <li>Pay close attention to spelling, tone, and formatting in messages. Multiple spelling errors, unusual wording, or sudden changes in communication style can be warning signs.</li>
-                    <li>Official OmniReferral email communications should come from an address ending in <strong>@omnireferral.us</strong>.</li>
+                    <li>Official OmniReferral email communications should come from an address ending in <strong>@omnireferrals.com</strong>.</li>
                     <li>Limit the amount of personal information you share on social media. Publicly visible details such as travel plans, phone numbers, or addresses can increase fraud risk.</li>
                 </ul>
             </article>
@@ -157,7 +157,7 @@
                     </div>
                     <div>
                         <span>Official website</span>
-                        <strong><a href="{{ route('home') }}">omnireferral.us</a></strong>
+                        <strong><a href="{{ route('home') }}">omnireferrals.com</a></strong>
                     </div>
                     <div>
                         <span>Direct support</span>

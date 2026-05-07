@@ -8,7 +8,7 @@ return [
     ],
 
     'company' => [
-        'support_email' => env('OMNI_SUPPORT_EMAIL', 'hello@omnireferral.us'),
+        'support_email' => env('OMNI_SUPPORT_EMAIL', 'hello@omnireferrals.com'),
         /** E.164 for tel: links, e.g. +12125551000. Omit to hide phone CTAs. */
         'support_phone_e164' => env('OMNI_SUPPORT_PHONE_E164'),
         /** Human-readable phone for display; omit when no phone. */

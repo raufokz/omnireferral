@@ -127,7 +127,7 @@ class OmniReferralSeeder extends Seeder
         $powerPlan = $packages->firstWhere('slug', 'power-leads');
         $primePlan = $packages->firstWhere('slug', 'prime-leads');
 
-        $admin = User::updateOrCreate(['email' => 'admin@omnireferral.us'], [
+        $admin = User::updateOrCreate(['email' => 'admin@omnireferrals.com'], [
             'name' => 'Olivia Parker',
             'password' => 'password',
             'phone' => '8005551000',
@@ -136,7 +136,7 @@ class OmniReferralSeeder extends Seeder
             'affiliate_code' => 'ADMIN100',
         ]);
 
-        $isa = User::updateOrCreate(['email' => 'isa@omnireferral.us'], [
+        $isa = User::updateOrCreate(['email' => 'isa@omnireferrals.com'], [
             'name' => 'Lena Brooks',
             'password' => 'password',
             'phone' => '8005551011',
@@ -146,7 +146,7 @@ class OmniReferralSeeder extends Seeder
             'affiliate_code' => 'ISA10011',
         ]);
 
-        $sales = User::updateOrCreate(['email' => 'sales@omnireferral.us'], [
+        $sales = User::updateOrCreate(['email' => 'sales@omnireferrals.com'], [
             'name' => 'Daniel Cruz',
             'password' => 'password',
             'phone' => '8005551012',
@@ -156,7 +156,7 @@ class OmniReferralSeeder extends Seeder
             'affiliate_code' => 'SAL10012',
         ]);
 
-        User::updateOrCreate(['email' => 'marketing@omnireferral.us'], [
+        User::updateOrCreate(['email' => 'marketing@omnireferrals.com'], [
             'name' => 'Mia Roberts',
             'password' => 'password',
             'phone' => '8005551013',
@@ -166,7 +166,7 @@ class OmniReferralSeeder extends Seeder
             'affiliate_code' => 'MKT10013',
         ]);
 
-        User::updateOrCreate(['email' => 'webdev@omnireferral.us'], [
+        User::updateOrCreate(['email' => 'webdev@omnireferrals.com'], [
             'name' => 'Noah Bennett',
             'password' => 'password',
             'phone' => '8005551014',
@@ -176,7 +176,7 @@ class OmniReferralSeeder extends Seeder
             'affiliate_code' => 'WEB10014',
         ]);
 
-        User::updateOrCreate(['email' => 'buyer@omnireferral.us'], [
+        User::updateOrCreate(['email' => 'buyer@omnireferrals.com'], [
             'name' => 'Taylor Morgan',
             'password' => 'password',
             'phone' => '8005552001',
@@ -185,7 +185,7 @@ class OmniReferralSeeder extends Seeder
             'affiliate_code' => 'BUY20001',
         ]);
 
-        User::updateOrCreate(['email' => 'seller@omnireferral.us'], [
+        User::updateOrCreate(['email' => 'seller@omnireferrals.com'], [
             'name' => 'Jamie Carter',
             'password' => 'password',
             'phone' => '8005552002',
@@ -195,12 +195,12 @@ class OmniReferralSeeder extends Seeder
         ]);
 
         $agents = collect([
-            ['name' => 'Mason Reed', 'email' => 'mason@omnireferral.us', 'city' => 'Dallas', 'state' => 'TX', 'zip' => '75201', 'brokerage' => 'Reed & Co Realty', 'plan' => $primePlan?->id],
-            ['name' => 'Ava Collins', 'email' => 'ava@omnireferral.us', 'city' => 'Miami', 'state' => 'FL', 'zip' => '33101', 'brokerage' => 'Collins Coastal Realty', 'plan' => $powerPlan?->id],
-            ['name' => 'Ethan Brooks', 'email' => 'ethan@omnireferral.us', 'city' => 'Phoenix', 'state' => 'AZ', 'zip' => '85001', 'brokerage' => 'Brooks Property Group', 'plan' => $quickPlan?->id],
-            ['name' => 'Sophia Hayes', 'email' => 'sophia@omnireferral.us', 'city' => 'Atlanta', 'state' => 'GA', 'zip' => '30301', 'brokerage' => 'Hayes Urban Homes', 'plan' => $powerPlan?->id],
-            ['name' => 'Liam Foster', 'email' => 'liam@omnireferral.us', 'city' => 'Austin', 'state' => 'TX', 'zip' => '73301', 'brokerage' => 'Foster Urban Realty', 'plan' => $primePlan?->id],
-            ['name' => 'Emma Hart', 'email' => 'emma@omnireferral.us', 'city' => 'Nashville', 'state' => 'TN', 'zip' => '37201', 'brokerage' => 'Hart & Home Advisors', 'plan' => $quickPlan?->id],
+            ['name' => 'Mason Reed', 'email' => 'mason@omnireferrals.com', 'city' => 'Dallas', 'state' => 'TX', 'zip' => '75201', 'brokerage' => 'Reed & Co Realty', 'plan' => $primePlan?->id],
+            ['name' => 'Ava Collins', 'email' => 'ava@omnireferrals.com', 'city' => 'Miami', 'state' => 'FL', 'zip' => '33101', 'brokerage' => 'Collins Coastal Realty', 'plan' => $powerPlan?->id],
+            ['name' => 'Ethan Brooks', 'email' => 'ethan@omnireferrals.com', 'city' => 'Phoenix', 'state' => 'AZ', 'zip' => '85001', 'brokerage' => 'Brooks Property Group', 'plan' => $quickPlan?->id],
+            ['name' => 'Sophia Hayes', 'email' => 'sophia@omnireferrals.com', 'city' => 'Atlanta', 'state' => 'GA', 'zip' => '30301', 'brokerage' => 'Hayes Urban Homes', 'plan' => $powerPlan?->id],
+            ['name' => 'Liam Foster', 'email' => 'liam@omnireferrals.com', 'city' => 'Austin', 'state' => 'TX', 'zip' => '73301', 'brokerage' => 'Foster Urban Realty', 'plan' => $primePlan?->id],
+            ['name' => 'Emma Hart', 'email' => 'emma@omnireferrals.com', 'city' => 'Nashville', 'state' => 'TN', 'zip' => '37201', 'brokerage' => 'Hart & Home Advisors', 'plan' => $quickPlan?->id],
         ])->map(function ($agent, $index) use ($realtorImages) {
             $user = User::updateOrCreate(['email' => $agent['email']], [
                 'name' => $agent['name'],

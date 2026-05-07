@@ -66,7 +66,7 @@
             <article class="legal-card cockpit-table-card" id="overview">
                 <span class="eyebrow">Overview</span>
                 <h2>Scope of this communication policy</h2>
-                <p>OmniReferral values the privacy of its users. This Communication Policy explains our practices concerning the collection, use, disclosure, and protection of information when you visit <strong>omnireferral.us</strong> or use any related site, app, communication channel, or service connected to OmniReferral.</p>
+                <p>OmniReferral values the privacy of its users. This Communication Policy explains our practices concerning the collection, use, disclosure, and protection of information when you visit <strong>omnireferrals.com</strong> or use any related site, app, communication channel, or service connected to OmniReferral.</p>
                 <p>We encourage you to review this policy carefully. If you do not agree with its terms, you should not access or use the Site or related communication services.</p>
                 <p>We may revise this policy at any time by updating the posted version and its "Last Updated" date. Continued use after a revision is posted means you accept the updated policy.</p>
             </article>
