@@ -8,6 +8,8 @@ class WebhookEvent extends Model
 {
     protected $fillable = [
         'provider',
+        'related_type',
+        'related_id',
         'event',
         'remote_id',
         'headers',

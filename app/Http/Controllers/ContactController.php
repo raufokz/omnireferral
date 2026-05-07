@@ -28,7 +28,7 @@ class ContactController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email'],
             'phone' => ['nullable', 'string', 'max:30'],
-            'role' => ['nullable', 'string', 'max:100'],
+            'sender_role' => ['nullable', 'string', 'max:100'],
             'zip_code' => ['nullable', 'string', 'max:10'],
             'subject' => ['nullable', 'string', 'max:255'],
             'recipient_user_id' => ['nullable', 'integer', 'exists:users,id'],
@@ -66,7 +66,7 @@ class ContactController extends Controller
         }
 
         $subject = trim((string) ($validated['subject'] ?? ''));
-        $senderRole = $validated['role'] ?? $request->user()?->role;
+        $senderRole = $validated['sender_role'] ?? $request->user()?->role;
 
         if ($subject === '') {
             $subject = $property
@@ -78,7 +78,7 @@ class ContactController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
-            'role' => $senderRole,
+            'sender_role' => $senderRole,
             'zip_code' => $validated['zip_code'] ?? null,
             'subject' => $subject,
             'message' => $validated['message'],

@@ -50,6 +50,7 @@ class Lead extends Model
         'realtor_response',
         'form_data',
         'route_notes',
+        'property_id',
         'assigned_agent_id',
         'reviewed_by_id',
         'reviewed_at',
@@ -84,6 +85,11 @@ class Lead extends Model
     public function package(): BelongsTo
     {
         return $this->belongsTo(Package::class);
+    }
+
+    public function property(): BelongsTo
+    {
+        return $this->belongsTo(Property::class);
     }
 
     public function matches(): HasMany

@@ -319,4 +319,24 @@ class User extends Authenticatable
 
         return mb_strtoupper(mb_substr($name, 0, min(2, mb_strlen($name))));
     }
+
+    /**
+     * Canonical referral / affiliate code for tracking (prefer affiliate_profiles; fallback legacy column).
+     */
+    public function referralAffiliateCode(): ?string
+    {
+        $fromProfile = $this->relationLoaded('affiliateProfile')
+            ? $this->affiliateProfile?->referral_code
+            : $this->affiliateProfile()->value('referral_code');
+
+        $fromProfile = $fromProfile !== null ? trim((string) $fromProfile) : '';
+
+        if ($fromProfile !== '') {
+            return $fromProfile;
+        }
+
+        $legacy = trim((string) ($this->affiliate_code ?? ''));
+
+        return $legacy !== '' ? $legacy : null;
+    }
 }

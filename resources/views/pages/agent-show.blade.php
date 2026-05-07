@@ -143,9 +143,9 @@
                 </label>
                 <label>
                     <span>I am a</span>
-                    <select name="role">
+                    <select name="sender_role">
                         @foreach(['buyer' => 'Buyer', 'seller' => 'Seller', 'agent' => 'Agent', 'other' => 'Other'] as $value => $label)
-                            <option value="{{ $value }}" {{ old('role', auth()->user()?->role) === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            <option value="{{ $value }}" {{ old('sender_role', auth()->user()?->role) === $value ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
                 </label>

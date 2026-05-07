@@ -116,12 +116,12 @@
                         </div>
                         <div class="cf-field">
                             <label class="cf-label" for="contactRole">I am a...</label>
-                            <select class="cf-input cf-select" name="role" id="contactRole">
-                                <option value="" disabled {{ old('role') ? '' : 'selected' }}>Select role</option>
-                                <option value="buyer" {{ old('role') === 'buyer' ? 'selected' : '' }}>Buyer</option>
-                                <option value="seller" {{ old('role') === 'seller' ? 'selected' : '' }}>Seller</option>
-                                <option value="agent" {{ old('role') === 'agent' ? 'selected' : '' }}>Agent / Realtor</option>
-                                <option value="partner" {{ old('role') === 'partner' ? 'selected' : '' }}>Partner</option>
+                            <select class="cf-input cf-select" name="sender_role" id="contactRole">
+                                <option value="" disabled {{ old('sender_role') ? '' : 'selected' }}>Select role</option>
+                                <option value="buyer" {{ old('sender_role') === 'buyer' ? 'selected' : '' }}>Buyer</option>
+                                <option value="seller" {{ old('sender_role') === 'seller' ? 'selected' : '' }}>Seller</option>
+                                <option value="agent" {{ old('sender_role') === 'agent' ? 'selected' : '' }}>Agent / Realtor</option>
+                                <option value="partner" {{ old('sender_role') === 'partner' ? 'selected' : '' }}>Partner</option>
                             </select>
                         </div>
                     </div>

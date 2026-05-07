@@ -4,18 +4,22 @@ namespace App\Policies;
 
 use App\Models\Lead;
 use App\Models\User;
+use App\Support\AuthorizesWithPermissions;
 
 class LeadPolicy
 {
+    use AuthorizesWithPermissions;
+
     public function viewAny(User $user): bool
     {
-        // Admin/staff operational views; agents via agent portal; buyers/sellers via their own dashboards.
-        return $user->isStaff() || $user->hasAnyRole(['agent', 'buyer', 'seller']);
+        return $user->can('leads.view')
+            || $user->isStaff()
+            || $user->hasAnyRole(['agent', 'buyer', 'seller']);
     }
 
     public function view(User $user, Lead $lead): bool
     {
-        if ($user->isStaff()) {
+        if ($this->canStaff($user, 'leads.view')) {
             return true;
         }
 
@@ -39,17 +43,17 @@ class LeadPolicy
 
     public function updateStatus(User $user, Lead $lead): bool
     {
-        return $user->isStaff();
+        return $user->can('leads.update') || $user->isStaff();
     }
 
     public function assign(User $user, Lead $lead): bool
     {
-        return $user->isStaff();
+        return $user->can('leads.assign') || $user->isStaff();
     }
 
     public function addActivity(User $user, Lead $lead): bool
     {
-        return $user->isStaff();
+        return $user->can('leads.update') || $user->isStaff();
     }
 }
 

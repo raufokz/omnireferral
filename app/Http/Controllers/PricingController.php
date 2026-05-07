@@ -36,8 +36,8 @@ class PricingController extends Controller
             'packageEmbeds' => $packageEmbeds,
             'pricingTrustMetrics' => [
                 [
-                    'value' => number_format(RealtorProfile::count()),
-                    'label' => 'Agent profiles live',
+                    'value' => number_format(RealtorProfile::query()->publicDirectory()->count()),
+                    'label' => 'Partner agents (directory)',
                 ],
                 [
                     'value' => $reviewCount > 0

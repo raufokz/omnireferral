@@ -18,7 +18,10 @@ class HomeController extends Controller
     public function index(): View
     {
         $viewer = auth()->user();
-        $realtors = RealtorProfile::with('user')->get();
+        $realtors = RealtorProfile::query()
+            ->publicDirectory()
+            ->with('user')
+            ->get();
 
         $partnerLogos = collect(File::files(public_path('images/companies-logos')))
             ->filter(fn ($file) => in_array(strtolower($file->getExtension()), ['png', 'jpg', 'jpeg', 'webp']))

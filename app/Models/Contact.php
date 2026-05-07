@@ -14,7 +14,7 @@ class Contact extends Model
         'name',
         'email',
         'phone',
-        'role',
+        'sender_role',
         'zip_code',
         'subject',
         'message',

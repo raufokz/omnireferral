@@ -25,6 +25,11 @@ class RealtorProfile extends Model
         'specialties',
         'bio',
         'headshot',
+        'approved_at',
+        'approved_by_user_id',
+        'rejected_at',
+        'rejected_by_user_id',
+        'approval_notes',
     ];
 
     protected $casts = [
@@ -53,6 +58,16 @@ class RealtorProfile extends Model
     public function contacts(): HasMany
     {
         return $this->hasMany(Contact::class);
+    }
+
+    public function approvedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by_user_id');
+    }
+
+    public function rejectedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by_user_id');
     }
 
     /**

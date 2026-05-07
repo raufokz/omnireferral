@@ -4,9 +4,12 @@ namespace App\Policies;
 
 use App\Models\Property;
 use App\Models\User;
+use App\Support\AuthorizesWithPermissions;
 
 class PropertyPolicy
 {
+    use AuthorizesWithPermissions;
+
     public function view(?User $user, Property $property): bool
     {
         if ($property->isApproved() && $property->status === 'Active') {
@@ -17,7 +20,7 @@ class PropertyPolicy
             return false;
         }
 
-        if ($user->isStaff()) {
+        if ($this->canStaff($user, 'properties.view')) {
             return true;
         }
 
@@ -34,13 +37,15 @@ class PropertyPolicy
 
     public function create(User $user): bool
     {
-        // Mirrors current behavior: seller/agent can submit listings; admin can create directly via admin UI.
-        return $user->isSeller() || $user->isAgent() || $user->isAdmin();
+        return $user->can('properties.create')
+            || $user->isSeller()
+            || $user->isAgent()
+            || $user->isAdmin();
     }
 
     public function update(User $user, Property $property): bool
     {
-        if ($user->isStaff()) {
+        if ($this->canStaff($user, 'properties.update')) {
             return true;
         }
 
@@ -57,8 +62,7 @@ class PropertyPolicy
 
     public function delete(User $user, Property $property): bool
     {
-        // Public deletes should be restricted. Admin can delete from registry; seller/agent can soft-delete their own.
-        if ($user->isAdmin()) {
+        if ($this->canAdmin($user, 'properties.delete')) {
             return true;
         }
 
@@ -67,7 +71,7 @@ class PropertyPolicy
 
     public function review(User $user, Property $property): bool
     {
-        return $user->isStaff();
+        return $user->can('properties.review') || $user->isStaff();
     }
 }
 

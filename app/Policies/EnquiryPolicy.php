@@ -4,18 +4,22 @@ namespace App\Policies;
 
 use App\Models\Enquiry;
 use App\Models\User;
+use App\Support\AuthorizesWithPermissions;
 
 class EnquiryPolicy
 {
+    use AuthorizesWithPermissions;
+
     public function viewAny(User $user): bool
     {
-        // Buyer/seller/agent can use their own threads; staff/admin can use operational queues.
-        return $user->isStaff() || $user->hasAnyRole(['buyer', 'seller', 'agent']);
+        return $user->can('enquiries.view')
+            || $user->isStaff()
+            || $user->hasAnyRole(['buyer', 'seller', 'agent']);
     }
 
     public function view(User $user, Enquiry $enquiry): bool
     {
-        if ($user->isStaff()) {
+        if ($this->canStaff($user, 'enquiries.view')) {
             return true;
         }
 
@@ -34,16 +38,12 @@ class EnquiryPolicy
 
     public function close(User $user, Enquiry $enquiry): bool
     {
-        if (! $this->view($user, $enquiry)) {
-            return false;
-        }
-
-        return $enquiry->status !== Enquiry::STATUS_CLOSED;
+        return $this->reply($user, $enquiry);
     }
 
     public function export(User $user): bool
     {
-        return $user->isAdmin();
+        return $user->can('enquiries.export') || $user->isAdmin();
     }
 }
 

@@ -270,7 +270,7 @@
                             <span>Message</span>
                             <textarea name="message" rows="4" required>{{ old('message', 'Hi, I would like more information about ' . $property->title . '.') }}</textarea>
                         </label>
-                        <input type="hidden" name="role" value="{{ old('role', auth()->user()?->role ?: 'buyer') }}">
+                        <input type="hidden" name="sender_role" value="{{ old('sender_role', auth()->user()?->role ?: 'buyer') }}">
                         <input type="hidden" name="subject" value="{{ old('subject', 'Inquiry about ' . $property->title) }}">
                         <button type="submit" class="button button--orange">Contact Agent</button>
                     </form>
@@ -297,7 +297,7 @@
                             <span>Message</span>
                             <textarea name="message" rows="4" required>{{ old('message', 'Hi, I would like more information about ' . $property->title . '.') }}</textarea>
                         </label>
-                        <input type="hidden" name="role" value="{{ old('role', auth()->user()?->role ?: 'buyer') }}">
+                        <input type="hidden" name="sender_role" value="{{ old('sender_role', auth()->user()?->role ?: 'buyer') }}">
                         <input type="hidden" name="subject" value="{{ old('subject', 'Inquiry about ' . $property->title) }}">
                         <button type="submit" class="button button--orange">Contact</button>
                     </form>

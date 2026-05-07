@@ -3,42 +3,48 @@
 namespace App\Policies;
 
 use App\Models\User;
+use App\Support\AuthorizesWithPermissions;
 
 class UserPolicy
 {
+    use AuthorizesWithPermissions;
+
     public function viewAny(User $actor): bool
     {
-        return $actor->isStaff();
+        return $actor->can('users.view') || $actor->isStaff();
     }
 
     public function view(User $actor, User $target): bool
     {
-        return $actor->isStaff();
+        return $actor->can('users.view') || $actor->isStaff();
     }
 
     public function update(User $actor, User $target): bool
     {
-        return $actor->isAdmin() && (int) $actor->id !== (int) $target->id;
+        return ($actor->can('users.update') || $actor->isAdmin())
+            && (int) $actor->id !== (int) $target->id;
     }
 
     public function export(User $actor): bool
     {
-        return $actor->isAdmin();
+        return $actor->can('users.export') || $actor->isAdmin();
     }
 
     public function suspend(User $actor, User $target): bool
     {
-        return $this->update($actor, $target);
+        return ($actor->can('users.suspend') || $actor->isAdmin())
+            && $this->moderate($actor, $target);
     }
 
     public function delete(User $actor, User $target): bool
     {
-        return $this->update($actor, $target);
+        return ($actor->can('users.delete') || $actor->isAdmin())
+            && $this->moderate($actor, $target);
     }
 
     public function moderate(User $actor, User $target): bool
     {
-        if (! $actor->isStaff()) {
+        if (! $actor->isStaff() && ! $actor->can('users.update')) {
             return false;
         }
 
@@ -59,7 +65,7 @@ class UserPolicy
 
     public function viewAuditLog(User $actor): bool
     {
-        return $actor->isAdmin();
+        return $actor->can('audit.view') || $actor->isAdmin();
     }
 }
 
