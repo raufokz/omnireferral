@@ -5,6 +5,11 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  APP_DIR: /home/u867057961/omnireferral
+  DOMAIN_DIR: /home/u867057961/domains/omnireferrals.com
+  DOMAIN_PUBLIC: /home/u867057961/domains/omnireferrals.com/public_html
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -55,13 +60,14 @@ jobs:
       - name: Ensure target directories exist
         run: |
           ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
-            mkdir -p /home/u867057961/omnireferral &&
-            mkdir -p /home/u867057961/omnireferral/storage/app/public &&
-            mkdir -p /home/u867057961/omnireferral/storage/framework/cache &&
-            mkdir -p /home/u867057961/omnireferral/storage/framework/sessions &&
-            mkdir -p /home/u867057961/omnireferral/storage/framework/views &&
-            mkdir -p /home/u867057961/omnireferral/storage/logs &&
-            mkdir -p /home/u867057961/omnireferral/bootstrap/cache
+            mkdir -p $APP_DIR &&
+            mkdir -p $APP_DIR/storage/app/public &&
+            mkdir -p $APP_DIR/storage/framework/cache &&
+            mkdir -p $APP_DIR/storage/framework/sessions &&
+            mkdir -p $APP_DIR/storage/framework/views &&
+            mkdir -p $APP_DIR/storage/logs &&
+            mkdir -p $APP_DIR/bootstrap/cache &&
+            mkdir -p $DOMAIN_DIR
           "
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
@@ -79,7 +85,7 @@ jobs:
             --exclude "bootstrap/cache/*.php" \
             --exclude "*.log" \
             -e "ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT -o StrictHostKeyChecking=no" \
-            ./ "$SSH_USER@$SSH_HOST:/home/u867057961/omnireferral/"
+            ./ "$SSH_USER@$SSH_HOST:$APP_DIR/"
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -87,10 +93,14 @@ jobs:
 
       - name: Post-deploy commands
         run: |
-          ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" <<'EOF'
+          ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" << EOF
             set -e
 
-            cd /home/u867057961/omnireferral
+            APP_DIR="$APP_DIR"
+            DOMAIN_DIR="$DOMAIN_DIR"
+            DOMAIN_PUBLIC="$DOMAIN_PUBLIC"
+
+            cd "\$APP_DIR"
 
             mkdir -p storage/app/public
             mkdir -p storage/framework/cache
@@ -99,8 +109,20 @@ jobs:
             mkdir -p storage/logs
             mkdir -p bootstrap/cache
 
+            if [ ! -f ".env" ]; then
+              echo "ERROR: .env file is missing on server."
+              echo "Create it at: \$APP_DIR/.env"
+              exit 1
+            fi
+
             rm -rf public/storage
-            ln -s /home/u867057961/omnireferral/storage/app/public /home/u867057961/omnireferral/public/storage || true
+            ln -s "\$APP_DIR/storage/app/public" "\$APP_DIR/public/storage" || true
+
+            if [ -d "\$DOMAIN_PUBLIC" ] && [ ! -L "\$DOMAIN_PUBLIC" ]; then
+              mv "\$DOMAIN_PUBLIC" "\$DOMAIN_PUBLIC.backup.\$(date +%s)"
+            fi
+
+            ln -sfn "\$APP_DIR/public" "\$DOMAIN_PUBLIC"
 
             find . -type f -exec chmod 644 {} \;
             find . -type d -exec chmod 755 {} \;
@@ -111,6 +133,8 @@ jobs:
             php artisan route:cache
             php artisan view:cache
             php artisan migrate --force
+
+            echo "Deployment finished for omnireferrals.com"
           EOF
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
