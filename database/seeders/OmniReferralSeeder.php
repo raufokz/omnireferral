@@ -310,7 +310,7 @@ class OmniReferralSeeder extends Seeder
         foreach ($propertyTitles as $index => $title) {
             Property::updateOrCreate(['slug' => Str::slug($title)], [
                 'title' => $title,
-                'description' => 'A premium demo listing seeded for the OmniReferral marketplace and agent dashboards.',
+                'description' => 'Marketplace sample listing illustrating how approved properties appear to buyers across search, detail pages, and agent outreach.',
                 'status' => $index % 2 === 0 ? 'Active' : 'New Listing',
                 'property_type' => $index % 3 === 0 ? 'House' : 'Apartment',
                 'price' => 325000 + ($index * 85000),

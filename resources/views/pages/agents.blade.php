@@ -2,8 +2,16 @@
 @section('content')
 @php
     $agentCollection = $agents->getCollection();
-    $agentCityCount = $agentCollection->pluck('city')->filter()->unique()->count();
-    $agentSpecialtyCount = $agentCollection->pluck('specialty')->filter()->unique()->count();
+    $agentCityCount = $agentCollection
+        ->map(fn ($agent) => $agent->realtorProfile?->city)
+        ->filter()
+        ->unique()
+        ->count();
+    $agentSpecialtyCount = $agentCollection
+        ->map(fn ($agent) => $agent->realtorProfile?->specialties)
+        ->filter()
+        ->unique()
+        ->count();
 @endphp
 <section class="page-hero agent-directory-hero">
     <div class="agent-directory-hero__glow" aria-hidden="true"></div>
@@ -63,7 +71,7 @@
                         <span>City</span>
                         <select id="agentCityFilter">
                             <option value="">All cities</option>
-                            @foreach($agents->pluck('city')->filter()->unique()->sort()->values() as $city)
+                            @foreach($agentCollection->map(fn ($agent) => $agent->realtorProfile?->city)->filter()->unique()->sort()->values() as $city)
                                 <option value="{{ strtolower($city) }}">{{ $city }}</option>
                             @endforeach
                         </select>
@@ -73,7 +81,7 @@
                         <span>Specialty</span>
                         <select id="agentSpecialtyFilter">
                             <option value="">All specialties</option>
-                            @foreach($agents->pluck('specialty')->filter()->unique()->sort()->values() as $specialty)
+                            @foreach($agentCollection->map(fn ($agent) => $agent->realtorProfile?->specialties)->filter()->unique()->sort()->values() as $specialty)
                                 <option value="{{ strtolower($specialty) }}">{{ $specialty }}</option>
                             @endforeach
                         </select>
@@ -90,20 +98,33 @@
         <div class="agent-directory agent-directory--grid" id="agentDirectoryGrid" data-stagger>
             @foreach($agents as $agent)
                 @php
-                    $ratingValue = $agent->rating ? number_format($agent->rating, 1) : '4.7';
-                    $specialty = $agent->specialty ?: 'Buyers Agent';
-                    $brokerage = $agent->brokerage_name ?: 'OmniReferral Partner Brokerage';
-                    $marketLabel = trim(collect([$agent->city, $agent->state])->filter()->implode(', '));
-                    $bio = $agent->bio ?: 'Experienced local partner helping buyers and sellers move through qualified opportunities with more clarity and confidence.';
+                    $profile = $agent->realtorProfile;
+                    $displayName = $agent->publicDisplayName() ?: 'OmniReferral Agent';
+                    $profileImage = $agent->profilePhotoPublicUrl();
+
+                    if (! $profileImage && $profile?->headshot) {
+                        $profileImage = \Illuminate\Support\Str::startsWith($profile->headshot, ['http://', 'https://'])
+                            ? $profile->headshot
+                            : asset(ltrim($profile->headshot, '/'));
+                    }
+
+                    $profileImage ??= asset('images/realtors/1.png');
+                    $ratingValue = $profile?->rating ? number_format($profile->rating, 1) : 'New';
+                    $specialty = $profile?->specialties ?: 'Agent';
+                    $brokerage = $profile?->brokerage_name ?: 'OmniReferral Agent Network';
+                    $marketLabel = trim(collect([$profile?->city, $profile?->state])->filter()->implode(', '));
+                    $bio = $profile?->bio ?: 'Verified OmniReferral agent account ready for buyer, seller, and listing opportunities.';
+                    $statusLabel = \Illuminate\Support\Str::title($agent->status ?: 'Pending');
+                    $profileRoute = $profile ? route('agents.show', $profile) : null;
                 @endphp
                 <article
                     class="agent-card agent-card--profile"
                     data-agent-card
-                    data-city="{{ strtolower($agent->city ?? '') }}"
-                    data-specialty="{{ strtolower($agent->specialty ?? 'buyers agent') }}"
+                    data-city="{{ strtolower($profile?->city ?? '') }}"
+                    data-specialty="{{ strtolower($specialty) }}"
                 >
                     <div class="agent-card__media">
-                        <img src="{{ asset($agent->headshot ?? 'images/realtors/1.png') }}" alt="{{ $agent->user->name }} profile image" loading="lazy">
+                        <img src="{{ $profileImage }}" alt="{{ $displayName }} profile image" loading="lazy">
                         <span class="agent-card__badge">Verified Agent</span>
                         <span class="agent-card__rating-chip" aria-label="{{ $ratingValue }} rating">
                             <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -119,20 +140,25 @@
                             <span class="agent-card__market">{{ $marketLabel ?: 'Local Market' }}</span>
                         </div>
 
-                        <h2>{{ $agent->user->name }}</h2>
+                        <h2>{{ $displayName }}</h2>
                         <p class="agent-card__meta">{{ $brokerage }}</p>
 
                         <div class="agent-card__stats">
-                            <span>{{ $ratingValue }} client rating</span>
-                            <span>{{ $specialty }}</span>
-                            <span>{{ $marketLabel ?: 'Market ready' }}</span>
+                            <span>{{ $agent->email }}</span>
+                            <span>{{ $agent->phone ?: 'Phone not added' }}</span>
+                            <span>Status: {{ $statusLabel }}</span>
                         </div>
 
                         <p class="agent-card__bio">{{ \Illuminate\Support\Str::limit($bio, 120) }}</p>
 
                         <div class="agent-card__actions">
-                            <a href="{{ route('agents.show', $agent) }}" class="button button--ghost-blue">View Profile</a>
-                            <a href="{{ route('agents.show', $agent) }}#agent-contact" class="button button--orange">Contact Agent</a>
+                            @if($profileRoute)
+                                <a href="{{ $profileRoute }}" class="button button--ghost-blue">View Profile</a>
+                                <a href="{{ $profileRoute }}#agent-contact" class="button button--orange">Contact Agent</a>
+                            @else
+                                <span class="button button--ghost-blue button--disabled" aria-disabled="true">Profile Pending</span>
+                                <a href="mailto:{{ $agent->email }}" class="button button--orange">Email Agent</a>
+                            @endif
                         </div>
                     </div>
                 </article>
@@ -141,9 +167,11 @@
 
         <div class="agent-directory-empty-state" id="agentDirectoryEmpty" @if($agents->count() > 0) hidden @endif>
             <span class="agent-directory-empty-state__icon">No Match</span>
-            <h3>No agents match this filter yet</h3>
-            <p>Try another city or specialty to see more vetted partners from this page of the directory.</p>
-            <button type="button" class="button button--orange" id="agentEmptyReset">Clear filters</button>
+            <h3>{{ $agents->count() > 0 ? 'No agents match this filter yet' : 'No Agents Found' }}</h3>
+            <p>{{ $agents->count() > 0 ? 'Try another city or specialty to see more vetted partners from this page of the directory.' : 'Agent accounts will appear here once users with the Agent role are added to the platform.' }}</p>
+            @if($agents->count() > 0)
+                <button type="button" class="button button--orange" id="agentEmptyReset">Clear filters</button>
+            @endif
         </div>
 
         <div class="pagination-wrap">{{ $agents->links() }}</div>

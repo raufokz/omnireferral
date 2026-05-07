@@ -15210,6 +15210,17 @@ iframe {
     justify-content: center;
 }
 
+.agent-card__stats span {
+    max-width: 100%;
+    word-break: break-word;
+}
+
+.agent-card__actions .button--disabled {
+    opacity: 0.66;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .agent-directory-empty-state {
     display: grid;
     gap: 0.9rem;

@@ -96,7 +96,7 @@ class LeadController extends Controller
                 'contact_preference' => $request->input('contact_preference'),
                 'property_address' => $validated['property_address'] ?? null,
             ],
-            'lead_score' => $request->filled('timeline') && ($request->filled('budget') || $request->filled('asking_price')) ? 82 : 68,
+            'lead_score' => $this->scoreLeadFromRequest($request),
             'is_priority' => in_array($request->input('timeline'), ['ASAP', '0-30 days'], true),
         ]);
 
@@ -134,5 +134,50 @@ class LeadController extends Controller
         preg_match('/\b\d{5}(?:-\d{4})?\b/', $address, $matches);
 
         return $matches[0] ?? null;
+    }
+
+    /**
+     * Heuristic priority score derived from populated form fields (0–100).
+     */
+    private function scoreLeadFromRequest(Request $request): int
+    {
+        $score = 45;
+
+        if ($request->filled('timeline')) {
+            $score += 12;
+        }
+
+        if ($request->filled('budget') || $request->filled('asking_price')) {
+            $score += 15;
+        }
+
+        if ($request->filled('financing_status')) {
+            $score += 8;
+        }
+
+        if ($request->filled('contact_preference')) {
+            $score += 6;
+        }
+
+        if ($request->filled('property_type')) {
+            $score += 6;
+        }
+
+        if ($request->filled('zip_code')) {
+            $score += 4;
+        }
+
+        $preferencesLength = strlen(trim((string) $request->input('preferences', '')));
+        if ($preferencesLength > 40) {
+            $score += 8;
+        } elseif ($preferencesLength > 12) {
+            $score += 4;
+        }
+
+        if ($request->hasFile('property_image')) {
+            $score += 6;
+        }
+
+        return (int) min(100, $score);
     }
 }

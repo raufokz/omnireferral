@@ -46,16 +46,16 @@
 
                 <div class="pricing-hero-band__metrics">
                     <div class="pricing-hero-band__metric">
-                        <strong>{{ count($pricingPlans['real_estate'] ?? []) }}</strong>
-                        <span>Lead paths</span>
+                        <strong>{{ number_format($leadPackages->count()) }}</strong>
+                        <span>Lead packages live</span>
                     </div>
                     <div class="pricing-hero-band__metric">
                         <strong>{{ count($pricingPlans['virtual_assistance'] ?? []) }}</strong>
                         <span>VA plans</span>
                     </div>
                     <div class="pricing-hero-band__metric">
-                        <strong>48 hr</strong>
-                        <span>Avg. routing</span>
+                        <strong>{{ number_format($leadsLast30Days ?? 0) }}</strong>
+                        <span>Leads last 30 days</span>
                     </div>
                 </div>
             </aside>
@@ -66,22 +66,12 @@
 <section class="pricing-trust-strip">
     <div class="container">
         <div class="pts-grid">
-            <div class="pts-item">
-                <div class="pts-item__val">12,700+</div>
-                <div class="pts-item__label">Agents and Teams</div>
-            </div>
-            <div class="pts-item">
-                <div class="pts-item__val">97%+</div>
-                <div class="pts-item__label">Client Satisfaction</div>
-            </div>
-            <div class="pts-item">
-                <div class="pts-item__val">$20k</div>
-                <div class="pts-item__label">Avg. Closed Deal</div>
-            </div>
-            <div class="pts-item">
-                <div class="pts-item__val">90-Day</div>
-                <div class="pts-item__label">Guarantee Mindset</div>
-            </div>
+            @foreach ($pricingTrustMetrics as $metric)
+                <div class="pts-item">
+                    <div class="pts-item__val">{{ $metric['value'] }}</div>
+                    <div class="pts-item__label">{{ $metric['label'] }}</div>
+                </div>
+            @endforeach
         </div>
     </div>
 </section>
@@ -122,8 +112,8 @@
             </div>
             <div class="pwy-feature" data-animate="up">
                 <div class="pwy-feature__icon">&#9889;</div>
-                <h3>48-Hour Delivery</h3>
-                <p>Qualified opportunities are packaged and delivered within 48 hours on average.</p>
+                <h3>Fast handoff</h3>
+                <p>Our operations team moves new requests into qualification and routing as quickly as your market and compliance requirements allow.</p>
             </div>
             <div class="pwy-feature" data-animate="up">
                 <div class="pwy-feature__icon">&#128202;</div>
@@ -134,7 +124,7 @@
     </div>
 </section>
 
-@include('partials.pricing-comparison-table-static')
+@include('partials.pricing-comparison-table', ['packageComparison' => $packageComparison])
 
 <section class="section pricing-final-cta">
     <div class="container">

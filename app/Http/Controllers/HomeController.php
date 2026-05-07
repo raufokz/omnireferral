@@ -8,7 +8,6 @@ use App\Models\Partner;
 use App\Models\Property;
 use App\Models\RealtorProfile;
 use App\Models\TeamMember;
-use App\Models\Testimonial;
 use App\Support\PricingContent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -20,28 +19,6 @@ class HomeController extends Controller
     {
         $viewer = auth()->user();
         $realtors = RealtorProfile::with('user')->get();
-
-        $testimonialQuotes = [
-            'The ISA team does not hand us cold names. They hand us lead-ready conversations with budget, intent, and location already clarified.',
-            'OmniReferral gave our brokerage a much cleaner conversion process. The lead notes feel specific, the routing feels intentional, and our first calls go better.',
-            'Elite leads changed how quickly we can move from inquiry to appointment. The level of context makes the entire sales conversation warmer from the start.',
-            'We finally have a platform that feels as polished as the service we promise our clients. Our team trusts the lead quality and the follow-up rhythm.',
-            'The dashboard, package structure, and onboarding flow make OmniReferral feel like a real operating system for lead generation, not just another vendor.',
-            'Between the ISA qualification and the sales support, our agents spend less time filtering noise and more time working high-intent opportunities.',
-        ];
-
-        $testimonials = $realtors
-            ->take(12)
-            ->values()
-            ->map(function ($realtor, $index) use ($testimonialQuotes) {
-                return [
-                    'path' => $realtor->headshot,
-                    'name' => $realtor->user->name,
-                    'role' => 'Realtor | '.($realtor->brokerage_name ?: 'OmniReferral Partner Network'),
-                    'location' => $realtor->city.', '.$realtor->state,
-                    'quote' => $testimonialQuotes[$index % count($testimonialQuotes)],
-                ];
-            });
 
         $partnerLogos = collect(File::files(public_path('images/companies-logos')))
             ->filter(fn ($file) => in_array(strtolower($file->getExtension()), ['png', 'jpg', 'jpeg', 'webp']))
@@ -66,7 +43,6 @@ class HomeController extends Controller
             'packages' => Package::active()->leadPlans()->orderBy('sort_order')->orderBy('one_time_price')->get(),
             'assistantPackages' => Package::active()->assistantPlans()->orderBy('sort_order')->orderBy('monthly_price')->get(),
             'pricingPlans' => PricingContent::plans(),
-            'testimonials' => $testimonials,
             'partners' => Partner::orderBy('sort_order')->get(),
             'partnerLogos' => $partnerLogos,
             'realtors' => $realtors->take(12),
@@ -119,11 +95,6 @@ class HomeController extends Controller
     public function news(): View
     {
         return view('pages.news', ['blogs' => Blog::latest()->get(), 'meta' => ['title' => 'News & Updates | OmniReferral', 'description' => 'Latest OmniReferral updates, campaign news, and growth announcements.']]);
-    }
-
-    public function reviews(): View
-    {
-        return view('pages.reviews', ['testimonials' => Testimonial::latest()->get(), 'meta' => ['title' => 'Reviews | OmniReferral', 'description' => 'Read reviews from agents and partner teams who use OmniReferral to grow their business.']]);
     }
 
     public function careers(): View

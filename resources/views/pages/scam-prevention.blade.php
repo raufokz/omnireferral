@@ -23,7 +23,7 @@
             <div class="legal-page-hero__chips">
                 <span>Official website: omnireferral.us</span>
                 <span>Verify new payment requests before sending money</span>
-                <span>Report suspicious activity to hello@omnireferral.us</span>
+                <span>Report suspicious activity to {{ config('omnireferral.company.support_email') }}</span>
             </div>
         </div>
 
@@ -38,7 +38,7 @@
                 </div>
                 <div>
                     <span>Fraud reporting</span>
-                    <strong><a href="mailto:hello@omnireferral.us">hello@omnireferral.us</a></strong>
+                    <strong><a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a></strong>
                 </div>
             </div>
         </div>
@@ -75,7 +75,7 @@
                     <li>Any website not hosted on <strong>omnireferral.us</strong> is unauthorized.</li>
                     <li>Our official website will be reflected as <strong>omnireferral.us</strong> or <strong>www.omnireferral.us</strong>.</li>
                 </ul>
-                <p>If you encounter a suspicious or copycat website, notify us immediately at <a href="mailto:hello@omnireferral.us">hello@omnireferral.us</a>.</p>
+                <p>If you encounter a suspicious or copycat website, notify us immediately at <a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a>.</p>
             </article>
 
             <article class="legal-card cockpit-table-card" id="payment-requests">
@@ -153,7 +153,7 @@
                 <div class="legal-contact-grid">
                     <div>
                         <span>Fraud reporting</span>
-                        <strong><a href="mailto:hello@omnireferral.us">hello@omnireferral.us</a></strong>
+                        <strong><a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a></strong>
                     </div>
                     <div>
                         <span>Official website</span>

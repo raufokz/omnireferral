@@ -41,7 +41,7 @@
             <div class="legal-page-hero__summary">
                 <div>
                     <span>Primary contact</span>
-                    <strong><a href="mailto:hello@omnireferral.us">hello@omnireferral.us</a></strong>
+                    <strong><a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a></strong>
                 </div>
                 <div>
                     <span>Coverage</span>
@@ -265,7 +265,7 @@
                 <div class="legal-contact-grid">
                     <div>
                         <span>General support</span>
-                        <strong><a href="mailto:hello@omnireferral.us">hello@omnireferral.us</a></strong>
+                        <strong><a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a></strong>
                     </div>
                     <div>
                         <span>Contact page</span>

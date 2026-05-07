@@ -38,7 +38,7 @@
             <div class="legal-page-hero__summary">
                 <div>
                     <span>Support email</span>
-                    <strong><a href="mailto:hello@omnireferral.us">hello@omnireferral.us</a></strong>
+                    <strong><a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a></strong>
                 </div>
                 <div>
                     <span>SMS help</span>
@@ -210,7 +210,7 @@
                 <div class="legal-contact-grid">
                     <div>
                         <span>Email</span>
-                        <strong><a href="mailto:hello@omnireferral.us">hello@omnireferral.us</a></strong>
+                        <strong><a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a></strong>
                     </div>
                     <div>
                         <span>SMS Help</span>

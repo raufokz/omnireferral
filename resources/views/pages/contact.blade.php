@@ -5,6 +5,16 @@
 @endpush
 
 @section('content')
+@php
+    $c = config('omnireferral.company');
+    $supportEmail = $c['support_email'];
+    $phoneE164 = trim((string) ($c['support_phone_e164'] ?? ''));
+    $phoneDisplay = trim((string) ($c['support_phone_display'] ?? ''));
+    $hasPhone = $phoneE164 !== '' && $phoneDisplay !== '';
+    $officeHours = $c['office_hours'];
+    $hqLabel = $c['hq_location_label'];
+    $mapsQuery = $c['maps_embed_query'];
+@endphp
 
 <section class="page-hero agent-directory-hero contact-page-hero">
     <div class="agent-directory-hero__glow" aria-hidden="true"></div>
@@ -14,8 +24,10 @@
             <h1>Let&apos;s talk about your next lead, listing, or partnership.</h1>
             <p>We keep conversations simple, helpful, and fast. Expect a response within one business day from the OmniReferral team.</p>
             <div class="agent-directory-hero__actions">
-                <a href="mailto:hello@omnireferral.us" class="button button--orange">Email Support</a>
-                <a href="tel:+18005550147" class="button button--ghost-light">Call Directly</a>
+                <a href="mailto:{{ $supportEmail }}" class="button button--orange">Email Support</a>
+                @if ($hasPhone)
+                    <a href="tel:{{ $phoneE164 }}" class="button button--ghost-light">Call Directly</a>
+                @endif
             </div>
             <div class="agent-directory-hero__proof">
                 <span>24-hour average response</span>
@@ -34,17 +46,19 @@
                     <span>average response target</span>
                 </div>
                 <div class="agent-directory-hero__stat">
-                    <strong>Mon-Fri</strong>
-                    <span>9am-6pm ET support hours</span>
+                    <strong>Hours</strong>
+                    <span>{{ $officeHours }}</span>
                 </div>
                 <div class="agent-directory-hero__stat">
                     <strong>Email</strong>
-                    <span>hello@omnireferral.us</span>
+                    <span>{{ $supportEmail }}</span>
                 </div>
-                <div class="agent-directory-hero__stat">
-                    <strong>Phone</strong>
-                    <span>(800) 555-0147</span>
-                </div>
+                @if ($hasPhone)
+                    <div class="agent-directory-hero__stat">
+                        <strong>Phone</strong>
+                        <span>{{ $phoneDisplay }}</span>
+                    </div>
+                @endif
             </div>
         </aside>
     </div>
@@ -150,27 +164,29 @@
                 </div>
 
                 <div class="contact-side-list">
-                    <a href="mailto:hello@omnireferral.us" class="contact-side-item">
+                    <a href="mailto:{{ $supportEmail }}" class="contact-side-item">
                         <span class="contact-side-item__icon contact-side-item__icon--blue" aria-hidden="true">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                         </span>
                         <span class="contact-side-item__body">
                             <span class="contact-side-item__label">Email support</span>
-                            <span class="contact-side-item__value">hello@omnireferral.us</span>
+                            <span class="contact-side-item__value">{{ $supportEmail }}</span>
                             <span class="contact-side-item__note">Best for package questions, billing help, onboarding, and detailed support requests.</span>
                         </span>
                     </a>
 
-                    <a href="tel:+18005550147" class="contact-side-item">
-                        <span class="contact-side-item__icon contact-side-item__icon--orange" aria-hidden="true">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 01.22 1.18 2 2 0 012.18 0H5.18a2 2 0 012 1.72c.128.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.14 7.94a16 16 0 006.29 6.29l1.3-1.3a2 2 0 012.11-.45c.907.339 1.85.572 2.81.7A2 2 0 0122 16.92z"/></svg>
-                        </span>
-                        <span class="contact-side-item__body">
-                            <span class="contact-side-item__label">Direct line</span>
-                            <span class="contact-side-item__value">(800) 555-0147</span>
-                            <span class="contact-side-item__note">Best for urgent follow-up, sales conversations, and live support during business hours.</span>
-                        </span>
-                    </a>
+                    @if ($hasPhone)
+                        <a href="tel:{{ $phoneE164 }}" class="contact-side-item">
+                            <span class="contact-side-item__icon contact-side-item__icon--orange" aria-hidden="true">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 01.22 1.18 2 2 0 012.18 0H5.18a2 2 0 012 1.72c.128.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.14 7.94a16 16 0 006.29 6.29l1.3-1.3a2 2 0 012.11-.45c.907.339 1.85.572 2.81.7A2 2 0 0122 16.92z"/></svg>
+                            </span>
+                            <span class="contact-side-item__body">
+                                <span class="contact-side-item__label">Direct line</span>
+                                <span class="contact-side-item__value">{{ $phoneDisplay }}</span>
+                                <span class="contact-side-item__note">Best for urgent follow-up, sales conversations, and live support during business hours.</span>
+                            </span>
+                        </a>
+                    @endif
 
                     <div class="contact-side-item contact-side-item--static">
                         <span class="contact-side-item__icon contact-side-item__icon--green" aria-hidden="true">
@@ -178,7 +194,7 @@
                         </span>
                         <span class="contact-side-item__body">
                             <span class="contact-side-item__label">Office hours</span>
-                            <span class="contact-side-item__value">Mon-Fri, 9am-6pm ET</span>
+                            <span class="contact-side-item__value">{{ $officeHours }}</span>
                             <span class="contact-side-item__note">Messages are monitored on weekdays and routed to the right team as quickly as possible.</span>
                         </span>
                     </div>
@@ -189,7 +205,7 @@
                         </span>
                         <span class="contact-side-item__body">
                             <span class="contact-side-item__label">Support hub</span>
-                            <span class="contact-side-item__value">New York, NY</span>
+                            <span class="contact-side-item__value">{{ $hqLabel }}</span>
                             <span class="contact-side-item__note">Campaign coordination for agent packages, partnerships, and nationwide lead support.</span>
                         </span>
                     </div>
@@ -218,7 +234,7 @@
 
                 <iframe
                     title="OmniReferral location map"
-                    src="https://www.google.com/maps?q=New+York,+NY&output=embed"
+                    src="https://www.google.com/maps?q={{ rawurlencode($mapsQuery) }}&output=embed"
                     loading="lazy"
                 ></iframe>
             </div>

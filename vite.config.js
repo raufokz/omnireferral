@@ -7,8 +7,10 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css', 
+                'resources/css/app/overrides/57-responsive-hardening.css',
                 'resources/js/app.js',
                 'resources/css/modules/home.css',
+                'resources/css/app/pages/53-homepage-style-polish.css',
                 'resources/css/modules/pricing.css',
                 'resources/css/modules/contact.css',
                 'resources/css/modules/dashboard.css',

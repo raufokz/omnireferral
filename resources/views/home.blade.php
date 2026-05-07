@@ -22,6 +22,7 @@
                 'location' => $testimonial->location ?: 'OmniReferral Network',
                 'path' => $testimonial->photo_url,
                 'audience' => $testimonial->audience_label,
+                'rating' => (int) ($testimonial->rating ?: 5),
                 'has_video' => $testimonial->has_video,
             ];
         });
@@ -34,6 +35,7 @@
             'location' => 'Tampa, FL',
             'path' => asset('images/companies-logos/best-american-homes-150x150.jpg'),
             'audience' => 'Buyer',
+            'rating' => 5,
             'has_video' => false,
         ],
         [
@@ -43,6 +45,7 @@
             'location' => 'Las Vegas, NV',
             'path' => asset('images/companies-logos/Nevada-Re-e1742235865385-150x150.jpg'),
             'audience' => 'Seller',
+            'rating' => 5,
             'has_video' => false,
         ],
         [
@@ -52,6 +55,7 @@
             'location' => 'Boca Raton, FL',
             'path' => asset('images/companies-logos/boca-real-estate-300x137.png'),
             'audience' => 'Agent',
+            'rating' => 5,
             'has_video' => false,
         ],
         [
@@ -61,6 +65,7 @@
             'location' => 'Phoenix, AZ',
             'path' => asset('images/companies-logos/Zopfteam-silvia-300x189.png'),
             'audience' => 'Seller',
+            'rating' => 5,
             'has_video' => false,
         ],
         [
@@ -70,6 +75,7 @@
             'location' => 'Dallas, TX',
             'path' => asset('images/companies-logos/Dallas-RE-150x150.png'),
             'audience' => 'Agent',
+            'rating' => 5,
             'has_video' => false,
         ],
         [
@@ -79,6 +85,7 @@
             'location' => 'Tampa, FL',
             'path' => asset('images/reviews/review-1-real.png'),
             'audience' => 'Buyer',
+            'rating' => 5,
             'has_video' => false,
         ],
     ]);
@@ -89,13 +96,6 @@
         ->unique('name')
         ->take(9)
         ->values();
-
-    $homepageFeaturedTestimonial = $homepageTestimonials->first();
-    $homepageCarouselTestimonials = $homepageTestimonials->skip(1)->values();
-
-    if ($homepageCarouselTestimonials->isEmpty() && $homepageFeaturedTestimonial) {
-        $homepageCarouselTestimonials = collect([$homepageFeaturedTestimonial]);
-    }
 
     $homepageAudienceCounts = [
         'buyer' => $publishedTestimonials->where('audience', 'buyer')->count(),
@@ -203,7 +203,19 @@
                             </div>
 
                             <div class="hero-map-card">
-                                <div class="hero-map" id="hero-map" aria-label="Lead search map">Map preview - ZIP routing</div>
+                                <div class="hero-map" id="hero-map" aria-label="Market preview for your ZIP">
+                                    <iframe
+                                        id="hero-map-embed"
+                                        title="ZIP market preview"
+                                        class="hero-map__embed"
+                                        hidden
+                                        loading="lazy"
+                                        referrerpolicy="no-referrer-when-downgrade"
+                                    ></iframe>
+                                    <div id="hero-map-placeholder" class="hero-map__placeholder">
+                                        <span>Enter your ZIP—we’ll preview the area alongside your request.</span>
+                                    </div>
+                                </div>
                                 <div class="hero-map-overlay">
                                     <div class="hero-map-overlay__item">
                                         <strong>ZIP</strong>
@@ -595,63 +607,13 @@ No confusion. No delays. Just momentum.</p>
                 </div>
             </div>
 
-            <div class="homepage-testimonial-stage">
-                @if($homepageFeaturedTestimonial)
-                    <article class="testimonial-card homepage-testimonial-featured" data-animate="left">
-                        <div class="homepage-testimonial-featured__meta">
-                            <span class="homepage-testimonial-card__badge">Featured Story</span>
-                            <span class="homepage-testimonial-card__badge homepage-testimonial-card__badge--video">{{ $homepageFeaturedTestimonial['audience'] }}</span>
-                        </div>
-                        <div class="testimonial-stars" aria-label="Five star rating">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-                        <p class="homepage-testimonial-featured__quote">"{{ $homepageFeaturedTestimonial['quote'] }}"</p>
-                        <div class="testimonial-card__footer homepage-testimonial-featured__footer">
-                            <img src="{{ $homepageFeaturedTestimonial['path'] }}" alt="{{ $homepageFeaturedTestimonial['name'] }}" loading="lazy">
-                            <div>
-                                <strong>{{ $homepageFeaturedTestimonial['name'] }}</strong>
-                                <span>{{ $homepageFeaturedTestimonial['role'] }}</span>
-                                <small>{{ $homepageFeaturedTestimonial['location'] }}</small>
-                            </div>
-                        </div>
-                        <a href="{{ route('reviews') }}" class="button button--orange">Read More Stories</a>
-                    </article>
-                @endif
-
-                <div class="testimonial-carousel homepage-testimonial-carousel" data-carousel data-animate="right">
-                    <div class="testimonial-track">
-                        @foreach($homepageCarouselTestimonials as $testimonial)
-                            <article class="testimonial-card homepage-testimonial-card">
-                                <div class="homepage-testimonial-card__meta">
-                                    <span class="homepage-testimonial-card__badge">{{ $testimonial['audience'] }}</span>
-                                    @if(!empty($testimonial['has_video']))
-                                        <span class="homepage-testimonial-card__badge homepage-testimonial-card__badge--video">Video story</span>
-                                    @endif
-                                </div>
-                                <div class="testimonial-stars" aria-label="Five star rating">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-                                <p class="testimonial-card__quote">"{{ $testimonial['quote'] }}"</p>
-                                <div class="testimonial-card__footer">
-                                    <img src="{{ $testimonial['path'] }}" alt="{{ $testimonial['name'] }}" loading="lazy">
-                                    <div>
-                                        <strong>{{ $testimonial['name'] }}</strong>
-                                        <span>{{ $testimonial['role'] }}</span>
-                                        <small>{{ $testimonial['location'] }}</small>
-                                    </div>
-                                </div>
-                            </article>
-                        @endforeach
-                    </div>
-                    <div class="carousel-controls homepage-carousel-controls">
-                        <div class="homepage-carousel-meta">
-                            <div class="homepage-carousel-status" data-carousel-status>1 / {{ max($homepageCarouselTestimonials->count(), 1) }}</div>
-                            <div class="homepage-carousel-progress">
-                                <span data-carousel-progress></span>
-                            </div>
-                        </div>
-                        <div class="homepage-carousel-buttons">
-                            <button type="button" data-carousel-prev aria-label="Previous testimonial">Previous</button>
-                            <button type="button" data-carousel-next aria-label="Next testimonial">Next</button>
-                        </div>
-                    </div>
-                </div>
+            <div class="homepage-testimonials-grid" data-stagger>
+                @foreach($homepageTestimonials as $index => $testimonial)
+                    @include('partials.testimonials.home-card', [
+                        'testimonial' => $testimonial,
+                        'featured' => $index === 0,
+                    ])
+                @endforeach
             </div>
         </div>
     </section>

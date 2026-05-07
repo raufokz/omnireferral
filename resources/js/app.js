@@ -923,7 +923,30 @@ window.initHomeMap = () => {
 
     syncZipState(zipInput?.value ?? '');
 
-    const mapEl = document.getElementById('homeMap') || document.getElementById('hero-map');
+    const apiKey = document.body.dataset.googleMapsApiKey?.trim?.() ?? '';
+    const heroMapEmbed = document.getElementById('hero-map-embed');
+    const heroPlaceholder = document.getElementById('hero-map-placeholder');
+    const legacyMapEl = document.getElementById('homeMap');
+
+    const applyHeroEmbed = (sanitized) => {
+        if (!heroMapEmbed || !heroPlaceholder) {
+            return;
+        }
+
+        const match = /^(\d{5})/.exec((sanitized || '').trim());
+
+        if (!match) {
+            heroMapEmbed.setAttribute('hidden', 'hidden');
+            heroMapEmbed.removeAttribute('src');
+            heroPlaceholder.removeAttribute('hidden');
+            return;
+        }
+
+        heroMapEmbed.removeAttribute('hidden');
+        heroPlaceholder.setAttribute('hidden', 'hidden');
+        heroMapEmbed.src = `https://www.google.com/maps?q=${encodeURIComponent(match[1])}&z=11&output=embed`;
+    };
+
     if (zipInput) {
         zipInput.addEventListener('input', e => {
             const sanitized = e.target.value.replace(/[^\d-]/g, '').slice(0, 10);
@@ -933,16 +956,23 @@ window.initHomeMap = () => {
             }
 
             syncZipState(sanitized);
-
-            if (typeof window.updateMapZip === 'function' && sanitized.length >= 5) {
-                window.updateMapZip(sanitized);
-            }
+            applyHeroEmbed(sanitized);
         });
     }
 
-    if (!mapEl || typeof google === 'undefined') return;
+    applyHeroEmbed(zipInput?.value ?? '');
 
-    const map = new google.maps.Map(mapEl, {
+    if (
+        heroMapEmbed
+        || legacyMapEl === null
+        || apiKey === ''
+        || typeof google === 'undefined'
+        || typeof google.maps === 'undefined'
+    ) {
+        return;
+    }
+
+    const map = new google.maps.Map(legacyMapEl, {
         center: { lat: 39.8, lng: -98.5 },
         zoom: 4,
         disableDefaultUI: true,
@@ -952,7 +982,7 @@ window.initHomeMap = () => {
     const marker = new google.maps.Marker({ map, position: { lat: 39.8, lng: -98.5 } });
     const geocoder = new google.maps.Geocoder();
 
-    window.updateMapZip = (zip) => {
+    window.updateMapZip = zip => {
         if (!zip || zip.length < 5) return;
         geocoder.geocode({ address: zip }, (results, status) => {
             if (status === 'OK' && results[0]) {

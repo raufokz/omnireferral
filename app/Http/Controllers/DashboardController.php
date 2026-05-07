@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AffiliateReferralClick;
 use App\Models\AffiliateProfile;
+use App\Models\AffiliateReferralClick;
 use App\Models\Lead;
 use App\Models\Package;
 use App\Models\Property;
@@ -11,6 +11,7 @@ use App\Models\RealtorProfile;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -201,8 +202,8 @@ class DashboardController extends Controller
         $affiliateProfile = AffiliateProfile::firstOrCreate(
             ['user_id' => $user->id],
             [
-                'slug' => \Illuminate\Support\Str::slug($user->name . '-' . \Illuminate\Support\Str::lower(\Illuminate\Support\Str::random(6))),
-                'referral_code' => $user->affiliate_code ?: strtoupper(\Illuminate\Support\Str::random(8)),
+                'slug' => Str::slug($user->name.'-'.Str::lower(Str::random(6))),
+                'referral_code' => $user->affiliate_code ?: strtoupper(Str::random(8)),
             ]
         );
 
@@ -225,7 +226,7 @@ class DashboardController extends Controller
             'referralSignupCount' => $referralSignupCount,
             'referralPaidPlanCount' => $referralPaidPlanCount,
             'recentClicks' => $recentClicks,
-            'referralShareUrl' => url('/?ref=' . $affiliateProfile->referral_code),
+            'referralShareUrl' => url('/?ref='.$affiliateProfile->referral_code),
             'meta' => [
                 'title' => 'Affiliate Hub | OmniReferral',
                 'description' => 'Manage your referral links, track clicks, and view commissions.',
@@ -263,7 +264,6 @@ class DashboardController extends Controller
             'buyerStats' => [
                 'saved_listings' => $favoriteCount,
                 'favorites' => $favoriteCount,
-                'saved_searches' => 0,
                 'new_alerts' => (clone $buyerLeadScope)->whereIn('status', ['new', 'contacted'])->count(),
             ],
         ];
