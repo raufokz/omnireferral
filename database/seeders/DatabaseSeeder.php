@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use Database\Seeders\LegacyRolesToSpatieSyncSeeder;
 use Database\Seeders\OmniReferralSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Database\Seeder;
@@ -13,5 +14,6 @@ class DatabaseSeeder extends Seeder
         // Seed RBAC first so seeded users can be assigned roles/permissions later.
         $this->call(RolesAndPermissionsSeeder::class);
         $this->call(OmniReferralSeeder::class);
+        $this->call(LegacyRolesToSpatieSyncSeeder::class);
     }
 }
