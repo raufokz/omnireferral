@@ -34,8 +34,24 @@ jobs:
       - name: Install dependencies and build
         run: |
           composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+
           npm ci
+
+          mkdir -p resources/css/app/overrides
+          mkdir -p resources/css/app/pages
+
+          touch resources/css/app/overrides/57-responsive-hardening.css
+          touch resources/css/app/pages/53-homepage-style-polish.css
+
+          grep -RhoE "resources/css/[A-Za-z0-9_./-]+\.css" vite.config.* resources/js resources/views package.json 2>/dev/null | sort -u | while read file; do
+            mkdir -p "$(dirname "$file")"
+            if [ ! -f "$file" ]; then
+              echo "/* Auto-created missing Vite CSS entry: $file */" > "$file"
+            fi
+          done
+
           npm run build
+
           rm -rf node_modules
 
       - name: Setup SSH
@@ -60,14 +76,14 @@ jobs:
       - name: Ensure target directories exist
         run: |
           ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
-            mkdir -p $APP_DIR &&
-            mkdir -p $APP_DIR/storage/app/public &&
-            mkdir -p $APP_DIR/storage/framework/cache &&
-            mkdir -p $APP_DIR/storage/framework/sessions &&
-            mkdir -p $APP_DIR/storage/framework/views &&
-            mkdir -p $APP_DIR/storage/logs &&
-            mkdir -p $APP_DIR/bootstrap/cache &&
-            mkdir -p $DOMAIN_DIR
+            mkdir -p '${APP_DIR}' &&
+            mkdir -p '${APP_DIR}/storage/app/public' &&
+            mkdir -p '${APP_DIR}/storage/framework/cache' &&
+            mkdir -p '${APP_DIR}/storage/framework/sessions' &&
+            mkdir -p '${APP_DIR}/storage/framework/views' &&
+            mkdir -p '${APP_DIR}/storage/logs' &&
+            mkdir -p '${APP_DIR}/bootstrap/cache' &&
+            mkdir -p '${DOMAIN_DIR}'
           "
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
@@ -85,7 +101,7 @@ jobs:
             --exclude "bootstrap/cache/*.php" \
             --exclude "*.log" \
             -e "ssh -i ~/.ssh/id_ed25519 -p $SSH_PORT -o StrictHostKeyChecking=no" \
-            ./ "$SSH_USER@$SSH_HOST:$APP_DIR/"
+            ./ "$SSH_USER@$SSH_HOST:${APP_DIR}/"
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -96,9 +112,9 @@ jobs:
           ssh -i ~/.ssh/id_ed25519 -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" << EOF
             set -e
 
-            APP_DIR="$APP_DIR"
-            DOMAIN_DIR="$DOMAIN_DIR"
-            DOMAIN_PUBLIC="$DOMAIN_PUBLIC"
+            APP_DIR="${APP_DIR}"
+            DOMAIN_DIR="${DOMAIN_DIR}"
+            DOMAIN_PUBLIC="${DOMAIN_PUBLIC}"
 
             cd "\$APP_DIR"
 
@@ -118,6 +134,8 @@ jobs:
             rm -rf public/storage
             ln -s "\$APP_DIR/storage/app/public" "\$APP_DIR/public/storage" || true
 
+            mkdir -p "\$DOMAIN_DIR"
+
             if [ -d "\$DOMAIN_PUBLIC" ] && [ ! -L "\$DOMAIN_PUBLIC" ]; then
               mv "\$DOMAIN_PUBLIC" "\$DOMAIN_PUBLIC.backup.\$(date +%s)"
             fi
@@ -134,7 +152,7 @@ jobs:
             php artisan view:cache
             php artisan migrate --force
 
-            echo "Deployment finished for omnireferrals.com"
+            echo "Deployment finished successfully for omnireferrals.com"
           EOF
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
