@@ -36,7 +36,7 @@
         ['label' => 'Security', 'route' => route('account.security'), 'active' => ['account.security'], 'icon' => 'security'],
     ];
 
-    $dashboardNavItems = match ($role) {
+        $dashboardNavItems = match ($role) {
         'buyer' => [
             ['label' => 'Overview', 'route' => route('dashboard.buyer'), 'active' => ['dashboard.buyer'], 'icon' => 'dashboard'],
             [
@@ -110,7 +110,7 @@
                 ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show'], 'icon' => 'marketplace'],
                 ['label' => 'Account', 'icon' => 'profile', 'children' => $accountNavItems],
             ],
-            ($workspaceUser?->role === 'admin')
+            ($workspaceUser && $workspaceUser->can('viewAuditLog', $workspaceUser))
                 ? [['label' => 'Audit Log', 'route' => route('admin.activity.index'), 'active' => ['admin.activity.*'], 'icon' => 'audit']]
                 : []
         ))),

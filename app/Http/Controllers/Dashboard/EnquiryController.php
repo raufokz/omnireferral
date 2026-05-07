@@ -15,7 +15,8 @@ class EnquiryController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
-        abort_unless($user && $user->hasAnyRole(['buyer', 'seller', 'agent']), 403);
+        abort_unless($user, 403);
+        $this->authorize('viewAny', \App\Models\Enquiry::class);
 
         $filters = [
             'status' => (string) $request->query('status', ''),
@@ -55,7 +56,8 @@ class EnquiryController extends Controller
     public function show(Request $request, Enquiry $enquiry): View
     {
         $user = $request->user();
-        $this->authorizeParticipant($user, $enquiry);
+        abort_unless($user, 403);
+        $this->authorize('view', $enquiry);
 
         $enquiry->load([
             'property',
@@ -83,8 +85,8 @@ class EnquiryController extends Controller
     public function storeReply(Request $request, Enquiry $enquiry): RedirectResponse
     {
         $user = $request->user();
-        $this->authorizeParticipant($user, $enquiry);
-        abort_unless($this->canReply($user, $enquiry), 403);
+        abort_unless($user, 403);
+        $this->authorize('reply', $enquiry);
 
         $validated = $request->validate([
             'message' => ['required', 'string', 'max:20000'],
@@ -98,13 +100,12 @@ class EnquiryController extends Controller
     public function updateStatus(Request $request, Enquiry $enquiry): RedirectResponse
     {
         $user = $request->user();
-        $this->authorizeParticipant($user, $enquiry);
+        abort_unless($user, 403);
+        $this->authorize('close', $enquiry);
 
         $validated = $request->validate([
             'status' => ['required', Rule::in([Enquiry::STATUS_CLOSED])],
         ]);
-
-        abort_unless($this->canClose($user, $enquiry), 403);
 
         $enquiry->update(['status' => $validated['status']]);
         $enquiry->syncLinkedContact();
@@ -112,40 +113,5 @@ class EnquiryController extends Controller
         return back()->with('success', 'Conversation marked as closed.');
     }
 
-    private function authorizeParticipant(?\App\Models\User $user, Enquiry $enquiry): void
-    {
-        abort_unless($user, 403);
-        abort_unless(
-            (int) $user->id === (int) $enquiry->receiver_user_id
-                || ($enquiry->sender_user_id && (int) $user->id === (int) $enquiry->sender_user_id),
-            403
-        );
-    }
-
-    private function canReply(?\App\Models\User $user, Enquiry $enquiry): bool
-    {
-        if (! $user) {
-            return false;
-        }
-
-        if ($enquiry->status === Enquiry::STATUS_CLOSED) {
-            return false;
-        }
-
-        if ((int) $user->id === (int) $enquiry->receiver_user_id) {
-            return true;
-        }
-
-        return $enquiry->sender_user_id && (int) $user->id === (int) $enquiry->sender_user_id;
-    }
-
-    private function canClose(?\App\Models\User $user, Enquiry $enquiry): bool
-    {
-        if (! $user || $enquiry->status === Enquiry::STATUS_CLOSED) {
-            return false;
-        }
-
-        return (int) $user->id === (int) $enquiry->receiver_user_id
-            || ($enquiry->sender_user_id && (int) $user->id === (int) $enquiry->sender_user_id);
-    }
+    // Participant, reply, and close rules are enforced via EnquiryPolicy.
 }

@@ -21,7 +21,7 @@ class UserManagementController extends Controller
 {
     public function index(Request $request): View
     {
-        abort_unless($request->user()?->isStaff(), 403);
+        $this->authorize('viewAny', User::class);
 
         $filters = [
             'search' => trim((string) $request->query('search', '')),
@@ -87,7 +87,7 @@ class UserManagementController extends Controller
 
     public function show(Request $request, User $user): View
     {
-        abort_unless($request->user()?->isStaff(), 403);
+        $this->authorize('view', $user);
 
         $user->load([
             'referrer',
@@ -131,7 +131,7 @@ class UserManagementController extends Controller
 
     public function edit(Request $request, User $user): View
     {
-        abort_unless($request->user()?->isAdmin(), 403);
+        $this->authorize('update', $user);
 
         if ($user->id === $request->user()->id) {
             return redirect()
@@ -165,7 +165,7 @@ class UserManagementController extends Controller
 
     public function update(Request $request, User $user): RedirectResponse
     {
-        abort_unless($request->user()?->isAdmin(), 403);
+        $this->authorize('update', $user);
 
         if ($user->id === $request->user()->id) {
             return back()->with('error', 'Edit your own account from Profile settings.');
@@ -269,7 +269,7 @@ class UserManagementController extends Controller
 
     public function quickUpdate(Request $request, User $user): RedirectResponse
     {
-        abort_unless($request->user()?->isAdmin(), 403);
+        $this->authorize('update', $user);
 
         if ($user->id === $request->user()->id) {
             return back()->with('error', 'You cannot change your own role or status from this screen.');
@@ -301,7 +301,7 @@ class UserManagementController extends Controller
 
     public function destroy(Request $request, User $user): RedirectResponse
     {
-        abort_unless($request->user()?->isAdmin(), 403);
+        $this->authorize('delete', $user);
 
         if ($user->id === $request->user()->id) {
             return back()->with('error', 'You cannot deactivate your own account.');
@@ -371,7 +371,7 @@ class UserManagementController extends Controller
 
     public function exportCsv(Request $request): StreamedResponse
     {
-        abort_unless($request->user()?->isAdmin(), 403);
+        $this->authorize('export', User::class);
 
         AdminAudit::log($request, 'users.export.csv', null, null, []);
 
@@ -408,7 +408,7 @@ class UserManagementController extends Controller
 
     public function exportXlsx(Request $request): StreamedResponse
     {
-        abort_unless($request->user()?->isAdmin(), 403);
+        $this->authorize('export', User::class);
 
         AdminAudit::log($request, 'users.export.xlsx', null, null, []);
 

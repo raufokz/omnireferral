@@ -2,8 +2,17 @@
 
 namespace App\Providers;
 
+use App\Models\Enquiry;
+use App\Models\Lead;
+use App\Models\Property;
+use App\Models\User;
+use App\Policies\EnquiryPolicy;
+use App\Policies\LeadPolicy;
+use App\Policies\PropertyPolicy;
+use App\Policies\UserPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -25,6 +34,11 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('production')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
+
+        Gate::policy(Property::class, PropertyPolicy::class);
+        Gate::policy(Enquiry::class, EnquiryPolicy::class);
+        Gate::policy(Lead::class, LeadPolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
 
         RateLimiter::for('leads', function (Request $request) {
             return Limit::perMinute(5)->by($request->ip());

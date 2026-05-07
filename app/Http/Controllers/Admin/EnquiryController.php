@@ -18,7 +18,7 @@ class EnquiryController extends Controller
 {
     public function index(Request $request): View
     {
-        abort_unless($request->user()?->isStaff(), 403);
+        $this->authorize('viewAny', \App\Models\Enquiry::class);
 
         $filters = [
             'search' => trim((string) $request->query('search', '')),
@@ -91,7 +91,7 @@ class EnquiryController extends Controller
 
     public function show(Request $request, Enquiry $enquiry): View
     {
-        abort_unless($request->user()?->isStaff(), 403);
+        $this->authorize('view', $enquiry);
 
         $enquiry->load([
             'property',
@@ -116,7 +116,7 @@ class EnquiryController extends Controller
 
     public function storeReply(Request $request, Enquiry $enquiry): RedirectResponse
     {
-        abort_unless($request->user()?->isStaff(), 403);
+        $this->authorize('reply', $enquiry);
 
         $validated = $request->validate([
             'message' => ['required', 'string', 'max:20000'],
@@ -129,7 +129,7 @@ class EnquiryController extends Controller
 
     public function updateStatus(Request $request, Enquiry $enquiry): RedirectResponse
     {
-        abort_unless($request->user()?->isStaff(), 403);
+        $this->authorize('close', $enquiry);
 
         $validated = $request->validate([
             'status' => ['required', Rule::in([Enquiry::STATUS_PENDING, Enquiry::STATUS_REPLIED, Enquiry::STATUS_CLOSED])],
@@ -151,7 +151,7 @@ class EnquiryController extends Controller
 
     public function exportCsv(Request $request): StreamedResponse
     {
-        abort_unless($request->user()?->isAdmin(), 403);
+        $this->authorize('export', \App\Models\Enquiry::class);
 
         AdminAudit::log($request, 'enquiries.export.csv', null, null, []);
 
@@ -197,7 +197,7 @@ class EnquiryController extends Controller
 
     public function exportXlsx(Request $request): StreamedResponse
     {
-        abort_unless($request->user()?->isAdmin(), 403);
+        $this->authorize('export', \App\Models\Enquiry::class);
 
         AdminAudit::log($request, 'enquiries.export.xlsx', null, null, []);
 

@@ -20,10 +20,9 @@ class PropertyController extends Controller
     {
         $viewer = Auth::user();
 
-        abort_unless(
-            ($property->isApproved() && $property->status === 'Active') || $this->canManage($property),
-            404
-        );
+        if (! $property->isApproved() || $property->status !== 'Active') {
+            $this->authorize('view', $property);
+        }
 
         $property->load(['realtorProfile.user', 'owner', 'listedBy'])
             ->load(['listingComments' => fn ($q) => $q->with('user')->latest()])
@@ -67,6 +66,8 @@ class PropertyController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $user = Auth::user();
+        abort_unless($user, 403);
+        $this->authorize('create', Property::class);
 
         $rules = [
             'title' => ['required', 'string', 'max:255'],
@@ -181,7 +182,7 @@ class PropertyController extends Controller
 
     public function edit(Property $property): View
     {
-        abort_unless($this->canManage($property), 403, 'Unauthorized action.');
+        $this->authorize('update', $property);
 
         return view('pages.dashboards.property-edit', [
             'property' => $property,
@@ -193,7 +194,7 @@ class PropertyController extends Controller
 
     public function update(Request $request, Property $property): RedirectResponse
     {
-        abort_unless($this->canManage($property), 403, 'Unauthorized action.');
+        $this->authorize('update', $property);
 
         $user = $request->user();
         $statusOptions = $user?->isStaff()
@@ -257,7 +258,7 @@ class PropertyController extends Controller
 
     public function destroy(Property $property): RedirectResponse
     {
-        abort_unless($this->canManage($property), 403, 'Unauthorized action.');
+        $this->authorize('delete', $property);
 
         $property->delete();
 
@@ -267,7 +268,8 @@ class PropertyController extends Controller
     public function review(Request $request, Property $property): RedirectResponse
     {
         $user = $request->user();
-        abort_unless($user && $user->isStaff(), 403, 'Unauthorized action.');
+        abort_unless($user, 403);
+        $this->authorize('review', $property);
 
         $validated = $request->validate([
             'decision' => ['required', Rule::in(['approve', 'reject'])],
@@ -451,27 +453,7 @@ class PropertyController extends Controller
         Storage::disk('public')->delete($path);
     }
 
-    protected function canManage(Property $property): bool
-    {
-        $user = Auth::user();
-        if (! $user) {
-            return false;
-        }
-
-        if (in_array($user->role, ['admin', 'staff'])) {
-            return true;
-        }
-
-        if ($user->isSeller() && (int) $property->owner_user_id === (int) $user->id) {
-            return true;
-        }
-
-        if ($user->role === 'agent' && $user->realtorProfile) {
-            return $property->realtor_profile_id === $user->realtorProfile->id;
-        }
-
-        return false;
-    }
+    // Property ownership and role rules are enforced via PropertyPolicy.
 
     protected function ensureAgentProfile($user): RealtorProfile
     {

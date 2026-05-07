@@ -19,6 +19,8 @@ class LeadController extends Controller
 
     public function status(Request $request, Lead $lead): RedirectResponse
     {
+        $this->authorize('updateStatus', $lead);
+
         $validated = $request->validate([
             'status' => ['required', 'in:new,contacted,in_progress,qualified,assigned,closed,not_interested'],
         ]);
@@ -48,6 +50,8 @@ class LeadController extends Controller
 
     public function assign(Request $request, Lead $lead): RedirectResponse
     {
+        $this->authorize('assign', $lead);
+
         $validated = $request->validate([
             'agent_id' => ['required', 'exists:users,id'],
         ]);
@@ -75,6 +79,8 @@ class LeadController extends Controller
 
     public function activity(Request $request, Lead $lead): RedirectResponse
     {
+        $this->authorize('addActivity', $lead);
+
         $validated = $request->validate([
             'type' => ['required', 'in:note,tag,reminder'],
             'content' => ['nullable', 'string', 'max:1000'],

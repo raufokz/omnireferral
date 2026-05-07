@@ -13,18 +13,12 @@ class UserModerationController extends Controller
 {
     public function review(Request $request, User $user): RedirectResponse
     {
-        abort_unless($request->user()?->isStaff(), 403, 'Unauthorized action.');
+        $actor = $request->user();
+        abort_unless($actor, 403);
+        $this->authorize('moderate', $user);
 
         if ($user->id === $request->user()->id) {
             abort(403, 'You cannot change your own account status here.');
-        }
-
-        if ($user->role === 'admin') {
-            abort(403, 'Administrator accounts cannot be moderated from this queue.');
-        }
-
-        if ($user->role === 'staff' && ! $request->user()->isAdmin()) {
-            abort(403, 'Only a full administrator can approve or suspend staff accounts.');
         }
 
         $validated = $request->validate([

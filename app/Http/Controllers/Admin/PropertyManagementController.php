@@ -20,7 +20,8 @@ class PropertyManagementController extends Controller
     public function index(Request $request): View
     {
         $workspaceUser = $request->user();
-        abort_unless($workspaceUser && $workspaceUser->isStaff(), 403);
+        abort_unless($workspaceUser, 403);
+        $this->authorize('viewAny', Property::class);
 
         $filters = [
             'search' => trim((string) $request->query('search', '')),
@@ -145,7 +146,8 @@ class PropertyManagementController extends Controller
     public function create(Request $request): View
     {
         $workspaceUser = $request->user();
-        abort_unless($workspaceUser && $workspaceUser->isAdmin(), 403);
+        abort_unless($workspaceUser, 403);
+        $this->authorize('create', Property::class);
 
         return view('pages/admin/properties/create', [
             'property' => new Property([
@@ -163,7 +165,8 @@ class PropertyManagementController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $workspaceUser = $request->user();
-        abort_unless($workspaceUser && $workspaceUser->isAdmin(), 403);
+        abort_unless($workspaceUser, 403);
+        $this->authorize('create', Property::class);
 
         $validated = $this->validatePayload($request, true);
         $prepared = $this->preparePayload($validated, $request, null);
@@ -189,7 +192,8 @@ class PropertyManagementController extends Controller
     public function edit(Request $request, Property $property): View
     {
         $workspaceUser = $request->user();
-        abort_unless($workspaceUser && $workspaceUser->isStaff(), 403);
+        abort_unless($workspaceUser, 403);
+        $this->authorize('update', $property);
 
         return view('pages/admin/properties/edit', [
             'property' => $property,
@@ -206,7 +210,8 @@ class PropertyManagementController extends Controller
     public function update(Request $request, Property $property): RedirectResponse
     {
         $workspaceUser = $request->user();
-        abort_unless($workspaceUser && $workspaceUser->isStaff(), 403);
+        abort_unless($workspaceUser, 403);
+        $this->authorize('update', $property);
 
         $validated = $this->validatePayload($request, false, $workspaceUser->isAdmin());
         $prepared = $this->preparePayload($validated, $request, $property, $workspaceUser->isAdmin());
@@ -233,7 +238,8 @@ class PropertyManagementController extends Controller
     public function destroy(Request $request, Property $property): RedirectResponse
     {
         $workspaceUser = $request->user();
-        abort_unless($workspaceUser && $workspaceUser->isAdmin(), 403);
+        abort_unless($workspaceUser, 403);
+        $this->authorize('delete', $property);
 
         $existingImages = collect($property->images ?? [])
             ->filter(fn ($path) => is_string($path) && $path !== '')
