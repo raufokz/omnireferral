@@ -88,16 +88,14 @@ class User extends Authenticatable
     }
 
     /**
-     * Public agent directory: active agent accounts with an approved realtor profile extension.
+     * Public agent directory: rows from `users` with agent role (active accounts only).
+     * Profile approval controls the public profile page, not directory membership.
      */
     public function scopePublicDirectoryAgents($query)
     {
         return $query
             ->where('role', 'agent')
-            ->where('status', 'active')
-            ->whereHas('realtorProfile', function ($q) {
-                $q->whereNotNull('approved_at');
-            });
+            ->where('status', 'active');
     }
 
     public function assignedLeads(): HasMany

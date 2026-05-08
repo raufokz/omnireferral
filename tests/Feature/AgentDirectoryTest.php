@@ -62,6 +62,33 @@ class AgentDirectoryTest extends TestCase
             ->assertDontSee('Admin User');
     }
 
+    public function test_agents_page_lists_active_agent_users_even_without_approved_profile(): void
+    {
+        $pending = User::factory()->create([
+            'name' => 'Pending Profile Agent',
+            'email' => 'pending.agent@example.com',
+            'role' => 'agent',
+            'status' => 'active',
+            'city' => 'Houston',
+            'state' => 'TX',
+        ]);
+
+        RealtorProfile::updateOrCreate(['user_id' => $pending->id], [
+            'slug' => 'pending-profile-agent',
+            'brokerage_name' => 'Open Brokerage',
+            'service_city' => 'Houston',
+            'service_state' => 'TX',
+            'specialties' => 'Listings',
+            'approved_at' => null,
+        ]);
+
+        $this->get(route('agents.index'))
+            ->assertOk()
+            ->assertSee('Pending Profile Agent')
+            ->assertSee('pending.agent@example.com')
+            ->assertSee('Profile Pending');
+    }
+
     public function test_agent_profile_page_resolves_by_slug_and_requires_approval(): void
     {
         $agent = User::factory()->create([

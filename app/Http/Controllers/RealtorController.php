@@ -87,7 +87,6 @@ class RealtorController extends Controller
 
         $filterCities = RealtorProfile::query()
             ->select('service_city')
-            ->whereNotNull('approved_at')
             ->whereNotNull('service_city')
             ->whereHas('user', fn ($u) => $u->where('role', 'agent')->where('status', 'active'))
             ->distinct()
@@ -98,7 +97,6 @@ class RealtorController extends Controller
 
         $filterSpecialties = RealtorProfile::query()
             ->select('specialties')
-            ->whereNotNull('approved_at')
             ->whereNotNull('specialties')
             ->whereHas('user', fn ($u) => $u->where('role', 'agent')->where('status', 'active'))
             ->distinct()

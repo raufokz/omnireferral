@@ -127,7 +127,7 @@
                     $brokerage = $profile?->brokerage_name ?: 'OmniReferral Agent Network';
                     $marketLabel = trim(collect([$profile?->service_city, $profile?->service_state])->filter()->implode(', '));
                     $bio = $profile?->bio ?: 'Verified OmniReferral agent account ready for buyer, seller, and listing opportunities.';
-                    $profileRoute = $profile ? route('agents.show', $profile) : null;
+                    $profileRoute = ($profile && $profile->approved_at) ? route('agents.show', $profile) : null;
                 @endphp
                 <article
                     class="agent-card agent-card--profile"
@@ -191,7 +191,7 @@
             <h3>{{ $totalAgents === 0 && $hasServerFilters ? 'No agents match your filters' : ($totalAgents === 0 ? 'No Agents Found' : 'No agents on this page') }}</h3>
             <p>
                 @if($totalAgents === 0 && ! $hasServerFilters)
-                    Approved agent profiles will appear here once partner agents are active on the platform.
+                    Active partner agents (accounts with the agent role) will appear here once they join the platform.
                 @elseif($totalAgents === 0 && $hasServerFilters)
                     Try clearing search or choosing a different city or specialty.
                 @else
