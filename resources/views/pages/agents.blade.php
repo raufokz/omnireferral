@@ -136,7 +136,7 @@
                     data-specialty="{{ strtolower($specialty) }}"
                 >
                     <div class="agent-card__media">
-                        <img src="{{ $profileImage }}" alt="{{ $displayName }} profile image" loading="lazy">
+                        <img src="{{ $profileImage }}" alt="{{ $displayName }} profile image" style="object-fit: contain;" loading="lazy">
                         <span class="agent-card__badge">Verified Agent</span>
                         <span class="agent-card__rating-chip" aria-label="{{ $ratingValue }} rating">
                             <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
