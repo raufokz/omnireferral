@@ -88,6 +88,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Public agent profile URL for directory cards; null when there is no profile or approval is still pending.
+     */
+    public function publicAgentProfileUrl(): ?string
+    {
+        return $this->realtorProfile?->publicShowUrl();
+    }
+
+    /**
      * Public agent directory: rows from `users` with agent role (active accounts only).
      * Profile approval controls the public profile page, not directory membership.
      */

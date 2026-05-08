@@ -122,7 +122,7 @@ class RealtorController extends Controller
     public function show(User $realtor): View
     {
         $profile = $realtor->realtorProfile;
-        abort_unless($profile && $profile->approved_at, 404);
+        abort_unless($profile && $profile->isApprovedForPublicShow(), 404);
 
         $viewer = auth()->user();
 

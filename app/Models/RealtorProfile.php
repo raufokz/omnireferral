@@ -78,8 +78,8 @@ class RealtorProfile extends Model
         return $query
             ->whereNotNull('approved_at')
             ->whereHas('user', function ($q) {
-            $q->where('role', 'agent')->where('status', 'active');
-        });
+                $q->where('role', 'agent')->where('status', 'active');
+            });
     }
 
     public function serviceAreaLabel(): string
@@ -87,5 +87,25 @@ class RealtorProfile extends Model
         return collect([$this->service_city, $this->service_state, $this->service_zip_code])
             ->filter(fn ($p) => is_string($p) && trim($p) !== '')
             ->implode(', ');
+    }
+
+    /**
+     * Public `/agents/{slug}` page is only available after admin approval.
+     */
+    public function isApprovedForPublicShow(): bool
+    {
+        return $this->approved_at !== null;
+    }
+
+    /**
+     * URL for the public agent profile, or null while approval is pending (directory may still list the user).
+     */
+    public function publicShowUrl(): ?string
+    {
+        if (! $this->isApprovedForPublicShow()) {
+            return null;
+        }
+
+        return route('agents.show', $this);
     }
 }

@@ -127,7 +127,7 @@
                     $brokerage = $profile?->brokerage_name ?: 'OmniReferral Agent Network';
                     $marketLabel = trim(collect([$profile?->service_city, $profile?->service_state])->filter()->implode(', '));
                     $bio = $profile?->bio ?: 'Verified OmniReferral agent account ready for buyer, seller, and listing opportunities.';
-                    $profileRoute = ($profile && $profile->approved_at) ? route('agents.show', $profile) : null;
+                    $profileRoute = $agent->publicAgentProfileUrl();
                 @endphp
                 <article
                     class="agent-card agent-card--profile"
