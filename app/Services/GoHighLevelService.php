@@ -6,6 +6,7 @@ use App\Models\Lead;
 use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class GoHighLevelService
 {
@@ -21,8 +22,14 @@ class GoHighLevelService
             return null;
         }
 
+        $timeout = (int) config('services.gohighlevel.http_timeout', 10);
+        $retries = (int) config('services.gohighlevel.http_retries', 3);
+        $sleepMs = (int) config('services.gohighlevel.http_retry_sleep_ms', 500);
+
         $response = Http::withToken(config('services.gohighlevel.api_key'))
             ->acceptJson()
+            ->timeout($timeout)
+            ->retry($retries, $sleepMs, throw: false)
             ->post(rtrim(config('services.gohighlevel.base_url'), '/') . '/contacts/', [
                 'locationId' => config('services.gohighlevel.location_id'),
                 'firstName' => Arr::get($payload, 'first_name'),
@@ -35,7 +42,18 @@ class GoHighLevelService
                 'customFields' => Arr::get($payload, 'custom_fields', []),
             ]);
 
-        return $response->successful() ? $response->json() : null;
+        if ($response->successful()) {
+            return $response->json();
+        }
+
+        Log::warning('GoHighLevel contact sync failed.', [
+            'status' => $response->status(),
+            'body' => mb_substr((string) $response->body(), 0, 1500),
+            'email' => Arr::get($payload, 'email'),
+            'source' => Arr::get($payload, 'source'),
+        ]);
+
+        return null;
     }
 
     public function syncLead(Lead $lead): ?array
@@ -91,12 +109,27 @@ class GoHighLevelService
             return false;
         }
 
+        $timeout = (int) config('services.gohighlevel.http_timeout', 10);
+        $retries = (int) config('services.gohighlevel.http_retries', 3);
+        $sleepMs = (int) config('services.gohighlevel.http_retry_sleep_ms', 500);
+
         $response = Http::withToken(config('services.gohighlevel.api_key'))
             ->acceptJson()
+            ->timeout($timeout)
+            ->retry($retries, $sleepMs, throw: false)
             ->put(rtrim(config('services.gohighlevel.base_url'), '/') . '/contacts/' . $contactId, [
                 'locationId' => config('services.gohighlevel.location_id'),
                 'pipelineStage' => $stage,
             ]);
+
+        if (! $response->successful()) {
+            Log::warning('GoHighLevel opportunity stage update failed.', [
+                'contact_id' => $contactId,
+                'stage' => $stage,
+                'status' => $response->status(),
+                'body' => mb_substr((string) $response->body(), 0, 1500),
+            ]);
+        }
 
         return $response->successful();
     }

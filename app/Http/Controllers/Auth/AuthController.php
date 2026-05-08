@@ -111,7 +111,7 @@ class AuthController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'role' => ['required', 'string', 'in:buyer,seller,agent'],
             'phone' => ['required', 'string', 'max:20'],
-            'profile_image' => ['required', 'image', 'max:4096'],
+            'profile_image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'address_line_1' => ['required', 'string', 'max:255'],
             'address_line_2' => ['nullable', 'string', 'max:255'],
             'city' => ['required', 'string', 'max:100'],

@@ -232,7 +232,13 @@ class User extends Authenticatable
         return $this->role === 'seller';
     }
 
-    public function hasAnyRole(array $roles): bool
+    /**
+     * Workspace role helper (NOT Spatie roles).
+     *
+     * This project uses `users.role` as the primary workspace selector (buyer/seller/agent/admin/staff).
+     * Spatie roles/permissions are used for fine-grained permissions via `$user->can('permission')`.
+     */
+    public function hasAnyWorkspaceRole(array $roles): bool
     {
         return in_array($this->role, $roles, true);
     }

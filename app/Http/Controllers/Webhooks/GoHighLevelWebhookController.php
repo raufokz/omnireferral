@@ -10,6 +10,7 @@ use App\Models\RealtorProfile;
 use App\Models\User;
 use App\Notifications\AgentCredentialsNotification;
 use App\Services\LeadCustomerNotifier;
+use App\Services\WebhookInboxService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -20,6 +21,35 @@ class GoHighLevelWebhookController extends Controller
     {
         if (! $this->isAuthorized($request)) {
             return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $payload = $request->all();
+        $rawPayload = $request->getContent();
+        $headers = collect($request->headers->all())
+            ->map(fn ($values) => is_array($values) ? (count($values) === 1 ? $values[0] : $values) : $values)
+            ->toArray();
+
+        $inbox = app(WebhookInboxService::class);
+        $remoteId = (string) ($request->input('id')
+            ?? $request->input('contact_id')
+            ?? data_get($payload, 'id')
+            ?? data_get($payload, 'contact.id')
+            ?? data_get($payload, 'contact_id')
+            ?? '');
+        $record = $inbox->recordInbound(
+            provider: 'gohighlevel',
+            event: 'package_purchased',
+            remoteId: $remoteId !== '' ? $remoteId : null,
+            rawPayload: $rawPayload,
+            payload: is_array($payload) ? $payload : [],
+            headers: $headers,
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
+            related: null,
+        );
+
+        if ($record->processed_at) {
+            return response()->json(['message' => 'Duplicate webhook ignored.'], 200);
         }
 
         $email = $request->string('email')->value() ?: data_get($request->all(), 'contact.email');
@@ -85,6 +115,8 @@ class GoHighLevelWebhookController extends Controller
             $user->notify(new AgentCredentialsNotification($tempPassword));
         }
 
+        $inbox->markProcessed($record);
+
         // Keep the client in the normal auth flow instead of a custom onboarding page.
         return response()->json([
             'message' => 'Purchase processed successfully.',
@@ -100,6 +132,35 @@ class GoHighLevelWebhookController extends Controller
     {
         if (! $this->isAuthorized($request)) {
             return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $payload = $request->all();
+        $rawPayload = $request->getContent();
+        $headers = collect($request->headers->all())
+            ->map(fn ($values) => is_array($values) ? (count($values) === 1 ? $values[0] : $values) : $values)
+            ->toArray();
+
+        $inbox = app(WebhookInboxService::class);
+        $remoteId = (string) ($request->input('id')
+            ?? $request->input('contact_id')
+            ?? data_get($payload, 'id')
+            ?? data_get($payload, 'contact.id')
+            ?? data_get($payload, 'contact_id')
+            ?? '');
+        $record = $inbox->recordInbound(
+            provider: 'gohighlevel',
+            event: 'onboarding_completed',
+            remoteId: $remoteId !== '' ? $remoteId : null,
+            rawPayload: $rawPayload,
+            payload: is_array($payload) ? $payload : [],
+            headers: $headers,
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
+            related: null,
+        );
+
+        if ($record->processed_at) {
+            return response()->json(['message' => 'Duplicate webhook ignored.'], 200);
         }
 
         $email = $request->string('email')->value() ?: data_get($request->all(), 'contact.email');
@@ -167,6 +228,8 @@ class GoHighLevelWebhookController extends Controller
             $user->notify(new AgentCredentialsNotification($tempPassword));
         }
 
+        $inbox->markProcessed($record);
+
         return response()->json([
             'message' => 'Onboarding processed successfully.',
             'user_id' => $user->id,
@@ -179,6 +242,36 @@ class GoHighLevelWebhookController extends Controller
     {
         if (! $this->isAuthorized($request)) {
             return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $payload = $request->all();
+        $rawPayload = $request->getContent();
+        $headers = collect($request->headers->all())
+            ->map(fn ($values) => is_array($values) ? (count($values) === 1 ? $values[0] : $values) : $values)
+            ->toArray();
+
+        $inbox = app(WebhookInboxService::class);
+        $remoteId = (string) ($request->input('id')
+            ?? data_get($payload, 'id')
+            ?? data_get($payload, 'contact.id')
+            ?? data_get($payload, 'contact_id')
+            ?? $request->input('ghl_contact_id')
+            ?? $request->input('lead_number')
+            ?? '');
+        $record = $inbox->recordInbound(
+            provider: 'gohighlevel',
+            event: 'lead_status_updated',
+            remoteId: $remoteId !== '' ? $remoteId : null,
+            rawPayload: $rawPayload,
+            payload: is_array($payload) ? $payload : [],
+            headers: $headers,
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
+            related: null,
+        );
+
+        if ($record->processed_at) {
+            return response()->json(['message' => 'Duplicate webhook ignored.'], 200);
         }
 
         $lead = Lead::query()
@@ -204,6 +297,8 @@ class GoHighLevelWebhookController extends Controller
 
         app(LeadCustomerNotifier::class)->notifyStatusChangeIfNeeded($lead->fresh(), $previousStatus);
 
+        $inbox->markProcessed($record);
+
         return response()->json(['message' => 'Lead status synced.']);
     }
 
@@ -216,6 +311,17 @@ class GoHighLevelWebhookController extends Controller
             return app()->environment(['local', 'testing']);
         }
 
-        return hash_equals($secret, $header);
+        if (! hash_equals($secret, $header)) {
+            return false;
+        }
+
+        if (! config('services.gohighlevel.webhook_require_nonce')) {
+            return true;
+        }
+
+        // Optional strict replay hardening: require a nonce header.
+        $nonce = trim((string) $request->header('X-OmniReferral-Webhook-Nonce', ''));
+
+        return $nonce !== '';
     }
 }

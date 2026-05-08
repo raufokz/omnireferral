@@ -43,7 +43,7 @@ class ProfileController extends Controller
             'city' => ['nullable', 'string', 'max:100'],
             'state' => ['nullable', 'string', 'max:120'],
             'zip_code' => ['nullable', 'string', 'max:10'],
-            'avatar' => ['nullable', 'image', 'max:3072'],
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:3072'],
             'social_facebook_url' => ['nullable', 'url', 'max:255'],
             'social_linkedin_url' => ['nullable', 'url', 'max:255'],
             'notify_email' => ['nullable', Rule::in(['0', '1'])],

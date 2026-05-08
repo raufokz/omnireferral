@@ -8,6 +8,7 @@ use App\Services\EnquiryReplyService;
 use App\Support\AdminAudit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -67,12 +68,17 @@ class EnquiryController extends Controller
             $query->where('status', $filters['status']);
         }
 
-        if ($filters['date_from'] !== '') {
-            $query->whereDate('created_at', '>=', $filters['date_from']);
-        }
+        if ($filters['date_from'] !== '' || $filters['date_to'] !== '') {
+            $from = $filters['date_from'] !== '' ? Carbon::parse($filters['date_from'])->startOfDay() : null;
+            $to = $filters['date_to'] !== '' ? Carbon::parse($filters['date_to'])->endOfDay() : null;
 
-        if ($filters['date_to'] !== '') {
-            $query->whereDate('created_at', '<=', $filters['date_to']);
+            if ($from && $to) {
+                $query->whereBetween('created_at', [$from, $to]);
+            } elseif ($from) {
+                $query->where('created_at', '>=', $from);
+            } elseif ($to) {
+                $query->where('created_at', '<=', $to);
+            }
         }
 
         $enquiries = $query->latest()->paginate(25)->withQueryString();
@@ -155,6 +161,21 @@ class EnquiryController extends Controller
 
         AdminAudit::log($request, 'enquiries.export.csv', null, null, []);
 
+        if ($request->boolean('async')) {
+            $export = \App\Models\DataExport::create([
+                'requested_by_user_id' => $request->user()?->id,
+                'type' => 'enquiries',
+                'format' => 'csv',
+                'filters' => null,
+                'status' => 'pending',
+            ]);
+            \App\Jobs\GenerateDataExport::dispatch($export->id);
+
+            return redirect()
+                ->route('admin.exports.index')
+                ->with('success', 'Enquiries export queued. You can download it once processing completes.');
+        }
+
         $filename = 'enquiries-export-' . now()->format('Ymd-His') . '.csv';
 
         return response()->streamDownload(function () {
@@ -200,6 +221,21 @@ class EnquiryController extends Controller
         $this->authorize('export', \App\Models\Enquiry::class);
 
         AdminAudit::log($request, 'enquiries.export.xlsx', null, null, []);
+
+        if ($request->boolean('async')) {
+            $export = \App\Models\DataExport::create([
+                'requested_by_user_id' => $request->user()?->id,
+                'type' => 'enquiries',
+                'format' => 'xlsx',
+                'filters' => null,
+                'status' => 'pending',
+            ]);
+            \App\Jobs\GenerateDataExport::dispatch($export->id);
+
+            return redirect()
+                ->route('admin.exports.index')
+                ->with('success', 'Enquiries export queued. You can download it once processing completes.');
+        }
 
         $filename = 'enquiries-export-' . now()->format('Ymd-His') . '.xlsx';
 

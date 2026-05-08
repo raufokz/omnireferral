@@ -12,6 +12,7 @@ class WebhookEvent extends Model
         'related_id',
         'event',
         'remote_id',
+        'payload_hash',
         'headers',
         'payload',
         'ip_address',

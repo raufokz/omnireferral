@@ -30,7 +30,7 @@ class EnsureListingDeviceCookie
             minutes: 60 * 24 * 365 * 5,
             path: '/',
             domain: null,
-            secure: config('session.secure', false),
+            secure: app()->environment('production') ? true : (bool) config('session.secure', false),
             httpOnly: true,
             raw: false,
             sameSite: 'lax',

@@ -72,7 +72,7 @@ class PortalController extends Controller
             'license_number' => ['required', 'string', 'max:100'],
             'specialties' => ['nullable', 'string', 'max:255'],
             'bio' => ['nullable', 'string'],
-            'profile_image' => ['nullable', 'image', 'max:4096'],
+            'profile_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ]);
 
         $avatarPath = $user->avatar;

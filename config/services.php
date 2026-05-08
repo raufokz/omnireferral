@@ -41,6 +41,12 @@ return [
         'location_id' => env('GOHIGHLEVEL_LOCATION_ID'),
         'base_url' => env('GOHIGHLEVEL_BASE_URL', 'https://services.leadconnectorhq.com'),
         'webhook_secret' => env('GOHIGHLEVEL_WEBHOOK_SECRET'),
+        'http_timeout' => (int) env('GOHIGHLEVEL_HTTP_TIMEOUT', 10),
+        'http_retries' => (int) env('GOHIGHLEVEL_HTTP_RETRIES', 3),
+        'http_retry_sleep_ms' => (int) env('GOHIGHLEVEL_HTTP_RETRY_SLEEP_MS', 500),
+        // Optional: tighten webhook checks in production without breaking existing clients.
+        // When enabled, require X-OmniReferral-Webhook-Nonce and enforce one-time use via webhook_events.
+        'webhook_require_nonce' => env('GOHIGHLEVEL_WEBHOOK_REQUIRE_NONCE', false),
     ],
 
     'stripe' => [

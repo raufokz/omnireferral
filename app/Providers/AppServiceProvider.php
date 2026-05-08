@@ -49,11 +49,23 @@ class AppServiceProvider extends ServiceProvider
             }
 
             // If Spatie roles are enabled and this user is a Super Admin, allow all.
-            if (method_exists($user, 'hasRole') && $user->hasRole('Super Admin')) {
+            // Guarded by config so production can disable role-name based escalation.
+            if (
+                (bool) config('omnireferral.security.allow_spatie_super_admin', false)
+                && method_exists($user, 'hasRole')
+                && $user->hasRole('Super Admin')
+            ) {
                 return true;
             }
 
             return null;
+        });
+
+        // Backward-compatible authorization bridge:
+        // The admin area is gated by `can:admin.access` in routes. In production we may also grant this
+        // via Spatie permissions, but we must always allow role-based admin/staff access.
+        Gate::define('admin.access', function (?User $user): bool {
+            return (bool) ($user?->isStaff() ?? false);
         });
 
         Gate::policy(Property::class, PropertyPolicy::class);

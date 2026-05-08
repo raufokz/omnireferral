@@ -14,7 +14,7 @@ class LeadPolicy
     {
         return $user->can('leads.view')
             || $user->isStaff()
-            || $user->hasAnyRole(['agent', 'buyer', 'seller']);
+            || $user->hasAnyWorkspaceRole(['agent', 'buyer', 'seller']);
     }
 
     public function view(User $user, Lead $lead): bool

@@ -102,7 +102,7 @@ class ReviewController extends Controller
             'location' => ['nullable', 'string', 'max:255'],
             'rating' => ['required', 'integer', 'min:1', 'max:5'],
             'quote' => ['required', 'string', 'max:3000'],
-            'photo' => ['nullable', 'image', 'max:4096'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ]);
 
         $testimonial = new Testimonial([

@@ -201,7 +201,7 @@ class UserManagementController extends Controller
             'two_factor_enabled' => ['nullable', Rule::in(['0', '1'])],
             'must_reset_password' => ['nullable', Rule::in(['0', '1'])],
             'email_verified' => ['nullable', Rule::in(['0', '1'])],
-            'avatar' => ['nullable', 'image', 'max:4096'],
+            'avatar' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'remove_avatar' => ['nullable', 'boolean'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
@@ -375,6 +375,21 @@ class UserManagementController extends Controller
 
         AdminAudit::log($request, 'users.export.csv', null, null, []);
 
+        if ($request->boolean('async')) {
+            $export = \App\Models\DataExport::create([
+                'requested_by_user_id' => $request->user()?->id,
+                'type' => 'users',
+                'format' => 'csv',
+                'filters' => null,
+                'status' => 'pending',
+            ]);
+            \App\Jobs\GenerateDataExport::dispatch($export->id);
+
+            return redirect()
+                ->route('admin.exports.index')
+                ->with('success', 'User export queued. You can download it once processing completes.');
+        }
+
         $filename = 'users-export-'.now()->format('Ymd-His').'.csv';
         $query = User::query()->orderBy('id');
 
@@ -411,6 +426,21 @@ class UserManagementController extends Controller
         $this->authorize('export', User::class);
 
         AdminAudit::log($request, 'users.export.xlsx', null, null, []);
+
+        if ($request->boolean('async')) {
+            $export = \App\Models\DataExport::create([
+                'requested_by_user_id' => $request->user()?->id,
+                'type' => 'users',
+                'format' => 'xlsx',
+                'filters' => null,
+                'status' => 'pending',
+            ]);
+            \App\Jobs\GenerateDataExport::dispatch($export->id);
+
+            return redirect()
+                ->route('admin.exports.index')
+                ->with('success', 'User export queued. You can download it once processing completes.');
+        }
 
         $filename = 'users-export-'.now()->format('Ymd-His').'.xlsx';
 

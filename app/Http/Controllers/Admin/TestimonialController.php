@@ -146,7 +146,7 @@ class TestimonialController extends Controller
             'location' => ['nullable', 'string', 'max:255'],
             'rating' => ['required', 'integer', 'min:1', 'max:5'],
             'quote' => ['required', 'string', 'max:3000'],
-            'photo' => ['nullable', 'image', 'max:4096'],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'video_url' => ['nullable', 'string', 'max:2048'],
             'video_file' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/quicktime', 'max:51200'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],

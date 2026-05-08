@@ -40,7 +40,7 @@ class StoreLeadRequest extends FormRequest
             'financing_status' => ['nullable', 'string', 'max:100'],
             'contact_preference' => ['nullable', 'string', 'max:50'],
             'package_slug' => ['nullable', 'string', 'exists:packages,slug'],
-            'property_image' => ['nullable', 'image', 'max:4096'],
+            'property_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'preferences' => ['nullable', 'string'],
         ];
     }

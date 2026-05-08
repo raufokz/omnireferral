@@ -6,10 +6,22 @@ use App\Models\User;
 use App\Services\GoHighLevelService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
 
 class SyncUserToGoHighLevel implements ShouldQueue
 {
     use Queueable;
+
+    public int $tries = 5;
+
+    /**
+     * Backoff schedule in seconds.
+     *
+     * @var array<int>
+     */
+    public array $backoff = [60, 300, 900, 1800];
+
+    public int $timeout = 20;
 
     public function __construct(public int $userId)
     {
@@ -23,7 +35,20 @@ class SyncUserToGoHighLevel implements ShouldQueue
             return;
         }
 
-        $response = $service->syncUser($user);
+        try {
+            $response = $service->syncUser($user);
+        } catch (\Throwable $e) {
+            Log::error('SyncUserToGoHighLevel job threw exception.', [
+                'user_id' => $this->userId,
+                'exception' => $e->getMessage(),
+            ]);
+
+            throw $e;
+        }
+
+        if (! $response) {
+            throw new \RuntimeException("GoHighLevel syncUser failed for user_id={$this->userId}");
+        }
         $ghlId = data_get($response, 'contact.id') ?? data_get($response, 'id');
 
         if ($ghlId) {

@@ -12,6 +12,17 @@ class RouteLeadToAgent implements ShouldQueue
 {
     use Queueable;
 
+    public int $tries = 5;
+
+    /**
+     * Backoff schedule in seconds.
+     *
+     * @var array<int>
+     */
+    public array $backoff = [30, 120, 300];
+
+    public int $timeout = 15;
+
     public function __construct(public int $leadId)
     {
     }
@@ -30,7 +41,16 @@ class RouteLeadToAgent implements ShouldQueue
             return;
         }
 
-        $routingService->assignIfConfigured($lead);
+        try {
+            $routingService->assignIfConfigured($lead);
+        } catch (\Throwable $e) {
+            Log::error('RouteLeadToAgent job threw exception.', [
+                'lead_id' => $this->leadId,
+                'exception' => $e->getMessage(),
+            ]);
+
+            throw $e;
+        }
 
         if ($lead->fresh()->assigned_agent_id) {
             Log::info("Lead {$lead->id} was routed via auto-assignment rules.");

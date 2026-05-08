@@ -12,7 +12,7 @@ class RoleMiddleware
     {
         $user = $request->user();
 
-        if (! $user || ! $user->hasAnyRole($roles)) {
+        if (! $user || ! $user->hasAnyWorkspaceRole($roles)) {
             abort(403, 'You do not have access to this area.');
         }
 

@@ -16,6 +16,8 @@ class Kernel extends ConsoleKernel
         // Note: To enable scheduling, run 'php artisan schedule:work' or set up cron:
         // * * * * * cd /path/to/project && php artisan schedule:run >> /dev/null 2>&1
         $schedule->command('lead:follow-up-reminders')->dailyAt('09:00');
+    }
+
     protected function commands(): void
     {
         $this->load(__DIR__.'/Commands');

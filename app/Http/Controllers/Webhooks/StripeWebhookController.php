@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Package;
 use App\Models\User;
 use App\Notifications\PackagePurchasedNotification;
+use App\Services\WebhookInboxService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Stripe\Exception\SignatureVerificationException;
@@ -32,6 +33,26 @@ class StripeWebhookController extends Controller
         $type = $event->type;
         $object = $event->data->object;
 
+        // Persist + dedupe (idempotency). Stripe event IDs are stable per delivery.
+        $inbox = app(WebhookInboxService::class);
+        $stored = $inbox->recordInbound(
+            provider: 'stripe',
+            event: (string) $type,
+            remoteId: (string) ($event->id ?? ''),
+            rawPayload: $payload,
+            payload: json_decode($payload, true) ?: [],
+            headers: [
+                'stripe_signature' => $signature,
+            ],
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
+            related: null,
+        );
+
+        if ($stored->processed_at) {
+            return response()->json(['received' => true, 'duplicate' => true]);
+        }
+
         if ($type === 'checkout.session.completed') {
             $userId = (int) ($object->metadata->user_id ?? 0);
             $packageId = (int) ($object->metadata->package_id ?? 0);
@@ -57,6 +78,8 @@ class StripeWebhookController extends Controller
                 User::where('stripe_customer_id', $customerId)->update(['current_plan_id' => null]);
             }
         }
+
+        $inbox->markProcessed($stored);
 
         return response()->json(['received' => true]);
     }

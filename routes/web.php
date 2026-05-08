@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\PlatformSearchController;
 use App\Http\Controllers\Admin\PropertyManagementController as AdminPropertyManagementController;
 use App\Http\Controllers\Admin\PackageController as AdminPackageController;
 use App\Http\Controllers\Admin\TestimonialController;
+use App\Http\Controllers\Admin\DataExportController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\UserModerationController;
 use App\Http\Controllers\Admin\WebhookEventController as AdminWebhookEventController;
@@ -227,6 +228,8 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
 
     Route::middleware(['can:admin.access'])->group(function () {
         Route::get('/admin', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+        Route::get('/admin/exports', [DataExportController::class, 'index'])->name('admin.exports.index');
+        Route::get('/admin/exports/{export}/download', [DataExportController::class, 'download'])->name('admin.exports.download');
         Route::get('/admin/search', PlatformSearchController::class)->name('admin.search');
         Route::get('/admin/users', [UserManagementController::class, 'index'])->name('admin.users.index');
         Route::get('/admin/users/export/csv', [UserManagementController::class, 'exportCsv'])->name('admin.users.export.csv');

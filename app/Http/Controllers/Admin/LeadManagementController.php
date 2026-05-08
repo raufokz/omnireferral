@@ -8,6 +8,7 @@ use App\Models\Lead;
 use App\Models\Property;
 use App\Models\RealtorProfile;
 use App\Models\User;
+use App\Services\LeadFilterService;
 use App\Services\LeadMultiFormatImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,9 +24,9 @@ class LeadManagementController extends Controller
 {
     public function index(Request $request): View
     {
-        $filters = $this->normalizeLeadFilters($request);
+        $filters = app(LeadFilterService::class)->normalizeFromRequest($request);
         $baseQuery = Lead::query()->with('assignedAgent:id,name');
-        $this->applyLeadFilters($baseQuery, $filters);
+        app(LeadFilterService::class)->apply($baseQuery, $filters);
 
         $leads = (clone $baseQuery)
             ->orderByRaw('COALESCE(source_timestamp, created_at) DESC')
@@ -83,9 +84,24 @@ class LeadManagementController extends Controller
 
     public function exportCsv(Request $request): StreamedResponse
     {
+        if ($request->boolean('async')) {
+            $export = \App\Models\DataExport::create([
+                'requested_by_user_id' => $request->user()?->id,
+                'type' => 'leads',
+                'format' => 'csv',
+                'filters' => app(LeadFilterService::class)->normalizeFromRequest($request),
+                'status' => 'pending',
+            ]);
+            \App\Jobs\GenerateDataExport::dispatch($export->id);
+
+            return redirect()
+                ->route('admin.exports.index')
+                ->with('success', 'Lead export queued. You can download it once processing completes.');
+        }
+
         $filename = 'leads-export-' . now()->format('Ymd-His') . '.csv';
         $query = Lead::query()->with('assignedAgent:id,name');
-        $this->applyLeadFilters($query, $this->normalizeLeadFilters($request));
+        app(LeadFilterService::class)->apply($query, app(LeadFilterService::class)->normalizeFromRequest($request));
 
         return response()->streamDownload(function () use ($query) {
             $handle = fopen('php://output', 'w');
@@ -288,42 +304,12 @@ class LeadManagementController extends Controller
 
     private function normalizeLeadFilters(Request $request): array
     {
-        return [
-            'search' => trim((string) $request->string('search')->value()),
-            'intent' => trim((string) $request->string('intent')->value()),
-            'status' => trim((string) $request->string('status')->value()),
-            'agent_id' => $request->integer('agent_id') ?: null,
-            'rep_name' => trim((string) $request->string('rep_name')->value()),
-            'source' => trim((string) $request->string('source')->value()),
-            'date_from' => $this->normalizeFilterDate((string) $request->string('date_from')->value()),
-            'date_to' => $this->normalizeFilterDate((string) $request->string('date_to')->value()),
-        ];
+        return app(LeadFilterService::class)->normalizeFromRequest($request);
     }
 
     private function applyLeadFilters($query, array $filters): void
     {
-        $query
-            ->when($filters['search'], function ($builder, string $search) {
-                $builder->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%")
-                        ->orWhere('lead_number', 'like', "%{$search}%")
-                        ->orWhere('zip_code', 'like', "%{$search}%")
-                        ->orWhere('property_address', 'like', "%{$search}%")
-                        ->orWhere('rep_name', 'like', "%{$search}%")
-                        ->orWhere('state', 'like', "%{$search}%")
-                        ->orWhere('sent_to', 'like', "%{$search}%")
-                        ->orWhere('source', 'like', "%{$search}%");
-                });
-            })
-            ->when($filters['intent'], fn ($builder, string $intent) => $builder->where('intent', $intent))
-            ->when($filters['status'], fn ($builder, string $status) => $builder->where('status', $status))
-            ->when($filters['agent_id'], fn ($builder, int $agentId) => $builder->where('assigned_agent_id', $agentId))
-            ->when($filters['rep_name'], fn ($builder, string $repName) => $builder->where('rep_name', $repName))
-            ->when($filters['source'], fn ($builder, string $source) => $builder->where('source', $source))
-            ->when($filters['date_from'], fn ($builder, string $dateFrom) => $builder->whereRaw('DATE(COALESCE(source_timestamp, created_at)) >= ?', [$dateFrom]))
-            ->when($filters['date_to'], fn ($builder, string $dateTo) => $builder->whereRaw('DATE(COALESCE(source_timestamp, created_at)) <= ?', [$dateTo]));
+        app(LeadFilterService::class)->apply($query, $filters);
     }
 
     private function normalizeFilterDate(string $value): ?string

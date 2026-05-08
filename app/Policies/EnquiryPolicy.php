@@ -14,7 +14,7 @@ class EnquiryPolicy
     {
         return $user->can('enquiries.view')
             || $user->isStaff()
-            || $user->hasAnyRole(['buyer', 'seller', 'agent']);
+            || $user->hasAnyWorkspaceRole(['buyer', 'seller', 'agent']);
     }
 
     public function view(User $user, Enquiry $enquiry): bool

@@ -14,6 +14,15 @@ class Lead extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected static function booted(): void
+    {
+        static::saving(function (Lead $lead): void {
+            // Keep normalized identity fields up to date for fast duplicate checks at scale.
+            $lead->email_normalized = self::normalizeEmail($lead->email);
+            $lead->phone_normalized = self::normalizePhone($lead->phone);
+        });
+    }
+
     protected $fillable = [
         'lead_number',
         'intent',
@@ -24,7 +33,9 @@ class Lead extends Model
         'source_timestamp',
         'name',
         'email',
+        'email_normalized',
         'phone',
+        'phone_normalized',
         'zip_code',
         'property_address',
         'beds_baths',
@@ -187,13 +198,22 @@ class Lead extends Model
                 $applied = false;
 
                 if ($normalizedEmail) {
-                    $query->whereRaw('LOWER(email) = ?', [$normalizedEmail]);
+                    $query->where(function ($q) use ($normalizedEmail) {
+                        $q->where('email_normalized', $normalizedEmail)
+                            ->orWhereRaw('LOWER(email) = ?', [$normalizedEmail]);
+                    });
                     $applied = true;
                 }
 
                 if ($normalizedPhone) {
                     $method = $applied ? 'orWhereRaw' : 'whereRaw';
-                    $query->{$method}("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, '-', ''), '(', ''), ')', ''), ' ', ''), '+', '') LIKE ?", ['%' . $normalizedPhone]);
+                    $query->orWhere(function ($q) use ($normalizedPhone) {
+                        $q->where('phone_normalized', $normalizedPhone)
+                            ->orWhereRaw(
+                                "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, '-', ''), '(', ''), ')', ''), ' ', ''), '+', '') LIKE ?",
+                                ['%' . $normalizedPhone]
+                            );
+                    });
                 }
             });
     }
