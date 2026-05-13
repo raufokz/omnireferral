@@ -2,9 +2,73 @@
 
 namespace App\Support;
 
+use App\Models\PricingPlan;
+use Illuminate\Support\Facades\Schema;
+
 class PricingContent
 {
     public static function plans(): array
+    {
+        $dbPlans = self::loadFromDatabase();
+        if ($dbPlans !== null) {
+            return $dbPlans;
+        }
+
+        return self::fallbackPlans();
+    }
+
+    public static function planBySlug(string $slug): ?array
+    {
+        foreach (self::plans() as $category => $plans) {
+            foreach ($plans as $plan) {
+                if (($plan['slug'] ?? null) === $slug) {
+                    $plan['category'] = $category;
+
+                    return $plan;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static function loadFromDatabase(): ?array
+    {
+        try {
+            if (! Schema::hasTable('pricing_plans')) {
+                return null;
+            }
+
+            $plans = PricingPlan::active()->ordered()->get();
+
+            if ($plans->isEmpty()) {
+                return null;
+            }
+
+            $grouped = [];
+            foreach ($plans as $plan) {
+                $grouped[$plan->category][] = [
+                    'slug' => $plan->slug,
+                    'name' => $plan->name,
+                    'tier' => $plan->tier,
+                    'value_price' => $plan->value_price,
+                    'price' => $plan->price,
+                    'price_note' => $plan->price_note,
+                    'summary' => $plan->summary,
+                    'features' => $plan->features ?? [],
+                    'cta_label' => $plan->cta_label ?? 'Get Started',
+                    'cta_url' => $plan->cta_url,
+                    'is_featured' => $plan->is_featured,
+                ];
+            }
+
+            return $grouped;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private static function fallbackPlans(): array
     {
         return [
             'real_estate' => [
@@ -161,20 +225,5 @@ class PricingContent
                 ],
             ],
         ];
-    }
-
-    public static function planBySlug(string $slug): ?array
-    {
-        foreach (self::plans() as $category => $plans) {
-            foreach ($plans as $plan) {
-                if (($plan['slug'] ?? null) === $slug) {
-                    $plan['category'] = $category;
-
-                    return $plan;
-                }
-            }
-        }
-
-        return null;
     }
 }

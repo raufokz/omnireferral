@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\LeadManagementController as AdminLeadManagementCo
 use App\Http\Controllers\Admin\PlatformSearchController;
 use App\Http\Controllers\Admin\PropertyManagementController as AdminPropertyManagementController;
 use App\Http\Controllers\Admin\PackageController as AdminPackageController;
+use App\Http\Controllers\Admin\PricingPlanController as AdminPricingPlanController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\DataExportController;
 use App\Http\Controllers\Admin\UserManagementController;
@@ -295,6 +296,17 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
                 'edit' => 'admin.packages.edit',
                 'update' => 'admin.packages.update',
                 'destroy' => 'admin.packages.destroy',
+            ]);
+
+        Route::resource('admin/pricing-plans', AdminPricingPlanController::class)
+            ->except(['show'])
+            ->names([
+                'index' => 'admin.pricing-plans.index',
+                'create' => 'admin.pricing-plans.create',
+                'store' => 'admin.pricing-plans.store',
+                'edit' => 'admin.pricing-plans.edit',
+                'update' => 'admin.pricing-plans.update',
+                'destroy' => 'admin.pricing-plans.destroy',
             ]);
 
         Route::get('admin/webhook-events', [AdminWebhookEventController::class, 'index'])->name('admin.webhook-events.index');

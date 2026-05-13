@@ -105,6 +105,7 @@
                     'children' => [
                         ['label' => 'Blog', 'route' => route('admin.blog.index'), 'active' => ['admin.blog.*'], 'icon' => 'content'],
                         ['label' => 'Testimonials', 'route' => route('admin.testimonials.index'), 'active' => ['admin.testimonials.*'], 'icon' => 'saved'],
+                        ['label' => 'Pricing Plans', 'route' => route('admin.pricing-plans.index'), 'active' => ['admin.pricing-plans.*'], 'icon' => 'marketplace'],
                     ],
                 ],
                 ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show'], 'icon' => 'marketplace'],
