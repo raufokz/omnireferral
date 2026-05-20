@@ -16,6 +16,9 @@
         ['id' => 'arbitration', 'label' => 'Dispute Resolution'],
         ['id' => 'contact', 'label' => 'Contact'],
     ];
+    $company = config('omnireferral.company');
+    $supportEmail = $company['support_email'];
+    $supportPhoneDisplay = trim((string) ($company['support_phone_display'] ?? ''));
 @endphp
 
 <section class="page-hero page-hero--omni legal-page-hero">
@@ -38,11 +41,11 @@
             <div class="legal-page-hero__summary">
                 <div>
                     <span>Support email</span>
-                    <strong><a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a></strong>
+                    <strong><a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a></strong>
                 </div>
                 <div>
                     <span>SMS help</span>
-                    <strong>Text HELP to +1 (786) 633-1912</strong>
+                    <strong>{{ $supportPhoneDisplay ? 'Text HELP to '.$supportPhoneDisplay : 'Use the contact form for SMS help' }}</strong>
                 </div>
             </div>
         </div>
@@ -120,7 +123,7 @@
                     <li>Message frequency varies based on your activity, engagement, and the nature of the service requested.</li>
                     <li>OmniReferral does not separately charge for text alerts, but your carrier's message and data rates may apply.</li>
                     <li>Anyone with access to your device or carrier account may be able to view messages containing limited personal information.</li>
-                    <li>For support, text <strong>HELP</strong> to <strong>+1 (786) 633-1912</strong>.</li>
+                    <li>For support, text <strong>HELP</strong>@if ($supportPhoneDisplay) to <strong>{{ $supportPhoneDisplay }}</strong>@else or use the contact form@endif.</li>
                     <li>To opt out at any time, reply <strong>STOP</strong> to a message from OmniReferral. You may receive a final confirmation text after opting out.</li>
                 </ul>
             </article>
@@ -210,11 +213,11 @@
                 <div class="legal-contact-grid">
                     <div>
                         <span>Email</span>
-                        <strong><a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a></strong>
+                        <strong><a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a></strong>
                     </div>
                     <div>
                         <span>SMS Help</span>
-                        <strong>+1 (786) 633-1912</strong>
+                        <strong>{{ $supportPhoneDisplay ?: 'Open contact form' }}</strong>
                     </div>
                     <div>
                         <span>Contact page</span>

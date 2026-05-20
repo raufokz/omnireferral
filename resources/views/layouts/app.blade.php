@@ -22,18 +22,39 @@
         <link rel="stylesheet" href="{{ asset('css/auth-custom.css') }}">
     @endif
     @php
+        $company = config('omnireferral.company');
+        $socialLinks = array_values(array_filter($company['social_links'] ?? []));
+        $companyAddress = array_filter($company['hq_address'] ?? []);
+
         $organizationSchema = [
             '@context' => 'https://schema.org',
             '@type' => 'Organization',
             'name' => 'OmniReferral',
             'url' => url('/'),
             'logo' => asset('images/logo.png'),
-            'sameAs' => [
-                'https://facebook.com/omnireferral',
-                'https://twitter.com/omnireferral',
-                'https://linkedin.com/company/omnireferral',
-            ],
+            'sameAs' => $socialLinks,
         ];
+
+        if (! empty($company['support_email']) || ! empty($company['support_phone_e164'])) {
+            $organizationSchema['contactPoint'] = array_filter([
+                '@type' => 'ContactPoint',
+                'contactType' => 'customer support',
+                'email' => $company['support_email'] ?? null,
+                'telephone' => $company['support_phone_e164'] ?? null,
+                'areaServed' => 'US',
+                'availableLanguage' => 'English',
+            ]);
+        }
+
+        if (! empty($companyAddress)) {
+            $organizationSchema['address'] = array_filter([
+                '@type' => 'PostalAddress',
+                'addressLocality' => $companyAddress['locality'] ?? null,
+                'addressRegion' => $companyAddress['region'] ?? null,
+                'postalCode' => $companyAddress['postal_code'] ?? null,
+                'addressCountry' => $companyAddress['country'] ?? null,
+            ]);
+        }
     @endphp
     <script type="application/ld+json">{!! json_encode($organizationSchema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 </head>

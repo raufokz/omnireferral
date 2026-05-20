@@ -14,6 +14,18 @@
     $officeHours = $c['office_hours'];
     $hqLabel = $c['hq_location_label'];
     $mapsQuery = $c['maps_embed_query'];
+    $socialLabels = [
+        'facebook' => 'Facebook',
+        'instagram' => 'Instagram',
+        'pinterest' => 'Pinterest',
+    ];
+    $socialLinks = collect($c['social_links'] ?? [])
+        ->filter()
+        ->map(fn ($url, $platform) => [
+            'label' => $socialLabels[$platform] ?? ucfirst((string) $platform),
+            'url' => $url,
+        ])
+        ->values();
 @endphp
 
 <section class="page-hero agent-directory-hero contact-page-hero">
@@ -209,6 +221,23 @@
                             <span class="contact-side-item__note">Campaign coordination for agent packages, partnerships, and nationwide lead support.</span>
                         </span>
                     </div>
+
+                    @if ($socialLinks->isNotEmpty())
+                        <div class="contact-side-item contact-side-item--static contact-side-item--social">
+                            <span class="contact-side-item__icon contact-side-item__icon--blue" aria-hidden="true">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98"/><path d="M15.41 6.51L8.59 10.49"/></svg>
+                            </span>
+                            <span class="contact-side-item__body">
+                                <span class="contact-side-item__label">Social profiles</span>
+                                <span class="contact-side-item__value">Follow OmniReferral</span>
+                                <span class="contact-social-links">
+                                    @foreach ($socialLinks as $socialLink)
+                                        <a href="{{ $socialLink['url'] }}" target="_blank" rel="noopener noreferrer">{{ $socialLink['label'] }}</a>
+                                    @endforeach
+                                </span>
+                            </span>
+                        </div>
+                    @endif
                 </div>
             </aside>
 
@@ -229,7 +258,7 @@
             <div class="contact-location-card">
                 <div class="contact-location-card__header">
                     <span class="eyebrow">Coverage</span>
-                    <h3>Built in New York, supporting agent campaigns across U.S. markets.</h3>
+                    <h3>Based in {{ $hqLabel }}, supporting agent campaigns across U.S. markets.</h3>
                 </div>
 
                 <iframe

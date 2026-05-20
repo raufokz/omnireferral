@@ -13,10 +13,21 @@ return [
     ],
     'company' => [
         'support_email' => env('OMNI_SUPPORT_EMAIL', 'hello@omnireferrals.com'),
-        'support_phone_e164' => env('OMNI_SUPPORT_PHONE_E164'),
-        'support_phone_display' => env('OMNI_SUPPORT_PHONE_DISPLAY'),
-        'hq_location_label' => env('OMNI_HQ_LOCATION_LABEL', 'New York, NY'),
-        'maps_embed_query' => env('OMNI_MAPS_EMBED_QUERY', 'New York, NY'),
+        'support_phone_e164' => env('OMNI_SUPPORT_PHONE_E164', '+17373273981'),
+        'support_phone_display' => env('OMNI_SUPPORT_PHONE_DISPLAY', '+1 737-327-3981'),
+        'hq_location_label' => env('OMNI_HQ_LOCATION_LABEL', 'Ann Arbor, Michigan 48461'),
+        'maps_embed_query' => env('OMNI_MAPS_EMBED_QUERY', 'Ann Arbor, Michigan 48461'),
         'office_hours' => env('OMNI_OFFICE_HOURS', 'Mon-Fri, 9am-6pm ET'),
+        'hq_address' => [
+            'locality' => env('OMNI_HQ_ADDRESS_LOCALITY', 'Ann Arbor'),
+            'region' => env('OMNI_HQ_ADDRESS_REGION', 'MI'),
+            'postal_code' => env('OMNI_HQ_ADDRESS_POSTAL_CODE', '48461'),
+            'country' => env('OMNI_HQ_ADDRESS_COUNTRY', 'US'),
+        ],
+        'social_links' => [
+            'facebook' => env('OMNI_FACEBOOK_URL', 'https://www.facebook.com/profile.php?id=61589808382458'),
+            'instagram' => env('OMNI_INSTAGRAM_URL', 'https://www.instagram.com/omni.referral/'),
+            'pinterest' => env('OMNI_PINTEREST_URL', 'https://www.pinterest.com/omnireferral/'),
+        ],
     ],
 ];

@@ -334,6 +334,34 @@
     color: var(--color-text-secondary);
 }
 
+.contact-social-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.35rem;
+}
+
+.contact-social-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2rem;
+    padding: 0.35rem 0.65rem;
+    border: 1px solid rgba(11, 54, 104, 0.12);
+    border-radius: 999px;
+    background: rgba(11, 54, 104, 0.05);
+    color: var(--color-secondary);
+    font-size: 0.8rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.contact-social-links a:hover {
+    border-color: rgba(255, 107, 0, 0.28);
+    background: rgba(255, 107, 0, 0.1);
+    color: var(--color-primary);
+}
+
 .contact-side-item:hover .contact-side-item__value {
     color: var(--color-primary);
 }

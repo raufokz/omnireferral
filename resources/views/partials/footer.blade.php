@@ -1,3 +1,23 @@
+@php
+    $footerCompany = config('omnireferral.company');
+    $footerSupportEmail = $footerCompany['support_email'] ?? null;
+    $footerPhoneE164 = trim((string) ($footerCompany['support_phone_e164'] ?? ''));
+    $footerPhoneDisplay = trim((string) ($footerCompany['support_phone_display'] ?? ''));
+    $footerLocation = $footerCompany['hq_location_label'] ?? null;
+    $footerSocialLabels = [
+        'facebook' => 'Facebook',
+        'instagram' => 'Instagram',
+        'pinterest' => 'Pinterest',
+    ];
+    $footerSocialLinks = collect($footerCompany['social_links'] ?? [])
+        ->filter()
+        ->map(fn ($url, $platform) => [
+            'label' => $footerSocialLabels[$platform] ?? ucfirst((string) $platform),
+            'url' => $url,
+        ])
+        ->values();
+@endphp
+
 <footer class="site-footer">
     <div class="footer-trust-strip">
         <div class="container footer-trust-grid">
@@ -33,6 +53,25 @@
     </div>
 
     <div class="container footer-grid">
+        <div class="footer-contact">
+            <h3>Contact</h3>
+            @if ($footerSupportEmail)
+                <a href="mailto:{{ $footerSupportEmail }}">{{ $footerSupportEmail }}</a>
+            @endif
+            @if ($footerPhoneE164 && $footerPhoneDisplay)
+                <a href="tel:{{ $footerPhoneE164 }}">{{ $footerPhoneDisplay }}</a>
+            @endif
+            @if ($footerLocation)
+                <span>{{ $footerLocation }}</span>
+            @endif
+            @if ($footerSocialLinks->isNotEmpty())
+                <div class="footer-social" aria-label="OmniReferral social profiles">
+                    @foreach ($footerSocialLinks as $socialLink)
+                        <a href="{{ $socialLink['url'] }}" target="_blank" rel="noopener noreferrer">{{ $socialLink['label'] }}</a>
+                    @endforeach
+                </div>
+            @endif
+        </div>
         <div>
             <h3>Platform</h3>
             <a href="{{ route('about') }}">About Us</a>

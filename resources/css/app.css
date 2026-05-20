@@ -20656,3 +20656,36 @@ iframe {
         grid-template-columns: 1fr;
     }
 }
+
+/* Public business contact details in the footer. */
+.footer-grid {
+    grid-template-columns: minmax(180px, 1.25fr) repeat(4, minmax(0, 1fr));
+}
+
+.footer-contact {
+    display: grid;
+    align-content: start;
+    gap: 0.35rem;
+}
+
+.footer-contact a,
+.footer-contact span {
+    color: rgba(255, 255, 255, 0.82);
+    font-size: var(--font-size-sm);
+    line-height: 1.55;
+}
+
+.footer-contact .footer-social {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.65rem;
+}
+
+.footer-contact .footer-social a {
+    width: auto;
+    min-height: 38px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 800;
+    line-height: 1;
+}
