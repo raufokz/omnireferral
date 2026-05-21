@@ -49,6 +49,7 @@
         if (! empty($companyAddress)) {
             $organizationSchema['address'] = array_filter([
                 '@type' => 'PostalAddress',
+                'streetAddress' => $companyAddress['street_address'] ?? null,
                 'addressLocality' => $companyAddress['locality'] ?? null,
                 'addressRegion' => $companyAddress['region'] ?? null,
                 'postalCode' => $companyAddress['postal_code'] ?? null,
