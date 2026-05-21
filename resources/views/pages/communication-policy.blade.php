@@ -19,6 +19,12 @@
     $company = config('omnireferral.company');
     $supportEmail = $company['support_email'];
     $supportPhoneDisplay = trim((string) ($company['support_phone_display'] ?? ''));
+    $smsHelpSummary = $supportPhoneDisplay
+        ? 'Text HELP to '.$supportPhoneDisplay
+        : 'Use the contact form for SMS help';
+    $smsHelpLine = $supportPhoneDisplay
+        ? 'For support, text HELP to '.$supportPhoneDisplay.'.'
+        : 'For support, text HELP or use the contact form.';
 @endphp
 
 <section class="page-hero page-hero--omni legal-page-hero">
@@ -45,7 +51,7 @@
                 </div>
                 <div>
                     <span>SMS help</span>
-                    <strong>{{ $supportPhoneDisplay ? 'Text HELP to '.$supportPhoneDisplay : 'Use the contact form for SMS help' }}</strong>
+                    <strong>{{ $smsHelpSummary }}</strong>
                 </div>
             </div>
         </div>
@@ -123,7 +129,7 @@
                     <li>Message frequency varies based on your activity, engagement, and the nature of the service requested.</li>
                     <li>OmniReferral does not separately charge for text alerts, but your carrier's message and data rates may apply.</li>
                     <li>Anyone with access to your device or carrier account may be able to view messages containing limited personal information.</li>
-                    <li>For support, text <strong>HELP</strong>@if ($supportPhoneDisplay) to <strong>{{ $supportPhoneDisplay }}</strong>@else or use the contact form@endif.</li>
+                    <li>{{ $smsHelpLine }}</li>
                     <li>To opt out at any time, reply <strong>STOP</strong> to a message from OmniReferral. You may receive a final confirmation text after opting out.</li>
                 </ul>
             </article>
