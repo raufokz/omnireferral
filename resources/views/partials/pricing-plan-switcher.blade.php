@@ -12,7 +12,7 @@
     <button type="button" class="toggle" aria-label="Toggle pricing category">
         <span class="toggle-thumb is-active"></span>
     </button>
-    <span data-category="virtual_assistance">Virtual Assistance</span>
+    <span data-category="virtual_assistance">VA Services</span>
 </div>
 
 <div class="{{ $gridClass }}" data-pricing-grid="{{ $toggleGroup }}" data-category="real_estate" data-stagger>
@@ -57,17 +57,21 @@
 <div class="{{ $gridClass }}" data-pricing-grid="{{ $toggleGroup }}" data-category="virtual_assistance" style="display:none;" data-stagger>
     @foreach(($pricingPlans['virtual_assistance'] ?? []) as $plan)
         @php
-            $ctaUrl = $plan['cta_url'] ?? route('contact', ['plan' => $plan['name']]);
+            $ctaUrl = ($plan['slug'] ?? null) ? route('packages.checkout', $plan['slug']) : ($plan['cta_url'] ?? route('contact', ['plan' => $plan['name']]));
             $isFeatured = $plan['is_featured'] ?? false;
+            $isFlexible = ($plan['slug'] ?? '') === 'individual-va';
             $features = $plan['features'] ?? [];
             $visibleFeatures = $featureLimit ? array_slice($features, 0, $featureLimit) : $features;
         @endphp
-        <article class="{{ $cardClass }} {{ $isFeatured ? 'pricing-card--featured' : '' }}">
+        <article class="{{ $cardClass }} {{ $isFeatured ? 'pricing-card--featured' : '' }}" style="position:relative;">
+            @if($isFeatured)
+                <div class="pricing-card__ribbon" aria-hidden="true">VA SUPPORT</div>
+            @endif
             <div class="homepage-pricing-card__header">
                 <div class="homepage-pricing-card__eyebrow-row">
                     <span class="pricing-label">{{ $plan['tier'] }}</span>
                     @if($isFeatured)
-                        <div class="pricing-badge-popular">Top Pick</div>
+                        <div class="pricing-badge-popular">MOST POPULAR</div>
                     @endif
                 </div>
                 <h3>{{ $plan['name'] }}</h3>
@@ -77,6 +81,9 @@
                 <strong>${{ number_format($plan['price']) }}</strong>
                 <span>{{ $plan['price_note'] }}</span>
             </div>
+            @if($isFlexible)
+                <div class="pricing-card__highlight-label" aria-label="Commitment note">No Long-Term Commitment</div>
+            @endif
             <ul class="feature-check-list homepage-pricing-card__features">
                 @foreach($visibleFeatures as $feature)
                     <li>{{ $feature }}</li>
