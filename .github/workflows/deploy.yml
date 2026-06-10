@@ -9,10 +9,14 @@ env:
   APP_DIR: /home/u867057961/omnireferral
   DOMAIN_DIR: /home/u867057961/domains/omnireferrals.com
   DOMAIN_PUBLIC: /home/u867057961/domains/omnireferrals.com/public_html
+  COMPOSER_PROCESS_TIMEOUT: 0
+  COMPOSER_NO_INTERACTION: 1
+  COMPOSER_NO_AUDIT: 1
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -41,42 +45,54 @@ jobs:
           rm -rf node_modules
 
       - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          printf "%s\n" "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -T 20 -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
         env:
           SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          set -e
+          mkdir -p ~/.ssh
+          printf "%s\n" "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -T 20 -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          ls -la ~/.ssh
 
       - name: Test SSH
-        run: |
-          ssh -i ~/.ssh/id_rsa -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "echo Connected successfully"
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          ssh -i ~/.ssh/id_rsa \
+            -o StrictHostKeyChecking=no \
+            -o ConnectTimeout=30 \
+            -o BatchMode=yes \
+            -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "echo Connected successfully"
 
       - name: Ensure target directories exist
-        run: |
-          ssh -i ~/.ssh/id_rsa -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
-            mkdir -p '${APP_DIR}' &&
-            mkdir -p '${APP_DIR}/storage/app/public' &&
-            mkdir -p '${APP_DIR}/storage/framework/cache' &&
-            mkdir -p '${APP_DIR}/storage/framework/sessions' &&
-            mkdir -p '${APP_DIR}/storage/framework/views' &&
-            mkdir -p '${APP_DIR}/storage/logs' &&
-            mkdir -p '${APP_DIR}/bootstrap/cache' &&
-            mkdir -p '${DOMAIN_DIR}'
-          "
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          ssh -i ~/.ssh/id_rsa \
+            -o StrictHostKeyChecking=no \
+            -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
+              mkdir -p '${APP_DIR}' &&
+              mkdir -p '${APP_DIR}/storage/app/public' &&
+              mkdir -p '${APP_DIR}/storage/framework/cache' &&
+              mkdir -p '${APP_DIR}/storage/framework/sessions' &&
+              mkdir -p '${APP_DIR}/storage/framework/views' &&
+              mkdir -p '${APP_DIR}/storage/logs' &&
+              mkdir -p '${APP_DIR}/bootstrap/cache' &&
+              mkdir -p '${DOMAIN_DIR}'
+            "
 
       - name: Deploy via Rsync
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
           rsync -avz --delete \
             --exclude ".git" \
@@ -88,59 +104,57 @@ jobs:
             --exclude "*.log" \
             -e "ssh -i ~/.ssh/id_rsa -p $SSH_PORT -o StrictHostKeyChecking=no" \
             ./ "$SSH_USER@$SSH_HOST:${APP_DIR}/"
-        env:
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
 
       - name: Post-deploy commands
-        run: |
-          ssh -i ~/.ssh/id_rsa -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" << EOF
-            set -e
-
-            APP_DIR="${APP_DIR}"
-            DOMAIN_DIR="${DOMAIN_DIR}"
-            DOMAIN_PUBLIC="${DOMAIN_PUBLIC}"
-
-            cd "\$APP_DIR"
-
-            mkdir -p storage/app/public
-            mkdir -p storage/framework/cache
-            mkdir -p storage/framework/sessions
-            mkdir -p storage/framework/views
-            mkdir -p storage/logs
-            mkdir -p bootstrap/cache
-
-            if [ ! -f ".env" ]; then
-              echo "ERROR: .env file is missing on server."
-              echo "Please create it here: \$APP_DIR/.env"
-              exit 1
-            fi
-
-            rm -rf public/storage
-            ln -s "\$APP_DIR/storage/app/public" "\$APP_DIR/public/storage" || true
-
-            mkdir -p "\$DOMAIN_DIR"
-
-            if [ -d "\$DOMAIN_PUBLIC" ] && [ ! -L "\$DOMAIN_PUBLIC" ]; then
-              mv "\$DOMAIN_PUBLIC" "\$DOMAIN_PUBLIC.backup.\$(date +%s)"
-            fi
-
-            ln -sfn "\$APP_DIR/public" "\$DOMAIN_PUBLIC"
-
-            find . -type f -exec chmod 644 {} \;
-            find . -type d -exec chmod 755 {} \;
-            chmod -R 775 storage bootstrap/cache
-
-            php artisan optimize:clear
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-            php artisan migrate --force
-
-            echo "Deployment finished successfully for omnireferrals.com"
-          EOF
         env:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          ssh -i ~/.ssh/id_rsa \
+            -o StrictHostKeyChecking=no \
+            -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" << EOF
+              set -e
+
+              APP_DIR="${APP_DIR}"
+              DOMAIN_DIR="${DOMAIN_DIR}"
+              DOMAIN_PUBLIC="${DOMAIN_PUBLIC}"
+
+              cd "\$APP_DIR"
+
+              mkdir -p storage/app/public
+              mkdir -p storage/framework/cache
+              mkdir -p storage/framework/sessions
+              mkdir -p storage/framework/views
+              mkdir -p storage/logs
+              mkdir -p bootstrap/cache
+
+              if [ ! -f ".env" ]; then
+                echo "ERROR: .env file is missing on server."
+                echo "Please create it here: \$APP_DIR/.env"
+                exit 1
+              fi
+
+              rm -rf public/storage
+              ln -s "\$APP_DIR/storage/app/public" "\$APP_DIR/public/storage" || true
+
+              mkdir -p "\$DOMAIN_DIR"
+
+              if [ -d "\$DOMAIN_PUBLIC" ] && [ ! -L "\$DOMAIN_PUBLIC" ]; then
+                mv "\$DOMAIN_PUBLIC" "\$DOMAIN_PUBLIC.backup.\$(date +%s)"
+              fi
+
+              ln -sfn "\$APP_DIR/public" "\$DOMAIN_PUBLIC"
+
+              find . -type f -exec chmod 644 {} \;
+              find . -type d -exec chmod 755 {} \;
+              chmod -R 775 storage bootstrap/cache
+
+              php artisan optimize:clear
+              php artisan config:cache
+              php artisan route:cache
+              php artisan view:cache
+              php artisan migrate --force
+
+              echo "Deployment finished successfully for omnireferrals.com"
+          EOF
