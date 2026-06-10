@@ -9,9 +9,6 @@ env:
   APP_DIR: /home/u867057961/omnireferral
   DOMAIN_DIR: /home/u867057961/domains/omnireferrals.com
   DOMAIN_PUBLIC: /home/u867057961/domains/omnireferrals.com/public_html
-  COMPOSER_PROCESS_TIMEOUT: 0
-  COMPOSER_NO_INTERACTION: 1
-  COMPOSER_NO_AUDIT: 1
 
 jobs:
   deploy:
@@ -25,15 +22,15 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: "8.2"
           extensions: mbstring, intl, gd, pdo_mysql, zip
           tools: composer:v2
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies and build
         run: |
@@ -50,12 +47,10 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
-          set -e
           mkdir -p ~/.ssh
           printf "%s\n" "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -T 20 -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-          ls -la ~/.ssh
 
       - name: Test SSH
         env:
@@ -65,7 +60,6 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_rsa \
             -o StrictHostKeyChecking=no \
-            -o ConnectTimeout=30 \
             -o BatchMode=yes \
             -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "echo Connected successfully"
 
@@ -75,18 +69,17 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
-          ssh -i ~/.ssh/id_rsa \
-            -o StrictHostKeyChecking=no \
-            -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
-              mkdir -p '${APP_DIR}' &&
-              mkdir -p '${APP_DIR}/storage/app/public' &&
-              mkdir -p '${APP_DIR}/storage/framework/cache' &&
-              mkdir -p '${APP_DIR}/storage/framework/sessions' &&
-              mkdir -p '${APP_DIR}/storage/framework/views' &&
-              mkdir -p '${APP_DIR}/storage/logs' &&
-              mkdir -p '${APP_DIR}/bootstrap/cache' &&
-              mkdir -p '${DOMAIN_DIR}'
-            "
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "
+            mkdir -p '${APP_DIR}' &&
+            mkdir -p '${DOMAIN_DIR}' &&
+            mkdir -p '${DOMAIN_PUBLIC}' &&
+            mkdir -p '${APP_DIR}/storage/app/public' &&
+            mkdir -p '${APP_DIR}/storage/framework/cache' &&
+            mkdir -p '${APP_DIR}/storage/framework/sessions' &&
+            mkdir -p '${APP_DIR}/storage/framework/views' &&
+            mkdir -p '${APP_DIR}/storage/logs' &&
+            mkdir -p '${APP_DIR}/bootstrap/cache'
+          "
 
       - name: Deploy via Rsync
         env:
@@ -111,50 +104,32 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
-          ssh -i ~/.ssh/id_rsa \
-            -o StrictHostKeyChecking=no \
-            -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" << EOF
-              set -e
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" << EOF
+            set -e
+            cd "${APP_DIR}"
 
-              APP_DIR="${APP_DIR}"
-              DOMAIN_DIR="${DOMAIN_DIR}"
-              DOMAIN_PUBLIC="${DOMAIN_PUBLIC}"
+            mkdir -p storage/app/public storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
 
-              cd "\$APP_DIR"
+            if [ ! -f ".env" ]; then
+              echo "ERROR: .env file missing at ${APP_DIR}/.env"
+              exit 1
+            fi
 
-              mkdir -p storage/app/public
-              mkdir -p storage/framework/cache
-              mkdir -p storage/framework/sessions
-              mkdir -p storage/framework/views
-              mkdir -p storage/logs
-              mkdir -p bootstrap/cache
+            rm -rf public/storage
+            ln -s "${APP_DIR}/storage/app/public" "${APP_DIR}/public/storage" || true
 
-              if [ ! -f ".env" ]; then
-                echo "ERROR: .env file is missing on server."
-                echo "Please create it here: \$APP_DIR/.env"
-                exit 1
-              fi
+            rm -rf "${DOMAIN_PUBLIC}"
+            ln -sfn "${APP_DIR}/public" "${DOMAIN_PUBLIC}"
 
-              rm -rf public/storage
-              ln -s "\$APP_DIR/storage/app/public" "\$APP_DIR/public/storage" || true
+            find . -type f -exec chmod 644 {} \;
+            find . -type d -exec chmod 755 {} \;
+            chmod -R 775 storage bootstrap/cache
 
-              mkdir -p "\$DOMAIN_DIR"
+            php artisan optimize:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan migrate --force
 
-              if [ -d "\$DOMAIN_PUBLIC" ] && [ ! -L "\$DOMAIN_PUBLIC" ]; then
-                mv "\$DOMAIN_PUBLIC" "\$DOMAIN_PUBLIC.backup.\$(date +%s)"
-              fi
-
-              ln -sfn "\$APP_DIR/public" "\$DOMAIN_PUBLIC"
-
-              find . -type f -exec chmod 644 {} \;
-              find . -type d -exec chmod 755 {} \;
-              chmod -R 775 storage bootstrap/cache
-
-              php artisan optimize:clear
-              php artisan config:cache
-              php artisan route:cache
-              php artisan view:cache
-              php artisan migrate --force
-
-              echo "Deployment finished successfully for omnireferrals.com"
+            echo "Deployment finished successfully for omnireferrals.com"
           EOF
