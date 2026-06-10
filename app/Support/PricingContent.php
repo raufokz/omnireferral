@@ -47,7 +47,7 @@ class PricingContent
 
             $grouped = [];
             foreach ($plans as $plan) {
-                $grouped[$plan->category][] = [
+                $grouped[$plan->category][] = self::enrichPlan([
                     'slug' => $plan->slug,
                     'name' => $plan->name,
                     'tier' => $plan->tier,
@@ -59,7 +59,7 @@ class PricingContent
                     'cta_label' => $plan->cta_label ?? 'Get Started',
                     'cta_url' => $plan->cta_url,
                     'is_featured' => $plan->is_featured,
-                ];
+                ]);
             }
 
             return $grouped;
@@ -71,7 +71,7 @@ class PricingContent
     private static function fallbackPlans(): array
     {
         return [
-            'real_estate' => [
+            'real_estate' => array_map([self::class, 'enrichPlan'], [
                 [
                     'slug' => 'quick-leads',
                     'name' => 'Starter',
@@ -150,8 +150,8 @@ class PricingContent
                     'cta_label' => 'Get Started',
                     'is_featured' => false,
                 ],
-            ],
-            'virtual_assistance' => [
+            ]),
+            'virtual_assistance' => array_map([self::class, 'enrichPlan'], [
                 [
                     'slug' => 'cold-calling-isa',
                     'name' => 'Cold Calling / ISA',
@@ -219,6 +219,133 @@ class PricingContent
                     'cta_url' => null,
                     'is_featured' => false,
                 ],
+            ]),
+        ];
+    }
+
+    private static function enrichPlan(array $plan): array
+    {
+        $slug = (string) ($plan['slug'] ?? '');
+        $enhancement = self::planEnhancements()[$slug] ?? null;
+
+        if (! $enhancement) {
+            return $plan;
+        }
+
+        return array_merge($plan, $enhancement);
+    }
+
+    private static function planEnhancements(): array
+    {
+        return [
+            'cold-calling-isa' => [
+                'summary' => 'Put a dedicated ISA on your outbound pipeline without recruiting, training, or managing another in-house hire.',
+                'highlights' => [
+                    'Dedicated caller capacity',
+                    'Territory-focused prospecting',
+                    'CRM-ready handoff',
+                ],
+                'best_for' => 'Agents and teams that need consistent outbound conversations in up to 5 target markets.',
+                'what_you_get' => 'A managed outbound lane that sources contact data, configures calling tools, keeps follow-up moving, and reports weekly performance signals.',
+                'feature_groups' => [
+                    [
+                        'title' => 'Prospecting setup',
+                        'items' => [
+                            'Data Scraping & Skip Tracing',
+                            'Up to 5 Cities / Zip Codes',
+                            'Daily Scheduling + VoIP Config',
+                        ],
+                    ],
+                    [
+                        'title' => 'Follow-up engine',
+                        'items' => [
+                            'CRM Setup + KPI Automation',
+                            'Email, Text & VoiceFlow Follow-ups',
+                            'Weekly Performance Reports',
+                        ],
+                    ],
+                    [
+                        'title' => 'Growth support',
+                        'items' => [
+                            'Key Area Territory Manager',
+                            'Social Media Management',
+                        ],
+                    ],
+                ],
+                'trust_note' => 'Built for teams that want more qualified conversations before spending time on appointments.',
+            ],
+            'social-media-mgmt' => [
+                'summary' => 'Turn your real estate brand into a daily content engine across video, engagement, ads, and local visibility.',
+                'highlights' => [
+                    'Daily content rhythm',
+                    'Cross-channel coverage',
+                    'Review cadence included',
+                ],
+                'best_for' => 'Agents who need consistent social presence, campaign execution, and lead-focused brand support.',
+                'what_you_get' => 'A social operations package that plans, produces, publishes, engages, and reviews your content so your brand stays visible between client conversations.',
+                'feature_groups' => [
+                    [
+                        'title' => 'Content production',
+                        'items' => [
+                            'IG, FB, LinkedIn + TikTok',
+                            'Dedicated Social Media Strategy',
+                            'Stories, Highlights + Reels',
+                        ],
+                    ],
+                    [
+                        'title' => 'Audience growth',
+                        'items' => [
+                            'Audience Engagement Management',
+                            'Custom Ads Creation + Management',
+                            'Monthly + Quarterly Review',
+                        ],
+                    ],
+                    [
+                        'title' => 'Brand and lead support',
+                        'items' => [
+                            'AI Branding & Lead Body Content',
+                            'Brand Development + Web SEO',
+                            'ISA Cold Calling Support',
+                        ],
+                    ],
+                ],
+                'trust_note' => 'Designed to keep your channels active, credible, and aligned with the way real estate clients research agents.',
+            ],
+            'individual-va' => [
+                'summary' => 'Flexible VA capacity for admin, CRM, design, data, and automation tasks without a long-term commitment.',
+                'highlights' => [
+                    'Hourly flexibility',
+                    'Task-based delegation',
+                    'Priority support',
+                ],
+                'best_for' => 'Solo agents, lean teams, and operators who need skilled help on demand instead of another fixed seat.',
+                'what_you_get' => 'A flexible assistant lane for recurring admin work, one-off projects, CRM cleanup, creative tasks, and workflow support as your workload changes.',
+                'feature_groups' => [
+                    [
+                        'title' => 'Admin support',
+                        'items' => [
+                            'Needs Assessment + Onboarding',
+                            '24/7 Discord Priority Support',
+                            'Appointment Setting + Calendar',
+                            'CRM Support + Email Management',
+                        ],
+                    ],
+                    [
+                        'title' => 'Web and creative help',
+                        'items' => [
+                            'WordPress / Shopify + SEO & AEO',
+                            'Graphic Design + Logo Creation',
+                        ],
+                    ],
+                    [
+                        'title' => 'Data and workflows',
+                        'items' => [
+                            'Data Entry + Lead Generation',
+                            'Automations, Workflows + Templates',
+                        ],
+                    ],
+                ],
+                'trust_note' => 'A clean way to add capacity when the work is real, but the need is not always full time.',
             ],
         ];
     }

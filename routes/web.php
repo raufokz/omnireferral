@@ -68,9 +68,9 @@ Route::get('/sitemap.xml', function () {
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/pricing', [PricingController::class, 'index'])->name('pricing');
-Route::get('/packages/{package:slug}/checkout', [PricingController::class, 'checkout'])->name('packages.checkout');
-Route::post('/packages/{package:slug}/stripe-checkout', [PricingController::class, 'startCheckout'])->name('packages.checkout.start');
-Route::get('/packages/{package:slug}/success', [PricingController::class, 'success'])->name('packages.success');
+Route::get('/packages/{packageSlug}/checkout', [PricingController::class, 'checkout'])->name('packages.checkout');
+Route::post('/packages/{packageSlug}/stripe-checkout', [PricingController::class, 'startCheckout'])->name('packages.checkout.start');
+Route::get('/packages/{packageSlug}/success', [PricingController::class, 'success'])->name('packages.success');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/faq', [HomeController::class, 'faq'])->name('faq');
 Route::get('/privacy-policy', [HomeController::class, 'privacy'])->name('privacy');

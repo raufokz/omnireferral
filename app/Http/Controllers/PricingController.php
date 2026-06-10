@@ -13,6 +13,7 @@ use App\Support\PricingContent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class PricingController extends Controller
@@ -64,8 +65,9 @@ class PricingController extends Controller
         ]);
     }
 
-    public function checkout(Package $package): View
+    public function checkout(string $packageSlug): View
     {
+        $package = $this->checkoutPackage($packageSlug);
         $pricingPlan = PricingContent::planBySlug($package->slug);
         $packageEmbed = $this->packageEmbeds()[$package->slug] ?? null;
         $postPurchaseAction = $this->postPurchaseAction();
@@ -81,6 +83,11 @@ class PricingController extends Controller
             'cta_label' => $pricingPlan['cta_label'] ?? $package->cta_label,
             'cta_url' => $pricingPlan['cta_url'] ?? null,
             'is_featured' => $pricingPlan['is_featured'] ?? $package->is_featured,
+            'highlights' => $pricingPlan['highlights'] ?? [],
+            'best_for' => $pricingPlan['best_for'] ?? null,
+            'what_you_get' => $pricingPlan['what_you_get'] ?? null,
+            'feature_groups' => $pricingPlan['feature_groups'] ?? [],
+            'trust_note' => $pricingPlan['trust_note'] ?? null,
         ];
         $packageEmbed = [
             'title' => $packageEmbed['title'] ?? $packageDisplay['name'],
@@ -106,8 +113,9 @@ class PricingController extends Controller
         ]);
     }
 
-    public function startCheckout(Request $request, Package $package, StripeCheckoutService $checkoutService): RedirectResponse
+    public function startCheckout(Request $request, string $packageSlug, StripeCheckoutService $checkoutService): RedirectResponse
     {
+        $package = $this->checkoutPackage($packageSlug, persist: true);
         $validated = $request->validate([
             'billing' => ['nullable', 'in:auto,one_time,monthly'],
             'role' => ['nullable', 'in:buyer,seller,agent,admin,staff,guest'],
@@ -117,8 +125,8 @@ class PricingController extends Controller
             'billing' => $validated['billing'] ?? 'auto',
             'role' => $validated['role'] ?? (Auth::user()?->role ?? 'guest'),
             'customer_email' => Auth::user()?->email,
-            'success_url' => route('packages.success', $package) . '?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => route('packages.checkout', $package),
+            'success_url' => route('packages.success', $package->slug) . '?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => route('packages.checkout', $package->slug),
         ]);
 
         if (! $session?->url) {
@@ -128,8 +136,9 @@ class PricingController extends Controller
         return redirect()->away($session->url);
     }
 
-    public function success(Request $request, Package $package): View|RedirectResponse
+    public function success(Request $request, string $packageSlug): View|RedirectResponse
     {
+        $package = $this->checkoutPackage($packageSlug);
         $postPurchaseAction = $this->postPurchaseAction();
         $sessionId = $request->string('session_id')->value();
         $stripeSecret = (string) config('services.stripe.secret');
@@ -137,7 +146,7 @@ class PricingController extends Controller
         if ($stripeSecret !== '') {
             if ($sessionId === '') {
                 return redirect()
-                    ->route('packages.checkout', $package)
+                    ->route('packages.checkout', $package->slug)
                     ->with('error', 'Missing payment confirmation. Please complete checkout again from the pricing page.');
             }
 
@@ -146,7 +155,7 @@ class PricingController extends Controller
                 $session = $stripe->checkout->sessions->retrieve($sessionId);
             } catch (\Stripe\Exception\ApiErrorException) {
                 return redirect()
-                    ->route('packages.checkout', $package)
+                    ->route('packages.checkout', $package->slug)
                     ->with('error', 'We could not verify that payment session with Stripe. Please try again or contact support.');
             }
 
@@ -155,12 +164,19 @@ class PricingController extends Controller
 
             if (! $paid) {
                 return redirect()
-                    ->route('packages.checkout', $package)
+                    ->route('packages.checkout', $package->slug)
                     ->with('error', 'That checkout session is not marked as paid yet.');
             }
 
             $sessionPackageId = (int) ($session->metadata->package_id ?? 0);
-            if ($sessionPackageId !== (int) $package->id) {
+            $sessionPackageSlug = (string) ($session->metadata->package_slug ?? '');
+            if ($sessionPackageSlug !== '' && $sessionPackageSlug !== $package->slug) {
+                return redirect()
+                    ->route('pricing')
+                    ->with('error', 'The confirmed package does not match this success page.');
+            }
+
+            if ($sessionPackageId && $package->exists && $sessionPackageId !== (int) $package->id) {
                 return redirect()
                     ->route('pricing')
                     ->with('error', 'The confirmed package does not match this success page.');
@@ -212,6 +228,57 @@ class PricingController extends Controller
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/DAYWVBJkNiVLEfoW740d',
                 'description' => 'Individual VA onboarding form for flexible hourly virtual assistant support and task setup.',
             ],
+        ];
+    }
+
+    private function checkoutPackage(string $packageSlug, bool $persist = false): Package
+    {
+        $slug = Str::slug($packageSlug);
+        $package = Package::query()->where('slug', $slug)->first();
+
+        if ($package) {
+            return $package;
+        }
+
+        $pricingPlan = PricingContent::planBySlug($slug);
+        abort_unless($pricingPlan, 404);
+
+        $attributes = $this->packageAttributesFromPricingPlan($pricingPlan);
+
+        if ($persist) {
+            return Package::query()->create($attributes);
+        }
+
+        return new Package($attributes);
+    }
+
+    private function packageAttributesFromPricingPlan(array $pricingPlan): array
+    {
+        $slug = (string) ($pricingPlan['slug'] ?? '');
+        $price = max(0, (int) ($pricingPlan['price'] ?? 0));
+        $priceNote = strtolower((string) ($pricingPlan['price_note'] ?? ''));
+        $isMonthly = str_contains($priceNote, 'month');
+        $isHourly = str_contains($priceNote, 'hour');
+        $embed = $this->packageEmbeds()[$slug] ?? [];
+
+        return [
+            'name' => (string) ($pricingPlan['name'] ?? Str::headline($slug)),
+            'slug' => $slug,
+            'description' => (string) ($pricingPlan['summary'] ?? ''),
+            'category' => ($pricingPlan['category'] ?? null) === 'virtual_assistance' ? 'virtual_assistant' : 'lead',
+            'billing_type' => $isHourly ? 'hourly' : ($isMonthly ? 'monthly' : 'one_time'),
+            'is_featured' => (bool) ($pricingPlan['is_featured'] ?? false),
+            'is_active' => true,
+            'one_time_price' => $isMonthly || $isHourly ? null : $price,
+            'monthly_price' => $isMonthly || $isHourly ? $price : null,
+            'stripe_price_id' => null,
+            'stripe_product_id' => null,
+            'ghl_form_url' => $embed['src'] ?? null,
+            'ghl_pipeline_stage' => $slug,
+            'features' => array_values((array) ($pricingPlan['features'] ?? [])),
+            'cta_label' => (string) ($pricingPlan['cta_label'] ?? 'Get Started'),
+            'duration_days' => 30,
+            'sort_order' => (int) ($pricingPlan['sort_order'] ?? 100),
         ];
     }
 

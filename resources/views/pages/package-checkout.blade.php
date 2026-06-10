@@ -90,6 +90,13 @@
                     </div>
                     <h3 class="pricing-pkg-card__name">{{ $packageDisplay['name'] }}</h3>
                     <p class="pricing-pkg-card__tagline">{{ $packageDisplay['summary'] }}</p>
+                    @if(!empty($packageDisplay['highlights']))
+                        <div class="pricing-card__mini-points">
+                            @foreach($packageDisplay['highlights'] as $highlight)
+                                <span>{{ $highlight }}</span>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
 
                 <div class="pricing-pkg-card__price">
@@ -100,11 +107,37 @@
 
             {{-- Colored Bottom Section --}}
             <div class="pricing-pkg-card__bottom">
-                <ul class="feature-check-list pricing-pkg-card__features">
-                    @foreach($packageDisplay['features'] as $feature)
-                        <li>{{ $feature }}</li>
-                    @endforeach
-                </ul>
+                @if(!empty($packageDisplay['what_you_get']))
+                    <div class="pricing-card__value-block pricing-card__value-block--dark">
+                        <span>What you get</span>
+                        <p>{{ $packageDisplay['what_you_get'] }}</p>
+                    </div>
+                @endif
+
+                @if(!empty($packageDisplay['feature_groups']))
+                    <div class="pricing-card__feature-groups pricing-card__feature-groups--dark">
+                        @foreach($packageDisplay['feature_groups'] as $group)
+                            <div class="pricing-card__feature-group">
+                                <strong>{{ $group['title'] ?? 'Included support' }}</strong>
+                                <ul class="feature-check-list pricing-pkg-card__features pricing-card__group-list">
+                                    @foreach(($group['items'] ?? []) as $feature)
+                                        <li>{{ $feature }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <ul class="feature-check-list pricing-pkg-card__features">
+                        @foreach($packageDisplay['features'] as $feature)
+                            <li>{{ $feature }}</li>
+                        @endforeach
+                    </ul>
+                @endif
+
+                @if(!empty($packageDisplay['trust_note']))
+                    <p class="pricing-card__trust-note pricing-card__trust-note--dark">{{ $packageDisplay['trust_note'] }}</p>
+                @endif
 
                 <div class="pricing-pkg-card__actions">
                     <a href="{{ route('contact', ['plan' => $packageDisplay['name']]) }}" class="ppc-form-link">
@@ -134,7 +167,7 @@
                                     <p>${{ number_format($option['amount']) }} {{ $option['key'] === 'monthly' ? 'per month' : 'one-time' }}</p>
                                     <small>{{ $option['note'] }}</small>
                                 </div>
-                                <form method="POST" action="{{ route('packages.checkout.start', $package) }}">
+                                <form method="POST" action="{{ route('packages.checkout.start', ['packageSlug' => $packageDisplay['slug']]) }}">
                                     @csrf
                                     <input type="hidden" name="billing" value="{{ $option['key'] }}">
                                     <button type="submit" class="button {{ $option['button'] }}">{{ $option['label'] }}</button>

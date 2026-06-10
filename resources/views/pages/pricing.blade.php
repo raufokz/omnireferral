@@ -89,6 +89,7 @@
             'toggleGroup' => 'pricing-page',
             'leadActionUrl' => $primaryActionUrl,
             'featureLimit' => null,
+            'showPackageDetails' => true,
         ])
     </div>
 </section>

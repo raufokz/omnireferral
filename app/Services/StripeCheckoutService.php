@@ -67,7 +67,7 @@ class StripeCheckoutService
             'customer' => $user?->stripe_customer_id ?: null,
             'customer_email' => $user && ! $user->stripe_customer_id ? $user->email : Arr::get($options, 'customer_email'),
             'metadata' => [
-                'package_id' => (string) $package->id,
+                'package_id' => $package->exists ? (string) $package->id : '',
                 'package_slug' => $package->slug,
                 'billing' => $billing,
                 'user_id' => (string) ($user?->id ?? 0),
