@@ -70,9 +70,16 @@ Route::get('/sitemap.xml', function () {
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/pricing', [PricingController::class, 'index'])->name('pricing');
-Route::get('/packages/{package:slug}/checkout', [PricingController::class, 'checkout'])->name('packages.checkout');
-Route::post('/packages/{package:slug}/stripe-checkout', [PricingController::class, 'startCheckout'])->name('packages.checkout.start');
-Route::get('/packages/{package:slug}/success', [PricingController::class, 'success'])->name('packages.success');
+
+/**
+ * Legacy pricing detail URLs now land directly on the GoHighLevel checkout pages.
+ */
+Route::redirect('/pricing/quick-lead', '/packages/quick-leads/checkout', 301)->name('pricing.quick-lead');
+Route::redirect('/pricing/power-lead', '/packages/power-leads/checkout', 301)->name('pricing.power-lead');
+Route::redirect('/pricing/prime-lead', '/packages/prime-leads/checkout', 301)->name('pricing.prime-lead');
+
+Route::get('/packages/{packageSlug}/checkout', [PricingController::class, 'checkout'])->name('packages.checkout');
+Route::get('/packages/{packageSlug}/success', [PricingController::class, 'success'])->name('packages.success');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/faq', [HomeController::class, 'faq'])->name('faq');
 Route::get('/privacy-policy', [HomeController::class, 'privacy'])->name('privacy');

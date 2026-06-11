@@ -642,7 +642,7 @@ No confusion. No delays. Just momentum.</p>
                             @foreach($row->concat($row) as $logo)
                                 <div class="homepage-partner-chip">
                                     <img src="{{ asset($logo['path']) }}" alt="{{ $logo['name'] }} logo" loading="lazy">
-                                    <span>{{ $logo['name'] }}</span>
+
                                 </div>
                             @endforeach
                         </div>

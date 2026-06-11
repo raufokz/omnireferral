@@ -5937,31 +5937,44 @@ body {
     max-width: 860px;
     margin: 0 auto;
     display: grid;
-    gap: 1rem;
+    gap: 1.25rem;
 }
 
 .faq-accordion {
-    border: 1px solid var(--color-border);
+    border: 1px solid rgba(15, 33, 61, 0.08);
     border-radius: 18px;
-    padding: 1rem 1.2rem;
+    padding: 1.25rem 1.5rem;
     background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
     box-shadow: var(--shadow-soft);
-    transition: box-shadow .25s ease, border-color .25s ease;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-bottom: 0.5rem;
+}
+
+.faq-accordion:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 102, 0, 0.24);
+    box-shadow: var(--shadow-hover);
 }
 
 .faq-accordion[open] {
     box-shadow: var(--shadow-hover);
-    border-color: rgba(255, 102, 0, 0.22);
+    border-color: rgba(255, 102, 0, 0.35);
+    background: #ffffff;
 }
 
 .faq-accordion summary {
     list-style: none;
     cursor: pointer;
     font-family: 'Poppins', sans-serif;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--color-heading);
     position: relative;
-    padding-right: 2rem;
+    padding-right: 3rem;
+    transition: color 0.3s ease;
+}
+
+.faq-accordion summary:hover {
+    color: var(--color-primary);
 }
 
 .faq-accordion summary::-webkit-details-marker {
@@ -5972,18 +5985,40 @@ body {
     content: '+';
     position: absolute;
     right: 0;
-    top: 0;
-    font-weight: 800;
-    color: var(--color-primary);
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #FFF0E6;
+    color: #FF6000;
+    font-size: 1.25rem;
+    font-weight: 700;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    line-height: 1;
+}
+
+.faq-accordion:hover summary::after {
+    background: #FF6000;
+    color: #ffffff;
 }
 
 .faq-accordion[open] summary::after {
-    content: '-';
+    content: '+';
+    transform: translateY(-50%) rotate(45deg);
+    background: #10213d;
+    color: #ffffff;
 }
 
 .faq-accordion p {
-    margin: .75rem 0 0;
+    margin: 1rem 0 0;
     color: var(--color-text-soft);
+    line-height: 1.65;
+    border-top: 1px dashed rgba(15, 33, 61, 0.08);
+    padding-top: 1rem;
 }
 
 /* FAQ page */
