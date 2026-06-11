@@ -26,6 +26,18 @@ class PricingCheckoutRoutingTest extends TestCase
         ];
     }
 
+    /**
+     * @return array<int, string>
+     */
+    private function publicPricingPageSlugs(): array
+    {
+        return [
+            'quick-leads',
+            'power-leads',
+            'prime-leads',
+        ];
+    }
+
     public function test_pricing_page_links_every_displayed_plan_to_checkout(): void
     {
         $this->seed(PricingPlanSeeder::class);
@@ -33,8 +45,12 @@ class PricingCheckoutRoutingTest extends TestCase
         $response = $this->get(route('pricing'));
 
         $response->assertOk();
-        foreach ($this->pricingSlugs() as $slug) {
+        foreach ($this->publicPricingPageSlugs() as $slug) {
             $response->assertSee('/packages/'.$slug.'/checkout', false);
+        }
+
+        foreach (array_diff($this->pricingSlugs(), $this->publicPricingPageSlugs()) as $slug) {
+            $response->assertDontSee('/packages/'.$slug.'/checkout', false);
         }
     }
 

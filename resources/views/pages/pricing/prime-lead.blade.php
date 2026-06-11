@@ -25,9 +25,10 @@
                 </p>
 
                 <div class="pdh-actions">
-                    <a class="button button--orange" href="{{ route('packages.checkout', ['packageSlug' => $planSlug]) }}">GET STARTED</a>
+                    <a class="button button--orange" href="#ghc-form" data-ghc-focus="1">GET STARTED</a>
                     <a class="button button--ghost-light" href="{{ route('contact') }}">TALK TO SALES</a>
                 </div>
+
 
                 <div class="pdh-meta">
                     <span class="pdh-pill">Priority front-of-queue access</span>
@@ -40,7 +41,7 @@
 
     <section class="section pricing-section">
         <div class="container">
-            <div class="pricing-detail-grid">
+            <div class="pricing-detail-grid" id="pricing-detail-grid">
                 <div class="pdx-col">
                     <div class="panel panel--premium">
                         <h2 class="panel__title">Full package overview</h2>

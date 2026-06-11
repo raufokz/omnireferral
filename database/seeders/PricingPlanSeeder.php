@@ -13,8 +13,8 @@ class PricingPlanSeeder extends Seeder
             [
                 'category' => 'real_estate',
                 'slug' => 'quick-leads',
-                'name' => 'Starter',
-                'tier' => 'Starter Tier',
+                'name' => 'Quick Lead',
+                'tier' => 'Quick Lead',
                 'value_price' => 999,
                 'price' => 399,
                 'price_note' => '/ month - 2 Areas',
@@ -40,8 +40,8 @@ class PricingPlanSeeder extends Seeder
             [
                 'category' => 'real_estate',
                 'slug' => 'power-leads',
-                'name' => 'Growth',
-                'tier' => 'Growth Tier',
+                'name' => 'Power Lead',
+                'tier' => 'Power Lead',
                 'value_price' => 1497,
                 'price' => 899,
                 'price_note' => '/ month - 5 Areas',
@@ -69,8 +69,8 @@ class PricingPlanSeeder extends Seeder
             [
                 'category' => 'real_estate',
                 'slug' => 'prime-leads',
-                'name' => 'Elite',
-                'tier' => 'Elite Tier',
+                'name' => 'Prime Lead',
+                'tier' => 'Prime Lead',
                 'value_price' => 3299,
                 'price' => 1999,
                 'price_note' => '/ month - 10 Areas',

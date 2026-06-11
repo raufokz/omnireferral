@@ -74,8 +74,8 @@ class PricingContent
             'real_estate' => array_map([self::class, 'enrichPlan'], [
                 [
                     'slug' => 'quick-leads',
-                    'name' => 'Starter',
-                    'tier' => 'Starter Tier',
+                    'name' => 'Quick Lead',
+                    'tier' => 'Quick Lead',
                     'value_price' => 999,
                     'price' => 399,
                     'price_note' => '/ month - 2 Areas',
@@ -98,8 +98,8 @@ class PricingContent
                 ],
                 [
                     'slug' => 'power-leads',
-                    'name' => 'Growth',
-                    'tier' => 'Growth Tier',
+                    'name' => 'Power Lead',
+                    'tier' => 'Power Lead',
                     'value_price' => 1497,
                     'price' => 899,
                     'price_note' => '/ month - 5 Areas',
@@ -124,8 +124,8 @@ class PricingContent
                 ],
                 [
                     'slug' => 'prime-leads',
-                    'name' => 'Elite',
-                    'tier' => 'Elite Tier',
+                    'name' => 'Prime Lead',
+                    'tier' => 'Prime Lead',
                     'value_price' => 3299,
                     'price' => 1999,
                     'price_note' => '/ month - 10 Areas',
@@ -222,22 +222,35 @@ class PricingContent
             ]),
         ];
     }
-
+ 
     private static function enrichPlan(array $plan): array
     {
         $slug = (string) ($plan['slug'] ?? '');
         $enhancement = self::planEnhancements()[$slug] ?? null;
-
+ 
         if (! $enhancement) {
             return $plan;
         }
-
+ 
         return array_merge($plan, $enhancement);
     }
-
+ 
     private static function planEnhancements(): array
     {
         return [
+            'quick-leads' => [
+                'name' => 'Quick Lead',
+                'tier' => 'Quick Lead',
+            ],
+            'power-leads' => [
+                'name' => 'Power Lead',
+                'tier' => 'Power Lead',
+                'is_featured' => true,
+            ],
+            'prime-leads' => [
+                'name' => 'Prime Lead',
+                'tier' => 'Prime Lead',
+            ],
             'cold-calling-isa' => [
                 'summary' => 'Put a dedicated ISA on your outbound pipeline without recruiting, training, or managing another in-house hire.',
                 'highlights' => [

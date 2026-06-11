@@ -2,13 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Lead;
 use App\Models\Package;
-use App\Models\Property;
-use App\Models\RealtorProfile;
-use App\Models\Testimonial;
 use App\Services\StripeCheckoutService;
-use App\Support\PackageComparison;
 use App\Support\PricingContent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,47 +15,10 @@ class PricingController extends Controller
 {
     public function index(): View
     {
-        $packageEmbeds = $this->packageEmbeds();
-        $primaryCta = $this->primaryAction();
-        $pricingPlans = PricingContent::plans();
-        $leadPackages = Package::active()->leadPlans()->orderBy('sort_order')->orderBy('one_time_price')->get();
-
-        $ratedReviews = Testimonial::published()->whereNotNull('rating');
-        $reviewCount = $ratedReviews->count();
-        $avgListPrice = Property::query()->marketplaceVisible()->avg('price');
-
         return view('pages.pricing', [
-            'leadPackages' => $leadPackages,
-            'assistantPackages' => Package::active()->assistantPlans()->orderBy('sort_order')->orderBy('monthly_price')->get(),
-            'pricingPlans' => $pricingPlans,
-            'packageComparison' => PackageComparison::fromLeadPackages($leadPackages),
-            'packageEmbeds' => $packageEmbeds,
-            'pricingTrustMetrics' => [
-                [
-                    'value' => number_format(RealtorProfile::query()->publicDirectory()->count()),
-                    'label' => 'Partner agents (directory)',
-                ],
-                [
-                    'value' => $reviewCount > 0
-                        ? number_format((float) $ratedReviews->avg('rating'), 1) . '★ avg'
-                        : '—',
-                    'label' => $reviewCount > 0 ? 'Published review score' : 'Reviews (earn your first)',
-                ],
-                [
-                    'value' => number_format(Property::query()->marketplaceVisible()->where('status', 'Active')->count()),
-                    'label' => 'Active marketplace listings',
-                ],
-                [
-                    'value' => $avgListPrice ? '$' . number_format((int) round($avgListPrice)) : '—',
-                    'label' => 'Avg. marketplace list price',
-                ],
-            ],
-            'primaryActionUrl' => $primaryCta['url'],
-            'primaryActionLabel' => $primaryCta['label'],
-            'leadsLast30Days' => Lead::query()->where('created_at', '>=', now()->subDays(30))->count(),
             'meta' => [
-                'title' => 'Pricing | OmniReferral Lead Packages and Virtual Assistant Plans',
-                'description' => 'Compare OmniReferral VA Services: Cold Calling / ISA ($1,999/mo), Social Media Mgmt ($1,499/mo), and Individual VA ($8/hr) — plus real estate lead packages for serious agents.',
+                'title' => 'Pricing | OmniReferral Lead Packages',
+                'description' => 'Compare OmniReferral Quick Lead, Power Lead, and Prime Lead packages for real estate teams that want qualified referrals and operational follow-up.',
             ],
         ]);
     }
