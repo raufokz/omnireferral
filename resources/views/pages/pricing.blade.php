@@ -6,61 +6,18 @@
 
 @section('content')
 @php
-    $leadPlans = [
-        [
-            'slug' => 'quick-leads',
-            'name' => 'Quick Lead',
-            'tier' => 'STARTER',
-            'price' => 399,
-            'price_note' => '/ month',
-            'summary' => 'A focused entry package for agents who want verified referral flow in a smaller service area.',
-            'features' => [
-                '16-20 total referrals',
-                'Up to 2 cities or ZIP codes',
-                'Email support',
-                '1-step verification',
-            ],
-            'best_for' => 'New Agents',
-            'cta_url' => route('packages.checkout', ['packageSlug' => 'quick-leads']),
-            'is_featured' => false,
-        ],
-        [
-            'slug' => 'power-leads',
-            'name' => 'Power Lead',
-            'tier' => 'MOST POPULAR',
-            'price' => 899,
-            'price_note' => '/ month',
-            'summary' => 'The balanced growth tier with stronger routing priority, more referrals, and included VA support.',
-            'features' => [
-                '30+ total referrals',
-                'Up to 5 cities or ZIP codes',
-                '3 hrs/week virtual assistance',
-                'Email + text support',
-            ],
-            'best_for' => 'Growing Teams',
-            'cta_url' => route('packages.checkout', ['packageSlug' => 'power-leads']),
-            'is_featured' => true,
-        ],
-        [
-            'slug' => 'prime-leads',
-            'name' => 'Prime Lead',
-            'tier' => 'PREMIUM',
-            'price' => 1999,
-            'price_note' => '/ month',
-            'summary' => 'A high-volume package for teams that need broader coverage, deeper verification, and premium support.',
-            'features' => [
-                '50+ total referrals',
-                'Up to 10 cities or ZIP codes',
-                '15 hrs/week virtual assistance',
-                'Call + text + email support',
-            ],
-            'best_for' => 'High Volume Agents',
-            'cta_url' => route('packages.checkout', ['packageSlug' => 'prime-leads']),
-            'is_featured' => false,
-        ],
-    ];
-
-    $featuredHeroPlan = $leadPlans[1];
+    $pricingPlans = $pricingPlans ?? \App\Support\PricingContent::plans();
+    $leadPlans = array_values($leadPlans ?? ($pricingPlans['real_estate'] ?? []));
+    $featuredHeroPlan = collect($leadPlans)->firstWhere('is_featured', true) ?? ($leadPlans[0] ?? [
+        'name' => 'Power Lead',
+        'summary' => 'Balanced growth and visibility for scaling teams.',
+        'card_description' => 'Our most balanced package for agents and teams looking to increase referral volume, improve visibility, strengthen market presence, and receive additional support resources.',
+        'price' => 797,
+        'billing_label' => 'One-Time',
+        'card_best_for' => 'Growing Teams',
+        'slug' => 'power-leads',
+    ]);
+    $featuredHeroUrl = route('packages.checkout', ['packageSlug' => $featuredHeroPlan['slug'] ?? 'power-leads']);
     $heroMetrics = [
         ['value' => '3', 'label' => 'Lead packages'],
         ['value' => '5', 'label' => 'Launch steps'],
@@ -95,20 +52,16 @@
             </div>
 
             <h2>{{ $featuredHeroPlan['name'] }}</h2>
-            <p>{{ $featuredHeroPlan['summary'] }}</p>
+            <p>{{ $featuredHeroPlan['card_description'] ?? $featuredHeroPlan['summary'] }}</p>
 
             <div class="pricing-hero-band__panel-price">
                 <strong>${{ number_format($featuredHeroPlan['price']) }}</strong>
-                <span>{{ $featuredHeroPlan['price_note'] }}</span>
+                <span>{{ $featuredHeroPlan['billing_label'] ?? $featuredHeroPlan['price_note'] ?? '/ Month' }}</span>
             </div>
 
-            <ul class="pricing-hero-band__panel-list">
-                @foreach($featuredHeroPlan['features'] as $feature)
-                    <li>{{ $feature }}</li>
-                @endforeach
-            </ul>
+            <span class="pricing-card__best-fit">Best for {{ $featuredHeroPlan['card_best_for'] ?? 'Growing Teams' }}</span>
 
-            <a href="{{ $featuredHeroPlan['cta_url'] }}" class="button button--orange">EXPLORE PLAN</a>
+            <a href="{{ $featuredHeroUrl }}" class="button button--orange">EXPLORE PLAN</a>
 
             <div class="pricing-hero-band__metrics">
                 @foreach($heroMetrics as $metric)
@@ -130,7 +83,7 @@
             <p class="pricing-section-head__sub">Switch between real estate referral packages and VA execution services without leaving the page.</p>
         </div>
 
-        @include('partials.pricing-plan-switcher', ['leadPlans' => $leadPlans])
+        @include('partials.pricing-plan-switcher', ['pricingPlans' => $pricingPlans, 'leadPlans' => $leadPlans])
     </div>
 </section>
 

@@ -2,112 +2,82 @@
     $toggleGroup = $toggleGroup ?? 'pricing-page';
     $defaultCategory = $defaultCategory ?? 'real_estate';
     $toggleId = preg_replace('/[^A-Za-z0-9_-]/', '-', $toggleGroup);
+    $pricingPlans = $pricingPlans ?? \App\Support\PricingContent::plans();
+    $leadPlans = array_values($leadPlans ?? ($pricingPlans['real_estate'] ?? []));
+    $vaPlans = array_values($vaPlans ?? ($pricingPlans['virtual_assistance'] ?? []));
 
-    $leadPlans = $leadPlans ?? [
-        [
-            'slug' => 'quick-leads',
-            'name' => 'Quick Lead',
-            'tier' => 'STARTER',
-            'price' => 399,
-            'price_note' => '/ month',
-            'summary' => 'A focused entry package for agents who want verified referral flow in a smaller service area.',
-            'features' => ['16-20 total referrals', 'Up to 2 cities or ZIP codes', 'Email support', '1-step verification'],
-            'best_for' => 'New Agents',
-            'cta_url' => route('packages.checkout', ['packageSlug' => 'quick-leads']),
-            'is_featured' => false,
-        ],
-        [
-            'slug' => 'power-leads',
-            'name' => 'Power Lead',
-            'tier' => 'MOST POPULAR',
-            'price' => 899,
-            'price_note' => '/ month',
-            'summary' => 'The balanced growth tier with stronger routing priority, more referrals, and included VA support.',
-            'features' => ['30+ total referrals', 'Up to 5 cities or ZIP codes', '3 hrs/week virtual assistance', 'Email + text support'],
-            'best_for' => 'Growing Teams',
-            'cta_url' => route('packages.checkout', ['packageSlug' => 'power-leads']),
-            'is_featured' => true,
-        ],
-        [
-            'slug' => 'prime-leads',
-            'name' => 'Prime Lead',
-            'tier' => 'PREMIUM',
-            'price' => 1999,
-            'price_note' => '/ month',
-            'summary' => 'A high-volume package for teams that need broader coverage, deeper verification, and premium support.',
-            'features' => ['50+ total referrals', 'Up to 10 cities or ZIP codes', '15 hrs/week virtual assistance', 'Call + text + email support'],
-            'best_for' => 'High Volume Agents',
-            'cta_url' => route('packages.checkout', ['packageSlug' => 'prime-leads']),
-            'is_featured' => false,
-        ],
-    ];
+    $billingLabel = function (array $plan): string {
+        if (!empty($plan['billing_label'])) {
+            return (string) $plan['billing_label'];
+        }
 
-    $vaPlans = [
-        [
-            'slug' => 'cold-calling-isa',
-            'name' => 'Cold Calling / ISA',
-            'tier' => 'SALES BOOST',
-            'price' => 1999,
-            'price_note' => '/ month',
-            'summary' => 'Dedicated ISA Sales Agent',
-            'features' => [
-                'Data Scraping & Skip Tracing',
-                'Up to 5 Cities / Zip Codes',
-                'Daily Scheduling + VoIP Config',
-                'CRM Setup + KPI Automation',
-                'Email, Text & VoiceFlow Follow-ups',
-                'Weekly Performance Reports',
-                'Key Area Territory Manager',
-                'Social Media Management',
-            ],
-            'badge' => null,
-            'cta_url' => route('packages.checkout', ['packageSlug' => 'cold-calling-isa']),
-            'is_featured' => false,
-        ],
-        [
-            'slug' => 'social-media-mgmt',
-            'name' => 'Social Media Mgmt',
-            'tier' => 'CONTENT ENGINE',
-            'price' => 1499,
-            'price_note' => '/ month',
-            'summary' => 'Daily Long + Short Form Videos',
-            'features' => [
-                'IG, FB, LinkedIn + TikTok',
-                'Dedicated Social Media Strategy',
-                'Stories, Highlights + Reels',
-                'Audience Engagement Management',
-                'Custom Ads Creation + Management',
-                'AI Branding & Lead Body Content',
-                'Brand Development + Web SEO',
-                'Monthly + Quarterly Review',
-                'ISA Cold Calling Support',
-            ],
-            'badge' => 'Most Popular',
-            'cta_url' => route('packages.checkout', ['packageSlug' => 'social-media-mgmt']),
-            'is_featured' => true,
-        ],
-        [
-            'slug' => 'individual-va',
-            'name' => 'Individual VA',
-            'tier' => 'FLEXIBLE HOURS',
-            'price' => 8,
-            'price_note' => '/ hour',
-            'summary' => 'Flexible Hourly Billing',
-            'features' => [
-                'Needs Assessment + Onboarding',
-                '24/7 Discord Priority Support',
-                'Appointment Setting + Calendar',
-                'CRM Support + Email Management',
-                'WordPress / Shopify + SEO & AEO',
-                'Graphic Design + Logo Creation',
-                'Data Entry + Lead Generation',
-                'Automations, Workflows + Templates',
-            ],
-            'badge' => 'No Long-Term Commitment',
-            'cta_url' => 'https://omnireferrals.com/contact',
-            'is_featured' => false,
-        ],
-    ];
+        $note = strtolower((string) ($plan['price_note'] ?? ''));
+
+        return match (true) {
+            str_contains($note, 'year') => 'Per Year',
+            str_contains($note, 'one') => 'One-Time',
+            str_contains($note, 'hour') => 'Per Hour',
+            str_contains($note, 'month') => 'Per Month',
+            default => trim((string) ($plan['price_note'] ?? '')),
+        };
+    };
+
+    $planIcon = function (string $slug): string {
+        return match ($slug) {
+            'quick-leads' => 'chart',
+            'power-leads' => 'rocket',
+            'prime-leads' => 'crown',
+            'cold-calling-isa', 'va-calling' => 'phone',
+            'social-media-mgmt', 'va-social' => 'social',
+            'individual-va', 'va-individual' => 'clock',
+            default => 'spark',
+        };
+    };
+
+    $cardMeta = function (array $plan, string $category) use ($billingLabel, $planIcon): array {
+        $slug = (string) ($plan['slug'] ?? '');
+        $isFeatured = (bool) ($plan['is_featured'] ?? false);
+        $tag = $plan['card_tag']
+            ?? $plan['badge']
+            ?? ($isFeatured ? 'Most Popular' : ($plan['tier'] ?? 'Plan'));
+        $audience = $plan['card_best_for']
+            ?? match ($slug) {
+                'quick-leads' => 'New Agents',
+                'power-leads' => 'Growing Teams',
+                'prime-leads' => 'High Volume Agents',
+                'cold-calling-isa', 'va-calling' => 'Busy Agents',
+                'social-media-mgmt', 'va-social' => 'Brand Growth',
+                'individual-va', 'va-individual' => 'Lean Teams',
+                default => $category === 'virtual_assistance' ? 'Lean Teams' : 'Real Estate Teams',
+            };
+        $valueStatement = $plan['value_statement'] ?? $plan['summary'] ?? '';
+        $description = $plan['card_description'] ?? $plan['summary'] ?? 'A focused OmniReferral package designed to help your team grow with cleaner handoff and support.';
+        $highlights = array_values(array_filter((array) ($plan['highlights'] ?? array_slice((array) ($plan['features'] ?? []), 0, 3))));
+
+        if (!empty($plan['cta_url'])) {
+            $ctaUrl = str_starts_with((string) $plan['cta_url'], 'http') || str_starts_with((string) $plan['cta_url'], '/')
+                ? (string) $plan['cta_url']
+                : url((string) $plan['cta_url']);
+        } elseif (in_array($slug, ['individual-va', 'va-individual'], true)) {
+            $ctaUrl = route('contact');
+        } elseif ($slug !== '') {
+            $ctaUrl = route('packages.checkout', ['packageSlug' => $slug]);
+        } else {
+            $ctaUrl = route('pricing');
+        }
+
+        return [
+            'audience' => $audience,
+            'billing' => $billingLabel($plan),
+            'cta_url' => $ctaUrl,
+            'description' => $description,
+            'highlights' => $highlights,
+            'icon' => $planIcon($slug),
+            'is_featured' => $isFeatured,
+            'tag' => $tag,
+            'value_statement' => $valueStatement,
+        ];
+    };
 @endphp
 
 <div class="pricing-toggle-shell pricing-toggle-shell--packages">
@@ -152,37 +122,12 @@
     @if($defaultCategory !== 'real_estate') hidden @endif
     data-stagger
 >
-    @foreach($leadPlans as $plan)
-        <article class="pricing-card pricing-card--interactive homepage-pricing-card {{ $plan['is_featured'] ? 'pricing-card--featured' : '' }}">
-            <div class="pricing-card__topline">
-                <span class="pricing-label">{{ $plan['tier'] }}</span>
-                @if($plan['is_featured'])
-                    <div class="pricing-badge-popular">Most Popular</div>
-                @endif
-            </div>
-
-            <div class="homepage-pricing-card__header">
-                <h3>{{ $plan['name'] }}</h3>
-                <p class="homepage-pricing-card__summary">{{ $plan['summary'] }}</p>
-            </div>
-
-            <div class="pricing-card__price-block">
-                <div class="price-row homepage-pricing-card__price">
-                    <strong>${{ number_format($plan['price']) }}</strong>
-                    <span>{{ $plan['price_note'] }}</span>
-                </div>
-                <span class="pricing-card__best-fit">Best for {{ $plan['best_for'] }}</span>
-            </div>
-
-            <ul class="pricing-card__quick-list" aria-label="{{ $plan['name'] }} features">
-                @foreach($plan['features'] as $feature)
-                    <li>{{ $feature }}</li>
-                @endforeach
-            </ul>
-
-            <a href="{{ $plan['cta_url'] }}" class="button {{ $plan['is_featured'] ? 'button--orange' : 'button--blue' }}" data-explore-plan="1">EXPLORE PLAN</a>
-        </article>
-    @endforeach
+    @forelse($leadPlans as $plan)
+        @php($card = $cardMeta($plan, 'real_estate'))
+        @include('partials.pricing-plan-card', ['plan' => $plan, 'card' => $card, 'category' => 'real_estate'])
+    @empty
+        <div class="pricing-empty-state">Pricing plans are being prepared. Please contact sales for package guidance.</div>
+    @endforelse
 </div>
 
 <div
@@ -195,34 +140,10 @@
     @if($defaultCategory !== 'virtual_assistance') hidden @endif
     data-stagger
 >
-    @foreach($vaPlans as $plan)
-        <article class="pricing-card pricing-card--interactive homepage-pricing-card pricing-card--va {{ $plan['is_featured'] ? 'pricing-card--featured' : '' }}">
-            <div class="pricing-card__topline">
-                <span class="pricing-label">{{ $plan['tier'] }}</span>
-                @if($plan['badge'])
-                    <div class="pricing-badge-popular">{{ $plan['badge'] }}</div>
-                @endif
-            </div>
-
-            <div class="homepage-pricing-card__header">
-                <h3>{{ $plan['name'] }}</h3>
-                <p class="homepage-pricing-card__summary">{{ $plan['summary'] }}</p>
-            </div>
-
-            <div class="pricing-card__price-block">
-                <div class="price-row homepage-pricing-card__price">
-                    <strong>${{ number_format($plan['price']) }}</strong>
-                    <span>{{ $plan['price_note'] }}</span>
-                </div>
-            </div>
-
-            <ul class="pricing-card__quick-list" aria-label="{{ $plan['name'] }} features">
-                @foreach($plan['features'] as $feature)
-                    <li>{{ $feature }}</li>
-                @endforeach
-            </ul>
-
-            <a href="{{ $plan['cta_url'] }}" class="button {{ $plan['is_featured'] ? 'button--orange' : 'button--blue' }}" data-explore-plan="1">EXPLORE PLAN</a>
-        </article>
-    @endforeach
+    @forelse($vaPlans as $plan)
+        @php($card = $cardMeta($plan, 'virtual_assistance'))
+        @include('partials.pricing-plan-card', ['plan' => $plan, 'card' => $card, 'category' => 'virtual_assistance'])
+    @empty
+        <div class="pricing-empty-state">VA service plans are being prepared. Please contact sales for support options.</div>
+    @endforelse
 </div>

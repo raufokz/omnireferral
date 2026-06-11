@@ -1,228 +1,205 @@
 @extends('layouts.app')
 
+@push('styles')
+    @vite('resources/css/modules/pricing.css')
+@endpush
+
 @section('content')
 @php
     $startingPrice = (int) ($packageDisplay['price'] ?? $package->one_time_price ?? $package->monthly_price ?? 0);
-    $isFeatured    = (bool)($packageDisplay['is_featured'] ?? false);
-    $priceNote     = (string)($packageDisplay['price_note'] ?? '');
-    $priceNoteSlug = trim(ltrim($priceNote, '/ '));
-    $pricePeriod   = explode(' ', $priceNoteSlug)[0] ?? '';
-    $pricePeriod   = $pricePeriod !== '' ? $pricePeriod : 'month';
+    $priceNote = (string) ($packageDisplay['price_note'] ?? '');
+    $billingLabel = $packageDisplay['billing_label'] ?? trim(str_replace('/', '', $priceNote));
+    $badge = $packageDisplay['badge'] ?? $packageDisplay['tier'] ?? 'Selected plan';
+    $summary = $packageDisplay['summary'] ?? $package->description;
+    $fullFeatures = array_values(array_filter((array) ($packageDisplay['features'] ?? [])));
+    $benefits = array_values(array_filter((array) ($packageDisplay['package_benefits'] ?? [])));
+    $featureGroups = array_values(array_filter((array) ($packageDisplay['feature_groups'] ?? [])));
+    $afterSubmission = array_values(array_filter((array) ($packageDisplay['after_submission'] ?? [])));
+    $trustIndicators = array_values(array_filter((array) ($packageDisplay['trust_indicators'] ?? [])));
+    $bestFor = $packageDisplay['best_for'] ?? null;
+    $supportDetails = $packageDisplay['support_details'] ?? null;
+    $whatYouGet = $packageDisplay['what_you_get'] ?? null;
+
+    if (empty($benefits)) {
+        $benefits = array_slice($fullFeatures, 0, 4);
+    }
+
+    if (empty($afterSubmission)) {
+        $afterSubmission = [
+            'Submit the secure form with your package and market details.',
+            'OmniReferral reviews your information and confirms the right workflow.',
+            'Your package setup is routed to the correct GoHighLevel lane.',
+            'The team follows up with next steps for launch and support.',
+        ];
+    }
+
+    if (empty($trustIndicators)) {
+        $trustIndicators = [
+            'Secure GoHighLevel survey',
+            'Real estate focused operations',
+            'Clear package handoff',
+            'Dedicated support workflow',
+        ];
+    }
 @endphp
 
-{{-- ====================== HERO (matches pricing-hero-band) ====================== --}}
-<section class="pricing-hero-band">
-    <div class="pricing-hero-band__bg" aria-hidden="true"></div>
-    <div class="container pricing-hero-band__inner pricing-hero-band__inner--split" data-animate="up">
-        <div class="phb-copy phb-copy--split">
-            <span class="eyebrow phb-eyebrow">Package Checkout</span>
-            <h1 class="phb-copy__headline">{{ $packageDisplay['name'] }}</h1>
-            <p class="phb-copy__sub">{{ $packageDisplay['summary'] }}</p>
-            <div class="phb-copy__ctas">
-                <a href="{{ route('pricing') }}" class="button button--ghost-light">← Back to Pricing</a>
-                <a href="{{ route('contact') }}" class="button button--orange">Talk to Sales</a>
-            </div>
-            <div class="phb-copy__badges">
-                <span class="phb-badge">{{ $packageDisplay['tier'] }}</span>
-                <span class="phb-badge">{{ $packageDisplay['price_note'] }}</span>
-                @if($package->category === 'lead')
-                    <span class="phb-badge">{{ $package->listingLimitLabel() }}</span>
-                @else
-                    <span class="phb-badge">Virtual assistance support</span>
-                @endif
-            </div>
+<section class="package-checkout-hero package-checkout-hero--premium">
+    <div class="package-checkout-hero__bg" aria-hidden="true"></div>
+    <div class="container package-checkout-hero__inner">
+        <div>
+            <span class="eyebrow">Package Checkout</span>
+            <h1>{{ $packageDisplay['name'] }}</h1>
+            <p>{{ $summary }}</p>
         </div>
-
-        <aside class="pricing-hero-band__panel">
-            <span class="pricing-hero-band__panel-eyebrow">Selected Package</span>
-            <h2>{{ $packageDisplay['name'] }}</h2>
-            <p>{{ $packageDisplay['summary'] }}</p>
-
-            <div class="pricing-hero-band__panel-price">
-                <strong>${{ number_format($startingPrice) }}</strong>
-                <span>{{ $packageDisplay['price_note'] }}</span>
-            </div>
-
-            <ul class="pricing-hero-band__panel-list">
-                @foreach(array_slice($packageDisplay['features'] ?? [], 0, 4) as $feature)
-                    <li>{{ $feature }}</li>
-                @endforeach
-            </ul>
-
-            @if($packageDisplay['value_price'])
-                <div class="pricing-hero-band__metrics">
-                    <div class="pricing-hero-band__metric">
-                        <strong>${{ number_format($packageDisplay['value_price']) }}</strong>
-                        <span>Est. value</span>
-                    </div>
-                    <div class="pricing-hero-band__metric">
-                        <strong>48 hr</strong>
-                        <span>Avg. routing</span>
-                    </div>
-                    <div class="pricing-hero-band__metric">
-                        <strong>90-Day</strong>
-                        <span>Satisfaction</span>
-                    </div>
-                </div>
-            @endif
-        </aside>
+        <div class="package-checkout-hero__actions">
+            <a href="{{ route('pricing') }}" class="button button--ghost-light">Back To Pricing</a>
+            <a href="#secure-form" class="button button--orange">Complete Form</a>
+        </div>
     </div>
 </section>
 
-{{-- ====================== CHECKOUT BODY ====================== --}}
-<section class="section package-checkout-section">
-    <div class="container two-column package-checkout-grid">
-
-        {{-- LEFT: Plan card — identical structure to pricing-pkg-card --}}
-        <article class="pricing-pkg-card {{ $isFeatured ? 'pricing-pkg-card--featured' : '' }} package-checkout-card">
-            @if($isFeatured)
-                <div class="pricing-pkg-card__badge">Most Popular</div>
-            @endif
-
-            {{-- White Top Section --}}
-            <div class="pricing-pkg-card__top">
-                <div class="pricing-pkg-card__head">
-                    <div class="pricing-pkg-card__meta">
-                        <span class="pricing-label">{{ $packageDisplay['tier'] }}</span>
-                        @if(!empty($packageDisplay['value_price']))
-                            <span class="pricing-card__value">Value ${{ number_format($packageDisplay['value_price']) }}</span>
-                        @endif
-                    </div>
-                    <h3 class="pricing-pkg-card__name">{{ $packageDisplay['name'] }}</h3>
-                    <p class="pricing-pkg-card__tagline">{{ $packageDisplay['summary'] }}</p>
-                    @if(!empty($packageDisplay['highlights']))
-                        <div class="pricing-card__mini-points">
-                            @foreach($packageDisplay['highlights'] as $highlight)
-                                <span>{{ $highlight }}</span>
-                            @endforeach
-                        </div>
+<section class="section package-checkout-section package-checkout-section--premium">
+    <div class="container package-checkout-grid package-checkout-grid--premium">
+        <article class="package-plan-detail">
+            <div class="package-plan-detail__header">
+                <div class="package-plan-detail__eyebrow">
+                    <span class="pricing-label">{{ $badge }}</span>
+                    @if(!empty($packageDisplay['is_featured']))
+                        <span class="pricing-badge-popular">Most Popular</span>
                     @endif
                 </div>
+                <h2>{{ $packageDisplay['name'] }}</h2>
+                <p>{{ $summary }}</p>
 
-                <div class="pricing-pkg-card__price">
-                    <strong class="ppc-price-amount">${{ number_format($startingPrice) }}</strong>
-                    <span class="ppc-price-period">/{{ $pricePeriod }}</span>
+                <div class="package-plan-detail__price-row">
+                    <div class="package-plan-detail__price">
+                        <span>Price</span>
+                        <strong>${{ number_format($startingPrice) }}</strong>
+                    </div>
+                    <div class="package-plan-detail__billing">
+                        <span>Billing type</span>
+                        <strong>{{ $billingLabel !== '' ? $billingLabel : 'Package billing' }}</strong>
+                    </div>
                 </div>
             </div>
 
-            {{-- Colored Bottom Section --}}
-            <div class="pricing-pkg-card__bottom">
-                @if(!empty($packageDisplay['what_you_get']))
-                    <div class="pricing-card__value-block pricing-card__value-block--dark">
-                        <span>What you get</span>
-                        <p>{{ $packageDisplay['what_you_get'] }}</p>
-                    </div>
-                @endif
+            <div class="package-plan-detail__meta-grid">
+                <div>
+                    <span>Badge</span>
+                    <strong>{{ $badge }}</strong>
+                </div>
+                <div>
+                    <span>Best for</span>
+                    <strong>{{ $bestFor ?: 'Agents and teams ready to grow' }}</strong>
+                </div>
+            </div>
 
-                @if(!empty($packageDisplay['feature_groups']))
-                    <div class="pricing-card__feature-groups pricing-card__feature-groups--dark">
-                        @foreach($packageDisplay['feature_groups'] as $group)
-                            <div class="pricing-card__feature-group">
+            @if($whatYouGet)
+                <section class="package-plan-detail__section">
+                    <h3>Full Description</h3>
+                    <p>{{ $whatYouGet }}</p>
+                </section>
+            @endif
+
+            <section class="package-plan-detail__section">
+                <h3>Complete Feature List</h3>
+                <ul class="package-detail-list package-detail-list--two">
+                    @foreach($fullFeatures as $feature)
+                        <li>{{ $feature }}</li>
+                    @endforeach
+                </ul>
+            </section>
+
+            <section class="package-plan-detail__section">
+                <h3>Benefits</h3>
+                <ul class="package-detail-list">
+                    @foreach($benefits as $benefit)
+                        <li>{{ $benefit }}</li>
+                    @endforeach
+                </ul>
+            </section>
+
+            <section class="package-plan-detail__section">
+                <h3>What Is Included</h3>
+                @if(!empty($featureGroups))
+                    <div class="package-included-grid">
+                        @foreach($featureGroups as $group)
+                            <div class="package-included-group">
                                 <strong>{{ $group['title'] ?? 'Included support' }}</strong>
-                                <ul class="feature-check-list pricing-pkg-card__features pricing-card__group-list">
-                                    @foreach(($group['items'] ?? []) as $feature)
-                                        <li>{{ $feature }}</li>
+                                <ul>
+                                    @foreach(($group['items'] ?? []) as $item)
+                                        <li>{{ $item }}</li>
                                     @endforeach
                                 </ul>
                             </div>
                         @endforeach
                     </div>
                 @else
-                    <ul class="feature-check-list pricing-pkg-card__features">
-                        @foreach($packageDisplay['features'] as $feature)
+                    <ul class="package-detail-list">
+                        @foreach(array_slice($fullFeatures, 0, 6) as $feature)
                             <li>{{ $feature }}</li>
                         @endforeach
                     </ul>
                 @endif
+            </section>
 
-                @if(!empty($packageDisplay['trust_note']))
-                    <p class="pricing-card__trust-note pricing-card__trust-note--dark">{{ $packageDisplay['trust_note'] }}</p>
-                @endif
+            <section class="package-plan-detail__section">
+                <h3>What Happens After Submission</h3>
+                <ol class="package-process-list">
+                    @foreach($afterSubmission as $step)
+                        <li>{{ $step }}</li>
+                    @endforeach
+                </ol>
+            </section>
 
-                <div class="pricing-pkg-card__actions">
-                    <a href="{{ route('contact', ['plan' => $packageDisplay['name']]) }}" class="ppc-form-link">
-                        Talk to sales about {{ $packageDisplay['name'] }}
-                        <span class="ppc-btn-icon">→</span>
-                    </a>
+            <section class="package-plan-detail__section package-plan-detail__section--support">
+                <h3>Support Information</h3>
+                <p>{{ $supportDetails ?: 'OmniReferral support reviews your submission, confirms package details, and helps guide your next setup step.' }}</p>
+            </section>
+
+            <section class="package-plan-detail__section">
+                <h3>Trust Indicators</h3>
+                <div class="package-trust-pills">
+                    @foreach($trustIndicators as $indicator)
+                        <span>{{ $indicator }}</span>
+                    @endforeach
                 </div>
-            </div>
+            </section>
         </article>
 
-        {{-- RIGHT: Checkout options + embed --}}
-        <div class="contact-card package-checkout-side">
-            <div class="dashboard-surface checkout-options-surface package-checkout-surface">
-                <div class="dashboard-surface__header">
-                    <div>
-                        <span class="eyebrow">Checkout Options</span>
-                        <h3>Launch payment</h3>
-                    </div>
-                </div>
+        <aside class="package-checkout-form-panel" id="secure-form">
+            <div class="package-checkout-form-panel__inner">
+                <span class="eyebrow">Secure GoHighLevel Form</span>
+                <h2>Complete your package request</h2>
+                <p>{{ $packageEmbed['description'] ?? 'Submit the secure form so OmniReferral can route your package details to the right onboarding workflow.' }}</p>
 
-                @if($stripeEnabled)
-                    <div class="package-checkout-billing-list">
-                        @foreach($billingOptions as $option)
-                            <article class="package-checkout-billing-card">
-                                <div>
-                                    <strong>{{ $option['label'] }}</strong>
-                                    <p>${{ number_format($option['amount']) }} {{ $option['key'] === 'monthly' ? 'per month' : 'one-time' }}</p>
-                                    <small>{{ $option['note'] }}</small>
-                                </div>
-                                <form method="POST" action="{{ route('packages.checkout.start', ['packageSlug' => $packageDisplay['slug']]) }}">
-                                    @csrf
-                                    <input type="hidden" name="billing" value="{{ $option['key'] }}">
-                                    <button type="submit" class="button {{ $option['button'] }}">{{ $option['label'] }}</button>
-                                </form>
-                            </article>
-                        @endforeach
+                @if(!empty($packageEmbed['src']))
+                    <div class="ghl-checkout-frame is-loading" data-embed-loader aria-busy="true">
+                        <div class="ghl-form-loader" data-embed-loader-indicator role="status" aria-live="polite">
+                            <span class="ghl-form-loader__spinner" aria-hidden="true"></span>
+                            <span class="ghl-form-loader__text">Loading secure form...</span>
+                        </div>
+                        <iframe
+                            src="{{ $packageEmbed['src'] }}"
+                            title="{{ $packageEmbed['title'] ?? $packageDisplay['name'] }} form"
+                            loading="lazy"
+                            data-embed-loader-frame
+                            referrerpolicy="no-referrer"
+                        ></iframe>
                     </div>
                 @else
                     <div class="package-checkout-inline-note">
-                        <strong>Stripe is not configured here yet.</strong>
-                        <p>You can still use the onboarding form below to confirm the setup flow and handoff details.</p>
+                        <strong>Secure form unavailable</strong>
+                        <p>Please contact OmniReferral support and we will help finish setup for this package manually.</p>
+                        <a href="{{ route('contact', ['plan' => $packageDisplay['name']]) }}" class="button button--orange">Contact Support</a>
                     </div>
                 @endif
             </div>
-
-            @if(!empty($packageEmbed['src']))
-                <div class="embed-card embed-card--ghl is-loading" data-embed-loader aria-busy="true">
-                    <div class="embed-card__loader" data-embed-loader-indicator role="status" aria-live="polite">
-                        <span class="embed-card__loader-badge">Loading Form</span>
-                        <h4 class="embed-card__loader-title">Preparing your onboarding form</h4>
-                        <p class="embed-card__loader-copy">Secure GoHighLevel fields are connecting now. Your setup form will appear here in a few seconds.</p>
-                        <div class="embed-card__loader-skeleton" aria-hidden="true">
-                            <span class="embed-card__loader-line embed-card__loader-line--short"></span>
-                            <span class="embed-card__loader-line embed-card__loader-line--medium"></span>
-                            <div class="embed-card__loader-grid">
-                                <span class="embed-card__loader-block"></span>
-                                <span class="embed-card__loader-block"></span>
-                                <span class="embed-card__loader-block embed-card__loader-block--wide"></span>
-                                <span class="embed-card__loader-block embed-card__loader-block--tall"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <iframe
-                        src="{{ $packageEmbed['src'] }}"
-                        title="{{ $packageEmbed['title'] ?? $packageDisplay['name'] }} form"
-                        loading="lazy"
-                        data-embed-loader-frame
-                    ></iframe>
-                </div>
-            @else
-                <div class="dashboard-surface package-checkout-surface">
-                    <div class="package-checkout-inline-note">
-                        <strong>No onboarding form is attached yet.</strong>
-                        <p>Contact OmniReferral support and we will help finish setup for this package manually.</p>
-                    </div>
-                </div>
-            @endif
-
-            <div class="package-modal-card__actions package-checkout-footer-actions">
-                <a href="{{ route('pricing') }}" class="button button--ghost-blue">Back To Pricing</a>
-                <a href="{{ $postPurchaseActionUrl }}" class="button button--orange">{{ $postPurchaseActionLabel }}</a>
-            </div>
-        </div>
+        </aside>
     </div>
 </section>
 
-<script src="https://link.msgsndr.com/js/form_embed.js"></script>
+@if(!empty($packageEmbed['src']))
+    <script src="https://link.msgsndr.com/js/form_embed.js"></script>
+@endif
 @endsection

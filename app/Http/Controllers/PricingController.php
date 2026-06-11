@@ -3,10 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Package;
-use App\Services\StripeCheckoutService;
 use App\Support\PricingContent;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -15,7 +12,12 @@ class PricingController extends Controller
 {
     public function index(): View
     {
+        $pricingPlans = PricingContent::plans();
+
         return view('pages.pricing', [
+            'pricingPlans' => $pricingPlans,
+            'leadPlans' => array_values($pricingPlans['real_estate'] ?? []),
+            'vaPlans' => array_values($pricingPlans['virtual_assistance'] ?? []),
             'meta' => [
                 'title' => 'Pricing | OmniReferral Lead Packages',
                 'description' => 'Compare OmniReferral Quick Lead, Power Lead, and Prime Lead packages for real estate teams that want qualified referrals and operational follow-up.',
@@ -36,6 +38,8 @@ class PricingController extends Controller
             'summary' => $pricingPlan['summary'] ?? $package->description,
             'price' => $pricingPlan['price'] ?? ($package->preferredCheckoutAmount() ?? 0),
             'price_note' => $pricingPlan['price_note'] ?? ($package->one_time_price ? '/ One-Time' : '/ Monthly'),
+            'billing_label' => $pricingPlan['billing_label'] ?? $this->billingLabel($pricingPlan['price_note'] ?? null, $package),
+            'badge' => $pricingPlan['badge'] ?? $pricingPlan['card_tag'] ?? $pricingPlan['tier'] ?? null,
             'features' => $pricingPlan['features'] ?? ($package->features ?? []),
             'value_price' => $pricingPlan['value_price'] ?? null,
             'cta_label' => $pricingPlan['cta_label'] ?? $package->cta_label,
@@ -44,6 +48,10 @@ class PricingController extends Controller
             'highlights' => $pricingPlan['highlights'] ?? [],
             'best_for' => $pricingPlan['best_for'] ?? null,
             'what_you_get' => $pricingPlan['what_you_get'] ?? null,
+            'package_benefits' => $pricingPlan['package_benefits'] ?? [],
+            'after_submission' => $pricingPlan['after_submission'] ?? [],
+            'support_details' => $pricingPlan['support_details'] ?? null,
+            'trust_indicators' => $pricingPlan['trust_indicators'] ?? [],
             'feature_groups' => $pricingPlan['feature_groups'] ?? [],
             'trust_note' => $pricingPlan['trust_note'] ?? null,
         ];
@@ -51,104 +59,35 @@ class PricingController extends Controller
             'title' => $packageEmbed['title'] ?? $packageDisplay['name'],
             'src' => $packageEmbed['src'] ?? $package->ghl_form_url,
             'description' => $packageEmbed['description']
-                ?? ($packageDisplay['summary'] ?: 'Complete the follow-up setup form after payment to help OmniReferral provision your workspace correctly.'),
+                ?? ($packageDisplay['summary'] ?: 'Complete the secure setup form so OmniReferral can provision your package correctly.'),
         ];
-
-        $billingOptions = $this->billingOptions($package, $pricingPlan);
 
         return view('pages.package-checkout', [
             'package' => $package,
             'packageDisplay' => $packageDisplay,
             'packageEmbed' => $packageEmbed,
-            'billingOptions' => $billingOptions,
-            'stripeEnabled' => (bool) config('services.stripe.secret'),
             'postPurchaseActionUrl' => $postPurchaseAction['url'],
             'postPurchaseActionLabel' => $postPurchaseAction['label'],
             'meta' => [
                 'title' => $packageDisplay['name'] . ' Checkout | OmniReferral',
-                'description' => 'Continue to payment and post-purchase setup for the ' . $packageDisplay['name'] . ' package.',
+                'description' => 'Review the ' . $packageDisplay['name'] . ' package and complete the secure GoHighLevel form.',
             ],
         ]);
     }
 
-    public function startCheckout(Request $request, string $packageSlug, StripeCheckoutService $checkoutService): RedirectResponse
-    {
-        $package = $this->checkoutPackage($packageSlug, persist: true);
-        $validated = $request->validate([
-            'billing' => ['nullable', 'in:auto,one_time,monthly'],
-            'role' => ['nullable', 'in:buyer,seller,agent,admin,staff,guest'],
-        ]);
-
-        $session = $checkoutService->createPackageCheckout($package, Auth::user(), [
-            'billing' => $validated['billing'] ?? 'auto',
-            'role' => $validated['role'] ?? (Auth::user()?->role ?? 'guest'),
-            'customer_email' => Auth::user()?->email,
-            'success_url' => route('packages.success', $package->slug) . '?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => route('packages.checkout', $package->slug),
-        ]);
-
-        if (! $session?->url) {
-            return back()->with('error', 'Stripe checkout is not configured yet for this environment. Use the embedded GoHighLevel form or configure your Stripe keys first.');
-        }
-
-        return redirect()->away($session->url);
-    }
-
-    public function success(Request $request, string $packageSlug): View|RedirectResponse
+    public function success(string $packageSlug): View
     {
         $package = $this->checkoutPackage($packageSlug);
         $postPurchaseAction = $this->postPurchaseAction();
-        $sessionId = $request->string('session_id')->value();
-        $stripeSecret = (string) config('services.stripe.secret');
-
-        if ($stripeSecret !== '') {
-            if ($sessionId === '') {
-                return redirect()
-                    ->route('packages.checkout', $package->slug)
-                    ->with('error', 'Missing payment confirmation. Please complete checkout again from the pricing page.');
-            }
-
-            try {
-                $stripe = new \Stripe\StripeClient($stripeSecret);
-                $session = $stripe->checkout->sessions->retrieve($sessionId);
-            } catch (\Stripe\Exception\ApiErrorException) {
-                return redirect()
-                    ->route('packages.checkout', $package->slug)
-                    ->with('error', 'We could not verify that payment session with Stripe. Please try again or contact support.');
-            }
-
-            $paid = in_array($session->payment_status ?? '', ['paid', 'no_payment_required'], true)
-                || ($session->status ?? '') === 'complete';
-
-            if (! $paid) {
-                return redirect()
-                    ->route('packages.checkout', $package->slug)
-                    ->with('error', 'That checkout session is not marked as paid yet.');
-            }
-
-            $sessionPackageId = (int) ($session->metadata->package_id ?? 0);
-            $sessionPackageSlug = (string) ($session->metadata->package_slug ?? '');
-            if ($sessionPackageSlug !== '' && $sessionPackageSlug !== $package->slug) {
-                return redirect()
-                    ->route('pricing')
-                    ->with('error', 'The confirmed package does not match this success page.');
-            }
-
-            if ($sessionPackageId && $package->exists && $sessionPackageId !== (int) $package->id) {
-                return redirect()
-                    ->route('pricing')
-                    ->with('error', 'The confirmed package does not match this success page.');
-            }
-        }
 
         return view('pages.package-success', [
             'package' => $package,
-            'sessionId' => $sessionId,
+            'sessionId' => null,
             'postPurchaseActionUrl' => $postPurchaseAction['url'],
             'postPurchaseActionLabel' => $postPurchaseAction['label'],
             'meta' => [
-                'title' => 'Payment Success | OmniReferral',
-                'description' => 'Welcome aboard! Your OmniReferral package is ready and your next access step is available.',
+                'title' => 'Package Next Steps | OmniReferral',
+                'description' => 'Your OmniReferral package next step is available.',
             ],
         ]);
     }
@@ -157,31 +96,46 @@ class PricingController extends Controller
     {
         return [
             'quick-leads' => [
-                'title' => 'Starter',
+                'title' => 'Quick Lead',
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/q61dioT6A8taz0yLfK93',
-                'description' => 'Starter lead onboarding form for initial package setup and campaign handoff.',
+                'description' => 'Quick Lead onboarding form for verified referral growth and market launch setup.',
             ],
             'power-leads' => [
-                'title' => 'Growth',
+                'title' => 'Power Lead',
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/ENBVclSqwUuX7awfOEM8',
-                'description' => 'Growth lead onboarding form for teams scaling lead intake and routing.',
+                'description' => 'Power Lead onboarding form for balanced growth, visibility, and scaling team support.',
             ],
             'prime-leads' => [
-                'title' => 'Elite',
+                'title' => 'Prime Lead',
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/z2wUhJG00x4n3MxY616R',
-                'description' => 'Elite lead onboarding form for premium, high-intent package workflows.',
+                'description' => 'Prime Lead onboarding form for premium referral exposure and priority support workflows.',
             ],
             'cold-calling-isa' => [
                 'title' => 'Cold Calling / ISA',
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/DAYWVBJkNiVLEfoW740d',
-                'description' => 'Cold Calling / ISA onboarding form for dedicated ISA sales agent setup and campaign configuration.',
+                'description' => 'Cold Calling / ISA onboarding form for dedicated prospecting, follow-up, and pipeline growth setup.',
             ],
             'social-media-mgmt' => [
                 'title' => 'Social Media Mgmt',
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/NiEcLMPWI084aKiAaNsi',
-                'description' => 'Social Media Management onboarding form for daily long and short form video content and growth execution.',
+                'description' => 'Social Media Management onboarding form for content, audience growth, and brand visibility.',
             ],
             'individual-va' => [
+                'title' => 'Individual VA',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/DAYWVBJkNiVLEfoW740d',
+                'description' => 'Individual VA onboarding form for flexible hourly virtual assistant support and task setup.',
+            ],
+            'va-calling' => [
+                'title' => 'Cold Calling / ISA',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/DAYWVBJkNiVLEfoW740d',
+                'description' => 'Cold Calling / ISA onboarding form for dedicated prospecting, follow-up, and pipeline growth setup.',
+            ],
+            'va-social' => [
+                'title' => 'Social Media Mgmt',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/NiEcLMPWI084aKiAaNsi',
+                'description' => 'Social Media Management onboarding form for content, audience growth, and brand visibility.',
+            ],
+            'va-individual' => [
                 'title' => 'Individual VA',
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/DAYWVBJkNiVLEfoW740d',
                 'description' => 'Individual VA onboarding form for flexible hourly virtual assistant support and task setup.',
@@ -229,8 +183,6 @@ class PricingController extends Controller
             'is_active' => true,
             'one_time_price' => $isMonthly || $isHourly ? null : $price,
             'monthly_price' => $isMonthly || $isHourly ? $price : null,
-            'stripe_price_id' => null,
-            'stripe_product_id' => null,
             'ghl_form_url' => $embed['src'] ?? null,
             'ghl_pipeline_stage' => $slug,
             'features' => array_values((array) ($pricingPlan['features'] ?? [])),
@@ -240,67 +192,19 @@ class PricingController extends Controller
         ];
     }
 
-    private function billingOptions(Package $package, ?array $pricingPlan): \Illuminate\Support\Collection
+    private function billingLabel(?string $priceNote, Package $package): string
     {
-        $planAmount = (int) ($pricingPlan['price'] ?? 0);
-        $planNote = (string) ($pricingPlan['price_note'] ?? '');
+        $note = trim(str_replace('/', '', (string) $priceNote));
 
-        if ($planAmount > 0 && $planNote !== '') {
-            $noteLower = strtolower($planNote);
-            $billingKey = str_contains($noteLower, 'month') ? 'monthly' : 'one_time';
-            $label = match (true) {
-                $billingKey === 'monthly' => 'Subscribe Monthly',
-                str_contains($noteLower, 'year') => 'Pay Yearly',
-                default => 'Pay One-Time',
-            };
-            $note = match (true) {
-                $billingKey === 'monthly' => 'Recurring billing for ongoing access and support.',
-                str_contains($noteLower, 'year') => 'Secure yearly access checkout for the selected package.',
-                default => 'Secure one-time checkout for the selected package.',
-            };
-
-            return collect([[
-                'key' => $billingKey,
-                'label' => $label,
-                'amount' => $planAmount,
-                'note' => $note,
-                'button' => $billingKey === 'monthly' ? 'button--ghost-blue' : 'button--orange',
-            ]]);
+        if ($note !== '') {
+            return ucfirst($note);
         }
 
-        return collect([
-            $package->one_time_price ? [
-                'key' => 'one_time',
-                'label' => 'Pay One-Time',
-                'amount' => $package->one_time_price,
-                'note' => 'Secure one-time checkout for the selected package.',
-                'button' => 'button--orange',
-            ] : null,
-            $package->monthly_price ? [
-                'key' => 'monthly',
-                'label' => 'Subscribe Monthly',
-                'amount' => $package->monthly_price,
-                'note' => 'Recurring billing for ongoing access and support.',
-                'button' => 'button--ghost-blue',
-            ] : null,
-        ])->filter()->values();
-    }
-
-    private function primaryAction(): array
-    {
-        $user = Auth::user();
-
-        if ($user) {
-            return [
-                'url' => $user->dashboardRoute(),
-                'label' => 'Open Dashboard',
-            ];
-        }
-
-        return [
-            'url' => route('register'),
-            'label' => 'Start Today',
-        ];
+        return match ($package->billing_type) {
+            'monthly' => 'Monthly package',
+            'hourly' => 'Hourly support',
+            default => 'One-time package',
+        };
     }
 
     private function postPurchaseAction(): array

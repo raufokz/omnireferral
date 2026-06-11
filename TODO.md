@@ -17,7 +17,7 @@
 ## Phase 2: Pricing page conversion flow + card CTA behavior
 - [ ] Update `resources/views/partials/pricing-plan-switcher.blade.php`:
   - [ ] Real estate package CTA button text: **EXPLORE PLAN**
-  - [ ] Real estate CTA links go to `/pricing/*-lead` (NOT checkout)
+  - [ ] Pricing card CTA links go directly to `/packages/{slug}/checkout`
 
 ## Phase 3: Premium SaaS pricing content + sections
 - [ ] Upgrade `resources/views/pages/pricing.blade.php` to match spec:
@@ -63,12 +63,12 @@
 ## Phase 7: Checkout 404 verification
 - [ ] Verify:
   - [ ] `/packages/{slug}/checkout` works for the 3 real-estate slugs
-  - [ ] `/packages/{slug}/stripe-checkout` creates sessions (if Stripe is configured)
+  - [ ] `/packages/{slug}/checkout` embeds the correct GoHighLevel form
   - [ ] `/packages/{slug}/success` renders correctly
   - [ ] No broken links from pricing cards or detail pages
 
 ## Done criteria
 - [ ] No 404s for pricing detail pages and checkout
 - [ ] Pricing page and detail pages match spec sections
-- [ ] CTA flow: Pricing → Explore Plan → Package Details → GET STARTED → Checkout
+- [ ] CTA flow: Pricing -> Explore Plan -> Checkout
 - [ ] Thorough testing (routing + UI sections + mobile layout)

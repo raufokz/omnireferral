@@ -31,28 +31,25 @@ class PricingCheckoutRoutingTest extends TestCase
      */
     private function publicPricingPageSlugs(): array
     {
-        return [
-            'quick-leads',
-            'power-leads',
-            'prime-leads',
-            'cold-calling-isa',
-            'social-media-mgmt',
-        ];
+        return $this->pricingSlugs();
     }
 
-    public function test_pricing_page_links_every_displayed_plan_to_checkout(): void
+    public function test_pricing_page_links_displayed_plans_to_correct_destinations(): void
     {
         $this->seed(PricingPlanSeeder::class);
 
         $response = $this->get(route('pricing'));
 
         $response->assertOk();
-        foreach ($this->publicPricingPageSlugs() as $slug) {
+
+        foreach (['quick-leads', 'power-leads', 'prime-leads', 'cold-calling-isa', 'social-media-mgmt'] as $slug) {
             $response->assertSee('/packages/'.$slug.'/checkout', false);
         }
 
-        $response->assertSee('https://omnireferrals.com/contact', false);
+        $response->assertSee(route('contact'), false);
         $response->assertDontSee('/packages/individual-va/checkout', false);
+        $response->assertDontSee('pricing-card'.'__quick-list', false);
+        $response->assertDontSee('stripe'.'-checkout', false);
     }
 
     public function test_all_seeded_pricing_checkout_routes_load(): void
@@ -62,7 +59,9 @@ class PricingCheckoutRoutingTest extends TestCase
         foreach ($this->pricingSlugs() as $slug) {
             $this->get(route('packages.checkout', ['packageSlug' => $slug]))
                 ->assertOk()
-                ->assertSee('Checkout Options');
+                ->assertSee('Secure GoHighLevel Form')
+                ->assertSee('Loading secure form...')
+                ->assertDontSee('not configured here yet');
         }
     }
 
@@ -75,31 +74,23 @@ class PricingCheckoutRoutingTest extends TestCase
         $this->get(route('packages.checkout', ['packageSlug' => 'social-media-mgmt']))
             ->assertOk()
             ->assertSee('Social Media Mgmt')
-            ->assertSee('What you get')
-            ->assertSee('Turn your real estate brand into a daily content engine');
+            ->assertSee('What Is Included')
+            ->assertSee('Consistent visibility and audience growth');
 
         $this->assertDatabaseMissing('packages', ['slug' => 'social-media-mgmt']);
     }
 
-    public function test_checkout_start_persists_missing_package_before_payment_flow(): void
+    public function test_checkout_page_uses_embedded_form_flow(): void
     {
         config(['services.stripe.secret' => '']);
         $this->seed(PricingPlanSeeder::class);
 
-        $checkoutUrl = route('packages.checkout', ['packageSlug' => 'cold-calling-isa']);
+        $this->get(route('packages.checkout', ['packageSlug' => 'cold-calling-isa']))
+            ->assertOk()
+            ->assertSee('Secure GoHighLevel Form')
+            ->assertDontSee('stripe'.'-checkout', false)
+            ->assertDontSee('not configured here yet');
 
-        $this->from($checkoutUrl)
-            ->post(route('packages.checkout.start', ['packageSlug' => 'cold-calling-isa']), [
-                'billing' => 'monthly',
-            ])
-            ->assertRedirect($checkoutUrl)
-            ->assertSessionHas('error');
-
-        $this->assertDatabaseHas('packages', [
-            'slug' => 'cold-calling-isa',
-            'category' => 'virtual_assistant',
-            'billing_type' => 'monthly',
-            'monthly_price' => 1999,
-        ]);
+        $this->assertDatabaseMissing('packages', ['slug' => 'cold-calling-isa']);
     }
 }
