@@ -126,8 +126,8 @@
     <div class="container">
         <div class="section-heading homepage-section__heading pricing-section-head" data-animate="left">
             <span class="eyebrow">Pricing</span>
-            <h2>Choose your referral growth lane</h2>
-            <p class="pricing-section-head__sub">Three focused packages, direct checkout, and a clear path from onboarding to qualified conversations.</p>
+            <h2>Choose your growth lane</h2>
+            <p class="pricing-section-head__sub">Switch between real estate referral packages and VA execution services without leaving the page.</p>
         </div>
 
         @include('partials.pricing-plan-switcher', ['leadPlans' => $leadPlans])
@@ -303,4 +303,8 @@
         </div>
     </div>
 </section>
+
+@push('scripts')
+    @include('partials.pricing-toggle-script')
+@endpush
 @endsection

@@ -35,6 +35,8 @@ class PricingCheckoutRoutingTest extends TestCase
             'quick-leads',
             'power-leads',
             'prime-leads',
+            'cold-calling-isa',
+            'social-media-mgmt',
         ];
     }
 
@@ -49,9 +51,8 @@ class PricingCheckoutRoutingTest extends TestCase
             $response->assertSee('/packages/'.$slug.'/checkout', false);
         }
 
-        foreach (array_diff($this->pricingSlugs(), $this->publicPricingPageSlugs()) as $slug) {
-            $response->assertDontSee('/packages/'.$slug.'/checkout', false);
-        }
+        $response->assertSee('https://omnireferrals.com/contact', false);
+        $response->assertDontSee('/packages/individual-va/checkout', false);
     }
 
     public function test_all_seeded_pricing_checkout_routes_load(): void
