@@ -20,7 +20,13 @@
 <div class="{{ $gridClass }}" data-pricing-grid="{{ $toggleGroup }}" data-category="real_estate" style="{{ $defaultCategory === 'real_estate' ? '' : 'display:none;' }}" data-stagger>
     @foreach(($pricingPlans['real_estate'] ?? []) as $plan)
         @php
-            $ctaUrl = ($plan['slug'] ?? null) ? route('packages.checkout', ['packageSlug' => $plan['slug']]) : $leadActionUrl;
+            $slug = (string) ($plan['slug'] ?? '');
+            $ctaUrl = match ($slug) {
+                'quick-leads' => route('pricing.quick-lead'),
+                'power-leads' => route('pricing.power-lead'),
+                'prime-leads' => route('pricing.prime-lead'),
+                default => $leadActionUrl,
+            };
             $isFeatured = $plan['is_featured'] ?? false;
             $features = $plan['features'] ?? [];
             $visibleFeatures = $featureLimit ? array_slice($features, 0, $featureLimit) : $features;
@@ -79,7 +85,7 @@
             @if($showPackageDetails && !empty($plan['trust_note']))
                 <p class="pricing-card__trust-note">{{ $plan['trust_note'] }}</p>
             @endif
-            <a href="{{ $ctaUrl }}" class="button {{ $isFeatured ? 'button--orange' : 'button--blue' }}">{{ $plan['cta_label'] ?? 'Get Started' }}</a>
+            <a href="{{ $ctaUrl }}" class="button {{ $isFeatured ? 'button--orange' : 'button--blue' }}">EXPLORE PLAN</a>
             @if($showSalesLinks)
                 <a href="{{ route('contact', ['plan' => $plan['name']]) }}" class="ppc-form-link">Talk to sales about {{ $plan['name'] }}</a>
             @endif

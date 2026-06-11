@@ -68,6 +68,23 @@ Route::get('/sitemap.xml', function () {
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/pricing', [PricingController::class, 'index'])->name('pricing');
+
+/**
+ * Package detail pages for premium SaaS-style pricing experience (no direct checkout from pricing cards).
+ * These pages contain CTAs that route into /packages/{packageSlug}/checkout.
+ */
+Route::get('/pricing/quick-lead', function () {
+    return view('pages.pricing.quick-lead');
+})->name('pricing.quick-lead');
+
+Route::get('/pricing/power-lead', function () {
+    return view('pages.pricing.power-lead');
+})->name('pricing.power-lead');
+
+Route::get('/pricing/prime-lead', function () {
+    return view('pages.pricing.prime-lead');
+})->name('pricing.prime-lead');
+
 Route::get('/packages/{packageSlug}/checkout', [PricingController::class, 'checkout'])->name('packages.checkout');
 Route::post('/packages/{packageSlug}/stripe-checkout', [PricingController::class, 'startCheckout'])->name('packages.checkout.start');
 Route::get('/packages/{packageSlug}/success', [PricingController::class, 'success'])->name('packages.success');
