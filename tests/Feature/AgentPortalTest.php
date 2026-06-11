@@ -55,7 +55,7 @@ class AgentPortalTest extends TestCase
             'leads_closed' => 3,
             'specialties' => 'Buyer Representation',
             'bio' => 'Agent bio',
-            'headshot' => 'images/realtors/3.png',
+            'headshot' => 'assets/images/default-agent-avatar.svg',
         ]);
 
         foreach (range(1, 5) as $number) {
@@ -128,7 +128,7 @@ class AgentPortalTest extends TestCase
             'leads_closed' => 6,
             'specialties' => 'Luxury, Relocation',
             'bio' => 'Experienced local guide.',
-            'headshot' => 'images/realtors/3.png',
+            'headshot' => 'assets/images/default-agent-avatar.svg',
         ]);
 
         $property = Property::create([
@@ -233,7 +233,7 @@ class AgentPortalTest extends TestCase
             'leads_closed' => 4,
             'specialties' => 'Listings, Buyer Representation',
             'bio' => 'Portal bio',
-            'headshot' => 'images/realtors/3.png',
+            'headshot' => 'assets/images/default-agent-avatar.svg',
         ]);
 
         $this->actingAs($agent)->get(route('dashboard.agent'))->assertOk();

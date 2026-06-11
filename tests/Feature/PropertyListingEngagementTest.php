@@ -36,7 +36,7 @@ class PropertyListingEngagementTest extends TestCase
             'leads_closed' => 1,
             'specialties' => 'Listings',
             'bio' => 'Bio',
-            'headshot' => 'images/realtors/3.png',
+            'headshot' => 'assets/images/default-agent-avatar.svg',
         ]);
 
         return Property::create([

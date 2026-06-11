@@ -8,6 +8,7 @@ use App\Models\Lead;
 use App\Models\Property;
 use App\Models\PropertyFavorite;
 use App\Models\RealtorProfile;
+use App\Support\AgentAvatar;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -270,7 +271,7 @@ class PortalController extends Controller
                 'service_zip_code' => $user->zip_code ?: '75201',
                 'specialties' => 'Buyer Representation, Seller Strategy, Lead Conversion',
                 'bio' => 'Agent profile created in the OmniReferral workspace.',
-                'headshot' => $user->avatar ? 'storage/' . $user->avatar : 'images/realtors/3.png',
+                'headshot' => $user->avatar ? 'storage/' . ltrim($user->avatar, '/') : AgentAvatar::defaultStorageHeadshot(),
             ]
         );
     }

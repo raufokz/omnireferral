@@ -130,7 +130,14 @@
                 <div><dt>Staff team</dt><dd>{{ $record->staff_team ? strtoupper($record->staff_team) : '—' }}</dd></div>
                 <div><dt>Onboarding</dt><dd>{{ $record->onboarding_completed_at?->format('M j, Y') ?: 'Incomplete' }}</dd></div>
                 @if($record->realtorProfile)
-                    <div><dt>Agent profile</dt><dd><a href="{{ route('agents.show', $record->realtorProfile) }}" target="_blank" rel="noopener">Public profile</a></dd></div>
+                    <div><dt>Agent profile</dt><dd>
+                        <a href="{{ route('admin.agent-profiles.show', $record->realtorProfile) }}">Review in admin</a>
+                        @if($record->realtorProfile->isApprovedForPublicShow())
+                            · <a href="{{ route('agents.show', $record->realtorProfile) }}" target="_blank" rel="noopener">Public profile</a>
+                        @else
+                            · <span class="text-muted">Not public yet</span>
+                        @endif
+                    </dd></div>
                 @endif
             </dl>
         </section>

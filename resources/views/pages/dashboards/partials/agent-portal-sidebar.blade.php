@@ -1,13 +1,10 @@
 @php
-    $agentHeadshot = $agentProfile?->headshot;
-    $agentImage = $agentHeadshot
-        ? (\Illuminate\Support\Str::startsWith($agentHeadshot, ['http://', 'https://', '/storage/', 'storage/']) ? $agentHeadshot : asset($agentHeadshot))
-        : ($agentUser?->avatar ? asset('storage/' . ltrim($agentUser->avatar, '/')) : asset('images/realtors/3.png'));
+    $agentImage = $agentProfile?->headshotPublicUrl($agentUser);
 
     $agentLocation = collect([
-        $agentProfile?->city ?: $agentUser?->city,
-        $agentProfile?->state ?: $agentUser?->state,
-        $agentProfile?->zip_code ?: $agentUser?->zip_code,
+        $agentProfile?->service_city ?: $agentUser?->city,
+        $agentProfile?->service_state ?: $agentUser?->state,
+        $agentProfile?->service_zip_code ?: $agentUser?->zip_code,
     ])->filter()->implode(', ');
 @endphp
 

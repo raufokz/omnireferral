@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\RealtorProfile;
 use App\Models\User;
+use App\Support\AgentAvatar;
 use Illuminate\Support\Str;
 
 class UserObserver
@@ -26,7 +27,8 @@ class UserObserver
                     'service_zip_code' => $user->zip_code,
                     'specialties' => 'Buyer Representation, Seller Strategy, Lead Conversion',
                     'bio' => 'Agent profile created automatically from the OmniReferral platform.',
-                    'headshot' => $user->avatar ? ('storage/' . ltrim($user->avatar, '/')) : 'images/realtors/3.png',
+                    'headshot' => $user->avatar ? ('storage/' . ltrim($user->avatar, '/')) : AgentAvatar::defaultStorageHeadshot(),
+                    'approval_notes' => 'Pending admin review',
                 ]);
             }
 

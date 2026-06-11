@@ -486,7 +486,7 @@ class PropertyController extends Controller
                 'service_zip_code' => $user->zip_code ?: '75201',
                 'specialties' => 'Buyer Representation, Seller Strategy, Lead Conversion',
                 'bio' => 'Agent profile created in the OmniReferral workspace.',
-                'headshot' => $user->avatar ? 'storage/'.ltrim($user->avatar, '/') : 'images/realtors/3.png',
+                'headshot' => $user->avatar ? 'storage/'.ltrim($user->avatar, '/') : \App\Support\AgentAvatar::defaultStorageHeadshot(),
             ]
         );
     }

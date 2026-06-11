@@ -5,19 +5,10 @@
     /** @var \App\Models\User $user */
     /** @var \App\Models\RealtorProfile $profile */
     $displayName = $user->publicDisplayName();
-    $userAvatar = $user->profilePhotoPublicUrl();
-    $headshot = $profile->headshot;
-    $agentImage = $userAvatar
-        ?: ($headshot
-            ? (\Illuminate\Support\Str::startsWith($headshot, ['http://', 'https://', '/storage/', 'storage/']) ? $headshot : asset(ltrim($headshot, '/')))
-            : asset('images/realtors/3.png'));
-
+    $agentImage = $profile->headshotPublicUrl($user);
     $serviceArea = collect([$profile->service_city, $profile->service_state, $profile->service_zip_code])->filter()->implode(', ');
     $accountLocation = collect([$user->city, $user->state, $user->zip_code])->filter()->implode(', ');
-    $specialties = collect(explode(',', (string) $profile->specialties))
-        ->map(fn ($item) => trim($item))
-        ->filter()
-        ->take(4);
+    $specialties = collect($profile->specialtiesList())->take(4);
 @endphp
 
 <section class="page-hero page-hero--split agent-public-hero">
@@ -93,7 +84,7 @@
                 <h2>Meet {{ $displayName }}</h2>
             </div>
 
-            <p>{{ $profile->bio ?: 'This OmniReferral partner agent is ready to support buyers and sellers with a more responsive, qualification-first workflow.' }}</p>
+            <p>{{ e($profile->bio ?: 'This OmniReferral partner agent is ready to support buyers and sellers with a more responsive, qualification-first workflow.') }}</p>
 
             @if($specialties->isNotEmpty())
                 <div class="agent-public-specialties">

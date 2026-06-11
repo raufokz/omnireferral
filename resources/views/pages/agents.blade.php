@@ -1,14 +1,14 @@
 @extends('layouts.app')
 @section('content')
 @php
-    $agentCollection = $agents->getCollection();
-    $agentCityCount = $agentCollection
-        ->map(fn ($agent) => $agent->realtorProfile?->service_city)
+    $profileCollection = $profiles->getCollection();
+    $agentCityCount = $profileCollection
+        ->map(fn ($profile) => $profile->service_city)
         ->filter()
         ->unique()
         ->count();
-    $agentSpecialtyCount = $agentCollection
-        ->map(fn ($agent) => $agent->realtorProfile?->specialties)
+    $agentSpecialtyCount = $profileCollection
+        ->map(fn ($profile) => $profile->specialties)
         ->filter()
         ->unique()
         ->count();
@@ -23,7 +23,7 @@
 
             <div class="agent-directory-hero__actions">
                 <a href="#agent-directory-results" class="button button--orange">Browse Agents</a>
-                <a href="{{ route('contact') }}" class="button button--ghost-light">Talk To Our Team</a>
+                <a href="{{ route('join-as-agent') }}" class="button button--ghost-light">Join as Agent</a>
             </div>
 
             <div class="agent-directory-hero__proof">
@@ -40,8 +40,8 @@
 
             <div class="agent-directory-hero__stats">
                 <div class="agent-directory-hero__stat">
-                    <strong>{{ method_exists($agents, 'total') ? number_format($agents->total()) : number_format($agents->count()) }}</strong>
-                    <span>Active partner agents</span>
+                    <strong>{{ method_exists($profiles, 'total') ? number_format($profiles->total()) : number_format($profiles->count()) }}</strong>
+                    <span>Approved partner agents</span>
                 </div>
                 <div class="agent-directory-hero__stat">
                     <strong>{{ $agentCityCount }}</strong>
@@ -69,7 +69,7 @@
                 <form method="get" action="{{ route('agents.index') }}" class="agent-directory-filters" id="agentDirectorySearchForm">
                     <label>
                         <span>Search</span>
-                        <input type="search" name="q" value="{{ request('q') }}" placeholder="Name, email, city, brokerage…" autocomplete="off">
+                        <input type="search" name="q" value="{{ request('q') }}" placeholder="Name, city, brokerage…" autocomplete="off">
                     </label>
                     <label>
                         <span>Service city</span>
@@ -99,7 +99,7 @@
 
                 <div class="agent-directory-toolbar__footer">
                     <p class="agent-directory-results" id="agentDirectoryCount">
-                        Showing {{ $agents->count() }} of {{ method_exists($agents, 'total') ? $agents->total() : $agents->count() }} agents
+                        Showing {{ $profiles->count() }} of {{ method_exists($profiles, 'total') ? $profiles->total() : $profiles->count() }} agents
                         @if(request()->filled('q') || request()->filled('city') || request()->filled('specialty'))
                             <span class="text-muted">(filtered)</span>
                         @endif
@@ -109,34 +109,25 @@
         </div>
 
         <div class="agent-directory agent-directory--grid" id="agentDirectoryGrid" data-stagger data-server-filtered="1">
-            @foreach($agents as $agent)
+            @foreach($profiles as $profile)
                 @php
-                    $profile = $agent->realtorProfile;
-                    $displayName = $agent->publicDisplayName() ?: 'OmniReferral Agent';
-                    $profileImage = $agent->profilePhotoPublicUrl();
-
-                    if (! $profileImage && $profile?->headshot) {
-                        $profileImage = \Illuminate\Support\Str::startsWith($profile->headshot, ['http://', 'https://'])
-                            ? $profile->headshot
-                            : asset(ltrim($profile->headshot, '/'));
-                    }
-
-                    $profileImage ??= asset('images/realtors/1.png');
-                    $ratingValue = $profile?->rating ? number_format($profile->rating, 1) : 'New';
-                    $specialty = $profile?->specialties ?: 'Agent';
-                    $brokerage = $profile?->brokerage_name ?: 'OmniReferral Agent Network';
-                    $marketLabel = trim(collect([$profile?->service_city, $profile?->service_state])->filter()->implode(', '));
-                    $bio = $profile?->bio ?: 'Verified OmniReferral agent account ready for buyer, seller, and listing opportunities.';
-                    $profileRoute = $agent->publicAgentProfileUrl();
+                    $agent = $profile->user;
+                    $displayName = $agent?->publicDisplayName() ?: 'OmniReferral Agent';
+                    $ratingValue = $profile->rating ? number_format((float) $profile->rating, 1) : 'New';
+                    $specialty = $profile->specialties ?: 'Agent';
+                    $brokerage = $profile->brokerage_name ?: 'OmniReferral Agent Network';
+                    $marketLabel = trim(collect([$profile->service_city, $profile->service_state])->filter()->implode(', '));
+                    $bio = e($profile->bio ?: 'Verified OmniReferral agent ready for buyer, seller, and listing opportunities.');
+                    $profileRoute = $profile->publicShowUrl();
                 @endphp
                 <article
                     class="agent-card agent-card--profile"
                     data-agent-card
-                    data-city="{{ strtolower($profile?->service_city ?? '') }}"
+                    data-city="{{ strtolower($profile->service_city ?? '') }}"
                     data-specialty="{{ strtolower($specialty) }}"
                 >
                     <div class="agent-card__media">
-                        <img src="{{ $profileImage }}" alt="{{ $displayName }} profile image" style="object-fit: contain;" loading="lazy">
+                        @include('partials.agent-avatar', ['user' => $agent, 'profile' => $profile, 'alt' => $displayName])
                         <span class="agent-card__badge">Verified Agent</span>
                         <span class="agent-card__rating-chip" aria-label="{{ $ratingValue }} rating">
                             <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -156,25 +147,20 @@
                         <p class="agent-card__meta">{{ $brokerage }}</p>
 
                         <div class="agent-card__stats">
-                            <span>{{ $agent->email }}</span>
-                            <span>{{ $agent->phone ?: 'Phone not added' }}</span>
-                            @php
-                                $acctLoc = trim(collect([$agent->city, $agent->state, $agent->zip_code])->filter()->implode(', '));
-                            @endphp
-                            @if($acctLoc !== '')
-                                <span>Account: {{ $acctLoc }}</span>
+                            @if($agent?->phone)
+                                <span>{{ $agent->phone }}</span>
+                            @endif
+                            @if($profile->years_of_experience)
+                                <span>{{ $profile->years_of_experience }}+ years experience</span>
                             @endif
                         </div>
 
-                        <p class="agent-card__bio">{{ \Illuminate\Support\Str::limit($bio, 120) }}</p>
+                        <p class="agent-card__bio">{{ \Illuminate\Support\Str::limit(strip_tags($bio), 120) }}</p>
 
                         <div class="agent-card__actions">
                             @if($profileRoute)
                                 <a href="{{ $profileRoute }}" class="button button--ghost-blue">View Profile</a>
                                 <a href="{{ $profileRoute }}#agent-contact" class="button button--orange">Contact Agent</a>
-                            @else
-                                <span class="button button--ghost-blue button--disabled" aria-disabled="true">Profile Pending</span>
-                                <a href="mailto:{{ $agent->email }}" class="button button--orange">Email Agent</a>
                             @endif
                         </div>
                     </div>
@@ -182,16 +168,16 @@
             @endforeach
         </div>
 
-        <div class="agent-directory-empty-state" id="agentDirectoryEmpty" @if($agents->count() > 0) hidden @endif>
+        <div class="agent-directory-empty-state" id="agentDirectoryEmpty" @if($profiles->count() > 0) hidden @endif>
             <span class="agent-directory-empty-state__icon">No Match</span>
             @php
                 $hasServerFilters = request()->filled('q') || request()->filled('city') || request()->filled('specialty');
-                $totalAgents = method_exists($agents, 'total') ? $agents->total() : $agents->count();
+                $totalAgents = method_exists($profiles, 'total') ? $profiles->total() : $profiles->count();
             @endphp
             <h3>{{ $totalAgents === 0 && $hasServerFilters ? 'No agents match your filters' : ($totalAgents === 0 ? 'No Agents Found' : 'No agents on this page') }}</h3>
             <p>
                 @if($totalAgents === 0 && ! $hasServerFilters)
-                    Active partner agents (accounts with the agent role) will appear here once they join the platform.
+                    Approved partner agents will appear here once profiles pass admin review.
                 @elseif($totalAgents === 0 && $hasServerFilters)
                     Try clearing search or choosing a different city or specialty.
                 @else
@@ -200,10 +186,12 @@
             </p>
             @if($hasServerFilters)
                 <a href="{{ route('agents.index') }}" class="button button--orange">Clear filters</a>
+            @elseif($totalAgents === 0)
+                <a href="{{ route('join-as-agent') }}" class="button button--orange">Apply to Join</a>
             @endif
         </div>
 
-        <div class="pagination-wrap">{{ $agents->links() }}</div>
+        <div class="pagination-wrap">{{ $profiles->links() }}</div>
     </div>
 </section>
 @endsection

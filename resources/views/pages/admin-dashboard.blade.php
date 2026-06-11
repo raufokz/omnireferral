@@ -7,6 +7,7 @@
 @section('dashboard_actions')
     <a href="{{ route('admin.search') }}" class="button button--ghost-blue">Platform search</a>
     <a href="{{ route('admin.users.index') }}" class="button button--ghost-blue">Users</a>
+    <a href="{{ route('admin.agent-profiles.index') }}" class="button button--ghost-blue">Agent profiles</a>
     <a href="{{ route('admin.enquiries.index') }}" class="button button--ghost-blue">Enquiries</a>
     @if($workspaceUser?->isAdmin())
         <a href="{{ route('admin.activity.index') }}" class="button button--ghost-blue">Audit log</a>

@@ -173,7 +173,10 @@ class AuthController extends Controller
                 'license_number' => $request->license_number,
                 'specialties' => 'Buyer Representation, Seller Strategy, Referral Conversion',
                 'bio' => 'New OmniReferral partner profile created through the onboarding funnel.',
-                'headshot' => $avatarPath ? 'storage/' . $avatarPath : 'images/realtors/3.png',
+                'headshot' => $avatarPath ? 'storage/' . $avatarPath : \App\Support\AgentAvatar::defaultStorageHeadshot(),
+                'approved_at' => null,
+                'rejected_at' => null,
+                'approval_notes' => 'Pending admin review',
             ]);
         }
 

@@ -61,7 +61,7 @@ class PropertyImageManagementTest extends TestCase
             'leads_closed' => 4,
             'specialties' => 'Listings',
             'bio' => 'Agent bio',
-            'headshot' => 'images/realtors/3.png',
+            'headshot' => 'assets/images/default-agent-avatar.svg',
         ]);
 
         $agent->unsetRelation('realtorProfile');

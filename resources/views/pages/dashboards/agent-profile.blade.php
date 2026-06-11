@@ -5,17 +5,14 @@
 @section('dashboard_description', 'Manage the profile details used across your public page, message routing, and listing identity.')
 
 @section('dashboard_actions')
-    @if($agentProfile)
+    @if($agentProfile?->isApprovedForPublicShow())
         <a href="{{ route('agents.show', $agentProfile) }}" class="button button--ghost-blue">Public Profile</a>
     @endif
 @endsection
 
 @section('content')
 @php
-    $agentHeadshot = $agentProfile?->headshot;
-    $agentImage = $agentHeadshot
-        ? (\Illuminate\Support\Str::startsWith($agentHeadshot, ['http://', 'https://', '/storage/', 'storage/']) ? $agentHeadshot : asset($agentHeadshot))
-        : ($agentUser?->avatar ? asset('storage/' . ltrim($agentUser->avatar, '/')) : asset('images/realtors/3.png'));
+    $agentImage = $agentProfile?->headshotPublicUrl($agentUser);
 @endphp
 
 <div class="workspace-grid workspace-grid--2">

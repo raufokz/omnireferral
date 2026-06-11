@@ -7,7 +7,7 @@ This document matches the migrations and application code in this repository. Us
 - **Users are master for auth/account** (`users`: credentials, status, workspace enum `role`, billing pointers).
 - **Spatie is the authorization source** for fine-grained abilities; policies use `$user->can('…')` with legacy `isStaff()` / `isAgent()` fallbacks until fully migrated.
 - **`realtor_profiles` is agent-only 1:1**: enforced by `UserObserver` (creates profile when `role === agent`, deletes when demoted) + DB unique `user_id`.
-- **Public agents**: `RealtorProfile::scopePublicDirectory()` — `approved_at` + user `role=agent` + `status=active`.
+- **Public agents**: `RealtorProfile::scopePublicEligible()` — approved, not rejected, complete profile, rating ≥ 3, user `role=agent` + `status=active`.
 - **Property listing identity**: `PropertyListingIdentityService` runs on `Property::saved` so `listed_by_id` always matches `realtor_profiles.user_id` when `realtor_profile_id` is set. `owner_user_id` remains the listing owner (often seller).
 
 ## P1 — Business logic & FKs
@@ -52,6 +52,6 @@ SET ap.referral_code = COALESCE(NULLIF(TRIM(ap.referral_code), ''), u.affiliate_
 WHERE u.affiliate_code IS NOT NULL AND u.affiliate_code <> '';
 ```
 
-## Relationship map (ideal)
+See also: [agents-and-profiles.md](./agents-and-profiles.md) for onboarding, repair SQL, and directory rules.
 
-See the main project README / product spec: **users** 1:1 **realtor_profiles** (agents only); **users** 1:1 **affiliate_profiles**; **properties** N:1 **users** (owner, listed_by), N:1 **realtor_profiles**; **leads** N:1 **users** (assignee), N:1 **properties** (optional); **enquiries** N:1 **properties**, 0..1 **contacts** (unique `contact_id` if legacy 1:1 preserved).
+## Relationship map (ideal) **users** 1:1 **realtor_profiles** (agents only); **users** 1:1 **affiliate_profiles**; **properties** N:1 **users** (owner, listed_by), N:1 **realtor_profiles**; **leads** N:1 **users** (assignee), N:1 **properties** (optional); **enquiries** N:1 **properties**, 0..1 **contacts** (unique `contact_id` if legacy 1:1 preserved).

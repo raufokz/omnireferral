@@ -59,7 +59,7 @@ class PricingController extends Controller
             'leadsLast30Days' => Lead::query()->where('created_at', '>=', now()->subDays(30))->count(),
             'meta' => [
                 'title' => 'Pricing | OmniReferral Lead Packages and Virtual Assistant Plans',
-                'description' => 'Compare OmniReferral VA Services: Cold Calling / ISA ($1,999/mo), Social Media Mgmt ($1,499/mo), and Individual VA ($8/hr) — plus real estate lead packages for serious agents.',
+                'description' => 'Compare Starter ($399/mo), Growth ($899/mo), and Elite ($1,999/mo) lead packages plus virtual assistant services for real estate professionals.',
             ],
         ]);
     }
@@ -197,20 +197,15 @@ class PricingController extends Controller
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/z2wUhJG00x4n3MxY616R',
                 'description' => 'Elite lead onboarding form for premium, high-intent package workflows.',
             ],
-            'cold-calling-isa' => [
-                'title' => 'Cold Calling / ISA',
+            'va-starter' => [
+                'title' => 'ISA Support',
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/DAYWVBJkNiVLEfoW740d',
-                'description' => 'Cold Calling / ISA onboarding form for dedicated ISA sales agent setup and campaign configuration.',
+                'description' => 'ISA support onboarding form for outreach and qualification operations.',
             ],
-            'social-media-mgmt' => [
-                'title' => 'Social Media Mgmt',
+            'va-growth' => [
+                'title' => 'Full Social Media Package',
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/NiEcLMPWI084aKiAaNsi',
-                'description' => 'Social Media Management onboarding form for daily long and short form video content and growth execution.',
-            ],
-            'individual-va' => [
-                'title' => 'Individual VA',
-                'src' => 'https://api.leadconnectorhq.com/widget/survey/DAYWVBJkNiVLEfoW740d',
-                'description' => 'Individual VA onboarding form for flexible hourly virtual assistant support and task setup.',
+                'description' => 'Full social media package onboarding form for monthly content and growth execution.',
             ],
         ];
     }

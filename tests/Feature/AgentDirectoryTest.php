@@ -11,9 +11,9 @@ class AgentDirectoryTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_agents_page_lists_only_users_with_agent_role(): void
+    private function createPublicAgent(array $userOverrides = [], array $profileOverrides = []): User
     {
-        $agent = User::factory()->create([
+        $agent = User::factory()->create(array_merge([
             'name' => 'Taylor Agent',
             'email' => 'taylor.agent@example.com',
             'phone' => '(555) 123-4567',
@@ -22,9 +22,9 @@ class AgentDirectoryTest extends TestCase
             'city' => 'Dallas',
             'state' => 'TX',
             'zip_code' => '75201',
-        ]);
+        ], $userOverrides));
 
-        RealtorProfile::updateOrCreate(['user_id' => $agent->id], [
+        RealtorProfile::updateOrCreate(['user_id' => $agent->id], array_merge([
             'slug' => 'taylor-agent',
             'brokerage_name' => 'Premier Realty',
             'license_number' => 'TX-123456',
@@ -32,10 +32,18 @@ class AgentDirectoryTest extends TestCase
             'service_state' => 'TX',
             'service_zip_code' => '75201',
             'specialties' => 'Buyer Representation',
-            'bio' => 'Local agent bio.',
-            'headshot' => 'images/realtors/1.png',
+            'bio' => str_repeat('Experienced Dallas agent focused on responsive communication and local market expertise. ', 2),
+            'headshot' => 'assets/images/default-agent-avatar.svg',
+            'rating' => 4.5,
             'approved_at' => now(),
-        ]);
+        ], $profileOverrides));
+
+        return $agent->fresh('realtorProfile');
+    }
+
+    public function test_agents_page_lists_only_public_eligible_profiles(): void
+    {
+        $this->createPublicAgent();
 
         User::factory()->create([
             'name' => 'Bailey Buyer',
@@ -54,53 +62,39 @@ class AgentDirectoryTest extends TestCase
         $this->get(route('agents.index'))
             ->assertOk()
             ->assertSee('Taylor Agent')
-            ->assertSee('taylor.agent@example.com')
-            ->assertSee('(555) 123-4567')
-            ->assertSee('Dallas')
             ->assertSee('Premier Realty')
+            ->assertSee('Dallas')
             ->assertDontSee('Bailey Buyer')
             ->assertDontSee('Admin User');
     }
 
-    public function test_agents_page_lists_active_agent_users_even_without_approved_profile(): void
+    public function test_agents_page_hides_unapproved_profiles(): void
     {
-        $pending = User::factory()->create([
+        $this->createPublicAgent([
             'name' => 'Pending Profile Agent',
             'email' => 'pending.agent@example.com',
-            'role' => 'agent',
-            'status' => 'active',
             'city' => 'Houston',
             'state' => 'TX',
-        ]);
-
-        RealtorProfile::updateOrCreate(['user_id' => $pending->id], [
+        ], [
             'slug' => 'pending-profile-agent',
-            'brokerage_name' => 'Open Brokerage',
             'service_city' => 'Houston',
             'service_state' => 'TX',
-            'specialties' => 'Listings',
             'approved_at' => null,
         ]);
 
         $this->get(route('agents.index'))
             ->assertOk()
-            ->assertSee('Pending Profile Agent')
-            ->assertSee('pending.agent@example.com')
-            ->assertSee('Profile Pending');
+            ->assertDontSee('Pending Profile Agent')
+            ->assertDontSee('Profile Pending');
     }
 
     public function test_agent_profile_page_resolves_by_slug_and_requires_approval(): void
     {
-        $agent = User::factory()->create([
+        $agent = $this->createPublicAgent([
             'name' => 'Public Agent',
-            'role' => 'agent',
-            'status' => 'active',
-        ]);
-
-        RealtorProfile::updateOrCreate(['user_id' => $agent->id], [
+        ], [
             'slug' => 'public-agent-slug',
             'brokerage_name' => 'Test Brokerage',
-            'approved_at' => now(),
             'service_city' => 'Austin',
             'service_state' => 'TX',
         ]);
@@ -116,7 +110,7 @@ class AgentDirectoryTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_agents_page_shows_empty_state_when_no_agent_users_exist(): void
+    public function test_agents_page_shows_empty_state_when_no_public_profiles_exist(): void
     {
         User::factory()->create([
             'name' => 'Seller User',
@@ -128,5 +122,36 @@ class AgentDirectoryTest extends TestCase
             ->assertOk()
             ->assertSee('No Agents Found')
             ->assertDontSee('seller@example.com');
+    }
+
+    public function test_join_as_agent_creates_pending_user_and_profile(): void
+    {
+        $response = $this->post(route('join-as-agent.store'), [
+            'name' => 'Jordan Agent',
+            'email' => 'jordan.agent@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'city' => 'Dallas',
+            'state' => 'TX',
+            'service_city' => 'Dallas',
+            'service_state' => 'TX',
+            'brokerage_name' => 'Jordan Realty',
+            'specialties' => ['Buyer Representation', 'Relocation'],
+            'bio' => str_repeat('Professional agent bio with enough detail for admin review and public directory readiness. ', 2),
+            'terms_accepted' => '1',
+        ]);
+
+        $response->assertRedirect(route('join-as-agent.success'));
+
+        $user = User::where('email', 'jordan.agent@example.com')->first();
+        $this->assertNotNull($user);
+        $this->assertSame('agent', $user->role);
+        $this->assertSame('pending', $user->status);
+
+        $profile = $user->realtorProfile;
+        $this->assertNotNull($profile);
+        $this->assertNull($profile->approved_at);
+        $this->assertSame('Pending admin review', $profile->approval_notes);
+        $this->assertSame($user->id, $profile->user_id);
     }
 }

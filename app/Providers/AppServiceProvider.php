@@ -5,11 +5,13 @@ namespace App\Providers;
 use App\Models\Enquiry;
 use App\Models\Lead;
 use App\Models\Property;
+use App\Models\RealtorProfile;
 use App\Models\User;
 use App\Observers\UserObserver;
 use App\Policies\EnquiryPolicy;
 use App\Policies\LeadPolicy;
 use App\Policies\PropertyPolicy;
+use App\Policies\RealtorProfilePolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -72,48 +74,38 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Enquiry::class, EnquiryPolicy::class);
         Gate::policy(Lead::class, LeadPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(RealtorProfile::class, RealtorProfilePolicy::class);
 
         User::observe(UserObserver::class);
 
         Route::bind('realtor', function (string $value) {
-            return User::query()
-                ->publicDirectoryAgents()
-                ->whereHas('realtorProfile', fn ($q) => $q->where('slug', $value))
+            $profile = RealtorProfile::query()
+                ->publicEligible()
+                ->where('slug', $value)
                 ->with([
-                    'realtorProfile' => fn ($q) => $q->select([
+                    'user' => fn ($q) => $q->select([
                         'id',
-                        'user_id',
-                        'slug',
-                        'brokerage_name',
-                        'license_number',
-                        'service_city',
-                        'service_state',
-                        'service_zip_code',
-                        'rating',
-                        'review_count',
-                        'leads_closed',
-                        'specialties',
-                        'bio',
-                        'headshot',
-                        'approved_at',
+                        'name',
+                        'display_name',
+                        'email',
+                        'phone',
+                        'avatar',
+                        'city',
+                        'state',
+                        'zip_code',
+                        'role',
+                        'status',
+                        'created_at',
+                        'updated_at',
                     ]),
                 ])
-                ->select([
-                    'id',
-                    'name',
-                    'display_name',
-                    'email',
-                    'phone',
-                    'avatar',
-                    'city',
-                    'state',
-                    'zip_code',
-                    'role',
-                    'status',
-                    'created_at',
-                    'updated_at',
-                ])
                 ->firstOrFail();
+
+            $user = $profile->user;
+            abort_unless($user, 404);
+            $user->setRelation('realtorProfile', $profile);
+
+            return $user;
         });
 
         RateLimiter::for('leads', function (Request $request) {
@@ -146,6 +138,10 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('auth-register', function (Request $request) {
             return Limit::perMinute(4)->by($request->ip());
+        });
+
+        RateLimiter::for('agent-join', function (Request $request) {
+            return Limit::perMinute(3)->by($request->ip());
         });
 
         RateLimiter::for('auth-password-reset', function (Request $request) {

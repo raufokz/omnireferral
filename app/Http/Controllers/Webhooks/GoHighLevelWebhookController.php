@@ -91,7 +91,7 @@ class GoHighLevelWebhookController extends Controller
                     'service_zip_code' => $request->string('zip_code')->value() ?: ($user->zip_code ?: '75201'),
                     'specialties' => $request->string('specialties')->value() ?: 'Buyer Representation, Seller Strategy, Lead Conversion',
                     'bio' => $request->string('bio')->value() ?: 'Agent profile created after package purchase.',
-                    'headshot' => 'images/realtors/3.png',
+                    'headshot' => \App\Support\AgentAvatar::defaultStorageHeadshot(),
                 ]);
 
                 return [
@@ -205,7 +205,7 @@ class GoHighLevelWebhookController extends Controller
                         'service_zip_code' => $request->string('zip_code')->value() ?: ($user->zip_code ?: '75201'),
                         'specialties' => $request->string('specialties')->value() ?: 'Buyer Representation, Seller Strategy, Lead Conversion',
                         'bio' => $request->string('bio')->value() ?: 'Agent profile generated from GoHighLevel onboarding.',
-                        'headshot' => 'images/realtors/3.png',
+                        'headshot' => \App\Support\AgentAvatar::defaultStorageHeadshot(),
                     ]);
                 }
 

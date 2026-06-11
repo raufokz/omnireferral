@@ -21,9 +21,7 @@
     $workspaceUser = auth()->user();
     $role = $workspaceUser?->role;
     $roleLabel = $workspaceUser?->roleLabel() ?? 'Workspace';
-    $avatarUrl = $workspaceUser?->avatar
-        ? asset('storage/' . ltrim($workspaceUser->avatar, '/'))
-        : asset('images/realtors/3.png');
+    $avatarUrl = $workspaceUser?->profilePhotoPublicUrl() ?? asset(\App\Support\AgentAvatar::defaultPath());
 
     $initials = collect(explode(' ', (string) ($workspaceUser?->name ?? 'Omni User')))
         ->filter()
@@ -94,6 +92,7 @@
                     'icon' => 'operations',
                     'children' => [
                         ['label' => 'Users', 'route' => route('admin.users.index'), 'active' => ['admin.users.*'], 'icon' => 'users'],
+                        ['label' => 'Agent Profiles', 'route' => route('admin.agent-profiles.index'), 'active' => ['admin.agent-profiles.*'], 'icon' => 'users'],
                         ['label' => 'Properties', 'route' => route('admin.properties.index'), 'active' => ['admin.properties.*'], 'icon' => 'properties'],
                         ['label' => 'Enquiries', 'route' => route('admin.enquiries.index'), 'active' => ['admin.enquiries.*'], 'icon' => 'enquiries'],
                         ['label' => 'Lead Registry', 'route' => route('admin.leads.index'), 'active' => ['admin.leads.*'], 'icon' => 'leads'],

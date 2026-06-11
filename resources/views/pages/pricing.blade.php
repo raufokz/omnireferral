@@ -13,17 +13,17 @@
     <div class="pricing-hero-band__bg" aria-hidden="true"></div>
     <div class="container pricing-hero-band__inner pricing-hero-band__inner--split" data-animate="up">
         <div class="phb-copy phb-copy--split">
-            <span class="eyebrow phb-eyebrow">VA Services & Lead Packages</span>
-            <h1 class="phb-copy__headline">Flexible support for serious teams</h1>
-            <p class="phb-copy__sub">Dedicated ISA cold callers, daily social media management, and flexible hourly VAs — plus real estate lead packages with transparent pricing and no hidden fees.</p>
+            <span class="eyebrow phb-eyebrow">Premium Real Estate Lead Engine</span>
+            <h1 class="phb-copy__headline">Simple, transparent pricing for serious agents</h1>
+            <p class="phb-copy__sub">ISA-qualified, sales-backed leads with clear packages, optional virtual assistance, and a smoother GoHighLevel handoff.</p>
             <div class="phb-copy__ctas">
                 <a href="#pricing-plans" class="button button--orange">View Packages</a>
                 <a href="{{ route('contact') }}" class="button button--ghost-light">Talk to Sales</a>
             </div>
             <div class="phb-copy__badges">
-                <span class="phb-badge">Dedicated ISA Agents</span>
-                <span class="phb-badge">Daily Video Content</span>
-                <span class="phb-badge">Flexible Hourly VAs</span>
+                <span class="phb-badge">90-day satisfaction focus</span>
+                <span class="phb-badge">Fast routing</span>
+                <span class="phb-badge">High-intent buyers and sellers</span>
             </div>
         </div>
 
@@ -80,8 +80,8 @@
     <div class="container">
         <div class="section-heading homepage-section__heading" data-animate="left">
             <span class="eyebrow">Pricing Snapshot</span>
-            <h2>Choose the VA service or lead package that fits your growth</h2>
-            <p class="pricing-section-head__sub">Each plan delivers meaningful ROI — whether you need a dedicated ISA caller, daily social content, a flexible VA, or a real estate lead tier.</p>
+            <h2>Choose the package that matches your growth stage</h2>
+            <p class="pricing-section-head__sub">Each tier delivers meaningful ROI, whether testing a new market or scaling a high-performing team.</p>
         </div>
 
         @include('partials.pricing-plan-switcher', [

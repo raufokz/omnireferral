@@ -95,15 +95,32 @@ class User extends Authenticatable
         return $this->realtorProfile?->publicShowUrl();
     }
 
+    public function scopeAgents($query)
+    {
+        return $query->where('role', 'agent');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    public function scopeWithApprovedProfile($query)
+    {
+        return $query->whereHas('realtorProfile', fn ($profile) => $profile->publicEligible());
+    }
+
     /**
-     * Public agent directory: rows from `users` with agent role (active accounts only).
-     * Profile approval controls the public profile page, not directory membership.
+     * Active agent accounts (workspace filter only — use withApprovedProfile for public directory).
      */
     public function scopePublicDirectoryAgents($query)
     {
-        return $query
-            ->where('role', 'agent')
-            ->where('status', 'active');
+        return $query->agents()->active();
+    }
+
+    public function agentAvatarUrl(): string
+    {
+        return \App\Support\AgentAvatar::url($this, $this->realtorProfile);
     }
 
     public function assignedLeads(): HasMany

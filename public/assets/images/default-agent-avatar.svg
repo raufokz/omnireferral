@@ -1,0 +1,6 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Default agent avatar">
+  <rect width="256" height="256" rx="128" fill="#EEF3FB"/>
+  <circle cx="128" cy="96" r="44" fill="#0057B8"/>
+  <path d="M48 220C48 168 82 132 128 132C174 132 208 168 208 220V236H48V220Z" fill="#FF6600"/>
+  <circle cx="128" cy="128" r="120" stroke="#0057B8" stroke-width="8" fill="none" opacity="0.25"/>
+</svg>
