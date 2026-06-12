@@ -31,11 +31,12 @@
             <a class="{{ $isHome ? 'is-active' : '' }}" href="{{ route('home') }}#how-it-works"
                 data-nav-section="how-it-works" @if($isHome) aria-current="page" @endif>How It Works</a>
             <a class="{{ $isListings ? 'is-active' : '' }}"
-                href="{{ route('listings') }}" @if($isListings) aria-current="page" @endif>Listings</a>
-            <a class="{{ $isPricing ? 'is-active' : '' }}"
-                href="{{ route('pricing') }}" @if($isPricing) aria-current="page" @endif>Pricing</a>
+                href="{{ route('listings') }}" @if($isListings) aria-current="page" @endif>Featured Listings</a>
+
             <a class="{{ $isAgents ? 'is-active' : '' }}"
-                href="{{ route('agents.index') }}" @if($isAgents) aria-current="page" @endif>Agents</a>
+                href="{{ route('agents.index') }}" @if($isAgents) aria-current="page" @endif>Preferred Agents</a>
+                   <a class="{{ $isPricing ? 'is-active' : '' }}"
+                href="{{ route('pricing') }}" @if($isPricing) aria-current="page" @endif>Pricing</a>
             <a class="{{ $isReviews ? 'is-active' : '' }}"
                 href="{{ route('reviews') }}" @if($isReviews) aria-current="page" @endif>Testimonials</a>
             <div class="nav-dropdown {{ $isMoreActive ? 'is-active' : '' }}"
@@ -48,12 +49,12 @@
                 </button>
                 <div class="nav-submenu" data-nav-submenu id="mainNavMoreSubmenu">
                     <a class="{{ request()->routeIs('about') ? 'is-active' : '' }}"
-                        href="{{ route('about') }}">About</a>
+                        href="{{ route('about') }}">About Us</a>
                     <a class="{{ request()->routeIs('blog.*') ? 'is-active' : '' }}"
-                        href="{{ route('blog.index') }}">Blog</a>
-                    <a class="{{ request()->routeIs('faq') ? 'is-active' : '' }}" href="{{ route('faq') }}">FAQ</a>
+                        href="{{ route('blog.index') }}">Blogs</a>
+                    <a class="{{ request()->routeIs('faq') ? 'is-active' : '' }}" href="{{ route('faq') }}">FAQ`s</a>
                     <a class="{{ request()->routeIs('contact') ? 'is-active' : '' }}"
-                        href="{{ route('contact') }}">Contact</a>
+                        href="{{ route('contact') }}">Contact Us</a>
 
                     <!-- <a class="{{ request()->routeIs('resources') ? 'is-active' : '' }}" href="{{ route('resources') }}">Resources</a> -->
                     <!-- <a class="{{ request()->routeIs('news') ? 'is-active' : '' }}" href="{{ route('news') }}">News</a> -->

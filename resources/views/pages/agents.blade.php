@@ -166,7 +166,7 @@
                             </div>
 
                             <div class="omni-agent-card__actions">
-                                <button type="button" class="agent-btn agent-btn--orange" x-on:click="openModal('{{ $profile->slug }}')">View Agent</button>
+                                <button type="button" class="agent-btn agent-btn--orange" x-on:click="openModal('{{ $profile->slug }}')">View Full Profile</button>
                             </div>
                         </div>
                     </article>
