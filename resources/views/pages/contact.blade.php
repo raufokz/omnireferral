@@ -8,6 +8,7 @@
 @php
     $c = config('omnireferral.company');
     $supportEmail = $c['support_email'];
+    $infoEmail = $c['info_email'];
     $phoneE164 = trim((string) ($c['support_phone_e164'] ?? ''));
     $phoneDisplay = trim((string) ($c['support_phone_display'] ?? ''));
     $hasPhone = $phoneE164 !== '' && $phoneDisplay !== '';
@@ -17,6 +18,7 @@
     $socialLabels = [
         'facebook' => 'Facebook',
         'instagram' => 'Instagram',
+        'linkedin' => 'LinkedIn',
         'pinterest' => 'Pinterest',
     ];
     $socialLinks = collect($c['social_links'] ?? [])
@@ -62,8 +64,12 @@
                     <span>{{ $officeHours }}</span>
                 </div>
                 <div class="agent-directory-hero__stat">
-                    <strong>Email</strong>
+                    <strong>Support</strong>
                     <span>{{ $supportEmail }}</span>
+                </div>
+                <div class="agent-directory-hero__stat">
+                    <strong>Info</strong>
+                    <span>{{ $infoEmail }}</span>
                 </div>
                 @if ($hasPhone)
                     <div class="agent-directory-hero__stat">
@@ -167,7 +173,7 @@
             {{-- Contact details --}}
             <aside class="contact-side-card" aria-label="Contact details">
                 <div class="contact-side-card__header">
-                    <span class="eyebrow">Contact Details</span>
+                    <span class="eyebrow">Support &amp; Information</span>
                     <h3 class="contact-side-card__title">Reach the right OmniReferral team faster.</h3>
                     <p class="contact-side-card__copy">
                         Choose the best contact path for sales, support, billing, or partnership questions.
@@ -181,9 +187,20 @@
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                         </span>
                         <span class="contact-side-item__body">
-                            <span class="contact-side-item__label">Email support</span>
+                            <span class="contact-side-item__label">Support</span>
                             <span class="contact-side-item__value">{{ $supportEmail }}</span>
                             <span class="contact-side-item__note">Best for package questions, billing help, onboarding, and detailed support requests.</span>
+                        </span>
+                    </a>
+
+                    <a href="mailto:{{ $infoEmail }}" class="contact-side-item">
+                        <span class="contact-side-item__icon contact-side-item__icon--blue" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                        </span>
+                        <span class="contact-side-item__body">
+                            <span class="contact-side-item__label">General Information</span>
+                            <span class="contact-side-item__value">{{ $infoEmail }}</span>
+                            <span class="contact-side-item__note">Best for platform questions, media inquiries, partnership basics, and general OmniReferral information.</span>
                         </span>
                     </a>
 

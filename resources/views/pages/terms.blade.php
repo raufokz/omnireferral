@@ -2,6 +2,9 @@
 
 @section('content')
 @php
+    $company = config('omnireferral.company');
+    $supportEmail = $company['support_email'];
+    $infoEmail = $company['info_email'];
     $policyLinks = [
         ['id' => 'overview', 'label' => 'Overview'],
         ['id' => 'communications', 'label' => 'Communications Consent'],
@@ -41,7 +44,7 @@
             <div class="legal-page-hero__summary">
                 <div>
                     <span>Primary contact</span>
-                    <strong><a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a></strong>
+                    <strong><a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a></strong>
                 </div>
                 <div>
                     <span>Coverage</span>
@@ -265,7 +268,11 @@
                 <div class="legal-contact-grid">
                     <div>
                         <span>General support</span>
-                        <strong><a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a></strong>
+                        <strong><a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a></strong>
+                    </div>
+                    <div>
+                        <span>General Information</span>
+                        <strong><a href="mailto:{{ $infoEmail }}">{{ $infoEmail }}</a></strong>
                     </div>
                     <div>
                         <span>Contact page</span>

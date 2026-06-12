@@ -36,8 +36,10 @@
             'sameAs' => $socialLinks,
         ];
 
+        $contactPoints = [];
+
         if (! empty($company['support_email']) || ! empty($company['support_phone_e164'])) {
-            $organizationSchema['contactPoint'] = array_filter([
+            $contactPoints[] = array_filter([
                 '@type' => 'ContactPoint',
                 'contactType' => 'customer support',
                 'email' => $company['support_email'] ?? null,
@@ -45,6 +47,20 @@
                 'areaServed' => 'US',
                 'availableLanguage' => 'English',
             ]);
+        }
+
+        if (! empty($company['info_email'])) {
+            $contactPoints[] = array_filter([
+                '@type' => 'ContactPoint',
+                'contactType' => 'general information',
+                'email' => $company['info_email'],
+                'areaServed' => 'US',
+                'availableLanguage' => 'English',
+            ]);
+        }
+
+        if (! empty($contactPoints)) {
+            $organizationSchema['contactPoint'] = $contactPoints;
         }
 
         if (! empty($companyAddress)) {

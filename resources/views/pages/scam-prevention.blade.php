@@ -2,6 +2,9 @@
 
 @section('content')
 @php
+    $company = config('omnireferral.company');
+    $supportEmail = $company['support_email'];
+    $infoEmail = $company['info_email'];
     $policyLinks = [
         ['id' => 'overview', 'label' => 'Overview'],
         ['id' => 'official-site', 'label' => 'Official Website'],
@@ -23,7 +26,7 @@
             <div class="legal-page-hero__chips">
                 <span>Official website: omnireferrals.com</span>
                 <span>Verify new payment requests before sending money</span>
-                <span>Report suspicious activity to {{ config('omnireferral.company.support_email') }}</span>
+                <span>Report suspicious activity to {{ $supportEmail }}</span>
             </div>
         </div>
 
@@ -38,7 +41,7 @@
                 </div>
                 <div>
                     <span>Fraud reporting</span>
-                    <strong><a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a></strong>
+                    <strong><a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a></strong>
                 </div>
             </div>
         </div>
@@ -75,7 +78,7 @@
                     <li>Any website not hosted on <strong>omnireferrals.com</strong> is unauthorized.</li>
                     <li>Our official website will be reflected as <strong>omnireferrals.com</strong> or <strong>www.omnireferrals.com</strong>.</li>
                 </ul>
-                <p>If you encounter a suspicious or copycat website, notify us immediately at <a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a>.</p>
+                <p>If you encounter a suspicious or copycat website, notify us immediately at <a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a>.</p>
             </article>
 
             <article class="legal-card cockpit-table-card" id="payment-requests">
@@ -153,7 +156,11 @@
                 <div class="legal-contact-grid">
                     <div>
                         <span>Fraud reporting</span>
-                        <strong><a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a></strong>
+                        <strong><a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a></strong>
+                    </div>
+                    <div>
+                        <span>General Information</span>
+                        <strong><a href="mailto:{{ $infoEmail }}">{{ $infoEmail }}</a></strong>
                     </div>
                     <div>
                         <span>Official website</span>

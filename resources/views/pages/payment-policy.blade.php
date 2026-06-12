@@ -2,6 +2,9 @@
 
 @section('content')
 @php
+    $company = config('omnireferral.company');
+    $supportEmail = $company['support_email'];
+    $infoEmail = $company['info_email'];
     $policyLinks = [
         ['id' => 'overview', 'label' => 'Overview'],
         ['id' => 'promo', 'label' => 'Open Enrollment Promo'],
@@ -37,7 +40,7 @@
             <div class="legal-page-hero__summary">
                 <div>
                     <span>Support</span>
-                    <strong><a href="mailto:support@omnireferrals.com">support@omnireferrals.com</a></strong>
+                    <strong><a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a></strong>
                 </div>
                 <div>
                     <span>Cancellations</span>
@@ -103,7 +106,7 @@
             <article class="legal-card cockpit-table-card" id="refund-request">
                 <span class="eyebrow">Refund Request Process</span>
                 <h2>How a refund request should be submitted</h2>
-                <p>To request a refund, the policy states that the agent should email <a href="mailto:support@omnireferrals.com">support@omnireferrals.com</a> with the subject line <strong>"Refund Request"</strong>.</p>
+                <p>To request a refund, the policy states that the agent should email <a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a> with the subject line <strong>"Refund Request"</strong>.</p>
                 <ul class="legal-list">
                     <li>Include your full name.</li>
                     <li>Include your contact details.</li>
@@ -167,7 +170,11 @@
                 <div class="legal-contact-grid">
                     <div>
                         <span>Refund Requests</span>
-                        <strong><a href="mailto:support@omnireferrals.com">support@omnireferrals.com</a></strong>
+                        <strong><a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a></strong>
+                    </div>
+                    <div>
+                        <span>General Information</span>
+                        <strong><a href="mailto:{{ $infoEmail }}">{{ $infoEmail }}</a></strong>
                     </div>
                     <div>
                         <span>Cancellations</span>

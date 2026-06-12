@@ -3,8 +3,7 @@ header("Content-type: application/xml; charset=UTF-8");
 
 /* Example properties (DB se aayega real project me) */
 $properties = [
-  ["slug" => "luxury-house-karachi", "date" => "2026-06-12"],
-  ["slug" => "dubai-villa-001", "date" => "2026-06-11"]
+ ["slug" => "dubai-villa-001", "date" => "2026-06-11"]
 ];
 
 echo "<?xml version='1.0' encoding='UTF-8'?>";

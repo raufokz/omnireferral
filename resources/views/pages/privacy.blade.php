@@ -2,6 +2,9 @@
 
 @section('content')
 @php
+    $company = config('omnireferral.company');
+    $supportEmail = $company['support_email'];
+    $infoEmail = $company['info_email'];
     $policyLinks = [
         ['id' => 'overview', 'label' => 'Overview'],
         ['id' => 'data-collection', 'label' => '1. Data Collection'],
@@ -42,7 +45,7 @@
             <div class="legal-page-hero__summary">
                 <div>
                     <span>Contact</span>
-                    <strong>{{ config('omnireferral.company.support_email') }}</strong>
+                    <strong>{{ $supportEmail }}</strong>
                 </div>
                 <div>
                     <span>Policy Scope</span>
@@ -143,7 +146,7 @@
                 <p>Subject to applicable law, you may request access to certain information stored by us and request corrections to help ensure accuracy.</p>
                 <ul class="legal-list">
                     <li>If information you provided changes or is inaccurate, you should notify us promptly so it can be updated.</li>
-                    <li>You may request deletion or modification of your information by using the Services or contacting us at <a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a>.</li>
+                    <li>You may request deletion or modification of your information by using the Services or contacting us at <a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a>.</li>
                     <li>Upon request, we will close your account and remove your information from view as soon as reasonably possible.</li>
                     <li>We may retain certain data where required by law or for legitimate business purposes.</li>
                 </ul>
@@ -217,7 +220,7 @@
                 <p>OmniReferral aims to make its website and legal information reasonably accessible. If you need this Privacy Policy in another format or need assistance accessing any part of the Services, please contact us and we will try to provide a reasonable accommodation where possible.</p>
                 <div class="legal-action-row">
                     <a href="{{ route('contact') }}" class="button button--orange">Contact OmniReferral</a>
-                    <a href="mailto:{{ config('omnireferral.company.support_email') }}" class="button button--ghost-blue">Email Support</a>
+                    <a href="mailto:{{ $supportEmail }}" class="button button--ghost-blue">Email Support</a>
                 </div>
             </article>
 
@@ -227,8 +230,12 @@
                 <p>If you have questions about this Privacy Policy or want to request access, updates, or deletion of your information, contact OmniReferral through our contact page or by email.</p>
                 <div class="legal-contact-grid">
                     <div>
-                        <span>Email</span>
-                        <strong><a href="mailto:{{ config('omnireferral.company.support_email') }}">{{ config('omnireferral.company.support_email') }}</a></strong>
+                        <span>Support</span>
+                        <strong><a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a></strong>
+                    </div>
+                    <div>
+                        <span>General Information</span>
+                        <strong><a href="mailto:{{ $infoEmail }}">{{ $infoEmail }}</a></strong>
                     </div>
                     <div>
                         <span>Contact Page</span>

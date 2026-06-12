@@ -18,6 +18,7 @@
     ];
     $company = config('omnireferral.company');
     $supportEmail = $company['support_email'];
+    $infoEmail = $company['info_email'];
     $supportPhoneDisplay = trim((string) ($company['support_phone_display'] ?? ''));
     $smsHelpSummary = $supportPhoneDisplay
         ? 'Text HELP to '.$supportPhoneDisplay
@@ -48,6 +49,10 @@
                 <div>
                     <span>Support email</span>
                     <strong><a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a></strong>
+                </div>
+                <div>
+                    <span>General Information</span>
+                    <strong><a href="mailto:{{ $infoEmail }}">{{ $infoEmail }}</a></strong>
                 </div>
                 <div>
                     <span>SMS help</span>
@@ -218,8 +223,12 @@
                 <p>If you have questions or feedback about this Communication Policy, or want help updating your communication preferences, contact OmniReferral through the channels below.</p>
                 <div class="legal-contact-grid">
                     <div>
-                        <span>Email</span>
+                        <span>Support</span>
                         <strong><a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a></strong>
+                    </div>
+                    <div>
+                        <span>General Information</span>
+                        <strong><a href="mailto:{{ $infoEmail }}">{{ $infoEmail }}</a></strong>
                     </div>
                     <div>
                         <span>SMS Help</span>
