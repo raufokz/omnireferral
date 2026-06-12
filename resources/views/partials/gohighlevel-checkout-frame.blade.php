@@ -122,7 +122,7 @@
         <div class="ghc-frame panel panel--premium">
             <div class="ghc-loading" id="ghc-loading">
                 <div class="ghc-spinner" aria-hidden="true"></div>
-                <div class="ghc-loading__text">Loading secure form...</div>
+                <div class="ghc-loading__text">Loading secure form</div>
             </div>
 
             @if($hasIframe)
@@ -133,7 +133,8 @@
                     title="{{ $iframeTitle }}"
                     style="border:none;width:100%;min-height:800px;background:transparent;"
                     scrolling="no"
-                    loading="lazy"
+                    loading="eager"
+                    fetchpriority="high"
                     referrerpolicy="no-referrer"
                     onload="(function(){var el=document.getElementById('ghc-loading');if(el){el.style.display='none';}})();"
                 ></iframe>
@@ -147,7 +148,7 @@
     </div>
 </div>
 
-<script src="https://link.msgsndr.com/js/form_embed.js"></script>
+<script src="https://link.msgsndr.com/js/form_embed.js" defer></script>
 
 @push('styles')
 <style>
@@ -179,21 +180,22 @@
 
     .ghc-loading{
         position:absolute;
-        inset: 18px;
+        inset: 18px 18px auto;
         display:flex;
-        flex-direction:column;
         align-items:center;
         justify-content:center;
-        gap:10px;
-        background: rgba(255,255,255,.75);
+        gap:8px;
+        min-height: 44px;
+        background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(255,255,255,.78));
         backdrop-filter: blur(4px);
         z-index:5;
-        border-radius: 14px;
+        border-radius: 12px;
+        pointer-events: none;
     }
     .ghc-iframe{ display:block; border-radius: 12px; }
     .ghc-spinner{
-        width: 44px; height:44px;
-        border: 4px solid rgba(11,27,58,.15);
+        width: 18px; height:18px;
+        border: 2px solid rgba(11,27,58,.15);
         border-top-color: var(--orange, #ff7a18);
         border-radius:50%;
         animation: ghc-spin .9s linear infinite;
@@ -202,6 +204,8 @@
     .ghc-loading__text{
         font-weight: 700;
         color: rgba(11,27,58,.85);
+        font-size: .82rem;
+        text-align:center;
     }
 
     .ghc-missing-iframe{ padding:18px; border-radius: 12px; border:1px solid rgba(11,27,58,.12); }
@@ -210,7 +214,7 @@
         .ghc-layout{ grid-template-columns: 1fr; }
         .ghc-right{ position:relative; top:auto; }
         .ghc-section--two{ grid-template-columns: 1fr; }
-        .ghc-loading{ inset: 14px; }
+        .ghc-loading{ inset: 14px 14px auto; }
     }
 </style>
 @endpush

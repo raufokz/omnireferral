@@ -43,7 +43,7 @@
                 <button type="button"
                     class="nav-submenu-toggle {{ $isMoreActive ? 'is-active' : '' }}"
                     data-nav-submenu-toggle aria-expanded="false" aria-haspopup="true" aria-controls="mainNavMoreSubmenu">
-                    More
+                    Resources
                     <span class="nav-submenu-toggle__caret" aria-hidden="true"></span>
                 </button>
                 <div class="nav-submenu" data-nav-submenu id="mainNavMoreSubmenu">

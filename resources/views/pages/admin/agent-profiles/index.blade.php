@@ -2,22 +2,34 @@
 
 @section('dashboard_eyebrow', 'Staff Workspace')
 @section('dashboard_title', 'Agent Profiles')
-@section('dashboard_description', 'Create and publish agent directory profiles sourced from Zillow, Realtor.com, social media, and brokerage sites.')
+@section('dashboard_description', 'Create, approve, suspend, and maintain scalable agent directory profiles.')
 
 @section('dashboard_actions')
-    <a href="{{ route('admin.agent-profiles.create') }}" class="button button--orange">Add Agent Profile</a>
+    <a href="{{ route('admin.agents.import') }}" class="button button--orange">Add Agent Profile</a>
 @endsection
 
 @section('content')
 <div class="workspace-stack">
     <section class="workspace-card">
         <div class="admin-user-show__pills">
-            @foreach(['all' => 'All', 'draft' => 'Draft', 'published' => 'Published', 'featured' => 'Featured'] as $key => $label)
-                <a href="{{ route('admin.agent-profiles.index', ['status' => $key]) }}" class="admin-user-show__pill {{ $status === $key ? 'is-active' : '' }}">
+            @foreach(['all' => 'All', 'draft' => 'Pending', 'published' => 'Approved', 'featured' => 'Featured', 'suspended' => 'Suspended'] as $key => $label)
+                <a href="{{ route('admin.agents.manage', ['status' => $key, 'q' => $search ?? null]) }}" class="admin-user-show__pill {{ $status === $key ? 'is-active' : '' }}">
                     {{ $label }} ({{ $counts[$key] ?? 0 }})
                 </a>
             @endforeach
         </div>
+
+        <form method="GET" action="{{ route('admin.agents.manage') }}" class="workspace-form-grid" style="margin-top:1rem;">
+            <input type="hidden" name="status" value="{{ $status }}">
+            <label class="workspace-field workspace-field--full">
+                <span>Search agents</span>
+                <input type="search" name="q" value="{{ $search ?? '' }}" placeholder="Name, email, brokerage, license, city, state, or ZIP">
+            </label>
+            <div>
+                <button type="submit" class="button button--orange">Search</button>
+                <a href="{{ route('admin.agents.manage') }}" class="button button--ghost-blue">Reset</a>
+            </div>
+        </form>
     </section>
 
     <section class="workspace-card">
@@ -42,12 +54,12 @@
                             </td>
                             <td>{{ $profile->brokerage_name }}</td>
                             <td>{{ $profile->serviceAreaLabel() }}</td>
-                            <td><span class="status-pill">{{ ucfirst($profile->profile_status) }}</span></td>
-                            <td>{{ $profile->createdByUser?->name ?? '—' }}</td>
+                            <td><span class="status-pill status-pill--{{ $profile->profile_status }}">{{ $profile->statusLabel() }}</span></td>
+                            <td>{{ $profile->createdByUser?->name ?? '-' }}</td>
                             <td><a href="{{ route('admin.agent-profiles.show', $profile) }}" class="button button--ghost-blue">Edit</a></td>
                         </tr>
                     @empty
-                        <tr><td colspan="6"><div class="workspace-empty">No profiles yet. <a href="{{ route('admin.agent-profiles.create') }}">Add the first agent</a>.</div></td></tr>
+                        <tr><td colspan="6"><div class="workspace-empty">No profiles found. <a href="{{ route('admin.agents.import') }}">Add an agent</a>.</div></td></tr>
                     @endforelse
                 </tbody>
             </table>

@@ -113,8 +113,7 @@ class OmniReferralSeeder extends Seeder
                     'Automations, Workflows + Templates',
                 ],
                 'cta_label' => 'Explore Plan',
-                'cta_badge' => 'No Long-Term Commitment',
-                'duration_days' => null,
+                'duration_days' => 30,
                 'sort_order' => 3,
             ],
         ])->map(fn ($plan) => Package::updateOrCreate(['slug' => $plan['slug']], $plan));

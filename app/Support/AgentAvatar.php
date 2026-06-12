@@ -11,7 +11,22 @@ class AgentAvatar
 
     public const FALLBACK_SVG = 'images/about/about-omnireferral.svg';
 
-    public const DEFAULT_PATH = self::LOGO_PATH;
+    public const DEFAULT_PATH = 'assets/images/default-agent-avatar.svg';
+
+    private const PLACEHOLDER_HEADSHOTS = [
+        'images/realtors/10.png',
+        'images/realtors/12.png',
+        'images/realtors/14.png',
+        'images/realtors/16.png',
+        'images/realtors/18.png',
+        'images/realtors/20.png',
+        'images/realtors/22.png',
+        'images/realtors/24.png',
+        'images/realtors/26.png',
+        'images/realtors/28.png',
+        'images/realtors/30.png',
+        'images/realtors/32.png',
+    ];
 
     public static function url(?User $user = null, ?RealtorProfile $profile = null): string
     {
@@ -28,11 +43,15 @@ class AgentAvatar
             return $avatar;
         }
 
-        return self::logoUrl();
+        return self::placeholderUrl($user, $profile);
     }
 
     public static function logoUrl(): string
     {
+        if (is_file(public_path(self::DEFAULT_PATH))) {
+            return asset(self::DEFAULT_PATH);
+        }
+
         if (is_file(public_path(self::LOGO_PATH))) {
             return asset(self::LOGO_PATH);
         }
@@ -47,7 +66,22 @@ class AgentAvatar
 
     public static function defaultStorageHeadshot(): string
     {
-        return self::LOGO_PATH;
+        return self::DEFAULT_PATH;
+    }
+
+    public static function placeholderUrl(?User $user = null, ?RealtorProfile $profile = null): string
+    {
+        $seed = (int) ($profile?->id ?? $user?->id ?? 0);
+        $paths = array_values(array_filter(
+            self::PLACEHOLDER_HEADSHOTS,
+            fn (string $path): bool => is_file(public_path($path))
+        ));
+
+        if ($paths !== []) {
+            return asset($paths[$seed % count($paths)]);
+        }
+
+        return self::logoUrl();
     }
 
     private static function resolvePath(string $path): ?string

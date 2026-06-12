@@ -440,12 +440,10 @@ const initEmbedLoaders = () => {
     embeds.forEach((embed) => {
         const frame = embed.querySelector('[data-embed-loader-frame], iframe');
         const loader = embed.querySelector('[data-embed-loader-indicator]');
-        const loaderCopy = loader?.querySelector('.embed-card__loader-copy');
 
         if (!frame) return;
 
         let isReady = false;
-        let delayTimer = null;
 
         const setReady = (ready) => {
             embed.classList.toggle('is-loading', !ready);
@@ -461,9 +459,6 @@ const initEmbedLoaders = () => {
             if (isReady) return;
 
             isReady = true;
-            if (delayTimer) {
-                window.clearTimeout(delayTimer);
-            }
             setReady(true);
         };
 
@@ -474,17 +469,9 @@ const initEmbedLoaders = () => {
 
         setReady(false);
 
-        delayTimer = window.setTimeout(() => {
-            if (!isReady && loaderCopy) {
-                loaderCopy.textContent = 'Still connecting to the secure form. This can take a few extra seconds on slower connections.';
-            }
-        }, 6000);
-
         frame.addEventListener('load', completeLoading, { once: true });
         frame.addEventListener('error', () => {
-            if (loaderCopy) {
-                loaderCopy.textContent = 'The form is taking longer than expected. Please refresh the page or contact support if it does not appear.';
-            }
+            setReady(true);
         });
     });
 };

@@ -28,14 +28,17 @@ class AgentDirectory
     public static function publicQuery(): Builder
     {
         return RealtorProfile::query()
-            ->publicVisible();
+            ->publicVisible()
+            ->whereHas('user', fn (Builder $userQuery) => $userQuery->where('status', 'active'));
     }
 
 
     public static function applyFeaturedSort(Builder $query): Builder
     {
         return $query
+            ->orderByRaw('CASE WHEN profile_status = ? THEN 0 ELSE 1 END', [RealtorProfile::STATUS_FEATURED])
             ->orderByDesc('rating')
+            ->orderByDesc('review_count')
             ->orderByDesc('created_at');
     }
 
@@ -54,6 +57,8 @@ class AgentDirectory
                 ->where('brokerage_name', 'like', $like)
                 ->orWhere('specialties', 'like', $like)
                 ->orWhere('service_city', 'like', $like)
+                ->orWhere('service_state', 'like', $like)
+                ->orWhere('service_zip_code', 'like', $like)
                 ->orWhere('bio', 'like', $like)
                 ->orWhereHas('user', function (Builder $userQuery) use ($like) {
                     $userQuery
@@ -71,6 +76,51 @@ class AgentDirectory
 
         if ($city) {
             $query->whereRaw('LOWER(service_city) = ?', [mb_strtolower($city)]);
+        }
+
+        return $query;
+    }
+
+    public static function applyAttributeFilters(
+        Builder $query,
+        ?string $name,
+        ?string $brokerage,
+        ?string $zip,
+        ?string $specialty,
+        ?string $minimumRating,
+        ?string $featured
+    ): Builder {
+        $name = trim((string) $name);
+        if ($name !== '') {
+            $like = '%'.$name.'%';
+            $query->whereHas('user', function (Builder $userQuery) use ($like) {
+                $userQuery
+                    ->where('name', 'like', $like)
+                    ->orWhere('display_name', 'like', $like);
+            });
+        }
+
+        $brokerage = trim((string) $brokerage);
+        if ($brokerage !== '') {
+            $query->where('brokerage_name', 'like', '%'.$brokerage.'%');
+        }
+
+        $zip = trim((string) $zip);
+        if ($zip !== '') {
+            $query->where('service_zip_code', 'like', $zip.'%');
+        }
+
+        $specialty = trim((string) $specialty);
+        if ($specialty !== '') {
+            $query->whereRaw('LOWER(specialties) LIKE ?', ['%'.mb_strtolower($specialty).'%']);
+        }
+
+        if (is_numeric($minimumRating)) {
+            $query->where('rating', '>=', max(0, min(5, (float) $minimumRating)));
+        }
+
+        if ($featured === '1') {
+            $query->where('profile_status', RealtorProfile::STATUS_FEATURED);
         }
 
         return $query;
@@ -107,6 +157,15 @@ class AgentDirectory
     public static function publicCardPayload(RealtorProfile $profile): array
     {
         $user = $profile->user;
+        $serviceAreas = self::listFromText($profile->market_areas);
+        if ($serviceAreas === [] && $profile->serviceAreaLabel() !== '') {
+            $serviceAreas = [$profile->serviceAreaLabel()];
+        }
+
+        $languages = self::listFromText($profile->languages);
+        if ($languages === []) {
+            $languages = ['English'];
+        }
 
         return [
             'id' => $profile->id,
@@ -119,15 +178,54 @@ class AgentDirectory
 
             'rating' => number_format((float) ($profile->rating ?? 0), 1),
             'review_count' => (int) ($profile->review_count ?? 0),
+            'leads_closed' => (int) ($profile->leads_closed ?? 0),
             'specialties' => $profile->specialtiesList(),
             'specialties_text' => $profile->specialties,
             'bio' => $profile->bio,
             'languages' => $profile->languages,
+            'languages_list' => $languages,
             'market_areas' => $profile->market_areas,
-            'is_featured' => false,
+            'service_areas' => $serviceAreas,
+            'years_of_experience' => $profile->years_of_experience,
+            'license_number' => $profile->license_number,
+            'license_label' => $profile->license_number ?: 'Verified on request',
+            'social_links' => $profile->social_links ?: [],
+            'is_featured' => $profile->isFeatured(),
 
             'headshot_url' => $profile->headshotPublicUrl($user),
             'profile_url' => route('agents.profile', $profile),
+            'contact_url' => route('agents.profile', $profile).'#contact',
+            'phone_label' => 'Routed by OmniReferral',
+            'email_label' => 'Protected referral contact',
+            'website_label' => 'Public profile',
+            'satisfaction_rate' => '98%',
+            'rank_label' => $profile->isFeatured() ? 'Top 1%' : 'Verified',
         ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private static function listFromText(?string $value): array
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return [];
+        }
+
+        if (str_starts_with($value, '[')) {
+            $decoded = json_decode($value, true);
+            if (is_array($decoded)) {
+                return array_values(array_filter(array_map(
+                    fn ($item) => trim((string) $item),
+                    $decoded
+                )));
+            }
+        }
+
+        return array_values(array_filter(array_map(
+            fn (string $item): string => trim($item),
+            preg_split('/[,;|]+/', $value) ?: []
+        )));
     }
 }

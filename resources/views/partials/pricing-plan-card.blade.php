@@ -24,17 +24,7 @@
         </div>
     </div>
 
-    <div class="pricing-card__audience-tag">Best for {{ $card['audience'] }}</div>
-
     <p class="pricing-card__description">{{ $card['description'] }}</p>
-
-    @if(!empty($card['highlights']))
-        <div class="pricing-card__mini-points" aria-label="Plan highlights">
-            @foreach($card['highlights'] as $highlight)
-                <span>{{ $highlight }}</span>
-            @endforeach
-        </div>
-    @endif
 
     <div class="pricing-card__actions-row">
         <a href="{{ $card['cta_url'] }}" class="button button--pricing-cta {{ $card['is_featured'] ? 'button--orange' : 'button--blue' }}" data-explore-plan="1">

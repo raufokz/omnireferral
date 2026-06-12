@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class StaffAgentProfileController extends Controller
@@ -29,14 +30,34 @@ class StaffAgentProfileController extends Controller
             $query->where('profile_status', $status);
         }
 
+        if ($search = trim((string) $request->query('q', ''))) {
+            $query->where(function ($profileQuery) use ($search) {
+                $like = '%'.$search.'%';
+                $profileQuery
+                    ->where('brokerage_name', 'like', $like)
+                    ->orWhere('service_city', 'like', $like)
+                    ->orWhere('service_state', 'like', $like)
+                    ->orWhere('service_zip_code', 'like', $like)
+                    ->orWhere('license_number', 'like', $like)
+                    ->orWhereHas('user', function ($userQuery) use ($like) {
+                        $userQuery
+                            ->where('name', 'like', $like)
+                            ->orWhere('display_name', 'like', $like)
+                            ->orWhere('email', 'like', $like);
+                    });
+            });
+        }
+
         return view('pages.admin.agent-profiles.index', [
             'profiles' => $query->paginate(25)->withQueryString(),
             'status' => $status,
+            'search' => $search ?? '',
             'counts' => [
                 'all' => RealtorProfile::count(),
                 'draft' => RealtorProfile::draft()->count(),
                 'published' => RealtorProfile::published()->count(),
                 'featured' => RealtorProfile::featured()->count(),
+                'suspended' => RealtorProfile::suspended()->count(),
             ],
             'meta' => [
                 'title' => 'Agent Profiles | Admin | OmniReferral',
@@ -73,6 +94,9 @@ class StaffAgentProfileController extends Controller
                 $headshotPath = $validated['headshot_url'];
             }
 
+            $profileStatus = $validated['profile_status'];
+            $isApproved = in_array($profileStatus, [RealtorProfile::STATUS_PUBLISHED, RealtorProfile::STATUS_FEATURED], true);
+
             $user = User::create([
                 'name' => $validated['name'],
                 'display_name' => $validated['display_name'] ?? null,
@@ -83,11 +107,14 @@ class StaffAgentProfileController extends Controller
                 'state' => strtoupper($validated['service_state']),
                 'zip_code' => $validated['service_zip_code'] ?? null,
                 'role' => 'agent',
-                'status' => 'pending',
+                'status' => $profileStatus === RealtorProfile::STATUS_SUSPENDED
+                    ? 'suspended'
+                    : ($isApproved ? 'active' : 'pending'),
                 'must_reset_password' => true,
+                'email_verified_at' => $isApproved ? now() : null,
             ]);
 
-            return RealtorProfile::create([
+            return RealtorProfile::updateOrCreate(['user_id' => $user->id], [
                 'user_id' => $user->id,
                 'created_by_user_id' => $request->user()?->id,
                 'slug' => $slug,
@@ -104,7 +131,13 @@ class StaffAgentProfileController extends Controller
                 'headshot' => $headshotPath,
                 'rating' => $validated['rating'] ?? 4.5,
                 'review_count' => $validated['review_count'] ?? 0,
-                'profile_status' => $validated['profile_status'],
+                'leads_closed' => $validated['leads_closed'] ?? 0,
+                'social_links' => $this->socialLinksFromPayload($validated),
+                'profile_status' => $profileStatus,
+                'approved_at' => $isApproved ? now() : null,
+                'approved_by_user_id' => $isApproved ? $request->user()?->id : null,
+                'rejected_at' => $profileStatus === RealtorProfile::STATUS_SUSPENDED ? now() : null,
+                'rejected_by_user_id' => $profileStatus === RealtorProfile::STATUS_SUSPENDED ? $request->user()?->id : null,
                 'source_url' => $validated['source_url'] ?? null,
             ]);
         });
@@ -155,7 +188,16 @@ class StaffAgentProfileController extends Controller
             'display_name' => $validated['display_name'] ?? null,
             'email' => $validated['email'] ?? $user->email,
             'phone' => $validated['phone'] ?? null,
+            'city' => $validated['service_city'],
+            'state' => strtoupper($validated['service_state']),
+            'zip_code' => $validated['service_zip_code'] ?? null,
+            'status' => $this->userStatusForProfileStatus($validated['profile_status']),
+            'email_verified_at' => in_array($validated['profile_status'], [RealtorProfile::STATUS_PUBLISHED, RealtorProfile::STATUS_FEATURED], true)
+                ? ($user->email_verified_at ?: now())
+                : $user->email_verified_at,
         ]);
+
+        $approvalFields = $this->approvalFieldsForStatus($request, $agentProfile, $validated['profile_status']);
 
         $agentProfile->update([
             'brokerage_name' => $validated['brokerage_name'],
@@ -170,9 +212,11 @@ class StaffAgentProfileController extends Controller
             'bio' => $validated['bio'],
             'rating' => $validated['rating'] ?? $agentProfile->rating,
             'review_count' => $validated['review_count'] ?? $agentProfile->review_count,
+            'leads_closed' => $validated['leads_closed'] ?? $agentProfile->leads_closed,
+            'social_links' => $this->socialLinksFromPayload($validated),
             'profile_status' => $validated['profile_status'],
             'source_url' => $validated['source_url'] ?? null,
-        ]);
+        ] + $approvalFields);
 
         AdminAudit::log($request, 'realtor_profile.updated', 'realtor_profile', $agentProfile->id);
 
@@ -183,7 +227,10 @@ class StaffAgentProfileController extends Controller
     {
         $this->authorize('update', $agentProfile);
 
-        $agentProfile->update(['profile_status' => RealtorProfile::STATUS_FEATURED]);
+        $agentProfile->update($this->approvalFieldsForStatus($request, $agentProfile, RealtorProfile::STATUS_FEATURED) + [
+            'profile_status' => RealtorProfile::STATUS_FEATURED,
+        ]);
+        $agentProfile->user?->update(['status' => 'active']);
 
         AdminAudit::log($request, 'realtor_profile.featured', 'realtor_profile', $agentProfile->id);
 
@@ -194,9 +241,26 @@ class StaffAgentProfileController extends Controller
     {
         $this->authorize('update', $agentProfile);
 
-        $agentProfile->update(['profile_status' => RealtorProfile::STATUS_PUBLISHED]);
+        $agentProfile->update($this->approvalFieldsForStatus($request, $agentProfile, RealtorProfile::STATUS_PUBLISHED) + [
+            'profile_status' => RealtorProfile::STATUS_PUBLISHED,
+        ]);
+        $agentProfile->user?->update(['status' => 'active']);
 
         return back()->with('success', 'Profile published.');
+    }
+
+    public function suspend(Request $request, RealtorProfile $agentProfile): RedirectResponse
+    {
+        $this->authorize('update', $agentProfile);
+
+        $agentProfile->update($this->approvalFieldsForStatus($request, $agentProfile, RealtorProfile::STATUS_SUSPENDED) + [
+            'profile_status' => RealtorProfile::STATUS_SUSPENDED,
+        ]);
+        $agentProfile->user?->update(['status' => 'suspended']);
+
+        AdminAudit::log($request, 'realtor_profile.suspended', 'realtor_profile', $agentProfile->id);
+
+        return back()->with('success', 'Profile suspended and removed from public directory.');
     }
 
     private function validatedProfilePayload(Request $request, ?int $userId = null): array
@@ -214,16 +278,66 @@ class StaffAgentProfileController extends Controller
             'years_of_experience' => ['nullable', 'integer', 'min:0', 'max:60'],
             'languages' => ['nullable', 'string', 'max:255'],
             'market_areas' => ['nullable', 'string', 'max:1000'],
+            'social_facebook_url' => ['nullable', 'url', 'max:500'],
+            'social_linkedin_url' => ['nullable', 'url', 'max:500'],
+            'social_instagram_url' => ['nullable', 'url', 'max:500'],
+            'website_url' => ['nullable', 'url', 'max:500'],
             'specialties' => ['nullable', 'array'],
             'specialties.*' => ['string', 'max:100'],
             'specialties_text' => ['nullable', 'string', 'max:500'],
             'bio' => ['required', 'string', 'min:40', 'max:2000'],
             'rating' => ['nullable', 'numeric', 'min:0', 'max:5'],
             'review_count' => ['nullable', 'integer', 'min:0'],
-            'profile_status' => ['required', 'in:draft,published,featured'],
+            'leads_closed' => ['nullable', 'integer', 'min:0'],
+            'profile_status' => ['required', Rule::in(array_keys(RealtorProfile::statusOptions()))],
             'source_url' => ['nullable', 'url', 'max:500'],
             'headshot' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'headshot_url' => ['nullable', 'string', 'max:500'],
+        ]);
+    }
+
+    private function userStatusForProfileStatus(string $profileStatus): string
+    {
+        return match ($profileStatus) {
+            RealtorProfile::STATUS_SUSPENDED => 'suspended',
+            RealtorProfile::STATUS_DRAFT => 'pending',
+            default => 'active',
+        };
+    }
+
+    private function approvalFieldsForStatus(Request $request, RealtorProfile $profile, string $profileStatus): array
+    {
+        if ($profileStatus === RealtorProfile::STATUS_SUSPENDED) {
+            return [
+                'rejected_at' => $profile->rejected_at ?: now(),
+                'rejected_by_user_id' => $profile->rejected_by_user_id ?: $request->user()?->id,
+            ];
+        }
+
+        if (in_array($profileStatus, [RealtorProfile::STATUS_PUBLISHED, RealtorProfile::STATUS_FEATURED], true)) {
+            return [
+                'approved_at' => $profile->approved_at ?: now(),
+                'approved_by_user_id' => $profile->approved_by_user_id ?: $request->user()?->id,
+                'rejected_at' => null,
+                'rejected_by_user_id' => null,
+            ];
+        }
+
+        return [
+            'approved_at' => null,
+            'approved_by_user_id' => null,
+            'rejected_at' => null,
+            'rejected_by_user_id' => null,
+        ];
+    }
+
+    private function socialLinksFromPayload(array $validated): array
+    {
+        return array_filter([
+            'facebook' => $validated['social_facebook_url'] ?? null,
+            'linkedin' => $validated['social_linkedin_url'] ?? null,
+            'instagram' => $validated['social_instagram_url'] ?? null,
+            'website' => $validated['website_url'] ?? null,
         ]);
     }
 }

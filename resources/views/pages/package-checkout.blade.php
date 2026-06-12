@@ -1,28 +1,40 @@
 @extends('layouts.app')
 
 @push('styles')
+    <link rel="preconnect" href="https://api.leadconnectorhq.com" crossorigin>
+    <link rel="preconnect" href="https://link.msgsndr.com" crossorigin>
+    <link rel="dns-prefetch" href="//api.leadconnectorhq.com">
+    <link rel="dns-prefetch" href="//link.msgsndr.com">
     @vite('resources/css/modules/pricing.css')
 @endpush
 
 @section('content')
 @php
-    $startingPrice = (int) ($packageDisplay['price'] ?? $package->one_time_price ?? $package->monthly_price ?? 0);
+    $startingPrice = (int) ($packageDisplay['price'] ?? $package->one_time_price ?? $package->monthly_price ?? $package->hourly_price ?? 0);
     $priceNote = (string) ($packageDisplay['price_note'] ?? '');
     $billingLabel = $packageDisplay['billing_label'] ?? trim(str_replace('/', '', $priceNote));
-    $badge = $packageDisplay['badge'] ?? $packageDisplay['tier'] ?? 'Selected plan';
+    $slug = (string) ($packageDisplay['slug'] ?? $package->slug);
+    $badge = match ($slug) {
+        'quick-leads' => 'Quick',
+        'power-leads' => 'Power',
+        'prime-leads' => 'Premium',
+        'cold-calling-isa', 'social-media-mgmt', 'individual-va', 'va-calling', 'va-social', 'va-individual' => 'VA',
+        default => $packageDisplay['badge'] ?? $packageDisplay['tier'] ?? 'Selected plan',
+    };
+    $savingsLabel = $packageDisplay['savings_label'] ?? null;
+    $guaranteeLabel = $packageDisplay['guarantee_label'] ?? null;
+    $ctaLabel = $packageDisplay['cta_label'] ?? 'Explore Plan';
     $summary = $packageDisplay['summary'] ?? $package->description;
+    $cardDescription = $packageDisplay['card_description'] ?? null;
     $fullFeatures = array_values(array_filter((array) ($packageDisplay['features'] ?? [])));
-    $benefits = array_values(array_filter((array) ($packageDisplay['package_benefits'] ?? [])));
-    $featureGroups = array_values(array_filter((array) ($packageDisplay['feature_groups'] ?? [])));
     $afterSubmission = array_values(array_filter((array) ($packageDisplay['after_submission'] ?? [])));
-    $trustIndicators = array_values(array_filter((array) ($packageDisplay['trust_indicators'] ?? [])));
     $bestFor = $packageDisplay['best_for'] ?? null;
-    $supportDetails = $packageDisplay['support_details'] ?? null;
     $whatYouGet = $packageDisplay['what_you_get'] ?? null;
-
-    if (empty($benefits)) {
-        $benefits = array_slice($fullFeatures, 0, 4);
-    }
+    $quickHighlights = array_values(array_filter([
+        $bestFor ? ['label' => 'Best Fit', 'value' => $bestFor] : null,
+        $whatYouGet && $whatYouGet !== $bestFor ? ['label' => 'Package Focus', 'value' => $whatYouGet] : null,
+        $cardDescription ? ['label' => 'Value Summary', 'value' => $cardDescription] : null,
+    ]));
 
     if (empty($afterSubmission)) {
         $afterSubmission = [
@@ -33,12 +45,9 @@
         ];
     }
 
-    if (empty($trustIndicators)) {
-        $trustIndicators = [
-            'Secure GoHighLevel survey',
-            'Real estate focused operations',
-            'Clear package handoff',
-            'Dedicated support workflow',
+    if (empty($quickHighlights)) {
+        $quickHighlights = [
+            ['label' => 'Package Focus', 'value' => $summary ?: 'OmniReferral package setup and secure onboarding.'],
         ];
     }
 @endphp
@@ -64,17 +73,16 @@
             <div class="package-plan-detail__header">
                 <div class="package-plan-detail__eyebrow">
                     <span class="pricing-label">{{ $badge }}</span>
-                    @if(!empty($packageDisplay['is_featured']))
-                        <span class="pricing-badge-popular">Most Popular</span>
-                    @endif
                 </div>
                 <h2>{{ $packageDisplay['name'] }}</h2>
-                <p>{{ $summary }}</p>
 
                 <div class="package-plan-detail__price-row">
                     <div class="package-plan-detail__price">
                         <span>Price</span>
                         <strong>${{ number_format($startingPrice) }}</strong>
+                        @if($priceNote !== '')
+                            <small class="package-plan-detail__price-note">{{ $priceNote }}</small>
+                        @endif
                     </div>
                     <div class="package-plan-detail__billing">
                         <span>Billing type</span>
@@ -83,23 +91,17 @@
                 </div>
             </div>
 
-            <div class="package-plan-detail__meta-grid">
-                <div>
-                    <span>Badge</span>
-                    <strong>{{ $badge }}</strong>
+            <section class="package-plan-detail__section package-plan-detail__section--compact" aria-labelledby="quick-highlights-title">
+                <h3 id="quick-highlights-title">Quick Highlights</h3>
+                <div class="package-quick-highlights">
+                    @foreach($quickHighlights as $highlight)
+                        <article class="package-highlight-card">
+                            <span>{{ $highlight['label'] }}</span>
+                            <p>{{ $highlight['value'] }}</p>
+                        </article>
+                    @endforeach
                 </div>
-                <div>
-                    <span>Best for</span>
-                    <strong>{{ $bestFor ?: 'Agents and teams ready to grow' }}</strong>
-                </div>
-            </div>
-
-            @if($whatYouGet)
-                <section class="package-plan-detail__section">
-                    <h3>Full Description</h3>
-                    <p>{{ $whatYouGet }}</p>
-                </section>
-            @endif
+            </section>
 
             <section class="package-plan-detail__section">
                 <h3>Complete Feature List</h3>
@@ -110,38 +112,22 @@
                 </ul>
             </section>
 
-            <section class="package-plan-detail__section">
-                <h3>Benefits</h3>
-                <ul class="package-detail-list">
-                    @foreach($benefits as $benefit)
-                        <li>{{ $benefit }}</li>
-                    @endforeach
-                </ul>
-            </section>
-
-            <section class="package-plan-detail__section">
-                <h3>What Is Included</h3>
-                @if(!empty($featureGroups))
-                    <div class="package-included-grid">
-                        @foreach($featureGroups as $group)
-                            <div class="package-included-group">
-                                <strong>{{ $group['title'] ?? 'Included support' }}</strong>
-                                <ul>
-                                    @foreach(($group['items'] ?? []) as $item)
-                                        <li>{{ $item }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <ul class="package-detail-list">
-                        @foreach(array_slice($fullFeatures, 0, 6) as $feature)
-                            <li>{{ $feature }}</li>
-                        @endforeach
-                    </ul>
-                @endif
-            </section>
+            @if($guaranteeLabel || $savingsLabel)
+                <section class="package-detail-guarantee" aria-label="Package guarantee and value">
+                    @if($guaranteeLabel)
+                        <div class="package-detail-guarantee__item">
+                            <span>Guarantee</span>
+                            <strong>{{ $guaranteeLabel }}</strong>
+                        </div>
+                    @endif
+                    @if($savingsLabel)
+                        <div class="package-detail-guarantee__item package-detail-guarantee__item--value">
+                            <span>Package Value</span>
+                            <strong>{{ $savingsLabel }}</strong>
+                        </div>
+                    @endif
+                </section>
+            @endif
 
             <section class="package-plan-detail__section">
                 <h3>What Happens After Submission</h3>
@@ -152,19 +138,7 @@
                 </ol>
             </section>
 
-            <section class="package-plan-detail__section package-plan-detail__section--support">
-                <h3>Support Information</h3>
-                <p>{{ $supportDetails ?: 'OmniReferral support reviews your submission, confirms package details, and helps guide your next setup step.' }}</p>
-            </section>
-
-            <section class="package-plan-detail__section">
-                <h3>Trust Indicators</h3>
-                <div class="package-trust-pills">
-                    @foreach($trustIndicators as $indicator)
-                        <span>{{ $indicator }}</span>
-                    @endforeach
-                </div>
-            </section>
+            <a href="#secure-form" class="package-plan-detail__cta">{{ $ctaLabel }}</a>
         </article>
 
         <aside class="package-checkout-form-panel" id="secure-form">
@@ -177,12 +151,13 @@
                     <div class="ghl-checkout-frame is-loading" data-embed-loader aria-busy="true">
                         <div class="ghl-form-loader" data-embed-loader-indicator role="status" aria-live="polite">
                             <span class="ghl-form-loader__spinner" aria-hidden="true"></span>
-                            <span class="ghl-form-loader__text">Loading secure form...</span>
+                            <span class="ghl-form-loader__text embed-card__loader-copy">Loading secure form</span>
                         </div>
                         <iframe
                             src="{{ $packageEmbed['src'] }}"
                             title="{{ $packageEmbed['title'] ?? $packageDisplay['name'] }} form"
-                            loading="lazy"
+                            loading="eager"
+                            fetchpriority="high"
                             data-embed-loader-frame
                             referrerpolicy="no-referrer"
                         ></iframe>
@@ -200,6 +175,6 @@
 </section>
 
 @if(!empty($packageEmbed['src']))
-    <script src="https://link.msgsndr.com/js/form_embed.js"></script>
+    <script src="https://link.msgsndr.com/js/form_embed.js" defer></script>
 @endif
 @endsection

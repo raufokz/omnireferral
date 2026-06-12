@@ -15,7 +15,10 @@ class RealtorProfile extends Model
 {
     use HasFactory;
 
-
+    public const STATUS_DRAFT = 'draft';
+    public const STATUS_PUBLISHED = 'published';
+    public const STATUS_FEATURED = 'featured';
+    public const STATUS_SUSPENDED = 'suspended';
 
     protected $fillable = [
         'user_id',
@@ -31,6 +34,7 @@ class RealtorProfile extends Model
         'specialties',
         'bio',
         'headshot',
+        'profile_status',
         'languages',
         'market_areas',
         'social_links',
@@ -57,6 +61,7 @@ class RealtorProfile extends Model
         'rating' => 4.5,
         'review_count' => 0,
         'leads_closed' => 0,
+        'profile_status' => self::STATUS_DRAFT,
     ];
 
 
@@ -102,7 +107,8 @@ class RealtorProfile extends Model
 
     public function scopePublicEligible(Builder $query): Builder
     {
-        return $query->whereNotNull('approved_at')
+        return $query
+            ->whereIn('profile_status', [self::STATUS_PUBLISHED, self::STATUS_FEATURED])
             ->whereNull('rejected_at');
     }
 
@@ -128,6 +134,25 @@ class RealtorProfile extends Model
         return $query->where('rating', '>=', $minRating);
     }
 
+    public function scopeDraft(Builder $query): Builder
+    {
+        return $query->where('profile_status', self::STATUS_DRAFT);
+    }
+
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('profile_status', self::STATUS_PUBLISHED);
+    }
+
+    public function scopeFeatured(Builder $query): Builder
+    {
+        return $query->where('profile_status', self::STATUS_FEATURED);
+    }
+
+    public function scopeSuspended(Builder $query): Builder
+    {
+        return $query->where('profile_status', self::STATUS_SUSPENDED);
+    }
 
     public function scopeOrderedForDirectory(Builder $query): Builder
     {
@@ -143,21 +168,23 @@ class RealtorProfile extends Model
 
     public function isPublicVisible(): bool
     {
-        return $this->approved_at !== null && $this->rejected_at === null;
+        $accountIsActive = $this->relationLoaded('user')
+            ? $this->user?->status === 'active'
+            : $this->user()->where('status', 'active')->exists();
+
+        return in_array($this->profile_status, [self::STATUS_PUBLISHED, self::STATUS_FEATURED], true)
+            && $this->rejected_at === null
+            && $accountIsActive;
     }
 
-    /**
-     * This project no longer has a DB "featured" field in realtor_profiles.
-     */
     public function isFeatured(): bool
     {
-        return false;
+        return $this->profile_status === self::STATUS_FEATURED;
     }
 
-    /** @deprecated Draft visibility is not supported without profile_status. */
     public function isDraft(): bool
     {
-        return false;
+        return $this->profile_status === self::STATUS_DRAFT;
     }
 
     public function isApprovedForPublicShow(): bool
@@ -232,6 +259,19 @@ class RealtorProfile extends Model
             ->implode(', ');
     }
 
-    // statusOptions() removed: realtor_profiles no longer has profile_status.
+    public static function statusOptions(): array
+    {
+        return [
+            self::STATUS_DRAFT => 'Pending Review',
+            self::STATUS_PUBLISHED => 'Approved',
+            self::STATUS_FEATURED => 'Featured',
+            self::STATUS_SUSPENDED => 'Suspended',
+        ];
+    }
+
+    public function statusLabel(): string
+    {
+        return self::statusOptions()[$this->profile_status] ?? Str::headline((string) $this->profile_status);
+    }
 
 }

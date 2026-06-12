@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Package;
+use App\Support\AgentDirectory;
 use App\Support\PricingContent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -13,11 +14,23 @@ class PricingController extends Controller
     public function index(): View
     {
         $pricingPlans = PricingContent::plans();
+        $featuredAgents = AgentDirectory::publicQuery()
+            ->with(['user:id,name,display_name,avatar,status'])
+            ->select([
+                'id', 'user_id', 'slug', 'brokerage_name', 'service_city', 'service_state',
+                'service_zip_code', 'rating', 'review_count', 'leads_closed', 'specialties',
+                'bio', 'headshot', 'profile_status', 'years_of_experience', 'languages',
+                'market_areas', 'social_links', 'created_at',
+            ])
+            ->orderedForDirectory()
+            ->take(3)
+            ->get();
 
         return view('pages.pricing', [
             'pricingPlans' => $pricingPlans,
             'leadPlans' => array_values($pricingPlans['real_estate'] ?? []),
             'vaPlans' => array_values($pricingPlans['virtual_assistance'] ?? []),
+            'featuredAgents' => $featuredAgents,
             'meta' => [
                 'title' => 'Pricing | OmniReferral Lead Packages',
                 'description' => 'Compare OmniReferral Quick Lead, Power Lead, and Prime Lead packages for real estate teams that want qualified referrals and operational follow-up.',
@@ -36,10 +49,14 @@ class PricingController extends Controller
             'name' => $pricingPlan['name'] ?? $package->name,
             'tier' => $pricingPlan['tier'] ?? ($package->category === 'lead' ? 'Lead Package' : 'Virtual Assistance'),
             'summary' => $pricingPlan['summary'] ?? $package->description,
+            'card_description' => $pricingPlan['card_description'] ?? null,
             'price' => $pricingPlan['price'] ?? ($package->preferredCheckoutAmount() ?? 0),
-            'price_note' => $pricingPlan['price_note'] ?? ($package->one_time_price ? '/ One-Time' : '/ Monthly'),
+            'price_note' => $pricingPlan['price_note'] ?? ($package->one_time_price ? '/ One-Time' : ($package->hourly_price ? '/ Hour' : '/ Monthly')),
             'billing_label' => $pricingPlan['billing_label'] ?? $this->billingLabel($pricingPlan['price_note'] ?? null, $package),
             'badge' => $pricingPlan['badge'] ?? $pricingPlan['card_tag'] ?? $pricingPlan['tier'] ?? null,
+            'ribbon_label' => $pricingPlan['ribbon_label'] ?? null,
+            'savings_label' => $pricingPlan['savings_label'] ?? null,
+            'guarantee_label' => $pricingPlan['guarantee_label'] ?? null,
             'features' => $pricingPlan['features'] ?? ($package->features ?? []),
             'value_price' => $pricingPlan['value_price'] ?? null,
             'cta_label' => $pricingPlan['cta_label'] ?? $package->cta_label,
@@ -112,32 +129,32 @@ class PricingController extends Controller
             ],
             'va-starter' => [
                 'title' => 'ISA Support',
-                'src' => 'https://api.leadconnectorhq.com/widget/survey/DAYWVBJkNiVLEfoW740d',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/6VrZG7vbNueWG6hoqYru',
                 'description' => 'Cold Calling / ISA onboarding form for dedicated prospecting, follow-up, and pipeline growth setup.',
             ],
             'va-growth' => [
                 'title' => 'Full Social Media Package',
-                'src' => 'https://api.leadconnectorhq.com/widget/survey/NiEcLMPWI084aKiAaNsi',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/NmuErgwOkT4c83tl1k12',
                 'description' => 'Social Media Management onboarding form for content, audience growth, and brand visibility.',
             ],
             'individual-va' => [
                 'title' => 'Individual VA',
-                'src' => 'https://api.leadconnectorhq.com/widget/survey/DAYWVBJkNiVLEfoW740d',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/DAnafQ8CfUsIMsj8Zq4D',
                 'description' => 'Individual VA onboarding form for flexible hourly virtual assistant support and task setup.',
             ],
             'va-calling' => [
                 'title' => 'Cold Calling / ISA',
-                'src' => 'https://api.leadconnectorhq.com/widget/survey/DAYWVBJkNiVLEfoW740d',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/6VrZG7vbNueWG6hoqYru',
                 'description' => 'Cold Calling / ISA onboarding form for dedicated prospecting, follow-up, and pipeline growth setup.',
             ],
             'va-social' => [
                 'title' => 'Social Media Mgmt',
-                'src' => 'https://api.leadconnectorhq.com/widget/survey/NiEcLMPWI084aKiAaNsi',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/NmuErgwOkT4c83tl1k12',
                 'description' => 'Social Media Management onboarding form for content, audience growth, and brand visibility.',
             ],
             'va-individual' => [
                 'title' => 'Individual VA',
-                'src' => 'https://api.leadconnectorhq.com/widget/survey/DAYWVBJkNiVLEfoW740d',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/DAnafQ8CfUsIMsj8Zq4D',
                 'description' => 'Individual VA onboarding form for flexible hourly virtual assistant support and task setup.',
             ],
         ];
@@ -182,7 +199,8 @@ class PricingController extends Controller
             'is_featured' => (bool) ($pricingPlan['is_featured'] ?? false),
             'is_active' => true,
             'one_time_price' => $isMonthly || $isHourly ? null : $price,
-            'monthly_price' => $isMonthly || $isHourly ? $price : null,
+            'monthly_price' => $isMonthly ? $price : null,
+            'hourly_price' => $isHourly ? $price : null,
             'ghl_form_url' => $embed['src'] ?? null,
             'ghl_pipeline_stage' => $slug,
             'features' => array_values((array) ($pricingPlan['features'] ?? [])),

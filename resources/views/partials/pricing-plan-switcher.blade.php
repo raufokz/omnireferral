@@ -58,8 +58,6 @@
             $ctaUrl = str_starts_with((string) $plan['cta_url'], 'http') || str_starts_with((string) $plan['cta_url'], '/')
                 ? (string) $plan['cta_url']
                 : url((string) $plan['cta_url']);
-        } elseif (in_array($slug, ['individual-va', 'va-individual'], true)) {
-            $ctaUrl = route('contact');
         } elseif ($slug !== '') {
             $ctaUrl = route('packages.checkout', ['packageSlug' => $slug]);
         } else {

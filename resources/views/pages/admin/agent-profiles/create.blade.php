@@ -12,7 +12,7 @@
         </ul>
     @endif
 
-    <form method="POST" action="{{ route('admin.agent-profiles.store') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('admin.agents.import.store') }}" enctype="multipart/form-data">
         @csrf
         <div class="workspace-form-grid">
             <label class="workspace-field"><span>Agent name *</span><input type="text" name="name" value="{{ old('name') }}" required></label>
@@ -28,6 +28,7 @@
             <label class="workspace-field"><span>Languages</span><input type="text" name="languages" value="{{ old('languages') }}"></label>
             <label class="workspace-field"><span>Rating</span><input type="number" step="0.1" min="0" max="5" name="rating" value="{{ old('rating', 4.5) }}"></label>
             <label class="workspace-field"><span>Review count</span><input type="number" min="0" name="review_count" value="{{ old('review_count', 0) }}"></label>
+            <label class="workspace-field"><span>Leads closed</span><input type="number" min="0" name="leads_closed" value="{{ old('leads_closed', 0) }}"></label>
             <label class="workspace-field"><span>Profile status *</span>
                 <select name="profile_status" required>
                     @foreach($statusOptions as $value => $label)
@@ -38,6 +39,10 @@
             <label class="workspace-field workspace-field--full"><span>Source URL</span><input type="url" name="source_url" value="{{ old('source_url') }}" placeholder="https://zillow.com/..."></label>
             <label class="workspace-field workspace-field--full"><span>Specialties (comma separated)</span><input type="text" name="specialties_text" value="{{ old('specialties_text') }}"></label>
             <label class="workspace-field workspace-field--full"><span>Market areas</span><input type="text" name="market_areas" value="{{ old('market_areas') }}"></label>
+            <label class="workspace-field"><span>Website</span><input type="url" name="website_url" value="{{ old('website_url') }}"></label>
+            <label class="workspace-field"><span>LinkedIn</span><input type="url" name="social_linkedin_url" value="{{ old('social_linkedin_url') }}"></label>
+            <label class="workspace-field"><span>Facebook</span><input type="url" name="social_facebook_url" value="{{ old('social_facebook_url') }}"></label>
+            <label class="workspace-field"><span>Instagram</span><input type="url" name="social_instagram_url" value="{{ old('social_instagram_url') }}"></label>
             <label class="workspace-field workspace-field--full"><span>Bio *</span><textarea name="bio" rows="5" required minlength="40">{{ old('bio') }}</textarea></label>
             <label class="workspace-field"><span>Headshot upload</span><input type="file" name="headshot" accept="image/*"></label>
             <label class="workspace-field"><span>Headshot URL</span><input type="url" name="headshot_url" value="{{ old('headshot_url') }}"></label>

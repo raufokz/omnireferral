@@ -52,7 +52,11 @@ class PackageComparison
                 'values' => $plans->map(fn (array $plan) => self::extractReferralFee((array) ($plan['features'] ?? [])))->all(),
             ],
             [
-                'feature' => 'Listing access',
+                'feature' => 'Portal Access',
+                'values' => $plans->map(fn (array $plan) => self::hasPortalAccess((array) ($plan['features'] ?? [])) ? 'Yes' : 'No')->all(),
+            ],
+            [
+                'feature' => 'Property Listings',
                 'values' => $plans->map(fn (array $plan) => self::extractListingAccess((array) ($plan['features'] ?? [])))->all(),
             ],
             [

@@ -75,6 +75,7 @@
                             <td data-label="Pricing">
                                 @if(!is_null($package->one_time_price)) One-time: ${{ number_format($package->one_time_price) }} @endif
                                 @if(!is_null($package->monthly_price)) <div class="workspace-property__meta">Monthly: ${{ number_format($package->monthly_price) }}</div> @endif
+                                @if(!is_null($package->hourly_price)) <div class="workspace-property__meta">Hourly: ${{ number_format($package->hourly_price) }}</div> @endif
                             </td>
                             <td data-label="">
                                 <a href="{{ route('admin.packages.edit', $package) }}" class="button button--ghost-blue">Edit</a>
@@ -92,4 +93,3 @@
     </section>
 </div>
 @endsection
-

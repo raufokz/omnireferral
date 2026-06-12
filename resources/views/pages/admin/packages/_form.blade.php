@@ -25,7 +25,7 @@
     <label class="workspace-field">
         <span>Billing type</span>
         <select name="billing_type" required>
-            @foreach(['one_time' => 'One-time', 'monthly' => 'Monthly', 'hybrid' => 'Hybrid'] as $value => $label)
+            @foreach(['one_time' => 'One-time', 'monthly' => 'Monthly', 'hourly' => 'Hourly', 'hybrid' => 'Hybrid'] as $value => $label)
                 <option value="{{ $value }}" {{ old('billing_type', $package->billing_type) === $value ? 'selected' : '' }}>{{ $label }}</option>
             @endforeach
         </select>
@@ -55,6 +55,11 @@
     <label class="workspace-field">
         <span>Monthly price (USD)</span>
         <input type="number" min="0" name="monthly_price" value="{{ old('monthly_price', $package->monthly_price) }}">
+    </label>
+
+    <label class="workspace-field">
+        <span>Hourly price (USD)</span>
+        <input type="number" min="0" name="hourly_price" value="{{ old('hourly_price', $package->hourly_price) }}">
     </label>
 
     <label class="workspace-field workspace-field--full">
@@ -97,4 +102,3 @@
         <input type="number" min="0" max="100000" name="sort_order" value="{{ old('sort_order', $package->sort_order) }}">
     </label>
 </div>
-

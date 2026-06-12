@@ -22,6 +22,7 @@ class Package extends Model
         'is_active',
         'one_time_price',
         'monthly_price',
+        'hourly_price',
         'stripe_price_id',
         'stripe_product_id',
         'ghl_form_url',
@@ -86,7 +87,11 @@ class Package extends Model
         if ($pricingPlan) {
             $planAmount = (int) ($pricingPlan['price'] ?? 0);
             $planNote = strtolower((string) ($pricingPlan['price_note'] ?? ''));
-            $planBilling = str_contains($planNote, 'month') ? 'monthly' : 'one_time';
+            $planBilling = match (true) {
+                str_contains($planNote, 'hour') => 'hourly',
+                str_contains($planNote, 'month') => 'monthly',
+                default => 'one_time',
+            };
 
             $requestedBilling = $billing === 'auto' ? $planBilling : $billing;
             if ($planAmount > 0 && $requestedBilling === $planBilling) {
@@ -95,9 +100,10 @@ class Package extends Model
         }
 
         return match ($billing) {
+            'hourly' => $this->hourly_price,
             'monthly' => $this->monthly_price,
             'one_time' => $this->one_time_price,
-            default => $this->one_time_price ?? $this->monthly_price,
+            default => $this->one_time_price ?? $this->monthly_price ?? $this->hourly_price,
         };
     }
 
@@ -106,14 +112,18 @@ class Package extends Model
         $pricingPlan = PricingContent::planBySlug($this->slug);
         if ($pricingPlan) {
             $planNote = strtolower((string) ($pricingPlan['price_note'] ?? ''));
-            $planBilling = str_contains($planNote, 'month') ? 'monthly' : 'one_time';
+            $planBilling = match (true) {
+                str_contains($planNote, 'hour') => 'hourly',
+                str_contains($planNote, 'month') => 'monthly',
+                default => 'one_time',
+            };
             $requested = $billing === 'auto' ? $planBilling : $billing;
 
             return $requested === 'monthly' ? 'subscription' : 'payment';
         }
 
         $requested = $billing === 'auto'
-            ? ($this->monthly_price && ! $this->one_time_price ? 'monthly' : 'one_time')
+            ? ($this->monthly_price && ! $this->one_time_price && ! $this->hourly_price ? 'monthly' : 'one_time')
             : $billing;
 
         return $requested === 'monthly' ? 'subscription' : 'payment';
@@ -134,16 +144,17 @@ class Package extends Model
                     return 10000;
                 }
 
-                if (preg_match('/\\bList\\s+up\\s+to\\s+(\\d+)\\s+active\\s+listings\\b/i', $feature, $matches)) {
+                if (preg_match('/\\bList\\s+up\\s+to\\s+(\\d+)\\s+active\\s+listings\\b/i', $feature, $matches)
+                    || preg_match('/\\bUp\\s+to\\s+(\\d+)\\s+Active\\s+Listings\\s+Per\\s+Month\\b/i', $feature, $matches)) {
                     return (int) $matches[1];
                 }
             }
         }
 
         return match ($this->slug) {
-            'quick-leads' => 5,
-            'power-leads' => 15,
-            'prime-leads' => 35,
+            'quick-leads' => 0,
+            'power-leads' => 5,
+            'prime-leads' => 10,
             default => 0,
         };
     }

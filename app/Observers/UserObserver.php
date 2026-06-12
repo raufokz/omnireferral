@@ -17,6 +17,8 @@ class UserObserver
 
         if ($user->role === 'agent') {
             if (! $user->realtorProfile) {
+                $isActiveAgent = $user->status === 'active';
+
                 RealtorProfile::create([
                     'user_id' => $user->id,
                     'slug' => $this->makeSlug($user),
@@ -28,7 +30,8 @@ class UserObserver
                     'specialties' => 'Buyer Representation, Seller Strategy, Lead Conversion',
                     'bio' => 'Agent profile created automatically from the OmniReferral platform.',
                     'headshot' => $user->avatar ? ('storage/' . ltrim($user->avatar, '/')) : AgentAvatar::defaultStorageHeadshot(),
-                    'profile_status' => RealtorProfile::STATUS_PUBLISHED,
+                    'profile_status' => $isActiveAgent ? RealtorProfile::STATUS_PUBLISHED : RealtorProfile::STATUS_DRAFT,
+                    'approved_at' => $isActiveAgent ? now() : null,
                 ]);
             }
 
@@ -56,4 +59,3 @@ class UserObserver
         return $base . '-' . Str::lower(Str::random(10));
     }
 }
-

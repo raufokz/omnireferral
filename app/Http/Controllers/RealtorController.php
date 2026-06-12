@@ -135,7 +135,9 @@ class RealtorController extends Controller
             ->select([
                 'id', 'user_id', 'slug', 'brokerage_name', 'service_city', 'service_state',
                 'service_zip_code', 'rating', 'review_count',
-                'specialties', 'bio', 'headshot', 'created_at', 'approved_at', 'rejected_at',
+                'leads_closed', 'specialties', 'bio', 'headshot', 'profile_status',
+                'years_of_experience', 'license_number', 'languages', 'market_areas', 'social_links',
+                'created_at', 'approved_at', 'rejected_at',
                 'rejected_by_user_id',
 
             ]);
@@ -147,19 +149,23 @@ class RealtorController extends Controller
             $request->query('state'),
             $request->query('city')
         );
-
-        if ($specialty = trim((string) $request->query('specialty', ''))) {
-            $query->whereRaw('LOWER(specialties) LIKE ?', ['%'.mb_strtolower($specialty).'%']);
-        }
+        AgentDirectory::applyAttributeFilters(
+            $query,
+            $request->query('name'),
+            $request->query('brokerage'),
+            $request->query('zip'),
+            $request->query('specialty'),
+            $request->query('rating'),
+            $request->query('featured')
+        );
 
         $profiles = $query
-            ->where('rating', '>=', 3)
             ->whereNotNull('bio')
-            ->whereRaw('CHAR_LENGTH(TRIM(bio)) > 0')
+            ->whereRaw('LENGTH(TRIM(bio)) > 0')
             ->whereNotNull('service_city')
-            ->whereRaw('CHAR_LENGTH(TRIM(service_city)) > 0')
+            ->whereRaw('LENGTH(TRIM(service_city)) > 0')
             ->whereNotNull('service_state')
-            ->whereRaw('CHAR_LENGTH(TRIM(service_state)) > 0')
+            ->whereRaw('LENGTH(TRIM(service_state)) > 0')
             ->tap(fn ($q) => AgentDirectory::applyFeaturedSort($q))
             ->paginate(12)
             ->withQueryString();
@@ -181,6 +187,21 @@ class RealtorController extends Controller
             ->filter()
             ->values());
 
+        $directoryStats = Cache::remember('agents:directory-stats:v2', now()->addHour(), function () {
+            $base = AgentDirectory::publicQuery();
+
+            return [
+                'total_agents' => (clone $base)->count(),
+                'cities_covered' => (clone $base)
+                    ->whereNotNull('service_city')
+                    ->whereRaw('LENGTH(TRIM(service_city)) > 0')
+                    ->distinct()
+                    ->count('service_city'),
+                'referral_matches' => (int) (clone $base)->sum('leads_closed'),
+                'featured_agents' => (clone $base)->featured()->count(),
+            ];
+        });
+
         $title = 'Agent Directory | OmniReferral';
         $description = 'Browse real estate agents across the United States. Find local expertise by city, state, and specialty.';
 
@@ -193,7 +214,19 @@ class RealtorController extends Controller
             'profiles' => $profiles,
             'filterCities' => $filterCities,
             'filterStates' => $filterStates,
+            'directoryStats' => $directoryStats,
             'location' => $location,
+            'activeFilters' => [
+                'q' => (string) $request->query('q', ''),
+                'name' => (string) $request->query('name', ''),
+                'brokerage' => (string) $request->query('brokerage', ''),
+                'city' => (string) $request->query('city', ''),
+                'state' => (string) $request->query('state', ''),
+                'zip' => (string) $request->query('zip', ''),
+                'specialty' => (string) $request->query('specialty', ''),
+                'rating' => (string) $request->query('rating', ''),
+                'featured' => (string) $request->query('featured', ''),
+            ],
             'meta' => [
                 'title' => $title,
                 'description' => $description,

@@ -42,12 +42,16 @@ class PricingCheckoutRoutingTest extends TestCase
 
         $response->assertOk();
 
-        foreach (['quick-leads', 'power-leads', 'prime-leads', 'cold-calling-isa', 'social-media-mgmt'] as $slug) {
+        foreach ($this->publicPricingPageSlugs() as $slug) {
             $response->assertSee('/packages/'.$slug.'/checkout', false);
         }
 
-        $response->assertSee(route('contact'), false);
-        $response->assertDontSee('/packages/individual-va/checkout', false);
+        $response->assertSee('Perfect for agents entering new markets who need verified referrals, local visibility, and predictable lead opportunities.');
+        $response->assertSee('Designed for growing teams that need more referrals, broader coverage, virtual assistance, and stronger lead qualification.');
+        $response->assertSee('Dedicated virtual support for CRM updates, scheduling, administrative tasks, and daily business operations.');
+        $response->assertDontSee(route('contact', ['plan' => 'Individual VA']), false);
+        $response->assertDontSee('First FIVE (5) Referrals FREE');
+        $response->assertDontSee('Dedicated Accounts Manager');
         $response->assertDontSee('pricing-card'.'__quick-list', false);
         $response->assertDontSee('stripe'.'-checkout', false);
     }
@@ -57,11 +61,46 @@ class PricingCheckoutRoutingTest extends TestCase
         $this->seed(OmniReferralSeeder::class);
 
         foreach ($this->pricingSlugs() as $slug) {
-            $this->get(route('packages.checkout', ['packageSlug' => $slug]))
+            $badge = match ($slug) {
+                'quick-leads' => 'Quick',
+                'power-leads' => 'Power',
+                'prime-leads' => 'Premium',
+                default => 'VA',
+            };
+            $guarantee = match ($slug) {
+                'quick-leads' => 'Closing Guarantee Under 150 Days',
+                'power-leads' => 'Closing Guarantee Under 120 Days',
+                'prime-leads' => 'Closing Guarantee Under 90 Days',
+                'individual-va' => 'No Long-Term Commitment',
+                default => null,
+            };
+
+            $response = $this->get(route('packages.checkout', ['packageSlug' => $slug]));
+            $html = $response->getContent();
+
+            $response
                 ->assertOk()
                 ->assertSee('Secure GoHighLevel Form')
-                ->assertSee('Loading secure form...')
+                ->assertSee('<span class="pricing-label">'.$badge.'</span>', false)
+                ->assertSee('Quick Highlights')
+                ->assertSee('Complete Feature List')
+                ->assertSee('What Happens After Submission')
+                ->assertSee('Loading secure form')
+                ->assertDontSee('Full Description')
+                ->assertDontSee('Benefits')
+                ->assertDontSee('Support Information')
+                ->assertDontSee('Trust Indicators')
+                ->assertDontSee('Preparing your secure OmniReferral form')
+                ->assertDontSee('ghl-form-loader__skeleton', false)
+                ->assertDontSee('package-detail-ribbon', false)
                 ->assertDontSee('not configured here yet');
+
+            $this->assertSame(1, substr_count($html, 'class="pricing-label"'));
+            $this->assertSame(0, substr_count($html, 'pricing-badge-popular'));
+
+            if ($guarantee !== null) {
+                $this->assertSame(1, substr_count($html, $guarantee));
+            }
         }
     }
 
@@ -74,8 +113,11 @@ class PricingCheckoutRoutingTest extends TestCase
         $this->get(route('packages.checkout', ['packageSlug' => 'social-media-mgmt']))
             ->assertOk()
             ->assertSee('Social Media Mgmt')
-            ->assertSee('What Is Included')
-            ->assertSee('Consistent visibility and audience growth');
+            ->assertSee('Quick Highlights')
+            ->assertSee('Complete Feature List')
+            ->assertSee('Daily Long + Short Form Videos')
+            ->assertDontSee('Benefits')
+            ->assertDontSee('Trust Indicators');
 
         $this->assertDatabaseMissing('packages', ['slug' => 'social-media-mgmt']);
     }

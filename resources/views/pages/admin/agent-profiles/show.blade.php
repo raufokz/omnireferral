@@ -12,9 +12,18 @@
     @if($profile->profile_status !== 'featured')
         <form method="POST" action="{{ route('admin.agent-profiles.feature', $profile) }}" style="display:inline;">@csrf<button type="submit" class="button button--orange">Mark Featured</button></form>
     @endif
+    @if($profile->profile_status !== 'published')
+        <form method="POST" action="{{ route('admin.agent-profiles.publish', $profile) }}" style="display:inline;">@csrf<button type="submit" class="button button--ghost-blue">Approve</button></form>
+    @endif
+    @if($profile->profile_status !== 'suspended')
+        <form method="POST" action="{{ route('admin.agent-profiles.suspend', $profile) }}" style="display:inline;">@csrf<button type="submit" class="button button--ghost-blue">Suspend</button></form>
+    @endif
 @endsection
 
 @section('content')
+@php
+    $socialLinks = is_array($profile->social_links) ? $profile->social_links : [];
+@endphp
 <div class="workspace-stack">
     @if(session('success'))<div class="workspace-card">{{ session('success') }}</div>@endif
 
@@ -35,6 +44,7 @@
                 <label class="workspace-field"><span>Languages</span><input type="text" name="languages" value="{{ old('languages', $profile->languages) }}"></label>
                 <label class="workspace-field"><span>Rating</span><input type="number" step="0.1" name="rating" value="{{ old('rating', $profile->rating) }}" min="0" max="5"></label>
                 <label class="workspace-field"><span>Reviews</span><input type="number" name="review_count" value="{{ old('review_count', $profile->review_count) }}" min="0"></label>
+                <label class="workspace-field"><span>Leads closed</span><input type="number" name="leads_closed" value="{{ old('leads_closed', $profile->leads_closed) }}" min="0"></label>
                 <label class="workspace-field"><span>Status</span>
                     <select name="profile_status" required>
                         @foreach($statusOptions as $value => $label)
@@ -45,6 +55,10 @@
                 <label class="workspace-field workspace-field--full"><span>Source URL</span><input type="url" name="source_url" value="{{ old('source_url', $profile->source_url) }}"></label>
                 <label class="workspace-field workspace-field--full"><span>Specialties</span><input type="text" name="specialties_text" value="{{ old('specialties_text', $profile->specialties) }}"></label>
                 <label class="workspace-field workspace-field--full"><span>Market areas</span><input type="text" name="market_areas" value="{{ old('market_areas', $profile->market_areas) }}"></label>
+                <label class="workspace-field"><span>Website</span><input type="url" name="website_url" value="{{ old('website_url', $socialLinks['website'] ?? '') }}"></label>
+                <label class="workspace-field"><span>LinkedIn</span><input type="url" name="social_linkedin_url" value="{{ old('social_linkedin_url', $socialLinks['linkedin'] ?? '') }}"></label>
+                <label class="workspace-field"><span>Facebook</span><input type="url" name="social_facebook_url" value="{{ old('social_facebook_url', $socialLinks['facebook'] ?? '') }}"></label>
+                <label class="workspace-field"><span>Instagram</span><input type="url" name="social_instagram_url" value="{{ old('social_instagram_url', $socialLinks['instagram'] ?? '') }}"></label>
                 <label class="workspace-field workspace-field--full"><span>Bio</span><textarea name="bio" rows="5" required>{{ old('bio', $profile->bio) }}</textarea></label>
                 <label class="workspace-field"><span>New headshot</span><input type="file" name="headshot" accept="image/*"></label>
                 <label class="workspace-field"><span>Headshot URL</span><input type="url" name="headshot_url" value="{{ old('headshot_url') }}"></label>

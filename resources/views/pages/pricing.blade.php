@@ -7,290 +7,443 @@
 @section('content')
 @php
     $pricingPlans = $pricingPlans ?? \App\Support\PricingContent::plans();
-    $leadPlans = array_values($leadPlans ?? ($pricingPlans['real_estate'] ?? []));
-    $featuredHeroPlan = collect($leadPlans)->firstWhere('is_featured', true) ?? ($leadPlans[0] ?? [
-        'name' => 'Power Lead',
-        'summary' => 'Balanced growth and visibility for scaling teams.',
-        'card_description' => 'Our most balanced package for agents and teams looking to increase referral volume, improve visibility, strengthen market presence, and receive additional support resources.',
-        'price' => 797,
-        'billing_label' => 'One-Time',
-        'card_best_for' => 'Growing Teams',
-        'slug' => 'power-leads',
-    ]);
-    $featuredHeroUrl = route('packages.checkout', ['packageSlug' => $featuredHeroPlan['slug'] ?? 'power-leads']);
-    $heroMetrics = [
-        ['value' => '3', 'label' => 'Lead packages'],
-        ['value' => '5', 'label' => 'Launch steps'],
-        ['value' => '24/7', 'label' => 'Dashboard access'],
-    ];
+    $sourceLeadPlans = collect(array_values($leadPlans ?? ($pricingPlans['real_estate'] ?? [])))->keyBy(fn ($plan) => $plan['slug'] ?? $plan['name']);
+    $sourceVaPlans = collect(array_values($vaPlans ?? ($pricingPlans['virtual_assistance'] ?? [])))->keyBy(fn ($plan) => $plan['slug'] ?? $plan['name']);
+
+    $planUrl = function (array $plan): string {
+        $slug = (string) ($plan['slug'] ?? '');
+
+        if ($slug === '') {
+            return route('pricing');
+        }
+
+        return route('packages.checkout', ['packageSlug' => $slug]);
+    };
+
+    $leadCards = collect([
+        [
+            'slug' => 'quick-leads',
+            'fallback_name' => 'Quick Lead',
+            'badge' => 'Starter',
+            'price' => 499,
+            'billing' => '/ Yearly',
+            'subtitle' => 'Starter-friendly. City-focused.',
+            'description' => 'Perfect for agents entering new markets who need verified referrals, local visibility, and predictable lead opportunities.',
+            'featured' => false,
+        ],
+        [
+            'slug' => 'power-leads',
+            'fallback_name' => 'Power Lead',
+            'badge' => 'Most Popular',
+            'price' => 797,
+            'billing' => '/ One-Time',
+            'subtitle' => 'Multi-city. Scalable support.',
+            'description' => 'Designed for growing teams that need more referrals, broader coverage, virtual assistance, and stronger lead qualification.',
+            'featured' => true,
+        ],
+        [
+            'slug' => 'prime-leads',
+            'fallback_name' => 'Prime Lead',
+            'badge' => 'Premium',
+            'price' => 2299,
+            'billing' => '/ One-Time',
+            'subtitle' => 'Premium reach. Full-service.',
+            'description' => 'Built for top-producing agents seeking maximum exposure, priority support, premium placement, and advanced lead qualification.',
+            'featured' => false,
+        ],
+    ])->map(function ($card) use ($sourceLeadPlans, $planUrl) {
+        $plan = $sourceLeadPlans->get($card['slug'], []);
+        $card['name'] = $plan['name'] ?? $card['fallback_name'];
+        $card['badge'] = $plan['badge'] ?? $plan['card_tag'] ?? $card['badge'];
+        $card['price'] = (int) ($plan['price'] ?? $card['price']);
+        $card['billing'] = $plan['price_note'] ?? $card['billing'];
+        $card['subtitle'] = $plan['value_statement'] ?? $plan['summary'] ?? $card['subtitle'];
+        $card['description'] = $plan['card_description'] ?? $card['description'];
+        $card['featured'] = (bool) ($plan['is_featured'] ?? $card['featured']);
+        $card['url'] = $planUrl(array_merge($plan, ['slug' => $card['slug']]));
+
+        return $card;
+    })->all();
+
+    $vaCards = collect([
+        [
+            'slug' => 'cold-calling-isa',
+            'fallback_name' => 'Cold Calling / ISA',
+            'badge' => 'Dedicated ISA',
+            'price' => 1999,
+            'billing' => '/ Month',
+            'subtitle' => 'Dedicated ISA Sales Agent',
+            'description' => 'Professional outbound support focused on appointment setting, lead nurturing, follow-ups, and pipeline growth.',
+            'featured' => false,
+        ],
+        [
+            'slug' => 'social-media-mgmt',
+            'fallback_name' => 'Social Media Mgmt',
+            'badge' => 'Most Popular',
+            'price' => 1499,
+            'billing' => '/ Month',
+            'subtitle' => 'Daily Long + Short Form Videos',
+            'description' => 'Done-for-you content creation, audience growth, engagement management, and brand visibility.',
+            'featured' => true,
+        ],
+        [
+            'slug' => 'individual-va',
+            'fallback_name' => 'Individual VA',
+            'badge' => 'Flexible Support',
+            'price' => 8,
+            'billing' => '/ Hour',
+            'subtitle' => 'Flexible Hourly Billing.',
+            'description' => 'Dedicated virtual support for CRM updates, scheduling, administrative tasks, and daily business operations.',
+            'featured' => false,
+        ],
+    ])->map(function ($card) use ($sourceVaPlans, $planUrl) {
+        $plan = $sourceVaPlans->get($card['slug'])
+            ?? $sourceVaPlans->get($card['fallback_name'])
+            ?? $sourceVaPlans->firstWhere('name', $card['fallback_name'])
+            ?? [];
+        $card['name'] = $plan['name'] ?? $card['fallback_name'];
+        $card['badge'] = $plan['badge'] ?? $plan['card_tag'] ?? $card['badge'];
+        $card['price'] = (int) ($plan['price'] ?? $card['price']);
+        $card['billing'] = $plan['price_note'] ?? $card['billing'];
+        $card['subtitle'] = $plan['value_statement'] ?? $plan['summary'] ?? $card['subtitle'];
+        $card['description'] = $plan['card_description'] ?? $card['description'];
+        $card['featured'] = (bool) ($plan['is_featured'] ?? $card['featured']);
+        $card['url'] = $planUrl(array_merge($plan, ['slug' => $card['slug']]));
+
+        return $card;
+    })->all();
+
+    $formatPrice = fn (int $price): string => '$'.number_format($price);
 @endphp
 
-<section class="pricing-hero-band pricing-hero-band--reference">
-    <div class="pricing-hero-band__bg" aria-hidden="true"></div>
-    <div class="container pricing-hero-band__inner pricing-hero-band__inner--split" data-animate="up">
-        <div class="phb-copy phb-copy--split">
-            <span class="eyebrow phb-eyebrow">OmniReferral Lead Packages</span>
-            <h1 class="phb-copy__headline">Qualified real estate referrals without the chase</h1>
-            <p class="phb-copy__sub">Choose a lead package built for real estate teams that want verified opportunities, clear routing, and follow-up workflows that move fast after checkout.</p>
+<div class="omni-pricing-page">
+    <section class="omni-pricing-hero">
+        <div class="omni-pricing-hero__bg" aria-hidden="true">
+            <img src="{{ asset('images/home/hero_backdrop_v2.png') }}" alt="">
+        </div>
+        <div class="container omni-pricing-hero__inner">
+            <div class="omni-pricing-hero__copy" data-animate="left">
+                <span class="omni-kicker">10X Growth Challenge</span>
+                <h1>10X Your Real Estate Growth</h1>
+                <p>Combine verified referrals, virtual assistants, lead routing, social media management, and featured agent placement in one growth platform.</p>
 
-            <div class="phb-copy__ctas">
-                <a href="#pricing-plans" class="button button--orange">View Packages</a>
-                <a href="{{ route('contact') }}" class="button button--ghost-light">Talk To Sales</a>
+                <div class="omni-pricing-focus-list" aria-label="Growth platform focus areas">
+                    <span>Real Estate Lead Generation</span>
+                    <span>VA Services</span>
+                    <span>Referral Growth</span>
+                    <span>Agent Visibility</span>
+                    <span>Marketplace Exposure</span>
+                </div>
+
+                <div class="omni-pricing-hero__actions">
+                    <a href="#pricing-packages" class="omni-btn omni-btn--orange">View Packages</a>
+                    <a href="{{ route('contact') }}" class="omni-btn omni-btn--outline">Talk To Sales</a>
+                </div>
+
+                <div class="omni-pricing-trust" aria-label="OmniReferral trust metrics">
+                    <div>
+                        <strong>10,000+</strong>
+                        <span>Leads Delivered</span>
+                    </div>
+                    <div>
+                        <strong>3,200+</strong>
+                        <span>Verified Agents</span>
+                    </div>
+                    <div>
+                        <strong>24/7</strong>
+                        <span>Support</span>
+                    </div>
+                    <div>
+                        <strong>50+</strong>
+                        <span>Markets Covered</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="phb-copy__badges" aria-label="Service highlights">
-                <span class="phb-badge">ISA qualified leads</span>
-                <span class="phb-badge">ZIP based routing</span>
-                <span class="phb-badge">Fast onboarding</span>
+            <aside class="omni-growth-challenge-card" data-animate="right" aria-label="10X Growth Challenge overview">
+                <span class="omni-growth-challenge-card__ribbon">Premium Growth System</span>
+                <div class="omni-growth-challenge-card__head">
+                    <span>10X Growth Challenge</span>
+                    <h2>One operating layer for referrals, visibility, assistant support, and faster market follow-up.</h2>
+                </div>
+                <div class="omni-growth-challenge-card__flow">
+                    <div>
+                        <strong>Verified Referral Engine</strong>
+                        <span>Qualified buyer and seller opportunities routed by market fit.</span>
+                    </div>
+                    <div>
+                        <strong>VA Operations Layer</strong>
+                        <span>Cold calling, admin support, social media, and response coverage.</span>
+                    </div>
+                    <div>
+                        <strong>Marketplace Visibility</strong>
+                        <span>Agent placement designed to increase discovery and trust.</span>
+                    </div>
+                </div>
+                <div class="omni-growth-challenge-card__meter" aria-label="Growth workflow stages">
+                    <span>Route</span>
+                    <span>Nurture</span>
+                    <span>Convert</span>
+                </div>
+            </aside>
+        </div>
+    </section>
+
+    <section class="omni-pricing-section" id="pricing-packages">
+        <div class="container">
+            <div class="omni-section-head" data-animate="up">
+                <span class="omni-kicker">Plans</span>
+                <h2>Choose your growth path</h2>
+                <p>Switch between real estate lead packages and virtual assistant services without scrolling through both at once.</p>
+            </div>
+
+            <div class="omni-package-switcher" role="tablist" aria-label="Pricing package groups" data-animate="up">
+                <button class="omni-package-switcher__button is-active" id="pricing-tab-real-estate" type="button" role="tab" aria-selected="true" aria-controls="pricing-panel-real-estate" tabindex="0" data-tab-trigger="real-estate">
+                    Real Estate Plans
+                </button>
+                <button class="omni-package-switcher__button" id="pricing-tab-va-services" type="button" role="tab" aria-selected="false" aria-controls="pricing-panel-va-services" tabindex="-1" data-tab-trigger="va-services">
+                    VA Services
+                </button>
+            </div>
+
+            <div class="omni-package-panel is-active" id="pricing-panel-real-estate" role="tabpanel" aria-labelledby="pricing-tab-real-estate" data-tab-panel="real-estate">
+                <div class="omni-package-panel__intro">
+                    <h3>Real Estate Lead Packages</h3>
+                    <p>Verified referral opportunities for agents who want cleaner intake, faster routing, and predictable market coverage.</p>
+                </div>
+                <div class="omni-plan-grid omni-plan-grid--primary" data-stagger>
+                    @foreach($leadCards as $card)
+                        <article class="omni-plan-card {{ $card['featured'] ? 'omni-plan-card--featured' : '' }}">
+                            <span class="omni-plan-card__badge">{{ $card['badge'] }}</span>
+                            <h3>{{ $card['name'] }}</h3>
+                            <p class="omni-plan-card__subtitle">{{ $card['subtitle'] }}</p>
+                            <div class="omni-plan-card__price">
+                                <strong>{{ $formatPrice($card['price']) }}</strong>
+                                <span>{{ $card['billing'] }}</span>
+                            </div>
+                            <p class="omni-plan-card__description">{{ $card['description'] }}</p>
+                            <a href="{{ $card['url'] }}" class="omni-plan-card__button">Explore Plan <span aria-hidden="true">&rarr;</span></a>
+                        </article>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="omni-package-panel" id="pricing-panel-va-services" role="tabpanel" aria-labelledby="pricing-tab-va-services" data-tab-panel="va-services" hidden>
+                <div class="omni-package-panel__intro">
+                    <h3>Virtual Assistant Services</h3>
+                    <p>Dedicated operational support for follow-up, prospecting, content, and daily real estate workflow coverage.</p>
+                </div>
+                <div class="omni-plan-grid omni-plan-grid--services" data-stagger>
+                    @foreach($vaCards as $card)
+                        <article class="omni-plan-card omni-plan-card--service {{ $card['featured'] ? 'omni-plan-card--featured' : '' }}">
+                            <span class="omni-plan-card__badge">{{ $card['badge'] }}</span>
+                            <h3>{{ $card['name'] }}</h3>
+                            <p class="omni-plan-card__subtitle">{{ $card['subtitle'] }}</p>
+                            <div class="omni-plan-card__price">
+                                <strong>{{ $formatPrice($card['price']) }}</strong>
+                                <span>{{ $card['billing'] }}</span>
+                            </div>
+                            <p class="omni-plan-card__description">{{ $card['description'] }}</p>
+                            <a href="{{ $card['url'] }}" class="omni-plan-card__button">Explore Plan <span aria-hidden="true">&rarr;</span></a>
+                        </article>
+                    @endforeach
+                </div>
             </div>
         </div>
+    </section>
 
-        <aside class="pricing-hero-band__panel pricing-hero-band__panel--featured" aria-label="Featured pricing plan">
-            <div class="pricing-hero-band__panel-top">
-                <span class="pricing-hero-band__panel-eyebrow">Most Popular</span>
-                <span class="pricing-hero-band__panel-chip">Power Lead</span>
+    <section class="omni-comparison-section" aria-labelledby="pricing-comparison-heading">
+        <div class="container">
+            <div class="omni-section-head" data-animate="up">
+                <span class="omni-kicker">Compare Plans</span>
+                <h2 id="pricing-comparison-heading">Compare real estate lead packages</h2>
+                <p>Power Lead is highlighted for agents who want the strongest balance of lead volume, speed, and support.</p>
             </div>
 
-            <h2>{{ $featuredHeroPlan['name'] }}</h2>
-            <p>{{ $featuredHeroPlan['card_description'] ?? $featuredHeroPlan['summary'] }}</p>
-
-            <div class="pricing-hero-band__panel-price">
-                <strong>${{ number_format($featuredHeroPlan['price']) }}</strong>
-                <span>{{ $featuredHeroPlan['billing_label'] ?? $featuredHeroPlan['price_note'] ?? '/ Month' }}</span>
+            <div class="omni-comparison-card" data-animate="up">
+                <table class="omni-comparison-table">
+                    <caption class="visually-hidden">Real estate lead package comparison</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Features</th>
+                            <th scope="col">Quick Lead</th>
+                            <th scope="col" class="is-featured">Power Lead <span class="omni-comparison-plan-badge">Recommended</span></th>
+                            <th scope="col">Prime Lead</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row">Exclusive Leads</th>
+                            <td>2</td>
+                            <td class="is-featured">5</td>
+                            <td>10</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Lead Quality</th>
+                            <td>High</td>
+                            <td class="is-featured">Very High</td>
+                            <td>Highest</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Response Time</th>
+                            <td>24-48 hrs</td>
+                            <td class="is-featured">12-24 hrs</td>
+                            <td>Within 12 hrs</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Follow-up Support</th>
+                            <td>Email</td>
+                            <td class="is-featured">Phone + Email</td>
+                            <td>Priority Phone</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Replacement Guarantee</th>
+                            <td>Basic</td>
+                            <td class="is-featured">Yes</td>
+                            <td>Yes</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Lead Match Score</th>
+                            <td>Good</td>
+                            <td class="is-featured">Better</td>
+                            <td>Best</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Marketplace Exposure</th>
+                            <td>Standard</td>
+                            <td class="is-featured">Enhanced</td>
+                            <td>Premium</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+        </div>
+    </section>
 
-            <span class="pricing-card__best-fit">Best for {{ $featuredHeroPlan['card_best_for'] ?? 'Growing Teams' }}</span>
-
-            <a href="{{ $featuredHeroUrl }}" class="button button--orange">EXPLORE PLAN</a>
-
-            <div class="pricing-hero-band__metrics">
-                @foreach($heroMetrics as $metric)
-                    <div class="pricing-hero-band__metric">
-                        <strong>{{ $metric['value'] }}</strong>
-                        <span>{{ $metric['label'] }}</span>
-                    </div>
+    <section class="omni-process-section">
+        <div class="container">
+            <div class="omni-section-head" data-animate="up">
+                <span class="omni-kicker">How It Works</span>
+                <h2>A cleaner path from package to pipeline</h2>
+                <p>Every plan is designed around quick onboarding, useful lead context, and support that helps agents act while intent is fresh.</p>
+            </div>
+            <div class="omni-process-grid" data-stagger>
+                @foreach([
+                    ['01', 'Choose Your Plan', 'Pick the lead or VA package that fits your current market, capacity, and growth target.'],
+                    ['02', 'Confirm Your Market', 'Share your target cities, ZIP codes, buyer profile, and preferred follow-up workflow.'],
+                    ['03', 'Activate Routing', 'OmniReferral configures the handoff so qualified opportunities reach the right place quickly.'],
+                    ['04', 'Follow Up Faster', 'Use cleaner context, assistant support, and visibility tools to keep prospects moving.'],
+                    ['05', 'Scale What Works', 'Add markets, upgrade support, or pair leads with VA services as your pipeline grows.'],
+                ] as [$number, $title, $copy])
+                    <article class="omni-process-step">
+                        <span>{{ $number }}</span>
+                        <h3>{{ $title }}</h3>
+                        <p>{{ $copy }}</p>
+                    </article>
                 @endforeach
             </div>
-        </aside>
-    </div>
-</section>
-
-<section class="section section--gray homepage-section homepage-section--pricing pricing-packages-section" id="pricing-plans">
-    <div class="container">
-        <div class="section-heading homepage-section__heading pricing-section-head" data-animate="left">
-            <span class="eyebrow">Pricing</span>
-            <h2>Choose your growth lane</h2>
-            <p class="pricing-section-head__sub">Switch between real estate referral packages and VA execution services without leaving the page.</p>
         </div>
+    </section>
 
-        @include('partials.pricing-plan-switcher', ['pricingPlans' => $pricingPlans, 'leadPlans' => $leadPlans])
-    </div>
-</section>
-
-<section class="section pricing-why-strip">
-    <div class="container">
-        <div class="section-heading" data-animate="up">
-            <span class="eyebrow">Why OmniReferral</span>
-            <h2>Why our leads are different</h2>
-        </div>
-
-        <div class="pricing-why-grid">
-            <div class="pwy-feature" data-animate="up">
-                <div class="pwy-feature__icon">ISA</div>
-                <h3>ISA Qualified Leads</h3>
-                <p>Every request is reviewed by our inside sales workflow before it reaches your pipeline.</p>
+    <section class="omni-success-section">
+        <div class="container">
+            <div class="omni-section-head" data-animate="up">
+                <span class="omni-kicker">Successes</span>
+                <h2>Success Stories</h2>
+                <p>Real estate teams use OmniReferral to open new markets, increase response speed, and add operational support without adding complexity.</p>
             </div>
-            <div class="pwy-feature" data-animate="up">
-                <div class="pwy-feature__icon">ZIP</div>
-                <h3>ZIP Based Routing</h3>
-                <p>Opportunities are matched to the areas your team actually serves.</p>
-            </div>
-            <div class="pwy-feature" data-animate="up">
-                <div class="pwy-feature__icon">FAST</div>
-                <h3>Fast Handoff</h3>
-                <p>Qualified referrals move into your follow-up workflow quickly after intake.</p>
-            </div>
-            <div class="pwy-feature" data-animate="up">
-                <div class="pwy-feature__icon">CRM</div>
-                <h3>Dashboard Access</h3>
-                <p>Track lead status, follow-up, and activity from a dedicated agent dashboard.</p>
+            <div class="omni-success-grid" data-stagger>
+                @foreach([
+                    ['name' => 'Jessica Miller', 'market' => 'Miami, FL', 'image' => 'images/realtors/12.png', 'result' => 'Closed 3 referrals in 45 days', 'copy' => 'Power Lead helped Jessica capture high-intent waterfront buyers without adding another internal assistant.'],
+                    ['name' => 'David Martinez', 'market' => 'Dallas, TX', 'image' => 'images/realtors/10.png', 'result' => 'Expanded into 4 new ZIP codes', 'copy' => 'Quick Lead gave David a predictable launch path in a new market with verified referral flow.'],
+                    ['name' => 'Amanda Taylor', 'market' => 'Nashville, TN', 'image' => 'images/realtors/14.png', 'result' => 'Reached top local placement', 'copy' => 'Prime Lead paired premium profile visibility with faster routing and stronger follow-up.'],
+                ] as $story)
+                    <article class="omni-success-card">
+                        <div class="omni-success-card__avatar">
+                            <img src="{{ asset($story['image']) }}" alt="{{ $story['name'] }}" loading="lazy" width="80" height="80">
+                        </div>
+                        <div>
+                            <h3>{{ $story['name'] }}</h3>
+                            <span>{{ $story['market'] }}</span>
+                        </div>
+                        <strong>{{ $story['result'] }}</strong>
+                        <p>{{ $story['copy'] }}</p>
+                        <span class="omni-success-card__tag">Verified growth story</span>
+                    </article>
+                @endforeach
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-@include('partials.pricing-comparison-table')
-
-<section class="section pricing-benefits">
-    <div class="container">
-        <div class="section-heading" data-animate="up">
-            <span class="eyebrow">How it works</span>
-            <h2>From package selection to measurable follow-up</h2>
-            <p class="pricing-section-head__sub">A compact launch process designed to get your market, routing, and support workflow moving without extra friction.</p>
-        </div>
-
-        <div class="pricing-how-grid">
-            <div class="how-step" data-animate="up">
-                <div class="how-step__num">1</div>
-                <h3>Choose Your Package</h3>
-                <p>Select the referral tier that matches your market coverage and growth target.</p>
-            </div>
-            <div class="how-step" data-animate="up">
-                <div class="how-step__num">2</div>
-                <h3>Complete Onboarding</h3>
-                <p>Share your service areas, lead preferences, and routing details.</p>
-            </div>
-            <div class="how-step" data-animate="up">
-                <div class="how-step__num">3</div>
-                <h3>We Launch Your System</h3>
-                <p>Our team configures your referral flow and follow-up workflow.</p>
-            </div>
-            <div class="how-step" data-animate="up">
-                <div class="how-step__num">4</div>
-                <h3>Receive Leads & Support</h3>
-                <p>Qualified referrals and support updates move into your operating rhythm.</p>
-            </div>
-            <div class="how-step how-step--wide" data-animate="up">
-                <div class="how-step__num">5</div>
-                <h3>Track Performance</h3>
-                <p>Monitor activity and adjust your focus as your pipeline grows.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="section pricing-qualification">
-    <div class="container">
-        <div class="section-heading" data-animate="up">
-            <span class="eyebrow">Benefits</span>
-            <h2>More qualified conversations, less chasing</h2>
-        </div>
-
-        <div class="pricing-qual-grid">
-            <div class="qual-card" data-animate="up">
-                <div class="qual-card__icon">OPS</div>
-                <h3>ISA + Ops Verification</h3>
-                <p>Reduce wasted follow-up by prioritizing prospects that have already passed through a real workflow.</p>
-            </div>
-            <div class="qual-card" data-animate="up">
-                <div class="qual-card__icon">ZIP</div>
-                <h3>ZIP Territory Routing</h3>
-                <p>Keep referrals aligned to the cities and ZIP codes where your team can respond quickly.</p>
-            </div>
-            <div class="qual-card" data-animate="up">
-                <div class="qual-card__icon">FLOW</div>
-                <h3>Workflow First Follow-up</h3>
-                <p>Use structured timing, next steps, and reminders so fewer leads slip through the cracks.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="section pricing-trust">
-    <div class="container">
-        <div class="section-heading" data-animate="up">
-            <span class="eyebrow">Trust</span>
-            <h2>Built for real estate teams that value execution</h2>
-        </div>
-
-        <div class="pricing-trust-grid">
-            @foreach(['Vetted ISA service', 'Fast onboarding', 'Transparent pricing', 'Dedicated support', 'Real operational workflows'] as $trustItem)
-                <div class="trust-pill" data-animate="up">
-                    <span class="trust-pill__check" aria-hidden="true">
-                        <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                    </span>
-                    {{ $trustItem }}
+    <section class="omni-trust-section">
+        <div class="container">
+            <div class="omni-trust-panel" data-animate="up">
+                <div class="omni-trust-panel__copy">
+                    <span class="omni-kicker">Trust Layer</span>
+                    <h2>Built to feel organized before, during, and after every handoff.</h2>
+                    <p>OmniReferral keeps the experience consistent across lead generation, assistant support, agent visibility, and buyer or seller routing.</p>
                 </div>
-            @endforeach
-        </div>
-    </div>
-</section>
-
-<section class="section pricing-faq">
-    <div class="container">
-        <div class="section-heading" data-animate="up">
-            <span class="eyebrow">FAQs</span>
-            <h2>Everything you need to know</h2>
-        </div>
-
-        <div class="faq-accordion">
-            @php
-                $faqs = [
-                    'How do referrals work?' => 'After checkout, onboarding confirms your target areas and workflow. Referrals are qualified, routed, and organized so your team can focus on the right conversations.',
-                    'What happens after purchase?' => 'You complete onboarding, we configure your package workflow, and your lead support process begins based on the tier you selected.',
-                    'Can I upgrade later?' => 'Yes. You can move from Quick Lead to Power Lead or Prime Lead as your volume and coverage needs grow.',
-                    'Are there any recurring fees?' => 'Each package is billed according to the pricing shown at checkout. Your checkout screen confirms the exact recurring amount before purchase.',
-                    'How quickly can I get started?' => 'You can start onboarding immediately after checkout. Launch timing depends on how quickly your market and routing details are completed.',
-                    'What support is included?' => 'Support scales by package, from email support to text, call, and dedicated execution support on higher tiers.',
-                    'What makes Omnireferral different?' => 'OmniReferral combines qualification, routing, dashboard visibility, and real operational follow-up instead of simply handing over raw names.',
-                    'Do you offer VA support too?' => 'Yes. Power Lead includes 3 hrs/week of virtual assistance and Prime Lead includes 15 hrs/week. Additional VA support can be discussed with sales.',
-                ];
-            @endphp
-
-            @foreach($faqs as $q => $a)
-                <details class="faq-item">
-                    <summary class="faq-summary">
-                        <span>{{ $q }}</span>
-                        <span class="faq-chevron" aria-hidden="true">+</span>
-                    </summary>
-                    <div class="faq-body">
-                        <p>{{ $a }}</p>
-                    </div>
-                </details>
-            @endforeach
-        </div>
-    </div>
-</section>
-
-<section class="section section--gray" id="featured-agent-plans">
-    <div class="container">
-        <div class="section-heading">
-            <span class="eyebrow">Directory Monetization</span>
-            <h2>Free listing vs Featured Agent placement</h2>
-            <p>Grow your directory presence for free, then upgrade for priority placement across search, city pages, and homepage widgets.</p>
-        </div>
-        <div class="pricing-featured-compare">
-            <article>
-                <h3>Free Profile</h3>
-                <ul>
-                    <li>Directory listing on city &amp; state pages</li>
-                    <li>Basic search visibility</li>
-                    <li>SEO indexable `/agent/{slug}` page</li>
-                    <li>Buyer inquiries routed through OmniReferral</li>
-                </ul>
-                <a href="{{ route('agents.index') }}" class="button button--ghost-blue">Browse directory</a>
-            </article>
-            <article class="is-featured">
-                <h3>⭐ Featured Profile</h3>
-                <ul>
-                    <li>Top placement in search results</li>
-                    <li>Priority on city &amp; state pages</li>
-                    <li>Homepage &amp; widget visibility</li>
-                    <li>Featured badge on agent cards</li>
-                    <li>More impressions &amp; lead opportunities</li>
-                </ul>
-                <a href="{{ route('contact') }}" class="button button--orange">Upgrade to Featured</a>
-            </article>
-        </div>
-    </div>
-</section>
-
-<section class="section pricing-final-cta">
-    <div class="container">
-        <div class="pfc-inner" data-animate="up">
-            <div class="pfc-copy">
-                <h2>Ready to choose your referral package?</h2>
-                <p>Explore a package above to start checkout, or talk to sales if you want help choosing the right tier.</p>
-            </div>
-            <div class="pfc-actions">
-                <a href="#pricing-plans" class="button button--orange">View Packages</a>
-                <a href="{{ route('contact') }}" class="button button--ghost-light">Talk To Sales</a>
+                <div class="omni-trust-grid">
+                    @foreach([
+                        ['Verified intake', 'Requests are reviewed for useful context before they move into the agent workflow.'],
+                        ['Human support', 'Sales and support coverage help agents choose the right package and resolve delivery questions.'],
+                        ['Market coverage', 'The platform supports local discovery across growing real estate markets.'],
+                    ] as [$title, $copy])
+                        <article>
+                            <strong>{{ $title }}</strong>
+                            <span>{{ $copy }}</span>
+                        </article>
+                    @endforeach
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-@push('scripts')
-    @include('partials.pricing-toggle-script')
-@endpush
+    <section class="omni-faq-section">
+        <div class="container">
+            <div class="omni-faq-layout" data-animate="up">
+                <div class="omni-faq-intro">
+                    <span class="omni-kicker">FAQ</span>
+                    <h2>Frequently Asked Questions</h2>
+                    <p>Clear answers for package fit, onboarding, verification, and support expectations.</p>
+                    <a href="{{ route('contact') }}" class="omni-btn omni-btn--orange">Talk To Sales</a>
+                </div>
+                <div class="omni-faq-list">
+                    @foreach([
+                        'Are the leads exclusive?' => 'Lead exclusivity depends on the package selected. Higher tiers receive stronger exclusivity, faster routing, and deeper follow-up support.',
+                        'How fast will I receive my leads?' => 'Most package onboarding starts immediately after checkout. Routing is configured once your target markets and package details are confirmed.',
+                        'Can I pair lead packages with VA services?' => 'Yes. Agents can use real estate lead packages and VA services together for prospecting, social media, follow-up, and daily operations.',
+                        'Can I get a replacement?' => 'Replacement support is available based on lead quality review and the plan selected. Our team will help review fit and delivery details.',
+                        'Are leads verified?' => 'OmniReferral uses a qualification workflow before handoff so agents receive cleaner referral opportunities with more useful context.',
+                        'Do you offer refunds?' => 'Package terms are confirmed at checkout, and our team can help resolve fit or delivery questions through support.',
+                    ] as $question => $answer)
+                        <details class="omni-faq-item">
+                            <summary>
+                                <span>{{ $question }}</span>
+                                <i aria-hidden="true">+</i>
+                            </summary>
+                            <p>{{ $answer }}</p>
+                        </details>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="omni-final-cta">
+        <div class="container">
+            <div class="omni-final-cta__panel" data-animate="up">
+                <div>
+                    <span class="omni-kicker">Get Started</span>
+                    <h2>Ready to grow your referral pipeline?</h2>
+                    <p>Choose the plan that matches your next stage, or talk to sales for help mapping your market strategy.</p>
+                </div>
+                <div class="omni-final-cta__actions">
+                    <a href="#pricing-packages" class="omni-btn omni-btn--orange">View Packages</a>
+                    <a href="{{ route('contact') }}" class="omni-btn omni-btn--outline">Talk To Sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
 @endsection

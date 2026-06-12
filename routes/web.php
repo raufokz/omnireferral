@@ -335,6 +335,9 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::post('admin/properties/{property}/review', [PropertyController::class, 'review'])->name('admin.properties.review');
         Route::post('admin/users/{user}/review', [UserModerationController::class, 'review'])->name('admin.users.review');
 
+        Route::get('admin/agents/manage', [StaffAgentProfileController::class, 'index'])->name('admin.agents.manage');
+        Route::get('admin/agents/import', [StaffAgentProfileController::class, 'create'])->name('admin.agents.import');
+        Route::post('admin/agents/import', [StaffAgentProfileController::class, 'store'])->name('admin.agents.import.store');
         Route::get('admin/agent-profiles', [StaffAgentProfileController::class, 'index'])->name('admin.agent-profiles.index');
         Route::get('admin/agent-profiles/create', [StaffAgentProfileController::class, 'create'])->name('admin.agent-profiles.create');
         Route::post('admin/agent-profiles', [StaffAgentProfileController::class, 'store'])->name('admin.agent-profiles.store');
@@ -342,5 +345,6 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::put('admin/agent-profiles/{agentProfile}', [StaffAgentProfileController::class, 'update'])->name('admin.agent-profiles.update');
         Route::post('admin/agent-profiles/{agentProfile}/feature', [StaffAgentProfileController::class, 'feature'])->name('admin.agent-profiles.feature');
         Route::post('admin/agent-profiles/{agentProfile}/publish', [StaffAgentProfileController::class, 'publish'])->name('admin.agent-profiles.publish');
+        Route::post('admin/agent-profiles/{agentProfile}/suspend', [StaffAgentProfileController::class, 'suspend'])->name('admin.agent-profiles.suspend');
     });
 });

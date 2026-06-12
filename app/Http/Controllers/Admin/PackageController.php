@@ -137,11 +137,12 @@ class PackageController extends Controller
             ],
             'description' => ['nullable', 'string', 'max:2000'],
             'category' => ['required', Rule::in(['lead', 'virtual_assistant'])],
-            'billing_type' => ['required', Rule::in(['one_time', 'monthly', 'hybrid'])],
+            'billing_type' => ['required', Rule::in(['one_time', 'monthly', 'hourly', 'hybrid'])],
             'is_active' => ['nullable', Rule::in(['0', '1'])],
             'is_featured' => ['nullable', Rule::in(['0', '1'])],
             'one_time_price' => ['nullable', 'integer', 'min:0'],
             'monthly_price' => ['nullable', 'integer', 'min:0'],
+            'hourly_price' => ['nullable', 'integer', 'min:0'],
             'stripe_price_id' => ['nullable', 'string', 'max:255'],
             'stripe_product_id' => ['nullable', 'string', 'max:255'],
             'ghl_form_url' => ['nullable', 'url', 'max:255'],
@@ -160,4 +161,3 @@ class PackageController extends Controller
         return $validated;
     }
 }
-
