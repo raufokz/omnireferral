@@ -252,73 +252,100 @@
         </div>
     </section>
 
-    <section class="omni-comparison-section" aria-labelledby="pricing-comparison-heading">
-        <div class="container">
-            <div class="omni-section-head" data-animate="up">
-                <span class="omni-kicker">Compare Plans</span>
-                <h2 id="pricing-comparison-heading">Compare real estate lead packages</h2>
-                <p>Power Lead is highlighted for agents who want the strongest balance of lead volume, speed, and support.</p>
-            </div>
-
-            <div class="omni-comparison-card" data-animate="up">
-                <table class="omni-comparison-table">
-                    <caption class="visually-hidden">Real estate lead package comparison</caption>
-                    <thead>
-                        <tr>
-                            <th scope="col">Features</th>
-                            <th scope="col">Quick Lead</th>
-                            <th scope="col" class="is-featured">Power Lead <span class="omni-comparison-plan-badge">Recommended</span></th>
-                            <th scope="col">Prime Lead</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <th scope="row">Exclusive Leads</th>
-                            <td>2</td>
-                            <td class="is-featured">5</td>
-                            <td>10</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Lead Quality</th>
-                            <td>High</td>
-                            <td class="is-featured">Very High</td>
-                            <td>Highest</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Response Time</th>
-                            <td>24-48 hrs</td>
-                            <td class="is-featured">12-24 hrs</td>
-                            <td>Within 12 hrs</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Follow-up Support</th>
-                            <td>Email</td>
-                            <td class="is-featured">Phone + Email</td>
-                            <td>Priority Phone</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Replacement Guarantee</th>
-                            <td>Basic</td>
-                            <td class="is-featured">Yes</td>
-                            <td>Yes</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Lead Match Score</th>
-                            <td>Good</td>
-                            <td class="is-featured">Better</td>
-                            <td>Best</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">Marketplace Exposure</th>
-                            <td>Standard</td>
-                            <td class="is-featured">Enhanced</td>
-                            <td>Premium</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+<section class="omni-comparison-section" aria-labelledby="pricing-comparison-heading">
+    <div class="container">
+        <div class="omni-section-head" data-animate="up">
+            <span class="omni-kicker">Compare Plans</span>
+            <h2 id="pricing-comparison-heading">Compare real estate lead packages</h2>
+            <p>Power Lead is highlighted for agents who want the strongest balance of lead volume, speed, and support.</p>
         </div>
-    </section>
+
+```
+    <div class="omni-comparison-card" data-animate="up">
+        <table class="omni-comparison-table">
+            <caption class="visually-hidden">Real estate lead package comparison</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Features</th>
+                    <th scope="col">Quick Lead</th>
+                    <th scope="col" class="is-featured">
+                        Power Lead
+                        <span class="omni-comparison-plan-badge">Recommended</span>
+                    </th>
+                    <th scope="col">Prime Lead</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th scope="row">Exclusive Leads</th>
+                    <td>2</td>
+                    <td class="is-featured">5</td>
+                    <td>10</td>
+                </tr>
+
+                <tr>
+                    <th scope="row">Lead Quality</th>
+                    <td>High</td>
+                    <td class="is-featured">Very High</td>
+                    <td>Highest</td>
+                </tr>
+
+                <tr>
+                    <th scope="row">Response Time</th>
+                    <td>24-48 hrs</td>
+                    <td class="is-featured">12-24 hrs</td>
+                    <td>Within 12 hrs</td>
+                </tr>
+
+                <tr>
+                    <th scope="row">Follow-up Support</th>
+                    <td>Email</td>
+                    <td class="is-featured">Phone + Email</td>
+                    <td>Priority Phone</td>
+                </tr>
+
+                <tr>
+                    <th scope="row">Replacement Guarantee</th>
+                    <td>Basic</td>
+                    <td class="is-featured">Yes</td>
+                    <td>Yes</td>
+                </tr>
+
+                <tr>
+                    <th scope="row">Lead Match Score</th>
+                    <td>Good</td>
+                    <td class="is-featured">Better</td>
+                    <td>Best</td>
+                </tr>
+
+                <tr>
+                    <th scope="row">Marketplace Exposure</th>
+                    <td>Standard</td>
+                    <td class="is-featured">Enhanced</td>
+                    <td>Premium</td>
+                </tr>
+
+                <tr>
+                    <th scope="row">Portal Access</th>
+                    <td>❌ Not Included</td>
+                    <td class="is-featured">✅ Included</td>
+                    <td>✅ Included</td>
+                </tr>
+
+                <tr>
+                    <th scope="row">Property Listings</th>
+                    <td>❌ Not Included</td>
+                    <td class="is-featured">✅ Up to 5 Listings / Month</td>
+                    <td>✅ Up to 10 Listings / Month</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+```
+
+</section>
+
 
     <section class="omni-process-section">
         <div class="container">

@@ -46,15 +46,15 @@
             <div class="agent-directory-hero__stats testimonials-hero__stats">
                 <div class="agent-directory-hero__stat">
                     <strong>{{ number_format($counts['all']) }}</strong>
-                    <span>total published stories</span>
+                    <span>Total Published Stories</span>
                 </div>
                 <div class="agent-directory-hero__stat">
                     <strong>{{ number_format($averageRating, 1) }}/5</strong>
-                    <span>average rating across audiences</span>
+                    <span>Average Rating Across Audiences</span>
                 </div>
                 <div class="agent-directory-hero__stat">
                     <strong>{{ number_format($videoTestimonials->count()) }}</strong>
-                    <span>video highlights available</span>
+                    <span>Video Highlights Available</span>
                 </div>
             </div>
             <p class="testimonials-hero__note">{{ ucfirst($selectedScope) }} are currently in focus through the active filter.</p>
