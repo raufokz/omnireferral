@@ -3,7 +3,7 @@ header("Content-type: application/xml; charset=UTF-8");
 
 $agents = [
   ["slug" => "john-smith-ny", "date" => "2026-06-12"],
-  ["slug" => "ali-khan-rawalpindi", "date" => "2026-06-11"]
+
 ];
 
 echo "<?xml version='1.0' encoding='UTF-8'?>";
