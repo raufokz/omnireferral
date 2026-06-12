@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <sitemap>
+    <loc>https://omnireferrals.com/sitemap-pages.php</loc>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://omnireferrals.com/sitemap-posts.php</loc>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://omnireferrals.com/sitemap-properties.php</loc>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://omnireferrals.com/sitemap-agents.php</loc>
+  </sitemap>
+
+</sitemapindex>
+
