@@ -8,8 +8,10 @@ use App\Models\Partner;
 use App\Models\Property;
 use App\Models\RealtorProfile;
 use App\Models\TeamMember;
+use App\Support\AgentDirectory;
 use App\Support\PricingContent;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 
@@ -18,10 +20,11 @@ class HomeController extends Controller
     public function index(): View
     {
         $viewer = auth()->user();
-        $realtors = RealtorProfile::query()
-            ->publicDirectory()
-            ->with('user')
-            ->get();
+        $realtors = Cache::remember('home:featured-agents', now()->addMinutes(30), fn () => AgentDirectory::publicQuery()
+            ->with(['user:id,name,display_name,avatar'])
+            ->orderedForDirectory()
+            ->limit(12)
+            ->get());
 
         $partnerLogos = collect(File::files(public_path('images/companies-logos')))
             ->filter(fn ($file) => in_array(strtolower($file->getExtension()), ['png', 'jpg', 'jpeg', 'webp']))

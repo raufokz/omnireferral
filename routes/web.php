@@ -10,13 +10,12 @@ use App\Http\Controllers\Admin\PlatformSearchController;
 use App\Http\Controllers\Admin\PropertyManagementController as AdminPropertyManagementController;
 use App\Http\Controllers\Admin\PackageController as AdminPackageController;
 use App\Http\Controllers\Admin\PricingPlanController as AdminPricingPlanController;
-use App\Http\Controllers\Admin\RealtorProfileModerationController;
+use App\Http\Controllers\Admin\StaffAgentProfileController;
 use App\Http\Controllers\Admin\TestimonialController;
 use App\Http\Controllers\Admin\DataExportController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\UserModerationController;
 use App\Http\Controllers\Admin\WebhookEventController as AdminWebhookEventController;
-use App\Http\Controllers\AgentJoinController;
 use App\Http\Controllers\Agent\LeadController as AgentLeadController;
 use App\Http\Controllers\Agent\PortalController as AgentPortalController;
 use App\Http\Controllers\Auth\AuthController;
@@ -152,10 +151,16 @@ Route::post('/lead-store', [LeadController::class, 'store'])->middleware('thrott
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{blog}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/agents', [RealtorController::class, 'index'])->name('agents.index');
-Route::get('/agents/{realtor}', [RealtorController::class, 'show'])->name('agents.show');
-Route::get('/join-as-agent', [AgentJoinController::class, 'create'])->name('join-as-agent');
-Route::post('/join-as-agent', [AgentJoinController::class, 'store'])->middleware('throttle:agent-join')->name('join-as-agent.store');
-Route::get('/join-as-agent/success', [AgentJoinController::class, 'success'])->name('join-as-agent.success');
+Route::get('/agents/{location}', [RealtorController::class, 'location'])
+    ->where('location', '[a-z0-9\-]+')
+    ->name('agents.location');
+Route::get('/agent/{agent}', [RealtorController::class, 'profile'])->name('agents.profile');
+Route::get('/agent/{agent}/preview', [RealtorController::class, 'preview'])->name('agents.preview');
+Route::post('/agent/{agent}/inquiry', [RealtorController::class, 'inquiry'])
+    ->middleware('throttle:contact')
+    ->name('agents.inquiry');
+Route::redirect('/join-as-agent', '/agents', 301);
+Route::redirect('/join-as-agent/success', '/agents', 301);
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth-login');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
@@ -330,12 +335,12 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::post('admin/properties/{property}/review', [PropertyController::class, 'review'])->name('admin.properties.review');
         Route::post('admin/users/{user}/review', [UserModerationController::class, 'review'])->name('admin.users.review');
 
-        Route::get('admin/agent-profiles', [RealtorProfileModerationController::class, 'index'])->name('admin.agent-profiles.index');
-        Route::get('admin/agent-profiles/{agentProfile}', [RealtorProfileModerationController::class, 'show'])->name('admin.agent-profiles.show');
-        Route::put('admin/agent-profiles/{agentProfile}', [RealtorProfileModerationController::class, 'update'])->name('admin.agent-profiles.update');
-        Route::post('admin/agent-profiles/{agentProfile}/approve', [RealtorProfileModerationController::class, 'approve'])->name('admin.agent-profiles.approve');
-        Route::post('admin/agent-profiles/{agentProfile}/reject', [RealtorProfileModerationController::class, 'reject'])->name('admin.agent-profiles.reject');
-        Route::post('admin/agent-profiles/{agentProfile}/activate-user', [RealtorProfileModerationController::class, 'activateUser'])->name('admin.agent-profiles.activate-user');
-        Route::post('admin/agent-profiles/{agentProfile}/suspend-user', [RealtorProfileModerationController::class, 'suspendUser'])->name('admin.agent-profiles.suspend-user');
+        Route::get('admin/agent-profiles', [StaffAgentProfileController::class, 'index'])->name('admin.agent-profiles.index');
+        Route::get('admin/agent-profiles/create', [StaffAgentProfileController::class, 'create'])->name('admin.agent-profiles.create');
+        Route::post('admin/agent-profiles', [StaffAgentProfileController::class, 'store'])->name('admin.agent-profiles.store');
+        Route::get('admin/agent-profiles/{agentProfile}', [StaffAgentProfileController::class, 'show'])->name('admin.agent-profiles.show');
+        Route::put('admin/agent-profiles/{agentProfile}', [StaffAgentProfileController::class, 'update'])->name('admin.agent-profiles.update');
+        Route::post('admin/agent-profiles/{agentProfile}/feature', [StaffAgentProfileController::class, 'feature'])->name('admin.agent-profiles.feature');
+        Route::post('admin/agent-profiles/{agentProfile}/publish', [StaffAgentProfileController::class, 'publish'])->name('admin.agent-profiles.publish');
     });
 });

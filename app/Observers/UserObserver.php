@@ -28,7 +28,7 @@ class UserObserver
                     'specialties' => 'Buyer Representation, Seller Strategy, Lead Conversion',
                     'bio' => 'Agent profile created automatically from the OmniReferral platform.',
                     'headshot' => $user->avatar ? ('storage/' . ltrim($user->avatar, '/')) : AgentAvatar::defaultStorageHeadshot(),
-                    'approval_notes' => 'Pending admin review',
+                    'profile_status' => RealtorProfile::STATUS_PUBLISHED,
                 ]);
             }
 

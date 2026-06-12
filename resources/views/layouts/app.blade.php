@@ -4,6 +4,7 @@
     @include('partials.google-tag')
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#002366">
     <meta name="google-site-verification" content="_8tmldi5k1EqLZJqCFO79Vbl5jwYuhYSdgVi8AtbSo0" />
 

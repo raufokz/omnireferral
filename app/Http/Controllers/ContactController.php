@@ -57,9 +57,16 @@ class ContactController extends Controller
                 ->find($validated['realtor_profile_id']);
         }
 
-        $recipientUserId = $realtorProfile?->user_id ?: ($validated['recipient_user_id'] ?? null);
+        $source = (string) ($validated['source'] ?? '');
+        $routeToAdmin = $realtorProfile && ! $property
+            || str_starts_with($source, 'agent_directory')
+            || str_starts_with($source, 'website_agent');
 
-        if (($property || $realtorProfile) && ! $recipientUserId) {
+        $recipientUserId = $routeToAdmin
+            ? null
+            : ($realtorProfile?->user_id ?: ($validated['recipient_user_id'] ?? null));
+
+        if (($property || $realtorProfile) && ! $routeToAdmin && ! $recipientUserId) {
             return back()
                 ->withInput()
                 ->with('error', 'This agent is not available for direct contact right now.');
@@ -97,11 +104,13 @@ class ContactController extends Controller
             );
         }
 
-        $successMessage = $recipientUserId
-            ? ($property
-                ? 'Your message has been sent to the listing agent. The property owner and OmniReferral operations have also been notified by email.'
-                : 'Your message has been sent directly to this agent.')
-            : 'Thanks for reaching out. We will follow up with you shortly.';
+        $successMessage = $routeToAdmin
+            ? 'Thanks! The OmniReferral team received your request and will follow up shortly.'
+            : ($recipientUserId
+                ? ($property
+                    ? 'Your message has been sent to the listing agent. The property owner and OmniReferral operations have also been notified by email.'
+                    : 'Your message has been sent directly to this agent.')
+                : 'Thanks for reaching out. We will follow up with you shortly.');
 
         return back()->with('success', $successMessage);
     }

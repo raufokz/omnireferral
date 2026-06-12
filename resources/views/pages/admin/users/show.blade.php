@@ -132,8 +132,8 @@
                 @if($record->realtorProfile)
                     <div><dt>Agent profile</dt><dd>
                         <a href="{{ route('admin.agent-profiles.show', $record->realtorProfile) }}">Review in admin</a>
-                        @if($record->realtorProfile->isApprovedForPublicShow())
-                            · <a href="{{ route('agents.show', $record->realtorProfile) }}" target="_blank" rel="noopener">Public profile</a>
+                        @if($record->realtorProfile->isPublicVisible())
+                            · <a href="{{ route('agents.profile', $record->realtorProfile) }}" target="_blank" rel="noopener">Public profile</a>
                         @else
                             · <span class="text-muted">Not public yet</span>
                         @endif

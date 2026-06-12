@@ -149,7 +149,9 @@ class DashboardController extends Controller
                 'pendingAccounts' => User::where('status', 'pending')
                     ->whereIn('role', ['buyer', 'seller', 'agent'])
                     ->count(),
-                'pendingAgentProfiles' => RealtorProfile::pendingReview()->count(),
+                'draftAgentProfiles' => RealtorProfile::draft()->count(),
+                'publishedAgentProfiles' => RealtorProfile::published()->count(),
+                'featuredAgentProfiles' => RealtorProfile::featured()->count(),
                 'userSubmittedListingsTotal' => Property::userSubmitted()->count(),
                 'contacts' => Contact::count(),
                 'enquiries' => Enquiry::count(),

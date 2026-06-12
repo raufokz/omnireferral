@@ -78,36 +78,6 @@ class AppServiceProvider extends ServiceProvider
 
         User::observe(UserObserver::class);
 
-        Route::bind('realtor', function (string $value) {
-            $profile = RealtorProfile::query()
-                ->publicEligible()
-                ->where('slug', $value)
-                ->with([
-                    'user' => fn ($q) => $q->select([
-                        'id',
-                        'name',
-                        'display_name',
-                        'email',
-                        'phone',
-                        'avatar',
-                        'city',
-                        'state',
-                        'zip_code',
-                        'role',
-                        'status',
-                        'created_at',
-                        'updated_at',
-                    ]),
-                ])
-                ->firstOrFail();
-
-            $user = $profile->user;
-            abort_unless($user, 404);
-            $user->setRelation('realtorProfile', $profile);
-
-            return $user;
-        });
-
         RateLimiter::for('leads', function (Request $request) {
             return Limit::perMinute(5)->by($request->ip());
         });
@@ -138,10 +108,6 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('auth-register', function (Request $request) {
             return Limit::perMinute(4)->by($request->ip());
-        });
-
-        RateLimiter::for('agent-join', function (Request $request) {
-            return Limit::perMinute(3)->by($request->ip());
         });
 
         RateLimiter::for('auth-password-reset', function (Request $request) {

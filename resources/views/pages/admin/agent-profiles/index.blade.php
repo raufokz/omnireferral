@@ -1,16 +1,22 @@
 @extends('layouts.dashboard')
 
-@section('dashboard_eyebrow', 'Admin Workspace')
+@section('dashboard_eyebrow', 'Staff Workspace')
 @section('dashboard_title', 'Agent Profiles')
-@section('dashboard_description', 'Review pending applications, approve public profiles, and manage linked agent accounts.')
+@section('dashboard_description', 'Create and publish agent directory profiles sourced from Zillow, Realtor.com, social media, and brokerage sites.')
+
+@section('dashboard_actions')
+    <a href="{{ route('admin.agent-profiles.create') }}" class="button button--orange">Add Agent Profile</a>
+@endsection
 
 @section('content')
 <div class="workspace-stack">
     <section class="workspace-card">
         <div class="admin-user-show__pills">
-            <a href="{{ route('admin.agent-profiles.index', ['status' => 'pending']) }}" class="admin-user-show__pill {{ $status === 'pending' ? 'is-active' : '' }}">Pending ({{ $counts['pending'] }})</a>
-            <a href="{{ route('admin.agent-profiles.index', ['status' => 'approved']) }}" class="admin-user-show__pill {{ $status === 'approved' ? 'is-active' : '' }}">Approved ({{ $counts['approved'] }})</a>
-            <a href="{{ route('admin.agent-profiles.index', ['status' => 'rejected']) }}" class="admin-user-show__pill {{ $status === 'rejected' ? 'is-active' : '' }}">Rejected ({{ $counts['rejected'] }})</a>
+            @foreach(['all' => 'All', 'draft' => 'Draft', 'published' => 'Published', 'featured' => 'Featured'] as $key => $label)
+                <a href="{{ route('admin.agent-profiles.index', ['status' => $key]) }}" class="admin-user-show__pill {{ $status === $key ? 'is-active' : '' }}">
+                    {{ $label }} ({{ $counts[$key] ?? 0 }})
+                </a>
+            @endforeach
         </div>
     </section>
 
@@ -21,28 +27,27 @@
                     <tr>
                         <th>Agent</th>
                         <th>Brokerage</th>
-                        <th>Service Area</th>
-                        <th>Account</th>
-                        <th>Submitted</th>
+                        <th>Market</th>
+                        <th>Status</th>
+                        <th>Created by</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($profiles as $profile)
-                        @php $user = $profile->user; @endphp
                         <tr>
                             <td>
-                                <strong>{{ $user?->publicDisplayName() ?: 'Unknown' }}</strong><br>
-                                <span class="text-muted">{{ $user?->email }}</span>
+                                <strong>{{ $profile->user?->publicDisplayName() }}</strong>
+                                <br><span class="text-muted">{{ $profile->slug }}</span>
                             </td>
-                            <td>{{ $profile->brokerage_name ?: '—' }}</td>
-                            <td>{{ $profile->serviceAreaLabel() ?: '—' }}</td>
-                            <td><span class="status-pill status-pill--{{ \Illuminate\Support\Str::slug($user?->status ?? 'pending', '_') }}">{{ ucfirst($user?->status ?? 'unknown') }}</span></td>
-                            <td>{{ $profile->created_at?->format('M j, Y') }}</td>
-                            <td><a href="{{ route('admin.agent-profiles.show', $profile) }}" class="button button--ghost-blue">Review</a></td>
+                            <td>{{ $profile->brokerage_name }}</td>
+                            <td>{{ $profile->serviceAreaLabel() }}</td>
+                            <td><span class="status-pill">{{ ucfirst($profile->profile_status) }}</span></td>
+                            <td>{{ $profile->createdByUser?->name ?? '—' }}</td>
+                            <td><a href="{{ route('admin.agent-profiles.show', $profile) }}" class="button button--ghost-blue">Edit</a></td>
                         </tr>
                     @empty
-                        <tr><td colspan="6"><div class="workspace-empty">No profiles in this queue.</div></td></tr>
+                        <tr><td colspan="6"><div class="workspace-empty">No profiles yet. <a href="{{ route('admin.agent-profiles.create') }}">Add the first agent</a>.</div></td></tr>
                     @endforelse
                 </tbody>
             </table>

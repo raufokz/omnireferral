@@ -235,11 +235,8 @@ class OmniReferralSeeder extends Seeder
                 'specialties' => 'Luxury, Relocation, First-Time Buyers',
                 'bio' => 'Helping clients navigate competitive markets with clear communication, local expertise, and a qualification-first approach to every buyer and seller introduction.',
                 'headshot' => $realtorImages[$index % max($realtorImages->count(), 1)] ?? $defaultHeadshot,
-                'approved_at' => now()->subDays(5 - $index),
-                'approved_by_user_id' => $admin->id,
-                'rejected_at' => null,
-                'rejected_by_user_id' => null,
-                'approval_notes' => 'Seeded demo agent — auto-approved for directory testing.',
+                'profile_status' => $index < 2 ? RealtorProfile::STATUS_FEATURED : RealtorProfile::STATUS_PUBLISHED,
+                'created_by_user_id' => $admin->id,
             ]);
         });
 

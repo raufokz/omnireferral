@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Support\AgentAvatar;
+use App\Support\AgentDirectory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +14,12 @@ use Illuminate\Support\Str;
 class RealtorProfile extends Model
 {
     use HasFactory;
+
+    public const STATUS_DRAFT = 'draft';
+
+    public const STATUS_PUBLISHED = 'published';
+
+    public const STATUS_FEATURED = 'featured';
 
     protected $fillable = [
         'user_id',
@@ -31,6 +39,9 @@ class RealtorProfile extends Model
         'specialties',
         'bio',
         'headshot',
+        'profile_status',
+        'created_by_user_id',
+        'source_url',
         'approved_at',
         'approved_by_user_id',
         'rejected_at',
@@ -48,6 +59,13 @@ class RealtorProfile extends Model
         'rejected_at' => 'datetime',
     ];
 
+    protected $attributes = [
+        'profile_status' => self::STATUS_PUBLISHED,
+        'rating' => 4.5,
+        'review_count' => 0,
+        'leads_closed' => 0,
+    ];
+
     public function getRouteKeyName(): string
     {
         return 'slug';
@@ -56,6 +74,11 @@ class RealtorProfile extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function createdByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by_user_id');
     }
 
     public function properties(): HasMany
@@ -78,61 +101,44 @@ class RealtorProfile extends Model
         return $this->belongsTo(User::class, 'rejected_by_user_id');
     }
 
-    public function scopeApproved($query)
+    public function scopeDraft(Builder $query): Builder
     {
-        return $query->whereNotNull('approved_at');
+        return $query->where('profile_status', self::STATUS_DRAFT);
     }
 
-    public function scopeNotRejected($query)
+    public function scopePublished(Builder $query): Builder
     {
-        return $query->whereNull('rejected_at');
+        return $query->where('profile_status', self::STATUS_PUBLISHED);
     }
 
-    public function scopeComplete($query)
+    public function scopeFeatured(Builder $query): Builder
     {
-        return $query
-            ->whereNotNull('service_city')
-            ->where('service_city', '!=', '')
-            ->whereNotNull('service_state')
-            ->where('service_state', '!=', '')
-            ->whereNotNull('bio')
-            ->where('bio', '!=', '');
-    }
-
-    public function scopeRatingAtLeast($query, float $rating = 3.0)
-    {
-        return $query->where('rating', '>=', $rating);
+        return $query->where('profile_status', self::STATUS_FEATURED);
     }
 
     /**
-     * Profiles eligible for the public agent directory and profile pages.
+     * Public directory visibility: published or featured profiles only.
      */
-    public function scopePublicEligible($query)
+    public function scopePublicVisible(Builder $query): Builder
     {
-        return $query
-            ->approved()
-            ->notRejected()
-            ->complete()
-            ->ratingAtLeast(3.0)
-            ->whereHas('user', function ($userQuery) {
-                $userQuery->agents()->active();
-            });
+        return $query->whereIn('profile_status', [self::STATUS_PUBLISHED, self::STATUS_FEATURED]);
     }
 
-    /**
-     * @deprecated Use scopePublicEligible() — kept for backward compatibility.
-     */
-    public function scopePublicDirectory($query)
+    /** @deprecated Use scopePublicVisible() */
+    public function scopePublicEligible(Builder $query): Builder
     {
-        return $query->publicEligible();
+        return $query->publicVisible();
     }
 
-    public function scopePendingReview($query)
+    /** @deprecated Use scopePublicVisible() */
+    public function scopePublicDirectory(Builder $query): Builder
     {
-        return $query
-            ->whereNull('approved_at')
-            ->whereNull('rejected_at')
-            ->whereHas('user', fn ($userQuery) => $userQuery->agents());
+        return $query->publicVisible();
+    }
+
+    public function scopeOrderedForDirectory(Builder $query): Builder
+    {
+        return AgentDirectory::applyFeaturedSort($query);
     }
 
     public function serviceAreaLabel(): string
@@ -142,31 +148,25 @@ class RealtorProfile extends Model
             ->implode(', ');
     }
 
+    public function isPublicVisible(): bool
+    {
+        return in_array($this->profile_status, [self::STATUS_PUBLISHED, self::STATUS_FEATURED], true);
+    }
+
+    public function isFeatured(): bool
+    {
+        return $this->profile_status === self::STATUS_FEATURED;
+    }
+
+    public function isDraft(): bool
+    {
+        return $this->profile_status === self::STATUS_DRAFT;
+    }
+
+    /** @deprecated Visibility is profile_status-based */
     public function isApprovedForPublicShow(): bool
     {
-        if ($this->approved_at === null || $this->rejected_at !== null) {
-            return false;
-        }
-
-        $user = $this->relationLoaded('user') ? $this->user : $this->user()->first();
-
-        if (! $user || ! $user->isAgent() || $user->status !== 'active') {
-            return false;
-        }
-
-        return $this->isComplete() && (float) $this->rating >= 3.0;
-    }
-
-    public function isComplete(): bool
-    {
-        return trim((string) $this->service_city) !== ''
-            && trim((string) $this->service_state) !== ''
-            && trim((string) $this->bio) !== '';
-    }
-
-    public function isPendingReview(): bool
-    {
-        return $this->approved_at === null && $this->rejected_at === null;
+        return $this->isPublicVisible();
     }
 
     public function headshotPublicUrl(?User $user = null): string
@@ -178,11 +178,11 @@ class RealtorProfile extends Model
 
     public function publicShowUrl(): ?string
     {
-        if (! $this->isApprovedForPublicShow()) {
+        if (! $this->isPublicVisible()) {
             return null;
         }
 
-        return route('agents.show', $this);
+        return route('agents.profile', $this);
     }
 
     public function specialtiesList(): array
@@ -233,5 +233,14 @@ class RealtorProfile extends Model
             ->map(fn ($item) => trim((string) $item))
             ->filter()
             ->implode(', ');
+    }
+
+    public static function statusOptions(): array
+    {
+        return [
+            self::STATUS_DRAFT => 'Draft',
+            self::STATUS_PUBLISHED => 'Published',
+            self::STATUS_FEATURED => 'Featured',
+        ];
     }
 }

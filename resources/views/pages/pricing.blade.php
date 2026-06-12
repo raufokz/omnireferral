@@ -242,6 +242,39 @@
     </div>
 </section>
 
+<section class="section section--gray" id="featured-agent-plans">
+    <div class="container">
+        <div class="section-heading">
+            <span class="eyebrow">Directory Monetization</span>
+            <h2>Free listing vs Featured Agent placement</h2>
+            <p>Grow your directory presence for free, then upgrade for priority placement across search, city pages, and homepage widgets.</p>
+        </div>
+        <div class="pricing-featured-compare">
+            <article>
+                <h3>Free Profile</h3>
+                <ul>
+                    <li>Directory listing on city &amp; state pages</li>
+                    <li>Basic search visibility</li>
+                    <li>SEO indexable `/agent/{slug}` page</li>
+                    <li>Buyer inquiries routed through OmniReferral</li>
+                </ul>
+                <a href="{{ route('agents.index') }}" class="button button--ghost-blue">Browse directory</a>
+            </article>
+            <article class="is-featured">
+                <h3>⭐ Featured Profile</h3>
+                <ul>
+                    <li>Top placement in search results</li>
+                    <li>Priority on city &amp; state pages</li>
+                    <li>Homepage &amp; widget visibility</li>
+                    <li>Featured badge on agent cards</li>
+                    <li>More impressions &amp; lead opportunities</li>
+                </ul>
+                <a href="{{ route('contact') }}" class="button button--orange">Upgrade to Featured</a>
+            </article>
+        </div>
+    </div>
+</section>
+
 <section class="section pricing-final-cta">
     <div class="container">
         <div class="pfc-inner" data-animate="up">

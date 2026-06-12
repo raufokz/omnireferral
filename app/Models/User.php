@@ -107,7 +107,7 @@ class User extends Authenticatable
 
     public function scopeWithApprovedProfile($query)
     {
-        return $query->whereHas('realtorProfile', fn ($profile) => $profile->publicEligible());
+        return $query->whereHas('realtorProfile', fn ($profile) => $profile->publicVisible());
     }
 
     /**

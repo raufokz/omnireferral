@@ -47,7 +47,7 @@
         </dl>
 
         <div class="agent-portal-profile-card__actions">
-            <a href="{{ route('agents.show', $agentProfile) }}" class="button button--ghost-blue">View Public Profile</a>
+            <a href="{{ route('agents.profile', $agentProfile) }}" class="button button--ghost-blue">View Public Profile</a>
             <a href="{{ route('agent.profile') }}" class="button button--blue">Edit Profile</a>
         </div>
     </div>

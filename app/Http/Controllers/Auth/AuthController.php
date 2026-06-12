@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SyncUserToGoHighLevel;
-use App\Models\RealtorProfile;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
@@ -109,7 +108,7 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'string', 'in:buyer,seller,agent'],
+            'role' => ['required', 'string', 'in:buyer,seller'],
             'phone' => ['required', 'string', 'max:20'],
             'profile_image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'address_line_1' => ['required', 'string', 'max:255'],
@@ -117,8 +116,6 @@ class AuthController extends Controller
             'city' => ['required', 'string', 'max:100'],
             'state' => ['required', 'string', 'size:2'],
             'zip_code' => ['required', 'string', 'max:10'],
-            'brokerage_name' => ['required_if:role,agent', 'nullable', 'string', 'max:255'],
-            'license_number' => ['required_if:role,agent', 'nullable', 'string', 'max:100'],
             'terms_accepted' => ['accepted'],
             'communication_accepted' => ['accepted'],
         ], [
@@ -134,8 +131,6 @@ class AuthController extends Controller
             'profile_image.image' => 'Please upload a valid profile photo.',
             'address_line_1.required' => 'Add your address so we can complete your profile.',
             'state.size' => 'Use the 2-letter state code, like TX or FL.',
-            'brokerage_name.required_if' => 'Agents need a brokerage name before continuing.',
-            'license_number.required_if' => 'Agents need a license number before continuing.',
             'terms_accepted.accepted' => 'Please accept the Terms and Privacy Policy before continuing.',
             'communication_accepted.accepted' => 'Please agree to onboarding communication so we can activate your account.',
         ]);
@@ -161,24 +156,6 @@ class AuthController extends Controller
             'avatar' => $avatarPath,
             'affiliate_code' => strtoupper(Str::random(8)),
         ]);
-
-        if ($user->isAgent()) {
-            RealtorProfile::updateOrCreate(['user_id' => $user->id], [
-                'slug' => RealtorProfile::where('user_id', $user->id)->value('slug')
-                    ?: Str::slug($user->name . '-' . Str::lower(Str::random(6))),
-                'service_city' => $request->city,
-                'service_state' => strtoupper($request->state),
-                'service_zip_code' => $request->zip_code,
-                'brokerage_name' => $request->brokerage_name,
-                'license_number' => $request->license_number,
-                'specialties' => 'Buyer Representation, Seller Strategy, Referral Conversion',
-                'bio' => 'New OmniReferral partner profile created through the onboarding funnel.',
-                'headshot' => $avatarPath ? 'storage/' . $avatarPath : \App\Support\AgentAvatar::defaultStorageHeadshot(),
-                'approved_at' => null,
-                'rejected_at' => null,
-                'approval_notes' => 'Pending admin review',
-            ]);
-        }
 
         if ($request->hasCookie('omnireferral_affiliate')) {
             $affiliateProfile = \App\Models\AffiliateProfile::where('referral_code', $request->cookie('omnireferral_affiliate'))->first();
@@ -307,12 +284,6 @@ class AuthController extends Controller
     private function registrationWorkspaces(): array
     {
         return [
-            [
-                'value' => 'agent',
-                'label' => 'Agent',
-                'description' => 'Create a partner profile with brokerage credentials.',
-                'icon' => 'agent',
-            ],
             [
                 'value' => 'buyer',
                 'label' => 'Buyer',

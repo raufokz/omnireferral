@@ -7,7 +7,11 @@ use App\Models\User;
 
 class AgentAvatar
 {
-    public const DEFAULT_PATH = 'assets/images/default-agent-avatar.svg';
+    public const LOGO_PATH = 'images/omnireferral-logo.png';
+
+    public const FALLBACK_SVG = 'images/about/about-omnireferral.svg';
+
+    public const DEFAULT_PATH = self::LOGO_PATH;
 
     public static function url(?User $user = null, ?RealtorProfile $profile = null): string
     {
@@ -24,17 +28,26 @@ class AgentAvatar
             return $avatar;
         }
 
-        return asset(self::DEFAULT_PATH);
+        return self::logoUrl();
+    }
+
+    public static function logoUrl(): string
+    {
+        if (is_file(public_path(self::LOGO_PATH))) {
+            return asset(self::LOGO_PATH);
+        }
+
+        return asset(self::FALLBACK_SVG);
     }
 
     public static function defaultPath(): string
     {
-        return self::DEFAULT_PATH;
+        return self::LOGO_PATH;
     }
 
     public static function defaultStorageHeadshot(): string
     {
-        return self::DEFAULT_PATH;
+        return self::LOGO_PATH;
     }
 
     private static function resolvePath(string $path): ?string
@@ -46,6 +59,11 @@ class AgentAvatar
 
         if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             return $path;
+        }
+
+        $publicPath = public_path(ltrim($path, '/'));
+        if (! is_file($publicPath)) {
+            return null;
         }
 
         return asset(ltrim($path, '/'));

@@ -5,8 +5,8 @@
 @section('dashboard_description', 'Manage the profile details used across your public page, message routing, and listing identity.')
 
 @section('dashboard_actions')
-    @if($agentProfile?->isApprovedForPublicShow())
-        <a href="{{ route('agents.show', $agentProfile) }}" class="button button--ghost-blue">Public Profile</a>
+    @if($agentProfile?->isPublicVisible())
+        <a href="{{ route('agents.profile', $agentProfile) }}" class="button button--ghost-blue">Public Profile</a>
     @endif
 @endsection
 

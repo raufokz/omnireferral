@@ -1,6 +1,7 @@
 @import "./dashboards-custom.css";
 @import "./modules/dashboard-shell.css";
 @import "./modules/admin-users.css";
+@import "./modules/agent-directory.css";
 
 .visually-hidden {
     position: absolute;

@@ -1,108 +1,72 @@
-# Users + Agent Profiles (OmniReferral)
+# Agent Growth Directory (OmniReferral)
 
-This document describes how workspace users, agent profiles, public directory visibility, and admin approval work together.
+The platform is a **massive agent directory** optimized for SEO, lead capture, and Featured placement upsells — not agent verification.
 
-## Data model
+## Profile status
 
-```
-users.id  ──1:1──>  realtor_profiles.user_id  (agents only)
-```
+| Status | Public visibility |
+|--------|-------------------|
+| `draft` | Hidden |
+| `published` | Visible (default for new staff-created profiles) |
+| `featured` | Visible + priority sort + ⭐ badge |
 
-- Every `realtor_profiles` row **must** reference a valid `users.id` (FK, not nullable).
-- Only users with `role = agent` should have a profile (`UserObserver` enforces this).
-- The workspace role enum is `buyer | seller | agent | admin | staff`. There is **no** `realtor` role — normalize legacy `realtor` values to `agent` using `database/repair/agent-profile-repair.sql`.
+Public visibility uses **`profile_status` only**. Legacy `approved_at` / `rejected_at` columns are not used for directory display.
 
-## Two-layer approval
+## Staff acquisition flow
 
-| Layer | Column | Effect |
-|-------|--------|--------|
-| Account | `users.status` | `pending` users cannot sign in; `active` users can access the agent portal |
-| Public profile | `realtor_profiles.approved_at` | Controls directory listing and `/agents/{slug}` visibility |
+Agents are **not** self-registered. ISA, Sales, Marketing, and Admin staff create profiles at:
 
-Approving an **account** (`POST admin/users/{user}/review`) does not publish the public profile. Use **Agent Profiles** in admin (`/admin/agent-profiles`) to approve or reject the profile itself.
+- `GET /admin/agent-profiles/create`
+- `POST /admin/agent-profiles`
 
-When a profile is **approved**:
+Staff can source agents from Zillow, Realtor.com, social media, brokerage sites, etc. Each profile creates:
 
-- `users.status = active`
-- `realtor_profiles.approved_at = now()`
-- `realtor_profiles.approved_by_user_id = admin id`
-- `rejected_at` / `rejected_by_user_id` cleared
+1. A `users` row (`role=agent`, internal email optional)
+2. A linked `realtor_profiles` row (`user_id` required)
 
-When **rejected**:
-
-- `rejected_at = now()`, `approved_at = null`
-- Linked user stays `pending` or can be suspended
-
-## Public directory rules
-
-Agents appear in `/agents` and the sitemap only when `RealtorProfile::scopePublicEligible()` passes:
-
-- `users.status = active`
-- `users.role = agent`
-- Valid `realtor_profiles.user_id`
-- `approved_at IS NOT NULL`
-- `rejected_at IS NULL`
-- Non-empty `service_city`, `service_state`, `bio`
-- `rating >= 3.0`
-
-## Agent onboarding
-
-Public application: **`GET /join-as-agent`**
-
-On submit the app:
-
-1. Creates `users` (`role=agent`, `status=pending`)
-2. Creates `realtor_profiles` linked by `user_id`
-3. Generates a unique slug
-4. Stores headshot upload or default avatar
-5. Sets `approval_notes = "Pending admin review"`
-6. Notifies active admin users by email
-7. Redirects to `/join-as-agent/success`
-
-Rate limit: `throttle:agent-join` (3/min per IP). Honeypot field: `company_website`.
-
-## Headshot fallback
-
-Use `App\Support\AgentAvatar::url($user, $profile)` or `@include('partials.agent-avatar')`:
-
-1. Profile headshot
-2. User avatar (`users.avatar`)
-3. Default: `public/assets/images/default-agent-avatar.svg`
-
-## Seeding
-
-`OmniReferralSeeder` inserts **users first**, then `realtor_profiles` with matching `user_id`:
-
-- `role = agent`, `status = active`
-- `approved_at` set for demo directory data
-- `rating >= 3.0`, bio ≥ 80 characters
-- Default headshot when image assets are missing
-
-Never insert `realtor_profiles` with `NULL user_id`.
-
-## Database repair
-
-Run after backup:
-
-```bash
-mysql -u USER -p DATABASE < database/repair/agent-profile-repair.sql
-```
-
-The script normalizes roles, quarantines orphan profiles, fixes duplicate slugs, fills incomplete data, and approves eligible profiles.
-
-## Admin routes
+## Public routes
 
 | Route | Purpose |
 |-------|---------|
-| `GET /admin/agent-profiles` | Pending / approved / rejected queues |
-| `GET /admin/agent-profiles/{id}` | Review, edit, approve, reject |
-| `POST .../approve` | Publish profile + activate user |
-| `POST .../reject` | Reject with notes |
+| `/agents` | Main directory |
+| `/agents/{location}` | State or city SEO page (e.g. `texas`, `dallas`) |
+| `/agent/{slug}` | Indexable SEO profile page |
+| `/agent/{slug}/preview` | JSON for modal popup |
+| `/agent/{slug}/inquiry` | Centralized lead capture |
 
-Permissions: `realtor_profiles.view`, `.update`, `.approve`, `.reject` (Spatie).
+Card clicks open a **modal popup** (not a separate navigation). SEO pages still exist for crawlers.
 
-## Model scopes
+## Sorting
 
-**User:** `agents()`, `active()`, `withApprovedProfile()`
+Featured first → highest rating → newest.
 
-**RealtorProfile:** `approved()`, `notRejected()`, `complete()`, `ratingAtLeast()`, `publicEligible()`, `pendingReview()`
+## Contact privacy
+
+Agent **email and phone are never shown** on cards, modals, or public SEO pages.
+
+## Lead routing
+
+`Contact Agent` and `Request Referral` submit to **OmniReferral admin**:
+
+- `contacts.recipient_user_id = NULL`
+- `leads.source = agent_directory`
+- `form_data` includes target agent profile metadata
+
+## Featured placement
+
+Profiles become `featured` when:
+
+1. Admin marks featured manually, or
+2. Linked user has an active paid plan (backfill migration)
+
+Sell upgrades on `/pricing` (Featured vs Free comparison).
+
+## Headshot fallback
+
+1. Profile headshot  
+2. User avatar  
+3. OmniReferral logo (`images/omnireferral-logo.png`)
+
+## Seeding
+
+`OmniReferralSeeder` inserts users first, then profiles with `profile_status` published/featured.
