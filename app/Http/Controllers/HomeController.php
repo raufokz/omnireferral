@@ -8,6 +8,7 @@ use App\Models\Partner;
 use App\Models\Property;
 use App\Models\RealtorProfile;
 use App\Models\TeamMember;
+use App\Models\Testimonial;
 use App\Support\AgentDirectory;
 use App\Support\PricingContent;
 use Illuminate\Http\Request;
@@ -55,6 +56,7 @@ class HomeController extends Controller
             'pricingPlans' => PricingContent::plans(),
             'partners' => Partner::orderBy('sort_order')->get(),
             'partnerLogos' => $partnerLogos,
+            'publishedTestimonials' => Testimonial::publicLibrary()->get(),
             'realtors' => $realtors->take(12),
             'blogs' => Blog::latest()->take(3)->get(),
             'team' => TeamMember::latest()->get(),

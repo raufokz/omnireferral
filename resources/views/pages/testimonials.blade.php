@@ -12,6 +12,15 @@
     $selectedScope = $selectedAudience === 'all'
         ? 'buyers, sellers, agents, and community members together'
         : strtolower($audienceMeta[$selectedAudience]['label']) . ' experiences';
+
+    $activeAudienceMeta = $selectedAudience === 'all'
+        ? [
+            'label' => 'All',
+            'heading' => 'All Published Stories',
+            'copy' => 'A full library of approved buyer, seller, agent, and community testimonials from the OmniReferral network.',
+            'focus' => 'Approved public feedback from across the OmniReferral experience.',
+        ]
+        : $audienceMeta[$selectedAudience];
 @endphp
 
 <div class="testimonials-page">
@@ -55,6 +64,18 @@
                 <div class="agent-directory-hero__stat">
                     <strong>{{ number_format($videoTestimonials->count()) }}</strong>
                     <span>Video Highlights Available</span>
+                </div>
+                <div class="agent-directory-hero__stat">
+                    <strong>{{ number_format($counts['buyer']) }}</strong>
+                    <span>Buyer Reviews</span>
+                </div>
+                <div class="agent-directory-hero__stat">
+                    <strong>{{ number_format($counts['seller']) }}</strong>
+                    <span>Seller Reviews</span>
+                </div>
+                <div class="agent-directory-hero__stat">
+                    <strong>{{ number_format($counts['agent']) }}</strong>
+                    <span>Agent Reviews</span>
                 </div>
             </div>
             <p class="testimonials-hero__note">{{ ucfirst($selectedScope) }} are currently in focus through the active filter.</p>
@@ -182,48 +203,74 @@
 
 <section class="section section--gray testimonials-page__library-section" id="testimonial-library">
     <div class="container">
-        @foreach(['buyer', 'seller', 'agent', 'community'] as $audience)
-            @continue($selectedAudience !== 'all' && $selectedAudience !== $audience)
+        <div class="section-heading testimonial-section-heading testimonial-library-heading">
+            <span class="eyebrow">{{ $activeAudienceMeta['label'] }}</span>
+            <h2>{{ $activeAudienceMeta['heading'] }}</h2>
+            <p>
+                @if($showingFallbackTestimonials)
+                    No published {{ strtolower($activeAudienceMeta['label']) }} testimonials are available yet, so this section is showing recent approved testimonials from the full library.
+                @else
+                    {{ $activeAudienceMeta['copy'] }}
+                @endif
+            </p>
+            @if($testimonials->total() > 0)
+                <div class="testimonial-library-heading__meta">
+                    Showing {{ number_format($testimonials->firstItem()) }}-{{ number_format($testimonials->lastItem()) }}
+                    of {{ number_format($testimonials->total()) }} approved testimonials
+                </div>
+            @endif
+        </div>
 
-            <div class="section-heading testimonial-section-heading">
-                <span class="eyebrow">{{ $audienceMeta[$audience]['label'] }}</span>
-                <h2>{{ $audienceMeta[$audience]['heading'] }}</h2>
-                <p>{{ $audienceMeta[$audience]['copy'] }}</p>
+        @if($showingFallbackTestimonials)
+            <div class="testimonial-fallback-note cockpit-table-card">
+                Recent approved testimonials are shown here until this category has its own published reviews.
             </div>
+        @endif
 
-            <div class="review-grid review-grid--premium testimonial-library-grid">
-                @forelse($groupedTestimonials[$audience] as $testimonial)
-                    <article class="review-card review-card--premium testimonial-library-card">
-                        <div class="review-card__header">
-                            <img src="{{ $testimonial->photo_url }}" alt="{{ $testimonial->name }} testimonial profile photo" loading="lazy" width="88" height="88">
-                            <div>
-                                <div class="testimonial-library-card__chips">
-                                    <span class="status-pill status-pill--assigned">{{ $testimonial->audience_label }}</span>
-                                    @if($testimonial->has_video)
-                                        <span class="status-pill status-pill--qualified">Video</span>
-                                    @endif
-                                </div>
-                                <h2>{{ $testimonial->name }}</h2>
-                                <p class="review-card__role">{{ $testimonial->company ?: $testimonial->audience_label . ' Client' }}</p>
-                                <span class="review-card__location">{{ $testimonial->location ?: 'OmniReferral Network' }}</span>
+        <div class="testimonial-library-masonry">
+            @forelse($testimonials as $testimonial)
+                @php
+                    $cardAudienceMeta = $audienceMeta[$testimonial->audience_key] ?? $activeAudienceMeta;
+                @endphp
+                <article class="review-card review-card--premium testimonial-library-card">
+                    <div class="review-card__header">
+                        <img src="{{ $testimonial->photo_url }}" alt="{{ $testimonial->name }} testimonial profile photo" loading="lazy" width="88" height="88">
+                        <div>
+                            <div class="testimonial-library-card__chips">
+                                <span class="status-pill status-pill--assigned">{{ $testimonial->audience_label }}</span>
+                                @if($testimonial->is_featured)
+                                    <span class="status-pill status-pill--qualified">Featured</span>
+                                @endif
+                                @if($testimonial->has_video)
+                                    <span class="status-pill status-pill--new">Video</span>
+                                @endif
                             </div>
+                            <h2>{{ $testimonial->name }}</h2>
+                            <p class="review-card__role">{{ $testimonial->company ?: $testimonial->audience_label . ' Client' }}</p>
+                            <span class="review-card__location">{{ $testimonial->location ?: 'OmniReferral Network' }}</span>
                         </div>
-                        <p class="testimonial-library-card__focus">{{ $audienceMeta[$audience]['focus'] }}</p>
-                        <div class="testimonial-stars" aria-label="{{ $testimonial->rating }} out of 5 stars">
-                            @for($i = 0; $i < (int) $testimonial->rating; $i++)
-                                <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                            @endfor
-                        </div>
-                        <p class="review-card__quote">"{{ $testimonial->quote }}"</p>
-                    </article>
-                @empty
-                    <article class="testimonial-empty-state cockpit-table-card">
-                        <h3>No {{ $audienceMeta[$audience]['label'] }} testimonials yet</h3>
-                        <p>As new {{ strtolower($audienceMeta[$audience]['label']) }} reviews are published, they will appear here automatically.</p>
-                    </article>
-                @endforelse
+                    </div>
+                    <p class="testimonial-library-card__focus">{{ $cardAudienceMeta['focus'] }}</p>
+                    <div class="testimonial-stars" aria-label="{{ $testimonial->rating }} out of 5 stars">
+                        @for($i = 0; $i < (int) $testimonial->rating; $i++)
+                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        @endfor
+                    </div>
+                    <p class="review-card__quote">"{{ $testimonial->quote }}"</p>
+                </article>
+            @empty
+                <article class="testimonial-empty-state cockpit-table-card">
+                    <h3>Testimonials are being reviewed</h3>
+                    <p>Approved and published testimonials will appear here automatically as soon as they are available.</p>
+                </article>
+            @endforelse
+        </div>
+
+        @if($testimonials->hasPages())
+            <div class="pagination-wrap testimonial-pagination">
+                {{ $testimonials->links() }}
             </div>
-        @endforeach
+        @endif
     </div>
 </section>
 

@@ -16,6 +16,25 @@ class Testimonial extends Model
     public const STATUS_APPROVED = 'approved';
     public const STATUS_REJECTED = 'rejected';
 
+    public const AUDIENCE_BUYER = 'buyer';
+    public const AUDIENCE_SELLER = 'seller';
+    public const AUDIENCE_AGENT = 'agent';
+    public const AUDIENCE_COMMUNITY = 'community';
+
+    public const AUDIENCES = [
+        self::AUDIENCE_BUYER,
+        self::AUDIENCE_SELLER,
+        self::AUDIENCE_AGENT,
+        self::AUDIENCE_COMMUNITY,
+    ];
+
+    public const AUDIENCE_LABELS = [
+        self::AUDIENCE_BUYER => 'Buyer',
+        self::AUDIENCE_SELLER => 'Seller',
+        self::AUDIENCE_AGENT => 'Agent',
+        self::AUDIENCE_COMMUNITY => 'Community',
+    ];
+
     protected $fillable = [
         'name',
         'audience',
@@ -42,7 +61,7 @@ class Testimonial extends Model
         'reviewed_at' => 'datetime',
     ];
 
-    protected $appends = ['photo_url', 'audience_label', 'video_embed_url', 'video_playback_url', 'has_video'];
+    protected $appends = ['photo_url', 'audience_key', 'audience_label', 'video_embed_url', 'video_playback_url', 'has_video'];
 
     public function submitter(): BelongsTo
     {
@@ -61,9 +80,64 @@ class Testimonial extends Model
             ->where('submission_status', self::STATUS_APPROVED);
     }
 
+    public function scopeOrderedForPublic($query)
+    {
+        return $query
+            ->orderByDesc('is_featured')
+            ->orderBy('sort_order')
+            ->latest();
+    }
+
+    public function scopePublicLibrary($query)
+    {
+        return $query->published()->orderedForPublic();
+    }
+
     public function scopePendingReview($query)
     {
         return $query->where('submission_status', self::STATUS_PENDING);
+    }
+
+    public static function normalizeAudience(?string $audience, ?string $company = null, ?string $quote = null): string
+    {
+        $audience = Str::of((string) $audience)->lower()->trim()->toString();
+
+        if ($audience !== self::AUDIENCE_AGENT && in_array($audience, self::AUDIENCES, true)) {
+            return $audience;
+        }
+
+        $haystack = Str::of(implode(' ', array_filter([$audience, $company, $quote])))
+            ->lower()
+            ->toString();
+
+        $companyText = Str::of((string) $company)->lower()->toString();
+
+        if ($audience === self::AUDIENCE_AGENT && Str::contains($companyText, [
+            'agent',
+            'broker',
+            'brokerage',
+            'realty',
+            'realtor',
+            'team lead',
+            'specialist',
+            'managing broker',
+        ])) {
+            return self::AUDIENCE_AGENT;
+        }
+
+        if (Str::contains($haystack, ['buyer', 'buying', 'first-time', 'relocation'])) {
+            return self::AUDIENCE_BUYER;
+        }
+
+        if (Str::contains($haystack, ['seller', 'selling', 'listing', 'home sale', 'property owner'])) {
+            return self::AUDIENCE_SELLER;
+        }
+
+        if (Str::contains($haystack, ['community', 'partner', 'platform user', 'local user', 'network member'])) {
+            return self::AUDIENCE_COMMUNITY;
+        }
+
+        return in_array($audience, self::AUDIENCES, true) ? $audience : self::AUDIENCE_AGENT;
     }
 
     public function getPhotoUrlAttribute(): string
@@ -85,12 +159,12 @@ class Testimonial extends Model
 
     public function getAudienceLabelAttribute(): string
     {
-        return match ($this->audience) {
-            'buyer' => 'Buyer',
-            'seller' => 'Seller',
-            'community' => 'Community',
-            default => 'Agent',
-        };
+        return self::AUDIENCE_LABELS[$this->audience_key] ?? self::AUDIENCE_LABELS[self::AUDIENCE_AGENT];
+    }
+
+    public function getAudienceKeyAttribute(): string
+    {
+        return self::normalizeAudience($this->audience, $this->company, $this->quote);
     }
 
     public function submissionStatusLabel(): string

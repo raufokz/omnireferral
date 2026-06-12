@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Testimonial;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class ReviewController extends Controller
@@ -15,38 +17,43 @@ class ReviewController extends Controller
         $selectedAudience = in_array($selectedAudience, ['buyer', 'seller', 'agent', 'community'], true) ? $selectedAudience : 'all';
         $user = $request->user();
 
-        $publishedTestimonials = Testimonial::published()
-            ->orderByDesc('is_featured')
-            ->orderBy('sort_order')
-            ->latest()
-            ->get();
+        $publishedTestimonials = Testimonial::publicLibrary()->get();
 
         $counts = [
             'all' => $publishedTestimonials->count(),
-            'buyer' => $publishedTestimonials->where('audience', 'buyer')->count(),
-            'seller' => $publishedTestimonials->where('audience', 'seller')->count(),
-            'agent' => $publishedTestimonials->where('audience', 'agent')->count(),
-            'community' => $publishedTestimonials->where('audience', 'community')->count(),
+            'buyer' => $publishedTestimonials->where('audience_key', 'buyer')->count(),
+            'seller' => $publishedTestimonials->where('audience_key', 'seller')->count(),
+            'agent' => $publishedTestimonials->where('audience_key', 'agent')->count(),
+            'community' => $publishedTestimonials->where('audience_key', 'community')->count(),
         ];
 
         $groupedTestimonials = [
-            'buyer' => $publishedTestimonials->where('audience', 'buyer')->values(),
-            'seller' => $publishedTestimonials->where('audience', 'seller')->values(),
-            'agent' => $publishedTestimonials->where('audience', 'agent')->values(),
-            'community' => $publishedTestimonials->where('audience', 'community')->values(),
+            'buyer' => $publishedTestimonials->where('audience_key', 'buyer')->values(),
+            'seller' => $publishedTestimonials->where('audience_key', 'seller')->values(),
+            'agent' => $publishedTestimonials->where('audience_key', 'agent')->values(),
+            'community' => $publishedTestimonials->where('audience_key', 'community')->values(),
         ];
 
-        $visibleTestimonials = $selectedAudience === 'all'
+        $libraryTestimonials = $selectedAudience === 'all'
             ? $publishedTestimonials
-            : $publishedTestimonials->where('audience', $selectedAudience)->values();
+            : $groupedTestimonials[$selectedAudience];
 
-        $featuredTestimonials = $visibleTestimonials
+        $showingFallbackTestimonials = false;
+
+        if ($selectedAudience !== 'all' && $libraryTestimonials->isEmpty() && $publishedTestimonials->isNotEmpty()) {
+            $libraryTestimonials = $publishedTestimonials;
+            $showingFallbackTestimonials = true;
+        }
+
+        $visibleTestimonials = $this->paginateCollection($libraryTestimonials, $request, 24);
+
+        $featuredTestimonials = $libraryTestimonials
             ->filter(fn (Testimonial $testimonial) => $testimonial->is_featured)
             ->take(3);
 
         if ($featuredTestimonials->count() < 3) {
             $featuredTestimonials = $featuredTestimonials->concat(
-                $visibleTestimonials
+                $libraryTestimonials
                     ->reject(fn (Testimonial $testimonial) => $featuredTestimonials->contains('id', $testimonial->id))
                     ->take(3 - $featuredTestimonials->count())
             );
@@ -54,15 +61,16 @@ class ReviewController extends Controller
 
         $featuredTestimonials = $featuredTestimonials->values();
 
-        $videoTestimonials = $visibleTestimonials
+        $videoTestimonials = $libraryTestimonials
             ->filter(fn (Testimonial $testimonial) => $testimonial->has_video)
             ->take(6)
             ->values();
 
-        $averageRating = round((float) ($visibleTestimonials->avg('rating') ?: $publishedTestimonials->avg('rating') ?: 5), 1);
+        $averageRating = round((float) ($libraryTestimonials->avg('rating') ?: $publishedTestimonials->avg('rating') ?: 5), 1);
 
         return view('pages.testimonials', [
             'selectedAudience' => $selectedAudience,
+            'showingFallbackTestimonials' => $showingFallbackTestimonials,
             'counts' => $counts,
             'groupedTestimonials' => $groupedTestimonials,
             'videoTestimonials' => $videoTestimonials,
@@ -141,5 +149,21 @@ class ReviewController extends Controller
             'agent' => 'agent',
             default => 'community',
         };
+    }
+
+    private function paginateCollection(Collection $testimonials, Request $request, int $perPage): LengthAwarePaginator
+    {
+        $page = max(1, (int) $request->query('page', 1));
+
+        return new LengthAwarePaginator(
+            $testimonials->forPage($page, $perPage)->values(),
+            $testimonials->count(),
+            $perPage,
+            $page,
+            [
+                'path' => $request->url(),
+                'query' => $request->except('page'),
+            ]
+        );
     }
 }

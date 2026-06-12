@@ -6,11 +6,7 @@
 
 @section('content')
 @php
-    $publishedTestimonials = \App\Models\Testimonial::published()
-        ->orderByDesc('is_featured')
-        ->orderBy('sort_order')
-        ->latest()
-        ->get();
+    $publishedTestimonials = collect($publishedTestimonials ?? []);
 
     $dbHomepageTestimonials = $publishedTestimonials
         ->take(9)
@@ -98,9 +94,9 @@
         ->values();
 
     $homepageAudienceCounts = [
-        'buyer' => $publishedTestimonials->where('audience', 'buyer')->count(),
-        'seller' => $publishedTestimonials->where('audience', 'seller')->count(),
-        'agent' => $publishedTestimonials->where('audience', 'agent')->count(),
+        'buyer' => $publishedTestimonials->where('audience_key', 'buyer')->count(),
+        'seller' => $publishedTestimonials->where('audience_key', 'seller')->count(),
+        'agent' => $publishedTestimonials->where('audience_key', 'agent')->count(),
     ];
 
     $homepageAverageRating = number_format((float) ($publishedTestimonials->avg('rating') ?: 5), 1);
