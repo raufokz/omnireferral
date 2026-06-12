@@ -96,12 +96,11 @@
                         <p class="agent-card-premium__brokerage">{{ $card['brokerage'] }}</p>
                         <div class="agent-card-premium__meta">
                             @if($card['city'] || $card['state'])
+
                                 <span>{{ trim($card['city'].', '.$card['state'], ', ') }}</span>
                             @endif
-                            @if($card['years_of_experience'])
-                                <span>{{ $card['years_of_experience'] }}+ yrs</span>
-                            @endif
                         </div>
+
                         <p class="agent-card-premium__specialty">{{ Str::limit($card['specialties_text'], 90) }}</p>
                     </div>
                 </article>
@@ -136,9 +135,7 @@
                                 <p x-text="profile.brokerage" style="color:#5a6b82;"></p>
                                 <p x-text="profile.service_area" style="margin-top:0.5rem;"></p>
                                 <p style="margin-top:0.75rem;"><strong x-text="profile.rating"></strong> rating · <span x-text="profile.review_count"></span> reviews</p>
-                                <template x-if="profile.years_of_experience">
-                                    <p><span x-text="profile.years_of_experience"></span>+ years experience</p>
-                                </template>
+
                             </div>
                         </div>
                         <div class="agent-modal__content">

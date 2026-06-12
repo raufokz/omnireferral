@@ -21,10 +21,14 @@ class HomeController extends Controller
     {
         $viewer = auth()->user();
         $realtors = Cache::remember('home:featured-agents', now()->addMinutes(30), fn () => AgentDirectory::publicQuery()
+            ->where('rating', '>=', 3)
             ->with(['user:id,name,display_name,avatar'])
             ->orderedForDirectory()
+            ->orderByDesc('rating')
+            ->orderByDesc('created_at')
             ->limit(12)
             ->get());
+
 
         $partnerLogos = collect(File::files(public_path('images/companies-logos')))
             ->filter(fn ($file) => in_array(strtolower($file->getExtension()), ['png', 'jpg', 'jpeg', 'webp']))

@@ -15,11 +15,7 @@ class RealtorProfile extends Model
 {
     use HasFactory;
 
-    public const STATUS_DRAFT = 'draft';
 
-    public const STATUS_PUBLISHED = 'published';
-
-    public const STATUS_FEATURED = 'featured';
 
     protected $fillable = [
         'user_id',
@@ -29,17 +25,15 @@ class RealtorProfile extends Model
         'service_zip_code',
         'brokerage_name',
         'license_number',
-        'years_of_experience',
-        'languages',
-        'market_areas',
-        'social_links',
         'rating',
         'review_count',
         'leads_closed',
         'specialties',
         'bio',
         'headshot',
-        'profile_status',
+        'languages',
+        'market_areas',
+        'social_links',
         'created_by_user_id',
         'source_url',
         'approved_at',
@@ -49,22 +43,22 @@ class RealtorProfile extends Model
         'approval_notes',
     ];
 
+
     protected $casts = [
         'rating' => 'decimal:2',
         'review_count' => 'integer',
         'leads_closed' => 'integer',
-        'years_of_experience' => 'integer',
         'social_links' => 'array',
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
     ];
 
     protected $attributes = [
-        'profile_status' => self::STATUS_PUBLISHED,
         'rating' => 4.5,
         'review_count' => 0,
         'leads_closed' => 0,
     ];
+
 
     public function getRouteKeyName(): string
     {
@@ -101,40 +95,39 @@ class RealtorProfile extends Model
         return $this->belongsTo(User::class, 'rejected_by_user_id');
     }
 
-    public function scopeDraft(Builder $query): Builder
+    public function scopeApproved(Builder $query): Builder
     {
-        return $query->where('profile_status', self::STATUS_DRAFT);
+        return $query->whereNotNull('approved_at');
     }
 
-    public function scopePublished(Builder $query): Builder
+    public function scopePublicEligible(Builder $query): Builder
     {
-        return $query->where('profile_status', self::STATUS_PUBLISHED);
-    }
-
-    public function scopeFeatured(Builder $query): Builder
-    {
-        return $query->where('profile_status', self::STATUS_FEATURED);
+        return $query->whereNotNull('approved_at')
+            ->whereNull('rejected_at');
     }
 
     /**
-     * Public directory visibility: published or featured profiles only.
+     * Public directory visibility: approved_at not null AND rejected_at null.
      */
     public function scopePublicVisible(Builder $query): Builder
     {
-        return $query->whereIn('profile_status', [self::STATUS_PUBLISHED, self::STATUS_FEATURED]);
+        return $query->publicEligible();
     }
 
-    /** @deprecated Use scopePublicVisible() */
-    public function scopePublicEligible(Builder $query): Builder
-    {
-        return $query->publicVisible();
-    }
-
-    /** @deprecated Use scopePublicVisible() */
+    /** @deprecated Use scopePublicEligible() */
     public function scopePublicDirectory(Builder $query): Builder
     {
-        return $query->publicVisible();
+        return $query->publicEligible();
     }
+
+    /**
+     * Top rated profiles for home/directory sections.
+     */
+    public function scopeTopRated(Builder $query, float $minRating = 3): Builder
+    {
+        return $query->where('rating', '>=', $minRating);
+    }
+
 
     public function scopeOrderedForDirectory(Builder $query): Builder
     {
@@ -150,24 +143,28 @@ class RealtorProfile extends Model
 
     public function isPublicVisible(): bool
     {
-        return in_array($this->profile_status, [self::STATUS_PUBLISHED, self::STATUS_FEATURED], true);
+        return $this->approved_at !== null && $this->rejected_at === null;
     }
 
+    /**
+     * This project no longer has a DB "featured" field in realtor_profiles.
+     */
     public function isFeatured(): bool
     {
-        return $this->profile_status === self::STATUS_FEATURED;
+        return false;
     }
 
+    /** @deprecated Draft visibility is not supported without profile_status. */
     public function isDraft(): bool
     {
-        return $this->profile_status === self::STATUS_DRAFT;
+        return false;
     }
 
-    /** @deprecated Visibility is profile_status-based */
     public function isApprovedForPublicShow(): bool
     {
         return $this->isPublicVisible();
     }
+
 
     public function headshotPublicUrl(?User $user = null): string
     {
@@ -235,12 +232,6 @@ class RealtorProfile extends Model
             ->implode(', ');
     }
 
-    public static function statusOptions(): array
-    {
-        return [
-            self::STATUS_DRAFT => 'Draft',
-            self::STATUS_PUBLISHED => 'Published',
-            self::STATUS_FEATURED => 'Featured',
-        ];
-    }
+    // statusOptions() removed: realtor_profiles no longer has profile_status.
+
 }

@@ -130,13 +130,16 @@ class RealtorController extends Controller
     {
         $query = AgentDirectory::publicQuery()
             ->with(['user' => fn ($userQuery) => $userQuery->select([
-                'id', 'name', 'display_name', 'avatar',
+                'id', 'name', 'display_name', 'avatar', 'role', 'status',
             ])])
             ->select([
                 'id', 'user_id', 'slug', 'brokerage_name', 'service_city', 'service_state',
-                'service_zip_code', 'rating', 'review_count', 'years_of_experience',
-                'specialties', 'bio', 'headshot', 'profile_status', 'created_at',
+                'service_zip_code', 'rating', 'review_count',
+                'specialties', 'bio', 'headshot', 'created_at', 'approved_at', 'rejected_at',
+                'rejected_by_user_id',
+
             ]);
+
 
         AgentDirectory::applySearch($query, $request->query('q'));
         AgentDirectory::applyLocationFilter(
@@ -149,9 +152,18 @@ class RealtorController extends Controller
             $query->whereRaw('LOWER(specialties) LIKE ?', ['%'.mb_strtolower($specialty).'%']);
         }
 
-        $profiles = AgentDirectory::applyFeaturedSort($query)
+        $profiles = $query
+            ->where('rating', '>=', 3)
+            ->whereNotNull('bio')
+            ->whereRaw('CHAR_LENGTH(TRIM(bio)) > 0')
+            ->whereNotNull('service_city')
+            ->whereRaw('CHAR_LENGTH(TRIM(service_city)) > 0')
+            ->whereNotNull('service_state')
+            ->whereRaw('CHAR_LENGTH(TRIM(service_state)) > 0')
+            ->tap(fn ($q) => AgentDirectory::applyFeaturedSort($q))
             ->paginate(12)
             ->withQueryString();
+
 
         $filterCities = Cache::remember('agents:filter-cities', now()->addHour(), fn () => AgentDirectory::publicQuery()
             ->select('service_city')

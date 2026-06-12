@@ -27,16 +27,18 @@ class AgentDirectory
 
     public static function publicQuery(): Builder
     {
-        return RealtorProfile::query()->publicVisible();
+        return RealtorProfile::query()
+            ->publicVisible();
     }
+
 
     public static function applyFeaturedSort(Builder $query): Builder
     {
         return $query
-            ->orderByRaw("CASE WHEN profile_status = 'featured' THEN 0 ELSE 1 END")
             ->orderByDesc('rating')
             ->orderByDesc('created_at');
     }
+
 
     public static function applySearch(Builder $query, ?string $search): Builder
     {
@@ -114,7 +116,7 @@ class AgentDirectory
             'city' => $profile->service_city,
             'state' => $profile->service_state,
             'service_area' => $profile->serviceAreaLabel(),
-            'years_of_experience' => $profile->years_of_experience,
+
             'rating' => number_format((float) ($profile->rating ?? 0), 1),
             'review_count' => (int) ($profile->review_count ?? 0),
             'specialties' => $profile->specialtiesList(),
@@ -122,7 +124,8 @@ class AgentDirectory
             'bio' => $profile->bio,
             'languages' => $profile->languages,
             'market_areas' => $profile->market_areas,
-            'is_featured' => $profile->isFeatured(),
+            'is_featured' => false,
+
             'headshot_url' => $profile->headshotPublicUrl($user),
             'profile_url' => route('agents.profile', $profile),
         ];
