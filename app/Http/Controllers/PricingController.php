@@ -129,12 +129,12 @@ class PricingController extends Controller
             ],
             'va-starter' => [
                 'title' => 'ISA Support',
-                'src' => 'https://api.leadconnectorhq.com/widget/survey/6VrZG7vbNueWG6hoqYru',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/DAYWVBJkNiVLEfoW740d',
                 'description' => 'Cold Calling / ISA onboarding form for dedicated prospecting, follow-up, and pipeline growth setup.',
             ],
             'va-growth' => [
                 'title' => 'Full Social Media Package',
-                'src' => 'https://api.leadconnectorhq.com/widget/survey/NmuErgwOkT4c83tl1k12',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/NiEcLMPWI084aKiAaNsi',
                 'description' => 'Social Media Management onboarding form for content, audience growth, and brand visibility.',
             ],
             'individual-va' => [
@@ -144,12 +144,12 @@ class PricingController extends Controller
             ],
             'va-calling' => [
                 'title' => 'Cold Calling / ISA',
-                'src' => 'https://api.leadconnectorhq.com/widget/survey/6VrZG7vbNueWG6hoqYru',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/DAYWVBJkNiVLEfoW740d',
                 'description' => 'Cold Calling / ISA onboarding form for dedicated prospecting, follow-up, and pipeline growth setup.',
             ],
             'va-social' => [
                 'title' => 'Social Media Mgmt',
-                'src' => 'https://api.leadconnectorhq.com/widget/survey/NmuErgwOkT4c83tl1k12',
+                'src' => 'https://api.leadconnectorhq.com/widget/survey/NiEcLMPWI084aKiAaNsi',
                 'description' => 'Social Media Management onboarding form for content, audience growth, and brand visibility.',
             ],
             'va-individual' => [

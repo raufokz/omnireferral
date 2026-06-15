@@ -23,7 +23,8 @@ class PricingContent
 
         foreach (self::plans() as $category => $plans) {
             foreach ($plans as $plan) {
-                if (($plan['slug'] ?? null) === $normalizedSlug) {
+                $planSlug = (string) ($plan['slug'] ?? '');
+                if (self::enhancementSlug($planSlug) === $normalizedSlug) {
                     $plan['category'] = $category;
 
                     return $plan;
@@ -258,9 +259,9 @@ class PricingContent
     private static function enhancementSlug(string $slug): string
     {
         return match ($slug) {
-            'va-calling' => 'cold-calling-isa',
-            'va-social' => 'social-media-mgmt',
-            'va-individual' => 'individual-va',
+            'va-calling', 'va-starter', 'cold-calling-isa' => 'cold-calling-isa',
+            'va-social', 'va-growth', 'social-media-mgmt' => 'social-media-mgmt',
+            'va-individual', 'individual-va' => 'individual-va',
             default => $slug,
         };
     }
