@@ -316,7 +316,14 @@ class PricingContent
                     'Basic Profile Optimization',
                     'Quarterly Profile Health Update and Tips',
                 ],
-                'guarantee_label' => 'Closing Guarantee Under 150 Days',
+                'guarantee_label' => [
+                    'Closing Guarantee Under 150 Days',
+                    'First TWO (2) Referrals for FREE',
+                    '150 Day Money Back Guarantee',
+                ],
+                'savings_label' => [
+                    'Fee credited back toward your first referral payment',
+                ],
                 'cta_label' => 'GO QUICK',
                 'feature_groups' => [
                     ['title' => 'Features', 'items' => [
@@ -374,7 +381,6 @@ class PricingContent
                     'Quarterly Profile Health Update and Tips',
                     'Exclusive Lead Pool Portal Access',
                     'Accept, Nurture, Reject or Re-Verify Referrals in Portal',
-                    '',
                 ],
                 'highlights' => ['15% Referral Fee', 'First FIVE (5) Referrals FREE', '3 Hrs / Week of Virtual Assistance'],
                 'best_for' => 'Multi-city. Scalable support.',
@@ -395,11 +401,16 @@ class PricingContent
                     'Premium Profile Showcase',
                     'Quarterly Profile Scorecard',
                     '3 High Revenue Ads / Quarter',
+                ],
+                'guarantee_label' => [
+                    'Closing Guarantee Under 120 Days',
                     'First FIVE (5) Referrals for FREE',
-                    'Fee credited back toward your first referral payment',
                     '150 Day Money Back Guarantee',
                 ],
-                'guarantee_label' => 'Closing Guarantee Under 120 Days',
+                'savings_label' => [
+                    'Save $400 on Yearly',
+                    'Fee credited back toward your first referral payment',
+                ],
                 'cta_label' => 'GO POWER',
                 'feature_groups' => [
                     ['title' => 'Features', 'items' => [
@@ -418,9 +429,6 @@ class PricingContent
                         'Premium Profile Showcase',
                         'Quarterly Profile Scorecard',
                         '3 High Revenue Ads / Quarter',
-                        'First FIVE (5) Referrals for FREE',
-                        'Fee credited back toward your first referral payment',
-                        '150 Day Money Back Guarantee',
                     ]],
                 ],
                 'after_submission' => [
@@ -436,7 +444,6 @@ class PricingContent
                 'badge' => 'Premium',
                 'card_tag' => 'Premium',
                 'ribbon_label' => 'Premium',
-                'savings_label' => 'Save $700 on Yearly',
                 'price' => 2299,
                 'price_note' => '/ One-Time',
                 'value_statement' => 'Premium reach. Full-service.',
@@ -468,7 +475,6 @@ class PricingContent
                 'package_benefits' => [
                     'Priority Access to Open Enrollment & 2x Referrals (Q3-Q4, 2026)',
                     '10% Referral Fee',
-                    'First NINE (9) Referrals FREE',
                     '50+ Referrals Till Dec, 2026',
                     'Select up to 10 Cities or ZIP Codes',
                     '15 Hrs / Week of Virtual Assistance',
@@ -484,13 +490,20 @@ class PricingContent
                     'Accept, Nurture, Reject or Re-Verify Referrals in Portal',
                     'Dedicated Accounts Manager',
                 ],
-                'guarantee_label' => 'Closing Guarantee Under 90 Days',
+                'guarantee_label' => [
+                    'Closing Guarantee Under 90 Days',
+                    'First NINE (9) Referrals for FREE',
+                    '150 Day Money Back Guarantee',
+                ],
+                'savings_label' => [
+                    'Save $700 on Yearly',
+                    'Fee credited back toward your first referral payment',
+                ],
                 'cta_label' => 'GO PRIME',
                 'feature_groups' => [
                     ['title' => 'Features', 'items' => [
                         'Priority Access to Open Enrollment & 2x Referrals (Q3-Q4, 2026)',
                         '10% Referral Fee',
-                        'First NINE (9) Referrals FREE',
                         '50+ Referrals Till Dec, 2026',
                         'Select up to 10 Cities or ZIP Codes',
                         '15 Hrs / Week of Virtual Assistance',

@@ -21,8 +21,8 @@
         'cold-calling-isa', 'social-media-mgmt', 'individual-va', 'va-calling', 'va-social', 'va-individual' => 'VA',
         default => $packageDisplay['badge'] ?? $packageDisplay['tier'] ?? 'Selected plan',
     };
-    $savingsLabel = $packageDisplay['savings_label'] ?? null;
-    $guaranteeLabel = $packageDisplay['guarantee_label'] ?? null;
+    $savingsLabel = array_filter((array) ($packageDisplay['savings_label'] ?? []));
+    $guaranteeLabel = array_filter((array) ($packageDisplay['guarantee_label'] ?? []));
     $ctaLabel = $packageDisplay['cta_label'] ?? 'Explore Plan';
     $summary = $packageDisplay['summary'] ?? $package->description;
     $cardDescription = $packageDisplay['card_description'] ?? null;
@@ -112,18 +112,22 @@
                 </ul>
             </section>
 
-            @if($guaranteeLabel || $savingsLabel)
+            @if(!empty($guaranteeLabel) || !empty($savingsLabel))
                 <section class="package-detail-guarantee" aria-label="Package guarantee and value">
-                    @if($guaranteeLabel)
+                    @if(!empty($guaranteeLabel))
                         <div class="package-detail-guarantee__item">
                             <span>Guarantee</span>
-                            <strong>{{ $guaranteeLabel }}</strong>
+                            @foreach($guaranteeLabel as $label)
+                                <strong>{{ $label }}</strong>
+                            @endforeach
                         </div>
                     @endif
-                    @if($savingsLabel)
+                    @if(!empty($savingsLabel))
                         <div class="package-detail-guarantee__item package-detail-guarantee__item--value">
                             <span>Package Value</span>
-                            <strong>{{ $savingsLabel }}</strong>
+                            @foreach($savingsLabel as $label)
+                                <strong>{{ $label }}</strong>
+                            @endforeach
                         </div>
                     @endif
                 </section>
