@@ -104,11 +104,15 @@ class AuthController extends Controller
 
     public function register(Request $request): RedirectResponse
     {
+        $isAgentDirectorySubmission = $request->string('role')->value() === 'agent'
+            && $request->boolean('agent_directory_submission');
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'string', 'in:buyer,seller'],
+            'password' => [$isAgentDirectorySubmission ? 'nullable' : 'required', 'string', 'min:8', 'confirmed'],
+            'role' => ['required', 'string', 'in:buyer,seller,agent'],
+            'agent_directory_submission' => ['nullable', 'boolean'],
             'phone' => ['required', 'string', 'max:20'],
             'profile_image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'address_line_1' => ['required', 'string', 'max:255'],
@@ -116,6 +120,8 @@ class AuthController extends Controller
             'city' => ['required', 'string', 'max:100'],
             'state' => ['required', 'string', 'size:2'],
             'zip_code' => ['required', 'string', 'max:10'],
+            'brokerage_name' => ['required_if:role,agent', 'nullable', 'string', 'max:255'],
+            'license_number' => ['required_if:role,agent', 'nullable', 'string', 'max:100'],
             'terms_accepted' => ['accepted'],
             'communication_accepted' => ['accepted'],
         ], [
@@ -131,6 +137,8 @@ class AuthController extends Controller
             'profile_image.image' => 'Please upload a valid profile photo.',
             'address_line_1.required' => 'Add your address so we can complete your profile.',
             'state.size' => 'Use the 2-letter state code, like TX or FL.',
+            'brokerage_name.required_if' => 'Add your brokerage so we can review your agent profile.',
+            'license_number.required_if' => 'Add your license number so we can review your agent profile.',
             'terms_accepted.accepted' => 'Please accept the Terms and Privacy Policy before continuing.',
             'communication_accepted.accepted' => 'Please agree to onboarding communication so we can activate your account.',
         ]);
@@ -144,7 +152,9 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => $request->password,
+            'password' => $request->filled('password')
+                ? $request->string('password')->value()
+                : Str::password(32),
             'role' => $request->role,
             'phone' => $request->phone,
             'address_line_1' => $request->address_line_1,
@@ -153,9 +163,21 @@ class AuthController extends Controller
             'state' => strtoupper($request->state),
             'zip_code' => $request->zip_code,
             'status' => 'pending',
+            'must_reset_password' => $isAgentDirectorySubmission,
             'avatar' => $avatarPath,
             'affiliate_code' => strtoupper(Str::random(8)),
         ]);
+
+        if ($user->role === 'agent') {
+            $user->realtorProfile()->update([
+                'brokerage_name' => $request->string('brokerage_name')->value(),
+                'license_number' => $request->string('license_number')->value(),
+                'service_city' => $request->string('city')->value(),
+                'service_state' => strtoupper($request->string('state')->value()),
+                'service_zip_code' => $request->string('zip_code')->value(),
+                'bio' => 'Agent profile submitted through public OmniReferral registration and awaiting admin review.',
+            ]);
+        }
 
         if ($request->hasCookie('omnireferral_affiliate')) {
             $affiliateProfile = \App\Models\AffiliateProfile::where('referral_code', $request->cookie('omnireferral_affiliate'))->first();
@@ -166,6 +188,15 @@ class AuthController extends Controller
         }
 
         SyncUserToGoHighLevel::dispatch($user->id);
+
+        if ($isAgentDirectorySubmission) {
+            return redirect()
+                ->route('agents.index')
+                ->with(
+                    'success',
+                    'Thanks for submitting your agent profile. Our admin team will review it before it appears in the directory.'
+                );
+        }
 
         return redirect()
             ->route('login')
@@ -285,6 +316,12 @@ class AuthController extends Controller
     {
         return [
             [
+                'value' => 'agent',
+                'label' => 'Agent',
+                'description' => 'Submit your agent profile for public directory review.',
+                'icon' => 'agent',
+            ],
+            [
                 'value' => 'buyer',
                 'label' => 'Buyer',
                 'description' => 'Save homes and send property enquiries faster.',
@@ -302,7 +339,13 @@ class AuthController extends Controller
     private function selectedWorkspace(Request $request, array $workspaces): string
     {
         $workspaceValues = array_column($workspaces, 'value');
-        $selected = $request->old('role', $request->session()->get('selected_workspace'));
+        $selected = $request->old('role');
+
+        if (! is_string($selected) || $selected === '') {
+            $selected = $request->query('role')
+                ?? $request->query('workspace')
+                ?? $request->session()->get('selected_workspace');
+        }
 
         if (is_string($selected) && in_array($selected, $workspaceValues, true)) {
             return $selected;

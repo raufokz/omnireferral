@@ -16,11 +16,13 @@
         'featured_agents' => 0,
     ], $directoryStats ?? []);
     $referralMatches = max((int) ($stats['referral_matches'] ?? 0), (int) $totalCount);
+    $showAgentSignupForm = old('role') === 'agent' && $errors->any();
 @endphp
 
 <div class="omni-agent-directory-page"
-    x-data="agentDirectoryModal()"
-    x-on:keydown.escape.window="closeModal()">
+    x-data="agentDirectoryModal({ showAgentSignup: @js($showAgentSignupForm) })"
+    x-init="init()"
+    x-on:keydown.escape.window="closeOverlays()">
     <section class="omni-agent-hero">
         <div class="omni-agent-hero__bg" aria-hidden="true">
             <img src="{{ asset('images/home/hero_backdrop_v2.png') }}" alt="">
@@ -32,7 +34,7 @@
                 <p>Browse verified real estate professionals by market, specialty, rating, and brokerage, then open a premium agent profile before you request a referral.</p>
                 <div class="omni-agent-hero__actions">
                     <a href="#agent-directory-results" class="agent-btn agent-btn--orange">Browse Agents</a>
-                    <a href="{{ route('register') }}" class="agent-btn agent-btn--light">Join Network</a>
+                    <button type="button" class="agent-btn agent-btn--light" x-on:click="openAgentSignup()">Add Agent Profile</button>
                 </div>
             </div>
 
@@ -119,14 +121,17 @@
         <div class="container">
             <div class="omni-agent-results__bar" data-animate="up">
                 <p>Showing {{ number_format($profiles->firstItem() ?? 0) }} to {{ number_format($profiles->lastItem() ?? 0) }} of {{ number_format($totalCount) }} agents</p>
-                <label>
-                    <span>Sort by</span>
-                    <select aria-label="Sort agents">
-                        <option>Most Recommended</option>
-                        <option>Highest Rated</option>
-                        <option>Most Reviews</option>
-                    </select>
-                </label>
+                <div class="omni-agent-results__tools">
+                    <button type="button" class="agent-btn agent-btn--orange" x-on:click="openAgentSignup()">Add Agent Profile</button>
+                    <label>
+                        <span>Sort by</span>
+                        <select aria-label="Sort agents">
+                            <option>Most Recommended</option>
+                            <option>Highest Rated</option>
+                            <option>Most Reviews</option>
+                        </select>
+                    </label>
+                </div>
             </div>
 
             <div class="omni-agent-card-grid" data-stagger>
@@ -208,6 +213,98 @@
             @endif
         </div>
     </section>
+
+    <template x-if="agentSignupOpen">
+        <div class="omni-agent-signup-modal" x-show="agentSignupOpen" x-transition x-cloak>
+            <div class="omni-agent-signup-modal__backdrop" x-on:click="closeAgentSignup()"></div>
+            <section class="omni-agent-signup-modal__panel" x-on:click.stop role="dialog" aria-modal="true" aria-labelledby="agent-signup-title">
+                <button type="button" class="omni-agent-signup-modal__close" x-on:click="closeAgentSignup()" aria-label="Close">&times;</button>
+
+                <div class="omni-agent-signup-modal__head">
+                    <span class="agent-kicker">Add Agent Profile</span>
+                    <h2 id="agent-signup-title">Submit your agent profile for review</h2>
+                    <p>Create a pending OmniReferral agent profile. Our admin team reviews each submission before it appears in the public directory.</p>
+                </div>
+
+                @if($showAgentSignupForm)
+                    <div class="omni-agent-signup-errors" role="alert">
+                        <strong>Please review the agent profile form.</strong>
+                        <ul>
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" class="omni-agent-signup-form">
+                    @csrf
+                    <input type="hidden" name="role" value="agent">
+                    <input type="hidden" name="agent_directory_submission" value="1">
+
+                    <label>
+                        <span>Full Name *</span>
+                        <input type="text" name="name" value="{{ old('name') }}" required autocomplete="name" placeholder="Taylor Morgan">
+                    </label>
+                    <label>
+                        <span>Email *</span>
+                        <input type="email" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="you@example.com">
+                    </label>
+                    <label>
+                        <span>Phone *</span>
+                        <input type="tel" name="phone" value="{{ old('phone') }}" required autocomplete="tel" placeholder="(555) 123-4567">
+                    </label>
+                    <label>
+                        <span>Profile Image *</span>
+                        <input type="file" name="profile_image" accept="image/*" required>
+                    </label>
+                    <label>
+                        <span>Brokerage *</span>
+                        <input type="text" name="brokerage_name" value="{{ old('brokerage_name') }}" required placeholder="Premier Realty Group">
+                    </label>
+                    <label>
+                        <span>License Number *</span>
+                        <input type="text" name="license_number" value="{{ old('license_number') }}" required placeholder="TX-1234567">
+                    </label>
+                    <label class="omni-agent-signup-form__full">
+                        <span>Street Address *</span>
+                        <input type="text" name="address_line_1" value="{{ old('address_line_1') }}" required autocomplete="street-address" placeholder="123 Main Street">
+                    </label>
+                    <label class="omni-agent-signup-form__full">
+                        <span>Address Line 2</span>
+                        <input type="text" name="address_line_2" value="{{ old('address_line_2') }}" placeholder="Suite, unit, or apartment">
+                    </label>
+                    <label>
+                        <span>City *</span>
+                        <input type="text" name="city" value="{{ old('city') }}" required autocomplete="address-level2" placeholder="Dallas">
+                    </label>
+                    <label>
+                        <span>State *</span>
+                        <input type="text" name="state" value="{{ old('state') }}" required maxlength="2" autocomplete="address-level1" placeholder="TX">
+                    </label>
+                    <label>
+                        <span>ZIP Code *</span>
+                        <input type="text" name="zip_code" value="{{ old('zip_code') }}" required autocomplete="postal-code" placeholder="75201">
+                    </label>
+                    <div class="omni-agent-signup-form__consent">
+                        <label>
+                            <input type="checkbox" name="terms_accepted" value="1" required @checked(old('terms_accepted'))>
+                            <span>I agree to the Terms and Privacy Policy.</span>
+                        </label>
+                        <label>
+                            <input type="checkbox" name="communication_accepted" value="1" required @checked(old('communication_accepted'))>
+                            <span>I agree to receive account and onboarding communications by email/SMS.</span>
+                        </label>
+                    </div>
+
+                    <div class="omni-agent-signup-form__actions">
+                        <button type="button" class="agent-btn agent-btn--ghost" x-on:click="closeAgentSignup()">Cancel</button>
+                        <button type="submit" class="agent-btn agent-btn--orange">Submit Agent Profile</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </template>
 
     <template x-if="open">
         <div class="omni-agent-modal" x-show="open" x-transition x-cloak>
@@ -336,9 +433,10 @@
 
 @push('scripts')
 <script>
-function agentDirectoryModal() {
+function agentDirectoryModal(config = {}) {
     return {
         open: false,
+        agentSignupOpen: Boolean(config.showAgentSignup),
         loading: false,
         profile: null,
         showForm: false,
@@ -346,14 +444,39 @@ function agentDirectoryModal() {
         submitting: false,
         successMessage: '',
         form: { name: '', email: '', phone: '', city: '', message: '', property_requirements: '' },
+        init() {
+            this.syncBodyLock();
+        },
+        syncBodyLock() {
+            document.body.style.overflow = (this.open || this.agentSignupOpen) ? 'hidden' : '';
+        },
+        openAgentSignup() {
+            this.open = false;
+            this.profile = null;
+            this.showForm = false;
+            this.agentSignupOpen = true;
+            this.syncBodyLock();
+        },
+        closeAgentSignup() {
+            this.agentSignupOpen = false;
+            this.syncBodyLock();
+        },
+        closeOverlays() {
+            this.open = false;
+            this.agentSignupOpen = false;
+            this.profile = null;
+            this.showForm = false;
+            this.syncBodyLock();
+        },
         async openModal(slug, mode = 'contact') {
             this.open = true;
+            this.agentSignupOpen = false;
             this.loading = true;
             this.profile = null;
             this.showForm = false;
             this.inquiryType = mode;
             this.successMessage = '';
-            document.body.style.overflow = 'hidden';
+            this.syncBodyLock();
 
             try {
                 const res = await fetch(`/agent/${slug}/preview`, { headers: { 'Accept': 'application/json' } });
@@ -367,7 +490,7 @@ function agentDirectoryModal() {
             this.open = false;
             this.profile = null;
             this.showForm = false;
-            document.body.style.overflow = '';
+            this.syncBodyLock();
         },
         startInquiry(mode) {
             this.inquiryType = mode;

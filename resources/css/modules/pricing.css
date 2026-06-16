@@ -4243,6 +4243,8 @@
     --omni-radius-panel: 32px;
     --omni-radius-card: 24px;
     --omni-radius-control: 14px;
+    --omni-pricing-hero-padding-top: clamp(3.4rem, 6vw, 5.8rem);
+    --omni-pricing-hero-padding-bottom: clamp(3rem, 4.5vw, 4.75rem);
     background: linear-gradient(180deg, #f7f9fc 0%, #ffffff 36%, #f7f9fc 100%);
 }
 
@@ -4253,7 +4255,7 @@
 .omni-pricing-hero {
     isolation: isolate;
     min-height: auto;
-    padding: clamp(2.4rem, 5vw, 4.8rem) 0 clamp(2.2rem, 4.5vw, 4rem);
+    padding: var(--omni-pricing-hero-padding-top) 0 var(--omni-pricing-hero-padding-bottom);
     background: #06152b;
 }
 
@@ -5137,5 +5139,65 @@
 
     .omni-pricing-page .omni-plan-card__price {
         flex-wrap: wrap;
+    }
+}
+
+/* ==========================================================
+   PRICING HERO CONTENT UPDATE - FINAL RESPONSIVE PASS
+   ========================================================== */
+
+.omni-pricing-page .omni-pricing-hero__inner {
+    grid-template-columns: minmax(0, 1.12fr) minmax(20rem, 0.78fr);
+}
+
+.omni-pricing-page .omni-pricing-hero__copy {
+    align-content: center;
+}
+
+.omni-pricing-page .omni-pricing-hero h1 {
+    max-width: 15ch;
+}
+
+.omni-pricing-page .omni-pricing-hero p {
+    max-width: 60ch;
+}
+
+.omni-pricing-page .omni-pricing-focus-list {
+    max-width: 48rem;
+}
+
+.omni-pricing-page .omni-pricing-focus-list span {
+    white-space: normal;
+}
+
+@media (max-width: 1180px) {
+    .omni-pricing-page .omni-pricing-hero__inner {
+        grid-template-columns: 1fr;
+    }
+
+    .omni-pricing-page .omni-pricing-hero h1,
+    .omni-pricing-page .omni-pricing-hero p {
+        max-width: 100%;
+    }
+
+    .omni-pricing-page .omni-growth-challenge-card {
+        justify-self: stretch;
+        width: 100%;
+    }
+}
+
+@media (max-width: 720px) {
+    .omni-pricing-page .omni-pricing-hero {
+        padding: 2.65rem 0 2.15rem;
+    }
+
+    .omni-pricing-page .omni-pricing-hero__actions,
+    .omni-pricing-page .omni-pricing-hero__actions .omni-btn {
+        width: 100%;
+    }
+
+    .omni-pricing-page .omni-pricing-hero__actions {
+        display: grid;
+        grid-template-columns: 1fr;
     }
 }

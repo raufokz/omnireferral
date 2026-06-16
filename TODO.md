@@ -1,7 +1,14 @@
-# TODO
-- [ ] Verify whether `resources/css/modules/agent-directory.css` exists.
-- [ ] If missing: create `resources/css/modules/agent-directory.css`.
-- [ ] Update `vite.config.js` to include `resources/css/modules/agent-directory.css` in the `laravel({ input: [...] })` array.
-- [ ] Confirm `resources/views/pages/agents.blade.php` uses `@vite('resources/css/modules/agent-directory.css')` (or remove if not needed).
-- [ ] Run build/test steps: `npm install`, `npm run build`, `php artisan optimize:clear`, `php artisan view:clear`, `php artisan cache:clear`.
-- [ ] Test `/agents` route loads without ViteException.
+# TODO - Agent page responsive + New Agent public create
+
+## Plan checkpoints
+- [x] Update agents page UI (filters row: Search + Cancel in same row)
+
+- [ ] Add “New Agent” button to agents directory page (public)
+- [ ] Make agent modal fully responsive (layout, padding, scroll)
+
+- [ ] Add public routes for agent creation (no auth)
+- [ ] Implement public agent creation controller (approved by default)
+- [ ] Create public agent create view/form
+- [ ] Validate & sanitize inputs + basic security (throttle/CSRF)
+- [ ] Manual testing: multiple viewport sizes + modal open/close + filters alignment
+

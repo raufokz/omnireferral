@@ -93,6 +93,46 @@ class AuthRegistrationTest extends TestCase
         Queue::assertPushed(SyncUserToGoHighLevel::class);
     }
 
+    public function test_public_agent_directory_submission_does_not_require_password(): void
+    {
+        Storage::fake('public');
+        Queue::fake();
+
+        $this->post(route('register'), [
+            'role' => 'agent',
+            'agent_directory_submission' => '1',
+            'name' => 'Morgan Reyes',
+            'email' => 'morgan-agent@example.com',
+            'phone' => '(555) 777-1212',
+            'address_line_1' => '45 Referral Avenue',
+            'city' => 'Austin',
+            'state' => 'tx',
+            'zip_code' => '73301',
+            'brokerage_name' => 'Omni Realty Partners',
+            'license_number' => 'TX-7654321',
+            'profile_image' => $this->fakePngUpload('directory-agent.png'),
+            'terms_accepted' => true,
+            'communication_accepted' => true,
+        ])
+            ->assertRedirect(route('agents.index'))
+            ->assertSessionHas('success');
+
+        $user = User::where('email', 'morgan-agent@example.com')->firstOrFail();
+
+        $this->assertSame('agent', $user->role);
+        $this->assertSame('pending', $user->status);
+        $this->assertTrue((bool) $user->must_reset_password);
+        $this->assertNotEmpty($user->password);
+
+        $profile = $user->realtorProfile()->first();
+
+        $this->assertNotNull($profile);
+        $this->assertSame('Omni Realty Partners', $profile->brokerage_name);
+        $this->assertSame('TX-7654321', $profile->license_number);
+
+        Queue::assertPushed(SyncUserToGoHighLevel::class);
+    }
+
     public function test_buyer_registration_still_requires_core_profile_fields_but_not_agent_credentials(): void
     {
         Storage::fake('public');

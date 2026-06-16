@@ -123,21 +123,21 @@
         </div>
         <div class="container omni-pricing-hero__inner">
             <div class="omni-pricing-hero__copy" data-animate="left">
-                <span class="omni-kicker">10X Growth Challenge</span>
-                <h1>10X Your Real Estate Growth</h1>
-                <p>Combine verified referrals, virtual assistants, lead routing, social media management, and featured agent placement in one growth platform.</p>
+                <span class="omni-kicker">OmniReferral Pricing</span>
+                <h1>Packages built to turn verified demand into closed deals</h1>
+                <p>Choose a growth path for cleaner referral handoffs, stronger agent visibility, and support that keeps every buyer or seller opportunity moving.</p>
 
                 <div class="omni-pricing-focus-list" aria-label="Growth platform focus areas">
-                    <span>Real Estate Lead Generation</span>
-                    <span>VA Services</span>
-                    <span>Referral Growth</span>
-                    <span>Agent Visibility</span>
-                    <span>Marketplace Exposure</span>
+                    <span>Verified buyer and seller referrals</span>
+                    <span>Featured agent profile options</span>
+                    <span>Market-matched routing</span>
+                    <span>Follow-up support</span>
+                    <span>VA services available</span>
                 </div>
 
                 <div class="omni-pricing-hero__actions">
-                    <a href="#pricing-packages" class="omni-btn omni-btn--orange">View Packages</a>
-                    <a href="{{ route('contact') }}" class="omni-btn omni-btn--outline">Talk To Sales</a>
+                    <a href="#pricing-packages" class="omni-btn omni-btn--orange">Compare Packages</a>
+                    <a href="{{ route('contact') }}" class="omni-btn omni-btn--outline">Build My Plan</a>
                 </div>
 
                 <div class="omni-pricing-trust" aria-label="OmniReferral trust metrics">
@@ -260,7 +260,6 @@
             <p>Power Lead is highlighted for agents who want the strongest balance of lead volume, speed, and support.</p>
         </div>
 
-```
     <div class="omni-comparison-card" data-animate="up">
         <table class="omni-comparison-table">
             <caption class="visually-hidden">Real estate lead package comparison</caption>
@@ -342,7 +341,6 @@
         </table>
     </div>
 </div>
-```
 
 </section>
 

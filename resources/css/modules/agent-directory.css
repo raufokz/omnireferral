@@ -479,9 +479,29 @@
 
 .omni-agent-search__actions {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.45rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem;
+    align-items: center;
 }
+
+/* Keep Search + Reset in the same row on desktop/tablet */
+@media (min-width: 761px) {
+    .omni-agent-search__actions {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 760px) {
+    .omni-agent-search__actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Ensure the modal panel is always fully reachable on smaller screens */
+.omni-agent-modal__panel {
+    max-width: 100%;
+}
+
 
 .omni-agent-results {
     padding: 5.3rem 0 4.8rem;
@@ -1154,6 +1174,9 @@
     --agent-radius-panel: 32px;
     --agent-radius-card: 24px;
     --agent-radius-control: 14px;
+    --agent-modal-gutter: clamp(0.6rem, 2vw, 1.25rem);
+    --agent-modal-close-size: 2.75rem;
+    --agent-hero-padding-top: clamp(3.4rem, 6vw, 5.8rem);
     background: linear-gradient(180deg, #f7f9fc 0%, #ffffff 34%, #f7f9fc 100%);
 }
 
@@ -1195,7 +1218,7 @@
 .omni-agent-hero {
     isolation: isolate;
     overflow: visible;
-    padding: clamp(2.4rem, 5vw, 4.8rem) 0 clamp(6.2rem, 8vw, 7.4rem);
+    padding: var(--agent-hero-padding-top) 0 clamp(6.2rem, 8vw, 7.4rem);
     background: #06152b;
 }
 
@@ -1542,7 +1565,7 @@
 
 @media (max-width: 760px) {
     .omni-agent-hero {
-        padding: 1.35rem 0 2rem;
+        padding: 2.65rem 0 2rem;
     }
 
     .omni-agent-hero__copy {
@@ -1618,5 +1641,586 @@
 
     .omni-agent-modal__actions .agent-btn {
         width: 100%;
+    }
+}
+
+/* ==========================================================
+   PUBLIC AGENT PAGE RESPONSIVE FINISH
+   ========================================================== */
+
+.omni-agent-results__tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: flex-end;
+    gap: 0.8rem;
+}
+
+.omni-agent-results__tools label {
+    display: grid;
+    gap: 0.32rem;
+}
+
+.omni-agent-search {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    align-items: end;
+}
+
+.omni-agent-search label,
+.omni-agent-search__wide {
+    grid-column: auto;
+}
+
+.omni-agent-search__actions {
+    grid-column: span 2;
+    grid-template-columns: minmax(0, 1fr) minmax(6.5rem, 0.72fr);
+    align-self: end;
+}
+
+.omni-agent-card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+}
+
+.omni-agent-modal {
+    align-items: start;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.omni-agent-modal__panel {
+    width: min(72rem, calc(100vw - 2rem));
+    max-height: min(90vh, calc(100dvh - 2rem));
+    margin-block: auto;
+}
+
+.omni-agent-modal__content {
+    grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
+}
+
+.omni-agent-modal__side > img {
+    max-height: 18rem;
+}
+
+.omni-agent-modal__main,
+.omni-agent-modal__section,
+.omni-agent-inquiry {
+    min-width: 0;
+}
+
+.omni-agent-modal__actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.omni-agent-modal__actions .agent-btn {
+    width: 100%;
+}
+
+@media (max-width: 1180px) {
+    .omni-agent-search {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .omni-agent-search__actions {
+        grid-column: span 3;
+    }
+}
+
+@media (max-width: 900px) {
+    .omni-agent-results__bar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .omni-agent-results__tools {
+        justify-content: space-between;
+    }
+
+    .omni-agent-results__tools .agent-btn,
+    .omni-agent-results__tools label {
+        flex: 1 1 14rem;
+    }
+
+    .omni-agent-modal__content {
+        grid-template-columns: 1fr;
+    }
+
+    .omni-agent-modal__side {
+        grid-template-columns: minmax(9rem, 12rem) minmax(0, 1fr);
+    }
+
+    .omni-agent-modal__side > img {
+        aspect-ratio: 1;
+    }
+}
+
+@media (max-width: 760px) {
+    .omni-agent-directory-page .container {
+        width: min(100% - 1rem, var(--container, 1280px));
+        padding-inline: 0;
+    }
+
+    .omni-agent-search {
+        grid-template-columns: 1fr;
+    }
+
+    .omni-agent-search__actions {
+        grid-column: auto;
+        grid-template-columns: 1fr;
+    }
+
+    .omni-agent-results__tools,
+    .omni-agent-results__tools .agent-btn,
+    .omni-agent-results__tools label,
+    .omni-agent-results__tools select {
+        width: 100%;
+    }
+
+    .omni-agent-card {
+        grid-template-columns: minmax(6.5rem, 0.38fr) minmax(0, 1fr);
+    }
+
+    .omni-agent-card__media {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1;
+    }
+
+    .omni-agent-card__top {
+        grid-template-columns: 1fr;
+        padding-right: 2.2rem;
+    }
+
+    .omni-agent-card__verified {
+        width: fit-content;
+    }
+
+    .omni-agent-modal {
+        padding: 0.5rem;
+    }
+
+    .omni-agent-modal__panel {
+        width: calc(100vw - 1rem);
+        max-height: calc(100dvh - 1rem);
+        border-radius: 18px;
+    }
+
+    .omni-agent-modal__content {
+        padding: 0.75rem;
+    }
+
+    .omni-agent-modal__side {
+        grid-template-columns: 1fr;
+    }
+
+    .omni-agent-modal__side > img {
+        max-height: 14rem;
+        aspect-ratio: 4 / 3;
+    }
+
+    .omni-agent-contact-card div {
+        grid-template-columns: minmax(4.4rem, 0.34fr) minmax(0, 1fr);
+    }
+
+    .omni-agent-modal__actions,
+    .omni-agent-modal__metrics,
+    .omni-agent-inquiry {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 520px) {
+    .omni-agent-hero h1 {
+        max-width: none;
+    }
+
+    .omni-agent-card {
+        grid-template-columns: 1fr;
+    }
+
+    .omni-agent-card__media {
+        aspect-ratio: 4 / 3;
+    }
+
+    .omni-agent-pagination a:first-child,
+    .omni-agent-pagination a:last-child {
+        min-width: 4.4rem;
+    }
+}
+
+/* ==========================================================
+   PUBLIC ADD AGENT FORM MODAL
+   ========================================================== */
+
+.omni-agent-signup-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1250;
+    display: grid;
+    align-items: start;
+    justify-items: center;
+    overflow-y: auto;
+    padding: clamp(0.65rem, 2vw, 1.25rem);
+    overscroll-behavior: contain;
+}
+
+.omni-agent-signup-modal__backdrop {
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(circle at 18% 12%, rgba(255, 96, 0, 0.18), transparent 20rem),
+        rgba(6, 21, 43, 0.66);
+    backdrop-filter: blur(8px);
+}
+
+.omni-agent-signup-modal__panel {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 1rem;
+    width: min(58rem, calc(100vw - 2rem));
+    max-height: min(92vh, calc(100dvh - 2rem));
+    margin-block: auto;
+    overflow: auto;
+    padding: clamp(1rem, 2.4vw, 1.6rem);
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    background:
+        radial-gradient(circle at top right, rgba(255, 107, 0, 0.1), transparent 18rem),
+        #ffffff;
+    box-shadow: 0 34px 90px rgba(6, 21, 43, 0.28);
+}
+
+.omni-agent-signup-modal__close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 2.45rem;
+    height: 2.45rem;
+    border: 1px solid rgba(15, 33, 61, 0.1);
+    border-radius: 999px;
+    background: #ffffff;
+    color: var(--agent-navy);
+    cursor: pointer;
+    font-size: 1.2rem;
+    box-shadow: 0 12px 24px rgba(15, 33, 61, 0.12);
+}
+
+.omni-agent-signup-modal__head {
+    display: grid;
+    gap: 0.6rem;
+    padding-right: 3rem;
+}
+
+.omni-agent-signup-modal__head h2 {
+    margin: 0;
+    color: var(--agent-navy);
+    font-size: clamp(1.65rem, 3vw, 2.45rem);
+    font-weight: 900;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
+}
+
+.omni-agent-signup-modal__head p {
+    max-width: 58ch;
+    margin: 0;
+    color: var(--agent-muted);
+    line-height: 1.65;
+}
+
+.omni-agent-signup-errors {
+    padding: 0.9rem 1rem;
+    border-radius: 18px;
+    border: 1px solid rgba(220, 38, 38, 0.18);
+    background: #fef2f2;
+    color: #991b1b;
+}
+
+.omni-agent-signup-errors strong {
+    display: block;
+    margin-bottom: 0.35rem;
+}
+
+.omni-agent-signup-errors ul {
+    margin: 0;
+    padding-left: 1.2rem;
+}
+
+.omni-agent-signup-form {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.omni-agent-signup-form label {
+    display: grid;
+    gap: 0.38rem;
+    min-width: 0;
+    color: var(--agent-navy);
+    font-size: 0.78rem;
+    font-weight: 850;
+}
+
+.omni-agent-signup-form input {
+    width: 100%;
+    min-height: 2.9rem;
+    border: 1px solid rgba(15, 33, 61, 0.13);
+    border-radius: var(--agent-radius-control, 14px);
+    background: #ffffff;
+    color: var(--agent-ink);
+    font-size: 0.9rem;
+    padding: 0.72rem 0.82rem;
+    outline: none;
+}
+
+.omni-agent-signup-form input[type="file"] {
+    padding: 0.55rem;
+}
+
+.omni-agent-signup-form input:focus {
+    border-color: rgba(255, 96, 0, 0.5);
+    box-shadow: 0 0 0 4px rgba(255, 96, 0, 0.1);
+}
+
+.omni-agent-signup-form__full,
+.omni-agent-signup-form__consent,
+.omni-agent-signup-form__actions {
+    grid-column: 1 / -1;
+}
+
+.omni-agent-signup-form__consent {
+    display: grid;
+    gap: 0.65rem;
+    padding: 0.95rem;
+    border-radius: 18px;
+    border: 1px solid rgba(15, 33, 61, 0.08);
+    background: #f8fafc;
+}
+
+.omni-agent-signup-form__consent label {
+    display: grid;
+    grid-template-columns: 1rem minmax(0, 1fr);
+    gap: 0.6rem;
+    align-items: start;
+    color: #475569;
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+.omni-agent-signup-form__consent input {
+    width: 1rem;
+    min-height: 1rem;
+    margin-top: 0.16rem;
+    padding: 0;
+}
+
+.omni-agent-signup-form__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.7rem;
+    padding-top: 0.2rem;
+}
+
+@media (max-width: 760px) {
+    .omni-agent-signup-modal {
+        padding: 0.5rem;
+    }
+
+    .omni-agent-signup-modal__panel {
+        width: calc(100vw - 1rem);
+        max-height: calc(100dvh - 1rem);
+        border-radius: 18px;
+    }
+
+    .omni-agent-signup-modal__head {
+        padding-right: 2.7rem;
+    }
+
+    .omni-agent-signup-form {
+        grid-template-columns: 1fr;
+    }
+
+    .omni-agent-signup-form__actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .omni-agent-signup-form__actions .agent-btn {
+        width: 100%;
+    }
+}
+
+/* Final modal responsiveness overrides */
+.omni-agent-modal,
+.omni-agent-signup-modal {
+    min-height: 100vh;
+    min-height: 100dvh;
+    align-items: center;
+    justify-items: center;
+    padding: var(--agent-modal-gutter);
+    overscroll-behavior: contain;
+}
+
+.omni-agent-modal__panel,
+.omni-agent-modal__panel *,
+.omni-agent-signup-modal__panel,
+.omni-agent-signup-modal__panel * {
+    box-sizing: border-box;
+}
+
+.omni-agent-modal__panel {
+    width: min(68rem, calc(100vw - var(--agent-modal-gutter)));
+    max-width: min(68rem, 95vw);
+    max-height: min(92vh, calc(100dvh - var(--agent-modal-gutter)));
+    overflow: auto;
+    border-radius: 20px;
+    overscroll-behavior: contain;
+}
+
+.omni-agent-modal__content {
+    min-height: 0;
+    max-height: calc(92dvh - 4rem);
+    overflow: auto;
+    grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
+}
+
+.omni-agent-modal__main,
+.omni-agent-modal__side,
+.omni-agent-modal__head,
+.omni-agent-modal__title-row,
+.omni-agent-modal__section,
+.omni-agent-contact-card,
+.omni-agent-inquiry,
+.omni-agent-signup-modal__panel {
+    min-width: 0;
+}
+
+.omni-agent-modal__head,
+.omni-agent-modal__title-row,
+.omni-agent-modal__section p,
+.omni-agent-contact-card strong {
+    overflow-wrap: anywhere;
+}
+
+.omni-agent-modal__close,
+.omni-agent-signup-modal__close {
+    width: var(--agent-modal-close-size);
+    height: var(--agent-modal-close-size);
+    min-width: var(--agent-modal-close-size);
+    min-height: var(--agent-modal-close-size);
+}
+
+.omni-agent-signup-modal__panel {
+    width: min(54rem, calc(100vw - var(--agent-modal-gutter)));
+    max-width: min(54rem, 95vw);
+    max-height: min(92vh, calc(100dvh - var(--agent-modal-gutter)));
+    border-radius: 20px;
+    overscroll-behavior: contain;
+}
+
+.omni-agent-signup-form input,
+.omni-agent-signup-form input[type="file"] {
+    min-height: 2.75rem;
+}
+
+@media (min-width: 769px) {
+    .omni-agent-modal__panel {
+        width: min(68rem, 75vw);
+        max-height: min(75vh, calc(100dvh - var(--agent-modal-gutter)));
+    }
+
+    .omni-agent-signup-modal__panel {
+        width: min(54rem, 75vw);
+        max-height: min(75vh, calc(100dvh - var(--agent-modal-gutter)));
+    }
+
+    .omni-agent-modal__content {
+        max-height: calc(75dvh - 4rem);
+    }
+}
+
+@media (max-height: 720px) and (min-width: 761px) {
+    .omni-agent-modal,
+    .omni-agent-signup-modal {
+        align-items: start;
+    }
+}
+
+@media (max-width: 768px) {
+    .omni-agent-modal__content,
+    .omni-agent-modal__side,
+    .omni-agent-modal__actions,
+    .omni-agent-modal__metrics,
+    .omni-agent-inquiry,
+    .omni-agent-signup-form {
+        grid-template-columns: 1fr;
+    }
+
+    .omni-agent-modal__side > img {
+        width: min(12rem, 42vw);
+        max-width: 100%;
+        margin-inline: auto;
+    }
+
+    .omni-agent-modal__metrics div + div {
+        border-left: 0;
+        border-top: 1px solid rgba(15, 33, 61, 0.08);
+    }
+
+    .omni-agent-modal__actions .agent-btn,
+    .omni-agent-inquiry button,
+    .omni-agent-signup-form__actions .agent-btn {
+        width: 100%;
+    }
+
+    .omni-agent-modal__panel,
+    .omni-agent-signup-modal__panel {
+        width: min(100%, 95vw);
+        max-height: calc(100dvh - 0.8rem);
+        border-radius: 18px;
+    }
+}
+
+@media (max-width: 640px) {
+    .omni-agent-modal,
+    .omni-agent-signup-modal {
+        align-items: stretch;
+        padding: 0.4rem;
+    }
+
+    .omni-agent-modal__panel,
+    .omni-agent-signup-modal__panel {
+        width: min(100%, 95vw);
+        max-height: calc(100dvh - 0.8rem);
+        border-radius: 14px;
+    }
+
+    .omni-agent-modal__content,
+    .omni-agent-modal__side,
+    .omni-agent-modal__actions,
+    .omni-agent-modal__metrics {
+        grid-template-columns: 1fr;
+    }
+
+    .omni-agent-modal__side > img {
+        width: min(11rem, 54vw);
+        margin-inline: auto;
+    }
+
+    .omni-agent-signup-modal__head {
+        padding-right: 2.6rem;
+    }
+
+    .omni-agent-signup-modal__head h2 {
+        font-size: 1.45rem;
+    }
+
+    .omni-agent-signup-modal__head p {
+        font-size: 0.9rem;
+        line-height: 1.5;
     }
 }
