@@ -104,8 +104,10 @@
         ? collect($properties->items())
         : collect($properties);
 
+    // Rely on the controller's marketplaceVisible() query to determine what should show.
+    // Keep this filter intentionally loose so homepage doesn't go empty due to status/approval value mismatches.
     $homepageMarketplaceProperties = $homepageListingItems
-        ->filter(fn ($property) => $property->approval_status === \App\Models\Property::APPROVAL_APPROVED && $property->status === 'Active')
+        ->filter(fn ($property) => !is_null($property))
         ->values();
 
     $partnerLogoRows = [
