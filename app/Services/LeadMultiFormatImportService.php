@@ -45,7 +45,7 @@ class LeadMultiFormatImportService
                 'lead_number' => Lead::generateLeadNumber(),
                 'source' => (string) ($row['_source'] ?? 'file_import'),
                 'source_timestamp' => $row['source_timestamp'] ?? null,
-                'package_type' => 'quick',
+                'package_type' => 'starter',
                 'name' => (string) ($row['name'] ?? ''),
                 'email' => (string) ($row['email'] ?? ''),
                 'phone' => (string) ($row['phone'] ?? ''),

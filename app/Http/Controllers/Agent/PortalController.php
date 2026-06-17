@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Agent;
 use App\Http\Controllers\Controller;
 use App\Models\Contact;
 use App\Models\Lead;
+use App\Models\Package;
 use App\Models\Property;
 use App\Models\PropertyFavorite;
 use App\Models\RealtorProfile;
@@ -226,6 +227,18 @@ class PortalController extends Controller
             ['label' => 'Closed', 'count' => (clone $leadsQuery)->where('status', 'closed')->count()],
         ];
 
+        $revenueMap = $this->dashboardRevenueMap();
+        $leadPipelineValue = (clone $leadsQuery)->get(['package_type'])->sum(fn ($lead) => $revenueMap[strtolower((string) $lead->package_type)] ?? 0);
+        $totalProperties = (clone $propertiesQuery)->count();
+        $analyticsTrends = collect(['daily', 'weekly', 'monthly', 'yearly'])
+            ->mapWithKeys(fn (string $period) => [
+                $period => [
+                    'revenue' => $this->revenueTrendForQuery((clone $leadsQuery), $revenueMap, $period)->values(),
+                    'users' => $this->countTrendForQuery(User::query()->where('id', $user->id), $period)->values(),
+                    'enquiries' => $this->countTrendForQuery((clone $messagesQuery), $period)->values(),
+                ],
+            ]);
+
         return [
             $user,
             $profile,
@@ -233,6 +246,7 @@ class PortalController extends Controller
                 'activePlan' => $activePlan,
                 'leadsQuery' => $leadsQuery,
                 'messagesQuery' => $messagesQuery,
+                'propertiesQuery' => $propertiesQuery,
                 'listingLimit' => $listingLimit,
                 'listingLimitLabel' => $activePlan?->listingLimitLabel() ?? 'No listing access',
                 'activeListingCount' => $activeListingCount,
@@ -245,6 +259,71 @@ class PortalController extends Controller
                 'unreadMessagesCount' => (clone $messagesQuery)->where('message_status', 'new')->count(),
                 'totalFavoritesReceived' => $totalFavoritesReceived,
                 'pipeline' => $pipeline,
+                'stats' => [
+                    'leads' => $totalLeads,
+                    'properties' => $totalProperties,
+                    'activeListings' => $activeListingCount,
+                    'featuredListings' => (clone $propertiesQuery)->where('is_featured', true)->count(),
+                    'pendingListings' => $pendingReviewCount,
+                    'pendingAccounts' => 0,
+                    'userSubmittedListingsTotal' => $totalProperties,
+                    'contacts' => $totalMessages,
+                    'enquiries' => $totalMessages,
+                    'packages' => Package::count(),
+                    'propertyFavorites' => $totalFavoritesReceived,
+                    'leadPipelineValue' => $leadPipelineValue,
+                    'mrrEstimate' => (float) ($activePlan?->monthly_price ?? 0),
+                    'usersTotal' => 1,
+                    'usersActive' => $user->status === 'active' ? 1 : 0,
+                    'usersSuspended' => $user->status === 'suspended' ? 1 : 0,
+                ],
+                'recentLeads' => (clone $leadsQuery)->latest()->take(6)->get(),
+                'pendingAccounts' => collect(),
+                'userSubmittedListings' => (clone $propertiesQuery)
+                    ->with(['realtorProfile.user', 'owner'])
+                    ->latest()
+                    ->take(6)
+                    ->get(),
+                'recentEnquiries' => (clone $messagesQuery)
+                    ->with(['property:id,title,slug'])
+                    ->latest()
+                    ->take(6)
+                    ->get(),
+                'pipelineHealth' => $this->pipelineHealthFromCounts($pipeline),
+                'teamQueues' => collect([
+                    [
+                        'team' => 'Lead Follow-up',
+                        'copy' => 'Assigned opportunities waiting for contact, qualification, or close.',
+                        'count' => (clone $leadsQuery)->whereIn('status', ['new', 'contacted'])->count(),
+                    ],
+                    [
+                        'team' => 'Listing Visibility',
+                        'copy' => 'Published inventory, pending approvals, and rejected uploads.',
+                        'count' => $slotUsageCount,
+                    ],
+                    [
+                        'team' => 'Inbox Activity',
+                        'copy' => 'Messages and listing enquiries requiring agent attention.',
+                        'count' => (clone $messagesQuery)->where('message_status', 'new')->count(),
+                    ],
+                    [
+                        'team' => 'Directory Growth',
+                        'copy' => 'Profile completeness, favorites, and public ranking signals.',
+                        'count' => $totalFavoritesReceived,
+                    ],
+                ]),
+                'leadTrend' => $this->countTrendForQuery((clone $leadsQuery), 'monthly'),
+                'enquiryTrend' => collect($analyticsTrends['monthly']['enquiries']),
+                'userGrowthTrend' => collect($analyticsTrends['monthly']['users']),
+                'revenueTrend' => collect($analyticsTrends['monthly']['revenue']),
+                'analyticsTrends' => $analyticsTrends->toArray(),
+                'propertyTypeDistribution' => $this->propertyTypeDistributionForQuery((clone $propertiesQuery)),
+                'recentAudit' => collect(),
+                'canViewFullAudit' => false,
+                'listingSectionEyebrow' => 'Published Inventory',
+                'listingSectionTitle' => 'Agent-submitted listings',
+                'listingSectionCopy' => 'Role-scoped listings tied to your agent profile and package capacity.',
+                'listingOwnerLabel' => 'Agent',
                 'agentStats' => [
                     'score' => number_format((float) ($profile->rating ?? 4.9), 1),
                     'leads_received' => $totalLeads,

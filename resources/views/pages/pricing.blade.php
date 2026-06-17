@@ -22,8 +22,8 @@
 
     $leadCards = collect([
         [
-            'slug' => 'quick-leads',
-            'fallback_name' => 'Quick Lead',
+            'slug' => 'starter-leads',
+            'fallback_name' => 'Starter Lead',
             'badge' => 'Starter',
             'price' => 369,
             'billing' => '/ Yearly',
@@ -32,8 +32,8 @@
             'featured' => false,
         ],
         [
-            'slug' => 'power-leads',
-            'fallback_name' => 'Power Lead',
+            'slug' => 'growth-leads',
+            'fallback_name' => 'Growth Lead',
             'badge' => 'Most Popular',
             'price' => 697,
             'billing' => '/ One-Time',
@@ -42,8 +42,8 @@
             'featured' => true,
         ],
         [
-            'slug' => 'prime-leads',
-            'fallback_name' => 'Prime Lead',
+            'slug' => 'elite-leads',
+            'fallback_name' => 'Elite Lead',
             'badge' => 'Premium',
             'price' => 1979,
             'billing' => '/ One-Time',
@@ -251,7 +251,7 @@
         <div class="omni-section-head" data-animate="up">
             <span class="omni-kicker">Compare Plans</span>
             <h2 id="pricing-comparison-heading">Compare real estate lead packages</h2>
-            <p>Power Lead is highlighted for agents who want the strongest balance of lead volume, speed, and support.</p>
+            <p>Growth Lead is highlighted for agents who want the strongest balance of lead volume, speed, and support.</p>
         </div>
 
     <div class="omni-comparison-card" data-animate="up">
@@ -260,12 +260,12 @@
             <thead>
                 <tr>
                     <th scope="col">Features</th>
-                    <th scope="col">Quick Lead</th>
+                    <th scope="col">Starter Lead</th>
                     <th scope="col" class="is-featured">
-                        Power Lead
+                        Growth Lead
                         <span class="omni-comparison-plan-badge">Recommended</span>
                     </th>
-                    <th scope="col">Prime Lead</th>
+                    <th scope="col">Elite Lead</th>
                 </tr>
             </thead>
             <tbody>
@@ -373,9 +373,9 @@
             </div>
             <div class="omni-success-grid" data-stagger>
                 @foreach([
-                    ['name' => 'Jessica Miller', 'market' => 'Miami, FL', 'image' => 'images/realtors/12.png', 'result' => 'Closed 3 referrals in 45 days', 'copy' => 'Power Lead helped Jessica capture high-intent waterfront buyers without adding another internal assistant.'],
-                    ['name' => 'David Martinez', 'market' => 'Dallas, TX', 'image' => 'images/realtors/10.png', 'result' => 'Expanded into 4 new ZIP codes', 'copy' => 'Quick Lead gave David a predictable launch path in a new market with verified referral flow.'],
-                    ['name' => 'Amanda Taylor', 'market' => 'Nashville, TN', 'image' => 'images/realtors/14.png', 'result' => 'Reached top local placement', 'copy' => 'Prime Lead paired premium profile visibility with faster routing and stronger follow-up.'],
+                    ['name' => 'Jessica Miller', 'market' => 'Miami, FL', 'image' => 'images/realtors/12.png', 'result' => 'Closed 3 referrals in 45 days', 'copy' => 'Growth Lead helped Jessica capture high-intent waterfront buyers without adding another internal assistant.'],
+                    ['name' => 'David Martinez', 'market' => 'Dallas, TX', 'image' => 'images/realtors/10.png', 'result' => 'Expanded into 4 new ZIP codes', 'copy' => 'Starter Lead gave David a predictable launch path in a new market with verified referral flow.'],
+                    ['name' => 'Amanda Taylor', 'market' => 'Nashville, TN', 'image' => 'images/realtors/14.png', 'result' => 'Reached top local placement', 'copy' => 'Elite Lead paired premium profile visibility with faster routing and stronger follow-up.'],
                 ] as $story)
                     <article class="omni-success-card">
                         <div class="omni-success-card__avatar">

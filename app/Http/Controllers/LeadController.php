@@ -48,7 +48,7 @@ class LeadController extends Controller
         $lead = Lead::create([
             ...$validated,
             'lead_number' => Lead::generateLeadNumber(),
-            'package_type' => $package ? str($package->slug)->before('-')->toString() : 'quick',
+            'package_type' => $package ? $this->normalizePackageType($package->slug) : 'starter',
             'package_id' => $package?->id,
             'status' => 'new',
             'source' => 'website',
@@ -80,6 +80,16 @@ class LeadController extends Controller
             : 'Welcome aboard! Your request has been captured in the OmniReferral review queue and is awaiting routing.';
 
         return back()->with('success', $message);
+    }
+
+    private function normalizePackageType(string $slug): string
+    {
+        return match ($slug) {
+            'starter-leads', 'quick-leads' => 'starter',
+            'growth-leads', 'power-leads' => 'growth',
+            'elite-leads', 'prime-leads' => 'elite',
+            default => str($slug)->before('-')->toString(),
+        };
     }
 
     private function normalizeZipCode(?string $zipCode): ?string

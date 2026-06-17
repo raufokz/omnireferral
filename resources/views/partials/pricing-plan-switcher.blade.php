@@ -24,9 +24,9 @@
 
     $planIcon = function (string $slug): string {
         return match ($slug) {
-            'quick-leads' => 'chart',
-            'power-leads' => 'rocket',
-            'prime-leads' => 'crown',
+            'starter-leads' => 'chart',
+            'growth-leads' => 'rocket',
+            'elite-leads' => 'crown',
             'cold-calling-isa', 'va-calling' => 'phone',
             'social-media-mgmt', 'va-social' => 'social',
             'individual-va', 'va-individual' => 'clock',
@@ -42,9 +42,9 @@
             ?? ($isFeatured ? 'Most Popular' : ($plan['tier'] ?? 'Plan'));
         $audience = $plan['card_best_for']
             ?? match ($slug) {
-                'quick-leads' => 'New Agents',
-                'power-leads' => 'Growing Teams',
-                'prime-leads' => 'High Volume Agents',
+                'starter-leads' => 'New Agents',
+                'growth-leads' => 'Growing Teams',
+                'elite-leads' => 'High Volume Agents',
                 'cold-calling-isa', 'va-calling' => 'Busy Agents',
                 'social-media-mgmt', 'va-social' => 'Brand Growth',
                 'individual-va', 'va-individual' => 'Lean Teams',
@@ -91,7 +91,7 @@
             aria-controls="pricing-panel-{{ $toggleId }}-real-estate"
         >
             <span>Real Estate Plans</span>
-            <small>Quick, Power, Prime</small>
+            <small>Starter, Growth, Elite</small>
         </button>
         <button
             type="button"

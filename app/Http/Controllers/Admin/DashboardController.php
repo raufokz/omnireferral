@@ -14,16 +14,50 @@ use App\Models\RealtorProfile;
 use App\Models\Testimonial;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(): View
+    public function index(): View|RedirectResponse
+    {
+        $workspaceUser = auth()->user();
+
+        if ($workspaceUser?->isSuperAdmin()) {
+            return redirect()->route('super-admin.dashboard');
+        }
+
+        if ($workspaceUser?->role === 'staff') {
+            return redirect()->route('staff.dashboard');
+        }
+
+        return $this->dashboard('pages.admin-dashboard');
+    }
+
+    public function staff(): View
+    {
+        abort_unless(auth()->user()?->role === 'staff', 403);
+
+        return $this->dashboard('pages.staff-dashboard');
+    }
+
+    public function superAdmin(): View
+    {
+        abort_unless(auth()->user()?->isSuperAdmin(), 403);
+
+        return $this->dashboard('pages.super-admin-dashboard');
+    }
+
+    private function dashboard(string $viewName): View
     {
         $workspaceUser = auth()->user();
         $isStaffView = $workspaceUser?->role === 'staff';
+        $isSuperAdminView = (bool) ($workspaceUser?->is_super_admin);
         $revenueMap = [
+            'starter' => 199,
+            'growth' => 349,
+            'elite' => 549,
             'quick' => 199,
             'power' => 349,
             'prime' => 549,
@@ -138,7 +172,7 @@ class DashboardController extends Controller
                 ->get()
             : collect();
 
-        return view('pages.admin-dashboard', [
+        return view($viewName, [
             'stats' => [
                 'leads' => Lead::count(),
                 'realtors' => RealtorProfile::count(),
@@ -193,10 +227,16 @@ class DashboardController extends Controller
             'recentAudit' => $recentAudit,
             'canViewFullAudit' => $workspaceUser?->can('audit.view') ?? false,
             'meta' => [
-                'title' => $isStaffView ? 'Staff Dashboard | OmniReferral' : 'Admin Dashboard | OmniReferral',
-                'description' => $isStaffView
-                    ? 'Coordinate operations queues, lead follow-up, and internal workflows across OmniReferral.'
-                    : 'Manage leads, agents, listings, and growth across OmniReferral.',
+                'title' => match (true) {
+                    $isSuperAdminView => 'Super Admin Dashboard | OmniReferral',
+                    $isStaffView => 'Staff Dashboard | OmniReferral',
+                    default => 'Admin Dashboard | OmniReferral',
+                },
+                'description' => match (true) {
+                    $isSuperAdminView => 'Oversee system health, audit logs, users, leads, listings, and full-platform operations.',
+                    $isStaffView => 'Coordinate operations queues, lead follow-up, and internal workflows across OmniReferral.',
+                    default => 'Manage leads, agents, listings, and growth across OmniReferral.',
+                },
             ],
         ]);
     }
@@ -229,56 +269,4 @@ class DashboardController extends Controller
         return $this->withTrendPercent($trend, 'amount');
     }
 
-    private function dashboardTrendWindows(string $period): Collection
-    {
-        $now = now();
-
-        return match ($period) {
-            'daily' => collect(range(6, 0))->map(function (int $daysAgo) use ($now) {
-                $date = $now->copy()->subDays($daysAgo);
-
-                return [
-                    'label' => $date->format('D'),
-                    'start' => $date->copy()->startOfDay(),
-                    'end' => $date->copy()->endOfDay(),
-                ];
-            }),
-            'weekly' => collect(range(7, 0))->map(function (int $weeksAgo) use ($now) {
-                $date = $now->copy()->subWeeks($weeksAgo)->startOfWeek();
-
-                return [
-                    'label' => $date->format('M j'),
-                    'start' => $date->copy()->startOfWeek(),
-                    'end' => $date->copy()->endOfWeek(),
-                ];
-            }),
-            'yearly' => collect(range(4, 0))->map(function (int $yearsAgo) use ($now) {
-                $date = $now->copy()->subYears($yearsAgo);
-
-                return [
-                    'label' => $date->format('Y'),
-                    'start' => $date->copy()->startOfYear(),
-                    'end' => $date->copy()->endOfYear(),
-                ];
-            }),
-            default => collect(range(5, 0))->map(function (int $monthsAgo) use ($now) {
-                $date = $now->copy()->subMonths($monthsAgo)->startOfMonth();
-
-                return [
-                    'label' => $date->format('M'),
-                    'start' => $date->copy()->startOfMonth(),
-                    'end' => $date->copy()->endOfMonth(),
-                ];
-            }),
-        };
-    }
-
-    private function withTrendPercent(Collection $trend, string $valueKey): Collection
-    {
-        $max = max(1, (int) $trend->max($valueKey));
-
-        return $trend->map(fn (array $row) => $row + [
-            'percent' => (int) round(((int) ($row[$valueKey] ?? 0) / $max) * 100),
-        ]);
-    }
 }

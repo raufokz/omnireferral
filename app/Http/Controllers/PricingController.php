@@ -33,7 +33,7 @@ class PricingController extends Controller
             'featuredAgents' => $featuredAgents,
             'meta' => [
                 'title' => 'Pricing | OmniReferral Lead Packages',
-                'description' => 'Compare OmniReferral Quick Lead, Power Lead, and Prime Lead packages for real estate teams that want qualified referrals and operational follow-up.',
+                'description' => 'Compare OmniReferral Starter Lead, Growth Lead, and Elite Lead packages for real estate teams that want qualified referrals and operational follow-up.',
             ],
         ]);
     }
@@ -42,7 +42,8 @@ class PricingController extends Controller
     {
         $package = $this->checkoutPackage($packageSlug);
         $pricingPlan = PricingContent::planBySlug($package->slug);
-        $packageEmbed = $this->packageEmbeds()[$package->slug] ?? null;
+        $displaySlug = $pricingPlan['slug'] ?? $this->normalizePackageSlug($package->slug);
+        $packageEmbed = $this->packageEmbeds()[$displaySlug] ?? [];
         $postPurchaseAction = $this->postPurchaseAction();
         $packageDisplay = [
             'slug' => $pricingPlan['slug'] ?? $package->slug,
@@ -112,20 +113,20 @@ class PricingController extends Controller
     private function packageEmbeds(): array
     {
         return [
-            'quick-leads' => [
-                'title' => 'Quick Lead',
+            'starter-leads' => [
+                'title' => 'Starter Lead',
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/q61dioT6A8taz0yLfK93',
-                'description' => 'Quick Lead onboarding form for verified referral growth and market launch setup.',
+                'description' => 'Starter Lead onboarding form for verified referral growth and market launch setup.',
             ],
-            'power-leads' => [
-                'title' => 'Power Lead',
+            'growth-leads' => [
+                'title' => 'Growth Lead',
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/ENBVclSqwUuX7awfOEM8',
-                'description' => 'Power Lead onboarding form for balanced growth, visibility, and scaling team support.',
+                'description' => 'Growth Lead onboarding form for balanced growth, visibility, and scaling team support.',
             ],
-            'prime-leads' => [
-                'title' => 'Prime Lead',
+            'elite-leads' => [
+                'title' => 'Elite Lead',
                 'src' => 'https://api.leadconnectorhq.com/widget/survey/z2wUhJG00x4n3MxY616R',
-                'description' => 'Prime Lead onboarding form for premium referral exposure and priority support workflows.',
+                'description' => 'Elite Lead onboarding form for premium referral exposure and priority support workflows.',
             ],
             'va-starter' => [
                 'title' => 'ISA Support',
@@ -169,6 +170,14 @@ class PricingController extends Controller
             return $package;
         }
 
+        $legacySlug = $this->legacyPackageSlug($slug);
+        if ($legacySlug !== null) {
+            $legacyPackage = Package::query()->where('slug', $legacySlug)->first();
+            if ($legacyPackage) {
+                return $legacyPackage;
+            }
+        }
+
         $pricingPlan = PricingContent::planBySlug($slug);
         abort_unless($pricingPlan, 404);
 
@@ -208,6 +217,26 @@ class PricingController extends Controller
             'duration_days' => 30,
             'sort_order' => (int) ($pricingPlan['sort_order'] ?? 100),
         ];
+    }
+
+    private function legacyPackageSlug(string $slug): ?string
+    {
+        return match ($slug) {
+            'starter-leads' => 'quick-leads',
+            'growth-leads' => 'power-leads',
+            'elite-leads' => 'prime-leads',
+            default => null,
+        };
+    }
+
+    private function normalizePackageSlug(string $slug): string
+    {
+        return match ($slug) {
+            'quick-leads' => 'starter-leads',
+            'power-leads' => 'growth-leads',
+            'prime-leads' => 'elite-leads',
+            default => $slug,
+        };
     }
 
     private function billingLabel(?string $priceNote, Package $package): string

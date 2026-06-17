@@ -152,9 +152,9 @@ class Package extends Model
         }
 
         return match ($this->slug) {
-            'quick-leads' => 0,
-            'power-leads' => 5,
-            'prime-leads' => 10,
+            'starter-leads', 'quick-leads' => 0,
+            'growth-leads', 'power-leads' => 5,
+            'elite-leads', 'prime-leads' => 10,
             default => 0,
         };
     }

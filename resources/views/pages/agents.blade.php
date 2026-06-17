@@ -144,7 +144,7 @@
                     <article class="omni-agent-card" data-agent-card>
                         <button type="button" class="omni-agent-card__save" aria-label="Save {{ $card['name'] }}" x-on:click="quickSave('{{ $profile->slug }}')">&#9825;</button>
                         <div class="omni-agent-card__media">
-                            <img src="{{ $card['headshot_url'] }}" alt="{{ $card['name'] }}" loading="lazy" width="180" height="180">
+                            <img src="{{ $card['headshot_url'] }}" alt="{{ $card['name'] }}" loading="lazy" width="180" height="180" onerror="this.onerror=null;this.src='{{ asset('images/omnireferral-logo.png') }}'">
                         </div>
                         <div class="omni-agent-card__body">
                             <div class="omni-agent-card__top">

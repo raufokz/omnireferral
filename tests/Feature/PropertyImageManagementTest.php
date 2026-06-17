@@ -25,9 +25,9 @@ class PropertyImageManagementTest extends TestCase
     private function createAgentWithListingAccess(): array
     {
         $package = Package::create([
-            'name' => 'Power Lead',
+            'name' => 'Growth Lead',
             'description' => 'Listing enabled plan',
-            'slug' => 'power-leads',
+            'slug' => 'growth-leads',
             'category' => 'lead',
             'billing_type' => 'one_time',
             'is_featured' => true,

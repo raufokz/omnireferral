@@ -1,4 +1,4 @@
-{{-- Premium SaaS-style comparison table for Quick/Power/Prime (as requested) --}}
+{{-- Premium SaaS-style comparison table for Starter/Growth/Elite (as requested) --}}
 @php
     /** @var string|null $activeSlug */
     $activeSlug = $activeSlug ?? '';
@@ -8,7 +8,7 @@
 <section class="pricing-saas-comparison" aria-labelledby="pricing-saas-comparison-heading">
     <div class="section-heading" data-animate="up" style="margin-bottom: 14px;">
         <span class="eyebrow">Package Comparison</span>
-        <h2 id="pricing-saas-comparison-heading">Quick vs Power vs Prime</h2>
+        <h2 id="pricing-saas-comparison-heading">Starter vs Growth vs Elite</h2>
         <p class="pricing-comparison-intro">Clear side-by-side differences so you can pick the plan that matches your goals.</p>
     </div>
 
@@ -19,30 +19,30 @@
                     <th class="pct-corner" scope="col">
                         <span class="pct-corner-label">Feature</span>
                     </th>
-                    <th scope="col" class="plan-col {{ $isActive('quick-leads') ? 'is-active' : '' }}">
+                    <th scope="col" class="plan-col {{ $isActive('starter-leads') ? 'is-active' : '' }}">
                         <div class="plan-col__name">
-                            <span>Quick Lead</span>
-                            @if($isActive('quick-leads'))
+                            <span>Starter Lead</span>
+                            @if($isActive('starter-leads'))
                                 <span class="plan-col__tag plan-col__tag--active">Selected</span>
                             @endif
                         </div>
-                        <div class="plan-col__badge plan-col__badge--corner">Quick</div>
+                        <div class="plan-col__badge plan-col__badge--corner">Starter</div>
                     </th>
-                    <th scope="col" class="plan-col plan-col--most-popular {{ $isActive('power-leads') ? 'is-active' : '' }}">
+                    <th scope="col" class="plan-col plan-col--most-popular {{ $isActive('growth-leads') ? 'is-active' : '' }}">
                         <div class="plan-col__name">
-                            <span>Power Lead</span>
+                            <span>Growth Lead</span>
                             <span class="plan-col__tag plan-col__tag--popular">Most Popular</span>
                         </div>
-                        <div class="plan-col__badge plan-col__badge--corner">Power</div>
+                        <div class="plan-col__badge plan-col__badge--corner">Growth</div>
                     </th>
-                    <th scope="col" class="plan-col {{ $isActive('prime-leads') ? 'is-active' : '' }}">
+                    <th scope="col" class="plan-col {{ $isActive('elite-leads') ? 'is-active' : '' }}">
                         <div class="plan-col__name">
-                            <span>Prime Lead</span>
-                            @if($isActive('prime-leads'))
+                            <span>Elite Lead</span>
+                            @if($isActive('elite-leads'))
                                 <span class="plan-col__tag plan-col__tag--active">Selected</span>
                             @endif
                         </div>
-                        <div class="plan-col__badge plan-col__badge--corner">Prime</div>
+                        <div class="plan-col__badge plan-col__badge--corner">Elite</div>
                     </th>
                 </tr>
             </thead>
@@ -122,7 +122,7 @@
 
         <div class="pricing-saas-comparison__note">
             <span class="pct-check" aria-hidden="true">✔</span>
-            <span>Power Lead is highlighted because it balances cost, coverage, and conversion-focused execution.</span>
+            <span>Growth Lead is highlighted because it balances cost, coverage, and conversion-focused execution.</span>
         </div>
     </div>
 </section>

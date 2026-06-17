@@ -50,6 +50,81 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             }
 
+            $adminAbilities = [
+                'admin.access',
+                'audit.view',
+                'settings.manage',
+                'integrations.manage',
+                'users.view',
+                'users.create',
+                'users.update',
+                'users.suspend',
+                'users.delete',
+                'users.export',
+                'realtor_profiles.view',
+                'realtor_profiles.update',
+                'realtor_profiles.approve',
+                'realtor_profiles.reject',
+                'properties.view',
+                'properties.create',
+                'properties.update',
+                'properties.delete',
+                'properties.review',
+                'properties.publish',
+                'properties.unpublish',
+                'properties.feature',
+                'leads.view',
+                'leads.update',
+                'leads.assign',
+                'leads.export',
+                'leads.import',
+                'enquiries.view',
+                'enquiries.reply',
+                'enquiries.export',
+                'contacts.view',
+                'contacts.moderate',
+                'packages.manage',
+                'affiliates.manage',
+                'webhook_events.view',
+                'webhook_events.replay',
+                'blog.manage',
+                'testimonials.manage',
+                'partners.manage',
+                'team.manage',
+                'media.manage',
+            ];
+
+            $staffAbilities = [
+                'admin.access',
+                'audit.view',
+                'users.view',
+                'users.update',
+                'users.export',
+                'realtor_profiles.view',
+                'properties.view',
+                'properties.review',
+                'leads.view',
+                'leads.update',
+                'leads.assign',
+                'leads.export',
+                'leads.import',
+                'enquiries.view',
+                'enquiries.reply',
+                'enquiries.export',
+                'contacts.view',
+                'packages.manage',
+                'affiliates.manage',
+                'webhook_events.view',
+            ];
+
+            if ($user->isAdmin() && in_array($ability, $adminAbilities, true)) {
+                return true;
+            }
+
+            if ($user->role === 'staff' && in_array($ability, $staffAbilities, true)) {
+                return true;
+            }
+
             // If Spatie roles are enabled and this user is a Super Admin, allow all.
             // Guarded by config so production can disable role-name based escalation.
             if (
@@ -68,6 +143,10 @@ class AppServiceProvider extends ServiceProvider
         // via Spatie permissions, but we must always allow role-based admin/staff access.
         Gate::define('admin.access', function (?User $user): bool {
             return (bool) ($user?->isStaff() ?? false);
+        });
+
+        Gate::define('super-admin.access', function (?User $user): bool {
+            return (bool) ($user?->isSuperAdmin() ?? false);
         });
 
         Gate::policy(Property::class, PropertyPolicy::class);

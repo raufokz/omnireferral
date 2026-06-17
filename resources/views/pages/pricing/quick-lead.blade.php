@@ -6,7 +6,7 @@
 
 @section('content')
     @php
-        $planSlug = 'quick-leads';
+        $planSlug = 'starter-leads';
         $pricingPlan = \App\Support\PricingContent::planBySlug($planSlug);
     @endphp
 
@@ -16,10 +16,10 @@
                 <div class="pdh-breadcrumbs">
                     <a href="{{ route('pricing') }}">Pricing</a>
                     <span aria-hidden="true">/</span>
-                    <span>Quick Lead</span>
+                    <span>Starter Lead</span>
                 </div>
 
-                <h1 class="pdh-title">{{ $pricingPlan['name'] ?? 'Quick Lead' }}</h1>
+                <h1 class="pdh-title">{{ $pricingPlan['name'] ?? 'Starter Lead' }}</h1>
                 <p class="pdh-subtitle">
                     {{ $pricingPlan['summary'] ?? 'A launch-ready lead tier designed to start your referral flow with verified opportunities and clear follow-up.' }}
                 </p>
@@ -203,7 +203,7 @@
             <div class="pfc-inner" data-animate="up">
                 <div class="pfc-copy">
                     <h2>Ready To Grow Your Business?</h2>
-                    <p>Choose Quick Lead to start receiving verified opportunities faster — and get the support to turn them into closed deals.</p>
+                    <p>Choose Starter Lead to start receiving verified opportunities faster — and get the support to turn them into closed deals.</p>
                 </div>
                 <div class="pfc-actions">
                     <a href="{{ route('packages.checkout', ['packageSlug' => $planSlug]) }}" class="button button--orange">GET STARTED</a>

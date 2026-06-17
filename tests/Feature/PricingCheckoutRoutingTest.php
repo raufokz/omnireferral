@@ -17,9 +17,9 @@ class PricingCheckoutRoutingTest extends TestCase
     private function pricingSlugs(): array
     {
         return [
-            'quick-leads',
-            'power-leads',
-            'prime-leads',
+            'starter-leads',
+            'growth-leads',
+            'elite-leads',
             'cold-calling-isa',
             'social-media-mgmt',
             'individual-va',
@@ -62,15 +62,15 @@ class PricingCheckoutRoutingTest extends TestCase
 
         foreach ($this->pricingSlugs() as $slug) {
             $badge = match ($slug) {
-                'quick-leads' => 'Quick',
-                'power-leads' => 'Power',
-                'prime-leads' => 'Premium',
+                'starter-leads' => 'Starter',
+                'growth-leads' => 'Growth',
+                'elite-leads' => 'Elite',
                 default => 'VA',
             };
             $guarantee = match ($slug) {
-                'quick-leads' => 'Closing Guarantee Under 150 Days',
-                'power-leads' => 'Closing Guarantee Under 120 Days',
-                'prime-leads' => 'Closing Guarantee Under 90 Days',
+                'starter-leads' => 'Closing Guarantee Under 150 Days',
+                'growth-leads' => 'Closing Guarantee Under 120 Days',
+                'elite-leads' => 'Closing Guarantee Under 90 Days',
                 'individual-va' => 'No Long-Term Commitment',
                 default => null,
             };

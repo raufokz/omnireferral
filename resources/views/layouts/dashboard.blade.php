@@ -34,47 +34,83 @@
         ['label' => 'Security', 'route' => route('account.security'), 'active' => ['account.security'], 'icon' => 'security'],
     ];
 
-        $dashboardNavItems = match ($role) {
+    $operationsOverviewRoute = match (true) {
+        $workspaceUser?->isSuperAdmin() => route('super-admin.dashboard'),
+        $role === 'staff' => route('staff.dashboard'),
+        $role === 'admin' => route('admin.dashboard'),
+        default => route('dashboard'),
+    };
+    $operationsOverviewActive = ['admin.dashboard', 'staff.dashboard', 'super-admin.dashboard'];
+
+    $dashboardNavItems = match ($role) {
         'buyer' => [
             ['label' => 'Overview', 'route' => route('dashboard.buyer'), 'active' => ['dashboard.buyer'], 'icon' => 'dashboard'],
+            ['label' => 'Search', 'route' => route('listings'), 'active' => ['listings', 'properties.show'], 'icon' => 'search'],
             [
-                'label' => 'Property Activity',
-                'icon' => 'properties',
+                'label' => 'Operations',
+                'icon' => 'operations',
                 'children' => [
-                    ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show'], 'icon' => 'marketplace'],
                     ['label' => 'Saved Homes', 'route' => route('dashboard.buyer.saved'), 'active' => ['dashboard.buyer.saved'], 'icon' => 'saved'],
                     ['label' => 'Requests', 'route' => route('dashboard.buyer.requests'), 'active' => ['dashboard.buyer.requests'], 'icon' => 'requests'],
+                    ['label' => 'Enquiries', 'route' => route('dashboard.enquiries.index'), 'active' => ['dashboard.enquiries.*'], 'icon' => 'enquiries'],
                 ],
             ],
-            ['label' => 'Enquiries', 'route' => route('dashboard.enquiries.index'), 'active' => ['dashboard.enquiries.*'], 'icon' => 'enquiries'],
+            [
+                'label' => 'Content',
+                'icon' => 'content',
+                'children' => [
+                    ['label' => 'Resources', 'route' => route('resources'), 'active' => ['resources'], 'icon' => 'content'],
+                    ['label' => 'Reviews', 'route' => route('reviews'), 'active' => ['reviews'], 'icon' => 'saved'],
+                ],
+            ],
+            ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show'], 'icon' => 'marketplace'],
             ['label' => 'Account', 'icon' => 'profile', 'children' => $accountNavItems],
         ],
         'seller' => [
             ['label' => 'Overview', 'route' => route('dashboard.seller'), 'active' => ['dashboard.seller'], 'icon' => 'dashboard'],
+            ['label' => 'Search', 'route' => route('listings'), 'active' => ['listings', 'properties.show'], 'icon' => 'search'],
             [
-                'label' => 'Listing Management',
-                'icon' => 'listings',
+                'label' => 'Operations',
+                'icon' => 'operations',
                 'children' => [
                     ['label' => 'My Listings', 'route' => route('dashboard.seller.listings'), 'active' => ['dashboard.seller.listings', 'properties.edit'], 'icon' => 'listings'],
                     ['label' => 'Requests', 'route' => route('dashboard.seller.requests'), 'active' => ['dashboard.seller.requests'], 'icon' => 'requests'],
-                    ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show'], 'icon' => 'marketplace'],
+                    ['label' => 'Enquiries', 'route' => route('dashboard.enquiries.index'), 'active' => ['dashboard.enquiries.*'], 'icon' => 'enquiries'],
                 ],
             ],
-            ['label' => 'Enquiries', 'route' => route('dashboard.enquiries.index'), 'active' => ['dashboard.enquiries.*'], 'icon' => 'enquiries'],
+            [
+                'label' => 'Content',
+                'icon' => 'content',
+                'children' => [
+                    ['label' => 'Resources', 'route' => route('resources'), 'active' => ['resources'], 'icon' => 'content'],
+                    ['label' => 'Reviews', 'route' => route('reviews'), 'active' => ['reviews'], 'icon' => 'saved'],
+                ],
+            ],
+            ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show'], 'icon' => 'marketplace'],
             ['label' => 'Account', 'icon' => 'profile', 'children' => $accountNavItems],
         ],
         'agent' => [
             ['label' => 'Overview', 'route' => route('dashboard.agent'), 'active' => ['dashboard.agent'], 'icon' => 'dashboard'],
-            ['label' => 'Leads', 'route' => route('agent.leads.index'), 'active' => ['agent.leads.*'], 'icon' => 'leads'],
-            ['label' => 'Listings', 'route' => route('agent.listings.index'), 'active' => ['agent.listings.*', 'properties.edit'], 'icon' => 'listings'],
+            ['label' => 'Search', 'route' => route('listings'), 'active' => ['listings', 'properties.show'], 'icon' => 'search'],
             [
-                'label' => 'Messages & Enquiries',
-                'icon' => 'messages',
+                'label' => 'Operations',
+                'icon' => 'operations',
                 'children' => [
+                    ['label' => 'Leads', 'route' => route('agent.leads.index'), 'active' => ['agent.leads.*'], 'icon' => 'leads'],
+                    ['label' => 'Listings', 'route' => route('agent.listings.index'), 'active' => ['agent.listings.*', 'properties.edit'], 'icon' => 'listings'],
                     ['label' => 'Messages', 'route' => route('agent.messages.index'), 'active' => ['agent.messages.*'], 'icon' => 'messages'],
                     ['label' => 'Enquiries', 'route' => route('dashboard.enquiries.index'), 'active' => ['dashboard.enquiries.*'], 'icon' => 'enquiries'],
                 ],
             ],
+            [
+                'label' => 'Content',
+                'icon' => 'content',
+                'children' => [
+                    ['label' => 'Resources', 'route' => route('resources'), 'active' => ['resources'], 'icon' => 'content'],
+                    ['label' => 'Reviews', 'route' => route('reviews'), 'active' => ['reviews'], 'icon' => 'saved'],
+                ],
+            ],
+            ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show'], 'icon' => 'marketplace'],
             [
                 'label' => 'Profile & Account',
                 'icon' => 'profile',
@@ -83,9 +119,26 @@
                 ], $accountNavItems),
             ],
         ],
-        'admin', 'staff' => array_values(array_filter(array_merge(
+        'staff' => [
+            ['label' => 'Overview', 'route' => $operationsOverviewRoute, 'active' => $operationsOverviewActive, 'icon' => 'dashboard'],
+            ['label' => 'Search', 'route' => route('admin.search'), 'active' => ['admin.search'], 'icon' => 'search'],
             [
-                ['label' => 'Overview', 'route' => route('admin.dashboard'), 'active' => ['admin.dashboard'], 'icon' => 'dashboard'],
+                'label' => 'Operations',
+                'icon' => 'operations',
+                'children' => [
+                    ['label' => 'Lead Registry', 'route' => route('admin.leads.index'), 'active' => ['admin.leads.*'], 'icon' => 'leads'],
+                    ['label' => 'Agent Profiles', 'route' => route('admin.agents.manage'), 'active' => ['admin.agent-profiles.*', 'admin.agents.*'], 'icon' => 'users'],
+                    ['label' => 'Properties', 'route' => route('admin.properties.index'), 'active' => ['admin.properties.*'], 'icon' => 'properties'],
+                    ['label' => 'Enquiries', 'route' => route('admin.enquiries.index'), 'active' => ['admin.enquiries.*'], 'icon' => 'enquiries'],
+                    ['label' => 'Users', 'route' => route('admin.users.index'), 'active' => ['admin.users.*'], 'icon' => 'users'],
+                ],
+            ],
+            ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show'], 'icon' => 'marketplace'],
+            ['label' => 'Account', 'icon' => 'profile', 'children' => $accountNavItems],
+        ],
+        'admin' => array_values(array_filter(array_merge(
+            [
+                ['label' => 'Overview', 'route' => $operationsOverviewRoute, 'active' => $operationsOverviewActive, 'icon' => 'dashboard'],
                 ['label' => 'Search', 'route' => route('admin.search'), 'active' => ['admin.search'], 'icon' => 'search'],
                 [
                     'label' => 'Operations',
@@ -105,14 +158,25 @@
                         ['label' => 'Blog', 'route' => route('admin.blog.index'), 'active' => ['admin.blog.*'], 'icon' => 'content'],
                         ['label' => 'Testimonials', 'route' => route('admin.testimonials.index'), 'active' => ['admin.testimonials.*'], 'icon' => 'saved'],
                         ['label' => 'Pricing Plans', 'route' => route('admin.pricing-plans.index'), 'active' => ['admin.pricing-plans.*'], 'icon' => 'marketplace'],
+                        ['label' => 'Packages', 'route' => route('admin.packages.index'), 'active' => ['admin.packages.*'], 'icon' => 'marketplace'],
                     ],
+                ],
+                [
+                    'label' => 'System',
+                    'icon' => 'security',
+                    'children' => array_values(array_filter([
+                        ['label' => 'Exports', 'route' => route('admin.exports.index'), 'active' => ['admin.exports.*'], 'icon' => 'audit'],
+                        $workspaceUser?->can('webhook_events.view')
+                            ? ['label' => 'Webhooks', 'route' => route('admin.webhook-events.index'), 'active' => ['admin.webhook-events.*'], 'icon' => 'audit']
+                            : null,
+                        $workspaceUser && $workspaceUser->can('viewAuditLog', $workspaceUser)
+                            ? ['label' => 'Audit Log', 'route' => route('admin.activity.index'), 'active' => ['admin.activity.*'], 'icon' => 'audit']
+                            : null,
+                    ])),
                 ],
                 ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show'], 'icon' => 'marketplace'],
                 ['label' => 'Account', 'icon' => 'profile', 'children' => $accountNavItems],
-            ],
-            ($workspaceUser && $workspaceUser->can('viewAuditLog', $workspaceUser))
-                ? [['label' => 'Audit Log', 'route' => route('admin.activity.index'), 'active' => ['admin.activity.*'], 'icon' => 'audit']]
-                : []
+            ]
         ))),
         default => [
             ['label' => 'Dashboard Home', 'route' => route('dashboard'), 'active' => ['dashboard'], 'icon' => 'dashboard'],
@@ -140,7 +204,7 @@
 
     $dashboardNotices = match ($role) {
         'admin', 'staff' => [
-            ['title' => 'Review operational queues', 'copy' => 'Check enquiries, properties, users, and lead registry health.', 'route' => route('admin.dashboard')],
+            ['title' => 'Review operational queues', 'copy' => 'Check enquiries, properties, users, and lead registry health.', 'route' => $operationsOverviewRoute],
             ['title' => 'Open platform search', 'copy' => 'Find users, listings, enquiries, and records quickly.', 'route' => route('admin.search')],
             ['title' => 'Monitor listing review', 'copy' => 'Approve or reject user-submitted property inventory.', 'route' => route('admin.properties.index')],
         ],

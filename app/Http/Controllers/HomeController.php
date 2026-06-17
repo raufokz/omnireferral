@@ -225,6 +225,7 @@ class HomeController extends Controller
             'buyer' => route('dashboard.buyer'),
             'seller' => route('dashboard.seller'),
             'admin' => route('admin.dashboard'),
+            'agent' => route('dashboard.agent'),
             default => route('dashboard.agent'),
         };
 

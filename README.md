@@ -14,7 +14,7 @@ OmniReferral is a modern Laravel-based real estate referral platform for buyers,
 
 - Human-centered homepage with buyer and seller lead capture tabs
 - How It Works workflow for ISA, Sales, Marketing, and Web teams
-- Pricing page with Quick, Power, Prime, and VA package cards
+- Pricing page with Starter, Growth, Elite, and VA package cards
 - Agent directory and agent profile pages
 - Blog, reviews, resources, careers, news, FAQ, privacy, and terms pages
 - Contact page with embedded Google Maps iframe and GoHighLevel survey embed

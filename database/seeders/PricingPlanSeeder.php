@@ -12,8 +12,8 @@ class PricingPlanSeeder extends Seeder
         $plans = [
             [
                 'category' => 'real_estate',
-                'slug' => 'quick-leads',
-                'name' => 'Quick Lead',
+                'slug' => 'starter-leads',
+                'name' => 'Starter Lead',
                 'tier' => 'Starter',
                 'value_price' => null,
                 'price' => 499,
@@ -38,9 +38,9 @@ class PricingPlanSeeder extends Seeder
             ],
             [
                 'category' => 'real_estate',
-                'slug' => 'power-leads',
-                'name' => 'Power Lead',
-                'tier' => 'Most Popular',
+                'slug' => 'growth-leads',
+                'name' => 'Growth Lead',
+                'tier' => 'Growth',
                 'value_price' => null,
                 'price' => 797,
                 'price_note' => '/ One-Time',
@@ -69,9 +69,9 @@ class PricingPlanSeeder extends Seeder
             ],
             [
                 'category' => 'real_estate',
-                'slug' => 'prime-leads',
-                'name' => 'Prime Lead',
-                'tier' => 'Premium',
+                'slug' => 'elite-leads',
+                'name' => 'Elite Lead',
+                'tier' => 'Elite',
                 'value_price' => null,
                 'price' => 2299,
                 'price_note' => '/ One-Time',

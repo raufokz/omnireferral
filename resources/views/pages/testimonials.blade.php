@@ -9,10 +9,6 @@
         'community' => ['label' => 'Community', 'heading' => 'Community Stories', 'copy' => 'Broader feedback from OmniReferral users and partners across the experience.', 'focus' => 'Credibility, usability, and a stronger overall platform experience.'],
     ];
 
-    $selectedScope = $selectedAudience === 'all'
-        ? 'buyers, sellers, agents, and community members together'
-        : strtolower($audienceMeta[$selectedAudience]['label']) . ' experiences';
-
     $activeAudienceMeta = $selectedAudience === 'all'
         ? [
             'label' => 'All',
@@ -24,6 +20,7 @@
 @endphp
 
 <div class="testimonials-page">
+
 <section class="page-hero agent-directory-hero testimonials-hero">
     <div class="agent-directory-hero__glow" aria-hidden="true"></div>
     <div class="container agent-directory-hero__inner">
@@ -33,53 +30,15 @@
                     {{ session('success') }}
                 </div>
             @endif
-            <span class="eyebrow">Testimonials</span>
-            <h1>Real feedback from buyers, sellers, agents, and community members</h1>
-            <p>See how OmniReferral is helping every side of the real estate journey with cleaner lead quality, better communication, stronger handoffs, and a more polished client experience.</p>
+
+            <h1>Real feedback that moves referrals forward.</h1>
+            <p>Read focused buyer, seller, agent, and community stories that show how OmniReferral creates clearer handoffs and stronger trust.</p>
+
             <div class="agent-directory-hero__actions">
                 <a href="#testimonial-library" class="button button--orange">Explore Testimonials</a>
                 <a href="#share-review" class="button button--ghost-light">Share Your Review</a>
             </div>
-            <div class="agent-directory-hero__proof testimonials-hero__proof">
-                <span>{{ number_format($counts['buyer']) }} buyer stories</span>
-                <span>{{ number_format($counts['seller']) }} seller stories</span>
-                <span>{{ number_format($counts['agent']) }} agent reviews</span>
-                <span>{{ number_format($counts['community']) }} community notes</span>
-            </div>
         </div>
-
-        <aside class="agent-directory-hero__panel testimonials-hero__panel">
-            <span class="agent-directory-hero__panel-eyebrow">Trust Snapshot</span>
-            <h2>Specific proof beats generic claims.</h2>
-            <p>The strongest reviews show what actually changed: clearer next steps, better handoffs, faster follow-up, stronger context, and a noticeably more premium feel across the journey.</p>
-            <div class="agent-directory-hero__stats testimonials-hero__stats">
-                <div class="agent-directory-hero__stat">
-                    <strong>{{ number_format($counts['all']) }}</strong>
-                    <span>Total Published Stories</span>
-                </div>
-                <div class="agent-directory-hero__stat">
-                    <strong>{{ number_format($averageRating, 1) }}/5</strong>
-                    <span>Average Rating Across Audiences</span>
-                </div>
-                <div class="agent-directory-hero__stat">
-                    <strong>{{ number_format($videoTestimonials->count()) }}</strong>
-                    <span>Video Highlights Available</span>
-                </div>
-                <div class="agent-directory-hero__stat">
-                    <strong>{{ number_format($counts['buyer']) }}</strong>
-                    <span>Buyer Reviews</span>
-                </div>
-                <div class="agent-directory-hero__stat">
-                    <strong>{{ number_format($counts['seller']) }}</strong>
-                    <span>Seller Reviews</span>
-                </div>
-                <div class="agent-directory-hero__stat">
-                    <strong>{{ number_format($counts['agent']) }}</strong>
-                    <span>Agent Reviews</span>
-                </div>
-            </div>
-            <p class="testimonials-hero__note">{{ ucfirst($selectedScope) }} are currently in focus through the active filter.</p>
-        </aside>
     </div>
 </section>
 
@@ -91,8 +50,12 @@
                 <h2>See what matters most to each side of the journey</h2>
                 <p>Filter the library to focus on buyer experiences, seller handoffs, or the agent stories that speak directly to lead quality and conversion.</p>
             </div>
+
             <div class="testimonial-filter-bar">
-                <a href="{{ route('reviews') }}" class="testimonial-filter-chip {{ $selectedAudience === 'all' ? 'is-active' : '' }}">All <span>{{ $counts['all'] }}</span></a>
+                <a href="{{ route('reviews') }}" class="testimonial-filter-chip {{ $selectedAudience === 'all' ? 'is-active' : '' }}">
+                    All <span>{{ $counts['all'] }}</span>
+                </a>
+
                 @foreach(['buyer', 'seller', 'agent', 'community'] as $audience)
                     <a href="{{ route('reviews', ['audience' => $audience]) }}" class="testimonial-filter-chip {{ $selectedAudience === $audience ? 'is-active' : '' }}">
                         {{ $audienceMeta[$audience]['label'] }} <span>{{ $counts[$audience] }}</span>
@@ -104,48 +67,27 @@
 </section>
 
 @if($featuredTestimonials->isNotEmpty())
-<section class="section testimonial-spotlight testimonials-page__spotlight-section">
-    <div class="container testimonial-spotlight__grid">
-        <article class="cockpit-table-card testimonial-spotlight__intro">
-            <span class="eyebrow">Spotlight Stories</span>
-            <h2>Specific proof beats generic claims</h2>
-            <p>The strongest reviews speak to real moments: faster follow-up, clearer next steps, cleaner lead context, and a noticeably more premium feel.</p>
-            <div class="testimonial-spotlight__highlights">
-                <div class="testimonial-spotlight__highlight">
-                    <strong>{{ number_format($counts['buyer']) }}</strong>
-                    <span>Buyer stories about confidence and guidance</span>
-                </div>
-                <div class="testimonial-spotlight__highlight">
-                    <strong>{{ number_format($counts['seller']) }}</strong>
-                    <span>Seller reviews focused on clarity and communication</span>
-                </div>
-                <div class="testimonial-spotlight__highlight">
-                    <strong>{{ number_format($counts['agent']) }}</strong>
-                    <span>Agent proof centered on qualification and conversion quality</span>
-                </div>
-                <div class="testimonial-spotlight__highlight">
-                    <strong>{{ number_format($counts['community']) }}</strong>
-                    <span>Community feedback that sharpens the product experience</span>
-                </div>
-            </div>
-        </article>
+<section class="section testimonials-page__spotlight-section">
+    <div class="container">
+        <div class="section-heading">
+            <span class="eyebrow">Featured Testimonials</span>
+            <h2>Stories worth spotlighting</h2>
+            <p>Selected approved testimonials from buyers, sellers, agents, and community members.</p>
+        </div>
 
-        <div class="testimonial-spotlight__cards">
+        <div class="testimonial-spotlight-grid">
             @foreach($featuredTestimonials as $testimonial)
-                <article class="testimonial-spotlight-card review-card review-card--premium">
-                    <div class="testimonial-library-card__chips">
-                        <span class="status-pill status-pill--assigned">{{ $testimonial->audience_label }}</span>
-                        <span class="status-pill status-pill--qualified">Spotlight</span>
-                        @if($testimonial->has_video)
-                            <span class="status-pill status-pill--new">Video</span>
-                        @endif
-                    </div>
+                <article class="testimonial-spotlight-card cockpit-table-card">
                     <div class="testimonial-stars" aria-label="{{ $testimonial->rating }} out of 5 stars">
                         @for($i = 0; $i < (int) $testimonial->rating; $i++)
-                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
                         @endfor
                     </div>
+
                     <p class="testimonial-spotlight-card__quote">"{{ $testimonial->quote }}"</p>
+
                     <div class="testimonial-card__footer">
                         <img src="{{ $testimonial->photo_url }}" alt="{{ $testimonial->name }} testimonial profile photo" loading="lazy">
                         <div>
@@ -169,27 +111,32 @@
             <h2>Watch the story behind the results</h2>
             <p>Video testimonials help buyers, sellers, and agents explain what felt different about the OmniReferral experience.</p>
         </div>
+
         <div class="testimonial-video-grid">
             @foreach($videoTestimonials as $testimonial)
                 <article class="testimonial-video-card cockpit-table-card">
                     <div class="testimonial-video-card__media">
                         @if($testimonial->video_embed_url)
-                            <iframe src="{{ $testimonial->video_embed_url }}" title="{{ $testimonial->name }} testimonial video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            <iframe src="{{ $testimonial->video_embed_url }}" title="{{ $testimonial->name }} testimonial video" loading="lazy" allowfullscreen></iframe>
                         @elseif($testimonial->video_playback_url)
                             <video controls preload="metadata" poster="{{ $testimonial->photo_url }}">
                                 <source src="{{ $testimonial->video_playback_url }}">
                             </video>
                         @endif
                     </div>
+
                     <div class="testimonial-video-card__body">
                         <div class="testimonial-video-card__meta">
                             <span class="status-pill status-pill--assigned">{{ $testimonial->audience_label }}</span>
+
                             @if($testimonial->is_featured)
                                 <span class="status-pill status-pill--qualified">Featured</span>
                             @endif
                         </div>
+
                         <h3>{{ $testimonial->name }}</h3>
                         <p>{{ $testimonial->company ?: $testimonial->audience_label . ' Client' }}</p>
+
                         @if($testimonial->location)
                             <small>{{ $testimonial->location }}</small>
                         @endif
@@ -206,6 +153,7 @@
         <div class="section-heading testimonial-section-heading testimonial-library-heading">
             <span class="eyebrow">{{ $activeAudienceMeta['label'] }}</span>
             <h2>{{ $activeAudienceMeta['heading'] }}</h2>
+
             <p>
                 @if($showingFallbackTestimonials)
                     No published {{ strtolower($activeAudienceMeta['label']) }} testimonials are available yet, so this section is showing recent approved testimonials from the full library.
@@ -213,6 +161,7 @@
                     {{ $activeAudienceMeta['copy'] }}
                 @endif
             </p>
+
             @if($testimonials->total() > 0)
                 <div class="testimonial-library-heading__meta">
                     Showing {{ number_format($testimonials->firstItem()) }}-{{ number_format($testimonials->lastItem()) }}
@@ -232,30 +181,40 @@
                 @php
                     $cardAudienceMeta = $audienceMeta[$testimonial->audience_key] ?? $activeAudienceMeta;
                 @endphp
+
                 <article class="review-card review-card--premium testimonial-library-card">
                     <div class="review-card__header">
                         <img src="{{ $testimonial->photo_url }}" alt="{{ $testimonial->name }} testimonial profile photo" loading="lazy" width="88" height="88">
+
                         <div>
                             <div class="testimonial-library-card__chips">
                                 <span class="status-pill status-pill--assigned">{{ $testimonial->audience_label }}</span>
+
                                 @if($testimonial->is_featured)
                                     <span class="status-pill status-pill--qualified">Featured</span>
                                 @endif
+
                                 @if($testimonial->has_video)
                                     <span class="status-pill status-pill--new">Video</span>
                                 @endif
                             </div>
+
                             <h2>{{ $testimonial->name }}</h2>
                             <p class="review-card__role">{{ $testimonial->company ?: $testimonial->audience_label . ' Client' }}</p>
                             <span class="review-card__location">{{ $testimonial->location ?: 'OmniReferral Network' }}</span>
                         </div>
                     </div>
+
                     <p class="testimonial-library-card__focus">{{ $cardAudienceMeta['focus'] }}</p>
+
                     <div class="testimonial-stars" aria-label="{{ $testimonial->rating }} out of 5 stars">
                         @for($i = 0; $i < (int) $testimonial->rating; $i++)
-                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                            </svg>
                         @endfor
                     </div>
+
                     <p class="review-card__quote">"{{ $testimonial->quote }}"</p>
                 </article>
             @empty
@@ -296,43 +255,55 @@
 
             <form method="POST" action="{{ route('reviews.store') }}" enctype="multipart/form-data" class="testimonial-submit-form">
                 @csrf
+
                 <div class="testimonial-submit-form__grid">
                     <label>
                         <span>Name</span>
                         <input type="text" name="name" value="{{ $reviewDraft['name'] }}" required>
                     </label>
+
                     <label>
                         <span>Email</span>
                         <input type="email" name="email" value="{{ $reviewDraft['email'] }}" required>
                     </label>
+
                     <label>
                         <span>Review Type</span>
                         <select name="audience" required>
                             @foreach($reviewAudienceOptions as $value => $label)
-                                <option value="{{ $value }}" {{ $reviewDraft['audience'] === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                <option value="{{ $value }}" {{ $reviewDraft['audience'] === $value ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
                             @endforeach
                         </select>
                     </label>
+
                     <label>
                         <span>Role / Company</span>
                         <input type="text" name="company" value="{{ $reviewDraft['company'] }}" placeholder="e.g. Buyer Client, Agent, OmniReferral User">
                     </label>
+
                     <label>
                         <span>Location</span>
                         <input type="text" name="location" value="{{ $reviewDraft['location'] }}" placeholder="e.g. Dallas, TX">
                     </label>
+
                     <label>
                         <span>Rating</span>
                         <select name="rating" required>
                             @for($i = 5; $i >= 1; $i--)
-                                <option value="{{ $i }}" {{ (int) $reviewDraft['rating'] === $i ? 'selected' : '' }}>{{ $i }} stars</option>
+                                <option value="{{ $i }}" {{ (int) $reviewDraft['rating'] === $i ? 'selected' : '' }}>
+                                    {{ $i }} stars
+                                </option>
                             @endfor
                         </select>
                     </label>
+
                     <label class="testimonial-submit-form__full">
                         <span>Your Review</span>
                         <textarea name="quote" rows="5" required placeholder="Tell OmniReferral what worked well, what felt polished, and what made the experience better.">{{ $reviewDraft['quote'] }}</textarea>
                     </label>
+
                     <label class="testimonial-submit-form__full">
                         <span>Photo</span>
                         <input type="file" name="photo" accept="image/*">
@@ -357,6 +328,7 @@
                 <h2>Ready to build a better client story?</h2>
                 <p>Explore the package mix, see how the handoff works, and move from generic leads to a cleaner experience for buyers, sellers, and agents.</p>
             </div>
+
             <div class="testimonial-cta__actions">
                 <a href="{{ route('pricing') }}" class="button button--orange">Explore Pricing</a>
                 <a href="#share-review" class="button button--ghost-blue">Write A Review</a>
@@ -365,5 +337,6 @@
         </div>
     </div>
 </section>
- </div>
+
+</div>
 @endsection

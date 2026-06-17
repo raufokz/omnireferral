@@ -16,6 +16,21 @@
     <a href="{{ route('admin.properties.index') }}" class="button button--ghost-blue">Properties</a>
 @endsection
 
+@push('styles')
+<style>
+.admin-kpi-icon {
+    width: 2.5rem; height: 2.5rem;
+    border-radius: 12px; display: grid; place-items: center;
+    margin-bottom: 0.55rem;
+}
+.admin-kpi-icon svg { width: 1.15rem; height: 1.15rem; }
+.admin-kpi-icon--blue   { background: rgba(11,54,104,0.10); color: #0b3668; }
+.admin-kpi-icon--orange { background: rgba(255,107,0,0.13); color: #c2410c; }
+.admin-kpi-icon--teal   { background: rgba(14,165,233,0.12); color: #0369a1; }
+.admin-kpi-icon--violet { background: rgba(109,93,252,0.12); color: #5145cd; }
+</style>
+@endpush
+
 @section('content')
 <div class="workspace-stack">
     <section class="dashboard-command-panel workspace-card">
@@ -33,32 +48,38 @@
     </section>
 
     <section class="dashboard-metric-grid">
-        <article class="workspace-card workspace-kpi" data-icon="👥" data-trend="↑ {{ number_format($stats['usersActive'] ?? 0) }} active">
+        <article class="workspace-card workspace-kpi" data-trend="↑ {{ number_format($stats['usersActive'] ?? 0) }} active">
+            <div class="admin-kpi-icon admin-kpi-icon--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
             <span>Total Users</span>
             <strong>{{ number_format($stats['usersTotal'] ?? 0) }}</strong>
             <span>{{ number_format($stats['usersSuspended'] ?? 0) }} suspended accounts</span>
         </article>
-        <article class="workspace-card workspace-kpi" data-icon="🏠" data-trend="↑ {{ number_format($stats['activeListings'] ?? 0) }} active">
+        <article class="workspace-card workspace-kpi" data-trend="↑ {{ number_format($stats['activeListings'] ?? 0) }} active">
+            <div class="admin-kpi-icon admin-kpi-icon--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
             <span>Total Properties</span>
             <strong>{{ number_format($stats['properties'] ?? 0) }}</strong>
             <span>{{ number_format($stats['featuredListings'] ?? 0) }} featured listings</span>
         </article>
-        <article class="workspace-card workspace-kpi" data-icon="✉" data-trend="↑ {{ number_format($stats['contacts'] ?? 0) }} contacts">
+        <article class="workspace-card workspace-kpi" data-trend="↑ {{ number_format($stats['contacts'] ?? 0) }} contacts">
+            <div class="admin-kpi-icon admin-kpi-icon--teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
             <span>Total Enquiries</span>
             <strong>{{ number_format($stats['enquiries'] ?? 0) }}</strong>
             <span>Listing conversations and inbound interest</span>
         </article>
-        <article class="workspace-card workspace-kpi workspace-kpi--warm" data-icon="$" data-trend="↑ Revenue signal">
+        <article class="workspace-card workspace-kpi workspace-kpi--warm" data-trend="↑ Revenue signal">
+            <div class="admin-kpi-icon admin-kpi-icon--orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
             <span>Total Revenue</span>
             <strong>${{ number_format(($stats['leadPipelineValue'] ?? 0) + ($stats['mrrEstimate'] ?? 0)) }}</strong>
             <span>OmniReferral pipeline + active plan MRR</span>
         </article>
-        <article class="workspace-card workspace-kpi" data-icon="📌" data-trend="Review {{ number_format($stats['pendingListings'] ?? 0) }}">
+        <article class="workspace-card workspace-kpi" data-trend="Review {{ number_format($stats['pendingListings'] ?? 0) }}">
+            <div class="admin-kpi-icon admin-kpi-icon--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
             <span>Active Listings</span>
             <strong>{{ number_format($stats['activeListings'] ?? 0) }}</strong>
             <span>{{ number_format($stats['pendingListings'] ?? 0) }} pending moderation</span>
         </article>
-        <article class="workspace-card workspace-kpi workspace-kpi--violet" data-icon="★" data-trend="Featured mix">
+        <article class="workspace-card workspace-kpi workspace-kpi--violet" data-trend="Featured mix">
+            <div class="admin-kpi-icon admin-kpi-icon--violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
             <span>Featured Listings</span>
             <strong>{{ number_format($stats['featuredListings'] ?? 0) }}</strong>
             <span>{{ number_format($stats['propertyFavorites'] ?? 0) }} saved listing signals</span>
@@ -127,17 +148,20 @@
     </section>
 
     <section class="workspace-grid workspace-grid--3">
-        <article class="workspace-card workspace-kpi" data-icon="📈" data-trend="Lead pipeline">
+        <article class="workspace-card workspace-kpi" data-trend="Lead pipeline">
+            <div class="admin-kpi-icon admin-kpi-icon--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
             <span>Lead Pipeline Value</span>
             <strong>${{ number_format($stats['leadPipelineValue'] ?? 0) }}</strong>
             <span>All leads by mapped package price</span>
         </article>
-        <article class="workspace-card workspace-kpi" data-icon="⏳" data-trend="Action required">
+        <article class="workspace-card workspace-kpi" data-trend="Action required">
+            <div class="admin-kpi-icon admin-kpi-icon--orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
             <span>Pending Sign-ups</span>
             <strong>{{ number_format($stats['pendingAccounts'] ?? 0) }}</strong>
             <span>Buyer, seller, and agent registrations awaiting activation</span>
         </article>
-        <article class="workspace-card workspace-kpi" data-icon="🏷" data-trend="Latest 25 below">
+        <article class="workspace-card workspace-kpi" data-trend="Latest 25 below">
+            <div class="admin-kpi-icon admin-kpi-icon--teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
             <span>User-submitted Listings</span>
             <strong>{{ number_format($stats['userSubmittedListingsTotal'] ?? 0) }}</strong>
             <span>Agent and seller uploads across moderation states</span>

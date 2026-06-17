@@ -13,16 +13,16 @@
                     <tr>
                         <th scope="col" class="pct-corner"><span class="pct-corner-label">Feature</span></th>
                         <th scope="col" class="pct-plan-col">
-                            <span class="pct-plan-name">Quick Lead</span>
+                            <span class="pct-plan-name">Starter Lead</span>
                         </th>
                         <th scope="col" class="pct-plan-col pct-plan-col--featured">
                             <div class="pct-badge-wrapper">
                                 <span class="pct-popular-badge">Most Popular</span>
                             </div>
-                            <span class="pct-plan-name">Power Lead</span>
+                            <span class="pct-plan-name">Growth Lead</span>
                         </th>
                         <th scope="col" class="pct-plan-col">
-                            <span class="pct-plan-name">Prime Lead</span>
+                            <span class="pct-plan-name">Elite Lead</span>
                         </th>
                     </tr>
                 </thead>

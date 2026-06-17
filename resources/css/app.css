@@ -9457,7 +9457,7 @@ small {
 }
 
 .partner-logo-card img {
-    max-height: 42px;
+    max-height: 84px;
     width: auto;
     object-fit: contain;
 }
@@ -16693,7 +16693,7 @@ iframe {
 }
 
 .homepage-partner-chip img {
-    max-height: 42px;
+    max-height: 84px !important;
     width: auto;
     object-fit: contain;
 }

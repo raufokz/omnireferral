@@ -12,6 +12,8 @@ class TestimonialController extends Controller
 {
     public function index(): View
     {
+        $this->authorizeTestimonialManagement();
+
         return view('pages.admin.testimonials.index', [
             'testimonials' => Testimonial::query()
                 ->orderByRaw("case when submission_status = 'pending' then 0 when submission_status = 'approved' then 1 else 2 end")
@@ -31,6 +33,8 @@ class TestimonialController extends Controller
 
     public function create(): View
     {
+        $this->authorizeTestimonialManagement();
+
         return view('pages.admin.testimonials.create', [
             'testimonial' => new Testimonial([
                 'rating' => 5,
@@ -45,6 +49,8 @@ class TestimonialController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorizeTestimonialManagement();
+
         $testimonial = new Testimonial();
         $testimonial->fill($this->validatedPayload($request));
 
@@ -69,11 +75,15 @@ class TestimonialController extends Controller
 
     public function edit(Testimonial $testimonial): View
     {
+        $this->authorizeTestimonialManagement();
+
         return view('pages.admin.testimonials.edit', compact('testimonial'));
     }
 
     public function update(Request $request, Testimonial $testimonial): RedirectResponse
     {
+        $this->authorizeTestimonialManagement();
+
         $testimonial->fill($this->validatedPayload($request));
 
         if ($request->boolean('remove_photo')) {
@@ -107,6 +117,8 @@ class TestimonialController extends Controller
 
     public function destroy(Testimonial $testimonial): RedirectResponse
     {
+        $this->authorizeTestimonialManagement();
+
         $testimonial->delete();
 
         return redirect()
@@ -116,6 +128,8 @@ class TestimonialController extends Controller
 
     public function review(Request $request, Testimonial $testimonial): RedirectResponse
     {
+        $this->authorizeTestimonialManagement();
+
         $validated = $request->validate([
             'decision' => ['required', 'in:approve,reject'],
         ]);
@@ -161,5 +175,10 @@ class TestimonialController extends Controller
         unset($validated['photo'], $validated['video_file'], $validated['remove_photo'], $validated['remove_video']);
 
         return $validated;
+    }
+
+    private function authorizeTestimonialManagement(): void
+    {
+        abort_unless(request()->user()?->can('testimonials.manage'), 403);
     }
 }

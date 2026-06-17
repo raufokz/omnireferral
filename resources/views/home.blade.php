@@ -227,7 +227,7 @@
                             </div>
 
                             <div class="hero-form__grid hero-form__grid--buyer-home">
-                                <input type="hidden" name="package_slug" value="quick-leads">
+                                <input type="hidden" name="package_slug" value="starter-leads">
                                 <div class="buyer-zip-card hero-form__full">
                                     <div class="buyer-zip-card__header">
                                         <span class="buyer-zip-card__eyebrow">Target Market</span>
@@ -328,7 +328,7 @@
                                 <p>Use the full property address so our team can review the opportunity with better market context.</p>
                             </div>
                             <div class="hero-form__grid">
-                                <input type="hidden" name="package_slug" value="power-leads">
+                                <input type="hidden" name="package_slug" value="growth-leads">
                                 <label class="hero-form__full"><span>Property address</span><input type="text" name="property_address" placeholder="123 Main St, Dallas, TX 75201" required autocomplete="street-address"></label>
                                 <label><span>Property type</span><select name="property_type"><option value="">Select type</option><option>House</option><option>Apartment</option><option>Condo</option><option>Commercial</option></select></label>
                             </div>

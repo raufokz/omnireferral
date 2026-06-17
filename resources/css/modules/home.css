@@ -1660,7 +1660,7 @@
 
 .homepage-partner-chip {
     min-width: 180px;
-    min-height: 82px;
+    min-height: 126px;
     display: grid;
     place-items: center;
     border-radius: 22px;
@@ -1795,6 +1795,7 @@
 
     .homepage-partner-chip {
         min-width: 150px;
+        min-height: 126px;
     }
 
     .homepage-cta-band {

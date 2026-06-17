@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AffiliateProfile;
 use App\Models\AffiliateReferralClick;
+use App\Models\Enquiry;
 use App\Models\Lead;
 use App\Models\Package;
 use App\Models\Property;
@@ -32,9 +33,19 @@ class DashboardController extends Controller
             return redirect()->route('dashboard.agent');
         }
 
-        if (in_array($user->role, ['admin', 'staff'], true)) {
+        if ($user->isSuperAdmin()) {
+            return redirect()->route('super-admin.dashboard');
+        }
+
+        if ($user->role === 'staff') {
+            return redirect()->route('staff.dashboard');
+        }
+
+        if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard');
         }
+
+        abort(403, 'Your account does not have a dashboard role assigned.');
 
         $allRoleCards = [
             'buyer' => [
@@ -60,7 +71,7 @@ class DashboardController extends Controller
             'staff' => [
                 'title' => 'Operations Workspace',
                 'copy' => 'Coordinate qualification queues, packaging workflows, and the handoff from outreach to revenue.',
-                'route' => route('admin.dashboard'),
+                'route' => route('staff.dashboard'),
             ],
         ];
 
@@ -243,15 +254,52 @@ class DashboardController extends Controller
             ->marketplaceVisible();
 
         $buyerLeadScope = Lead::query()->matchingIdentityForUser($buyer)->where('intent', 'buyer');
+        $enquiriesQuery = Enquiry::query()->forParticipant($buyer);
+        $revenueMap = $this->dashboardRevenueMap();
+        $leadPipelineValue = (clone $buyerLeadScope)->get(['package_type'])->sum(fn ($lead) => $revenueMap[strtolower((string) $lead->package_type)] ?? 0);
 
         $buyerRequests = (clone $buyerLeadScope)->latest()->take(6)->get();
         $buyerJourney = [
             ['label' => 'Submitted', 'count' => (clone $buyerLeadScope)->whereIn('status', ['new', 'contacted'])->count()],
             ['label' => 'Qualified', 'count' => (clone $buyerLeadScope)->where('status', 'qualified')->count()],
             ['label' => 'Agent Match', 'count' => (clone $buyerLeadScope)->where('status', 'assigned')->count()],
-            ['label' => 'Closed', 'count' => (clone $buyerLeadScope)->where('status', 'closed')->count()],
+            ['label' => 'Closed', 'count' => (clone $buyerLeadScope)->where('status', 'closed')->count(), 'tone' => 'slate'],
         ];
         $favoriteCount = $buyer->propertyFavorites()->count();
+
+        $analyticsTrends = collect(['daily', 'weekly', 'monthly', 'yearly'])
+            ->mapWithKeys(fn (string $period) => [
+                $period => [
+                    'revenue' => $this->revenueTrendForQuery((clone $buyerLeadScope), $revenueMap, $period)->values(),
+                    'users' => $this->countTrendForQuery(User::query()->where('id', $buyer->id), $period)->values(),
+                    'enquiries' => $this->countTrendForQuery((clone $enquiriesQuery), $period)->values(),
+                ],
+            ]);
+
+        $propertyTypeDistribution = $this->propertyTypeDistributionForQuery((clone $favoritePropertiesQuery));
+        $pipelineHealth = $this->pipelineHealthFromCounts($buyerJourney);
+        $teamQueues = collect([
+            [
+                'team' => 'Search Shortlist',
+                'copy' => 'Saved homes waiting for comparison, agent contact, or follow-up.',
+                'count' => $favoriteCount,
+            ],
+            [
+                'team' => 'Request Matching',
+                'copy' => 'Buyer requests moving through submitted, qualified, assigned, and closed stages.',
+                'count' => (clone $buyerLeadScope)->whereIn('status', ['new', 'contacted', 'qualified', 'assigned'])->count(),
+            ],
+            [
+                'team' => 'Enquiry Threads',
+                'copy' => 'Listing conversations started from marketplace inventory.',
+                'count' => (clone $enquiriesQuery)->where('status', 'pending')->count(),
+            ],
+            [
+                'team' => 'Marketplace Watch',
+                'copy' => 'Approved listings currently visible in the buyer marketplace.',
+                'count' => (clone $favoritePropertiesQuery)->marketplaceVisible()->count(),
+            ],
+        ]);
 
         return [
             'favoritePropertiesQuery' => clone $favoritePropertiesQuery,
@@ -266,6 +314,49 @@ class DashboardController extends Controller
                 'favorites' => $favoriteCount,
                 'new_alerts' => (clone $buyerLeadScope)->whereIn('status', ['new', 'contacted'])->count(),
             ],
+            'stats' => [
+                'leads' => (clone $buyerLeadScope)->count(),
+                'properties' => $favoriteCount,
+                'activeListings' => $favoriteCount,
+                'featuredListings' => (clone $favoritePropertiesQuery)->where('is_featured', true)->count(),
+                'pendingListings' => 0,
+                'pendingAccounts' => 0,
+                'userSubmittedListingsTotal' => $favoriteCount,
+                'contacts' => (clone $enquiriesQuery)->count(),
+                'enquiries' => (clone $enquiriesQuery)->count(),
+                'packages' => Package::count(),
+                'propertyFavorites' => $favoriteCount,
+                'leadPipelineValue' => $leadPipelineValue,
+                'mrrEstimate' => 0,
+                'usersTotal' => 1,
+                'usersActive' => $buyer->status === 'active' ? 1 : 0,
+                'usersSuspended' => $buyer->status === 'suspended' ? 1 : 0,
+            ],
+            'recentLeads' => (clone $buyerLeadScope)->latest()->take(6)->get(),
+            'pendingAccounts' => collect(),
+            'userSubmittedListings' => (clone $favoritePropertiesQuery)
+                ->orderByPivot('created_at', 'desc')
+                ->take(6)
+                ->get(),
+            'recentEnquiries' => (clone $enquiriesQuery)
+                ->with(['property:id,title,slug', 'receiver:id,name'])
+                ->latest()
+                ->take(6)
+                ->get(),
+            'pipelineHealth' => $pipelineHealth,
+            'teamQueues' => $teamQueues,
+            'leadTrend' => $this->countTrendForQuery((clone $buyerLeadScope), 'monthly'),
+            'enquiryTrend' => collect($analyticsTrends['monthly']['enquiries']),
+            'userGrowthTrend' => collect($analyticsTrends['monthly']['users']),
+            'revenueTrend' => collect($analyticsTrends['monthly']['revenue']),
+            'analyticsTrends' => $analyticsTrends->toArray(),
+            'propertyTypeDistribution' => $propertyTypeDistribution,
+            'recentAudit' => collect(),
+            'canViewFullAudit' => false,
+            'listingSectionEyebrow' => 'Saved Inventory',
+            'listingSectionTitle' => 'Saved and matched listings',
+            'listingSectionCopy' => 'Role-scoped inventory from your buyer workspace shortlist.',
+            'listingOwnerLabel' => 'Agent / Partner',
         ];
     }
 
@@ -273,33 +364,72 @@ class DashboardController extends Controller
     {
         $seller = Auth::user();
 
-        $properties = Property::query()
+        $propertiesQuery = Property::query()
+            ->with(['realtorProfile.user', 'owner'])
             ->withFavoriteSummary()
-            ->marketplaceVisible()
+            ->where('owner_user_id', $seller->id);
+
+        $properties = (clone $propertiesQuery)
             ->latest()
             ->take(6)
             ->get();
 
         $sellerLeadScope = Lead::query()->matchingIdentityForUser($seller)->where('intent', 'seller');
+        $enquiriesQuery = Enquiry::query()->forParticipant($seller);
+        $buyerMatchesScope = Lead::query()->matchingIdentityForUser($seller)->where('intent', 'buyer');
+        $revenueMap = $this->dashboardRevenueMap();
+        $leadPipelineValue = (clone $sellerLeadScope)->get(['package_type'])->sum(fn ($lead) => $revenueMap[strtolower((string) $lead->package_type)] ?? 0);
 
         $sellerRequests = (clone $sellerLeadScope)->latest()->take(6)->get();
         $sellerJourney = [
             ['label' => 'Submitted', 'count' => (clone $sellerLeadScope)->whereIn('status', ['new', 'contacted'])->count()],
             ['label' => 'Qualified', 'count' => (clone $sellerLeadScope)->where('status', 'qualified')->count()],
             ['label' => 'In Market', 'count' => (clone $sellerLeadScope)->where('status', 'assigned')->count()],
-            ['label' => 'Closed', 'count' => (clone $sellerLeadScope)->where('status', 'closed')->count()],
+            ['label' => 'Closed', 'count' => (clone $sellerLeadScope)->where('status', 'closed')->count(), 'tone' => 'slate'],
         ];
 
-        $ownedActiveCount = Property::query()
-            ->where('owner_user_id', $seller->id)
+        $ownedActiveCount = (clone $propertiesQuery)
             ->where('approval_status', '!=', Property::APPROVAL_REJECTED)
             ->whereNotIn('status', ['Sold', 'Off-Market'])
             ->count();
 
-        $recentOwnedUpdates = Property::query()
-            ->where('owner_user_id', $seller->id)
+        $recentOwnedUpdates = (clone $propertiesQuery)
             ->where('updated_at', '>=', now()->subDays(30))
             ->count();
+
+        $analyticsTrends = collect(['daily', 'weekly', 'monthly', 'yearly'])
+            ->mapWithKeys(fn (string $period) => [
+                $period => [
+                    'revenue' => $this->revenueTrendForQuery((clone $sellerLeadScope), $revenueMap, $period)->values(),
+                    'users' => $this->countTrendForQuery(User::query()->where('id', $seller->id), $period)->values(),
+                    'enquiries' => $this->countTrendForQuery((clone $enquiriesQuery), $period)->values(),
+                ],
+            ]);
+
+        $propertyTypeDistribution = $this->propertyTypeDistributionForQuery((clone $propertiesQuery));
+        $pipelineHealth = $this->pipelineHealthFromCounts($sellerJourney);
+        $teamQueues = collect([
+            [
+                'team' => 'Listing Review',
+                'copy' => 'Seller uploads waiting for approval, rejection, or marketplace publication.',
+                'count' => (clone $propertiesQuery)->where('approval_status', Property::APPROVAL_PENDING)->count(),
+            ],
+            [
+                'team' => 'Buyer Demand',
+                'copy' => 'Buyer-side request signals that may align with your listings.',
+                'count' => (clone $buyerMatchesScope)->count(),
+            ],
+            [
+                'team' => 'Inbound Interest',
+                'copy' => 'Seller-side lead activity and open inquiry threads.',
+                'count' => (clone $sellerLeadScope)->whereNotIn('status', ['closed', 'not_interested'])->count(),
+            ],
+            [
+                'team' => 'Marketplace Visibility',
+                'copy' => 'Approved listings currently visible in the public marketplace.',
+                'count' => (clone $propertiesQuery)->marketplaceVisible()->count(),
+            ],
+        ]);
 
         return [
             'properties' => $properties,
@@ -309,8 +439,52 @@ class DashboardController extends Controller
                 'active_listings' => $ownedActiveCount,
                 'open_inquiries' => (clone $sellerLeadScope)->whereNotIn('status', ['closed', 'not_interested'])->count(),
                 'price_updates' => $recentOwnedUpdates,
-                'buyer_matches' => Lead::query()->matchingIdentityForUser($seller)->where('intent', 'buyer')->count(),
+                'buyer_matches' => (clone $buyerMatchesScope)->count(),
             ],
+            'stats' => [
+                'leads' => (clone $sellerLeadScope)->count(),
+                'properties' => (clone $propertiesQuery)->count(),
+                'activeListings' => $ownedActiveCount,
+                'featuredListings' => (clone $propertiesQuery)->where('is_featured', true)->count(),
+                'pendingListings' => (clone $propertiesQuery)->where('approval_status', Property::APPROVAL_PENDING)->count(),
+                'pendingAccounts' => 0,
+                'userSubmittedListingsTotal' => (clone $propertiesQuery)->count(),
+                'contacts' => (clone $enquiriesQuery)->count(),
+                'enquiries' => (clone $enquiriesQuery)->count(),
+                'packages' => Package::count(),
+                'propertyFavorites' => (clone $propertiesQuery)->get()->sum(fn ($property) => $property->favorites_count ?? 0),
+                'leadPipelineValue' => $leadPipelineValue,
+                'mrrEstimate' => 0,
+                'usersTotal' => 1,
+                'usersActive' => $seller->status === 'active' ? 1 : 0,
+                'usersSuspended' => $seller->status === 'suspended' ? 1 : 0,
+            ],
+            'recentLeads' => (clone $sellerLeadScope)->latest()->take(6)->get(),
+            'pendingAccounts' => collect(),
+            'userSubmittedListings' => (clone $propertiesQuery)
+                ->latest()
+                ->take(6)
+                ->get(),
+            'recentEnquiries' => (clone $enquiriesQuery)
+                ->with(['property:id,title,slug', 'receiver:id,name'])
+                ->latest()
+                ->take(6)
+                ->get(),
+            'pipelineHealth' => $pipelineHealth,
+            'teamQueues' => $teamQueues,
+            'leadTrend' => $this->countTrendForQuery((clone $sellerLeadScope), 'monthly'),
+            'enquiryTrend' => collect($analyticsTrends['monthly']['enquiries']),
+            'userGrowthTrend' => collect($analyticsTrends['monthly']['users']),
+            'revenueTrend' => collect($analyticsTrends['monthly']['revenue']),
+            'analyticsTrends' => $analyticsTrends->toArray(),
+            'propertyTypeDistribution' => $propertyTypeDistribution,
+            'recentAudit' => collect(),
+            'canViewFullAudit' => false,
+            'listingSectionEyebrow' => 'Submitted Listings',
+            'listingSectionTitle' => 'User-submitted listings',
+            'listingSectionCopy' => 'Role-scoped seller uploads across moderation and marketplace states.',
+            'listingOwnerLabel' => 'Owner',
         ];
     }
+
 }

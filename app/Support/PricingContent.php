@@ -85,8 +85,8 @@ class PricingContent
         return [
             'real_estate' => array_map([self::class, 'enrichPlan'], [
                 [
-                    'slug' => 'quick-leads',
-                    'name' => 'Quick Lead',
+                    'slug' => 'starter-leads',
+                    'name' => 'Starter Lead',
                     'tier' => 'Starter',
                     'value_price' => null,
                     'price' => 499,
@@ -108,9 +108,9 @@ class PricingContent
                     'is_featured' => false,
                 ],
                 [
-                    'slug' => 'power-leads',
-                    'name' => 'Power Lead',
-                    'tier' => 'Most Popular',
+                    'slug' => 'growth-leads',
+                    'name' => 'Growth Lead',
+                    'tier' => 'Growth',
                     'value_price' => null,
                     'price' => 797,
                     'price_note' => '/ One-Time',
@@ -136,9 +136,9 @@ class PricingContent
                     'is_featured' => true,
                 ],
                 [
-                    'slug' => 'prime-leads',
-                    'name' => 'Prime Lead',
-                    'tier' => 'Premium',
+                    'slug' => 'elite-leads',
+                    'name' => 'Elite Lead',
+                    'tier' => 'Elite',
                     'value_price' => null,
                     'price' => 2299,
                     'price_note' => '/ One-Time',
@@ -245,6 +245,7 @@ class PricingContent
 
     private static function enrichPlan(array $plan): array
     {
+        $plan = self::normalizeLegacyPlan($plan);
         $slug = (string) ($plan['slug'] ?? '');
         $enhancementKey = self::enhancementSlug($slug);
         $enhancement = self::planEnhancements()[$enhancementKey] ?? null;
@@ -256,9 +257,38 @@ class PricingContent
         return array_merge($plan, $enhancement);
     }
 
+    private static function normalizeLegacyPlan(array $plan): array
+    {
+        $slug = (string) ($plan['slug'] ?? '');
+        $name = (string) ($plan['name'] ?? '');
+        $tier = (string) ($plan['tier'] ?? '');
+
+        return match ($slug) {
+            'quick-leads' => array_merge($plan, [
+                'slug' => 'starter-leads',
+                'name' => $name === '' ? 'Starter Lead' : str_replace('Quick Lead', 'Starter Lead', $name),
+                'tier' => $tier === '' || $tier === 'Quick' ? 'Starter' : $tier,
+            ]),
+            'power-leads' => array_merge($plan, [
+                'slug' => 'growth-leads',
+                'name' => $name === '' ? 'Growth Lead' : str_replace('Power Lead', 'Growth Lead', $name),
+                'tier' => in_array($tier, ['', 'Power', 'Most Popular', 'Growth'], true) ? 'Growth' : $tier,
+            ]),
+            'prime-leads' => array_merge($plan, [
+                'slug' => 'elite-leads',
+                'name' => $name === '' ? 'Elite Lead' : str_replace('Prime Lead', 'Elite Lead', $name),
+                'tier' => in_array($tier, ['', 'Prime', 'Premium', 'Elite'], true) ? 'Elite' : $tier,
+            ]),
+            default => $plan,
+        };
+    }
+
     private static function enhancementSlug(string $slug): string
     {
         return match ($slug) {
+            'starter-leads', 'quick-leads' => 'starter-leads',
+            'growth-leads', 'power-leads' => 'growth-leads',
+            'elite-leads', 'prime-leads' => 'elite-leads',
             'va-calling', 'va-starter', 'cold-calling-isa' => 'cold-calling-isa',
             'va-social', 'va-growth', 'social-media-mgmt' => 'social-media-mgmt',
             'va-individual', 'individual-va' => 'individual-va',
@@ -269,7 +299,7 @@ class PricingContent
     private static function planEnhancements(): array
     {
         return [
-            'quick-leads' => [
+            'starter-leads' => [
                 'is_featured' => false,
                 'badge' => 'Starter',
                 'card_tag' => 'Starter',
@@ -325,7 +355,7 @@ class PricingContent
                 'savings_label' => [
                     'Fee credited back toward your first referral payment',
                 ],
-                'cta_label' => 'GO QUICK',
+                'cta_label' => 'GO STARTER',
                 'feature_groups' => [
                     ['title' => 'Features', 'items' => [
                         'Access to Open Enrollment & 2x Referrals (Q3-Q4, 2026)',
@@ -353,11 +383,11 @@ class PricingContent
                 'trust_indicators' => ['Closing Guarantee Under 150 Days', '1-Step Verified Prospects', 'AI + Human Powered Verification'],
                 'trust_note' => 'Closing Guarantee Under 150 Days',
             ],
-            'power-leads' => [
+            'growth-leads' => [
                 'is_featured' => true,
                 'badge' => 'Most Popular',
                 'card_tag' => 'Most Popular',
-                'ribbon_label' => 'Elite Tier',
+                'ribbon_label' => 'Growth Tier',
                 'price' => 697,
                 'price_note' => '/ One-Time',
                 'value_statement' => 'Multi-city. Scalable support.',
@@ -411,7 +441,7 @@ class PricingContent
                     'Save $400 on Yearly',
                     'Fee credited back toward your first referral payment',
                 ],
-                'cta_label' => 'GO POWER',
+                'cta_label' => 'GO GROWTH',
                 'feature_groups' => [
                     ['title' => 'Features', 'items' => [
                         'Access to Open Enrollment & 2x Referrals (Q3-Q4, 2026)',
@@ -440,10 +470,10 @@ class PricingContent
                 'trust_indicators' => ['Closing Guarantee Under 120 Days', '2-Steps Verified Prospects', 'AI + Human Powered Referrals'],
                 'trust_note' => 'Closing Guarantee Under 120 Days',
             ],
-            'prime-leads' => [
-                'badge' => 'Premium',
-                'card_tag' => 'Premium',
-                'ribbon_label' => 'Premium',
+            'elite-leads' => [
+                'badge' => 'Elite',
+                'card_tag' => 'Elite',
+                'ribbon_label' => 'Elite',
                 'price' => 1979,
                 'price_note' => '/ One-Time',
                 'value_statement' => 'Premium reach. Full-service.',
@@ -497,7 +527,7 @@ class PricingContent
                     'Fee credited back toward your first referral payment',
                 ],
                 'savings_label' => [],
-                'cta_label' => 'GO PRIME',
+                'cta_label' => 'GO ELITE',
                 'feature_groups' => [
                     ['title' => 'Features', 'items' => [
                         'Priority Access to Open Enrollment & 2x Referrals (Q3-Q4, 2026)',

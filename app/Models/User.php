@@ -273,8 +273,13 @@ class User extends Authenticatable
 
     public function dashboardRoute(): string
     {
+        if ($this->isSuperAdmin()) {
+            return route('super-admin.dashboard');
+        }
+
         return match ($this->role) {
-            'admin', 'staff' => route('admin.dashboard'),
+            'admin' => route('admin.dashboard'),
+            'staff' => route('staff.dashboard'),
             'agent' => route('dashboard.agent'),
             'seller' => route('dashboard.seller'),
             'buyer' => route('dashboard.buyer'),

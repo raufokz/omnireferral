@@ -15,9 +15,9 @@
     $billingLabel = $packageDisplay['billing_label'] ?? trim(str_replace('/', '', $priceNote));
     $slug = (string) ($packageDisplay['slug'] ?? $package->slug);
     $badge = match ($slug) {
-        'quick-leads' => 'Quick',
-        'power-leads' => 'Power',
-        'prime-leads' => 'Premium',
+        'starter-leads' => 'Starter',
+        'growth-leads' => 'Growth',
+        'elite-leads' => 'Elite',
         'cold-calling-isa', 'social-media-mgmt', 'individual-va', 'va-calling', 'va-social', 'va-individual' => 'VA',
         default => $packageDisplay['badge'] ?? $packageDisplay['tier'] ?? 'Selected plan',
     };

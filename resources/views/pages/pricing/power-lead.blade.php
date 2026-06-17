@@ -6,7 +6,7 @@
 
 @section('content')
     @php
-        $planSlug = 'power-leads';
+        $planSlug = 'growth-leads';
         $pricingPlan = \App\Support\PricingContent::planBySlug($planSlug);
     @endphp
 
@@ -16,10 +16,10 @@
                 <div class="pdh-breadcrumbs">
                     <a href="{{ route('pricing') }}">Pricing</a>
                     <span aria-hidden="true">/</span>
-                    <span>Power Lead</span>
+                    <span>Growth Lead</span>
                 </div>
 
-                <h1 class="pdh-title">{{ $pricingPlan['name'] ?? 'Power Lead' }}</h1>
+                <h1 class="pdh-title">{{ $pricingPlan['name'] ?? 'Growth Lead' }}</h1>
                 <p class="pdh-subtitle">
                     {{ $pricingPlan['summary'] ?? 'The Most Popular growth tier with warm opportunities, stronger routing priority, and stronger follow-up engines.' }}
                 </p>
@@ -201,7 +201,7 @@
             <div class="pfc-inner" data-animate="up">
                 <div class="pfc-copy">
                     <h2>Ready To Grow Your Business?</h2>
-                    <p>Choose Power Lead to start receiving warm opportunities faster — and get the support to turn them into closed deals.</p>
+                    <p>Choose Growth Lead to start receiving warm opportunities faster — and get the support to turn them into closed deals.</p>
                 </div>
                 <div class="pfc-actions">
                     <a href="{{ route('packages.checkout', ['packageSlug' => $planSlug]) }}" class="button button--orange">GET STARTED</a>

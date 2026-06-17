@@ -71,11 +71,14 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/pricing', [PricingController::class, 'index'])->name('pricing');
 
 /**
- * Legacy pricing detail URLs now land directly on the GoHighLevel checkout pages.
+ * Pricing detail URLs use the Starter, Growth, and Elite plan names.
  */
-Route::redirect('/pricing/quick-lead', '/packages/quick-leads/checkout', 301)->name('pricing.quick-lead');
-Route::redirect('/pricing/power-lead', '/packages/power-leads/checkout', 301)->name('pricing.power-lead');
-Route::redirect('/pricing/prime-lead', '/packages/prime-leads/checkout', 301)->name('pricing.prime-lead');
+Route::redirect('/pricing/starter-lead', '/packages/starter-leads/checkout', 301)->name('pricing.starter-lead');
+Route::redirect('/pricing/growth-lead', '/packages/growth-leads/checkout', 301)->name('pricing.growth-lead');
+Route::redirect('/pricing/elite-lead', '/packages/elite-leads/checkout', 301)->name('pricing.elite-lead');
+Route::redirect('/pricing/quick-lead', '/pricing/starter-lead', 301);
+Route::redirect('/pricing/power-lead', '/pricing/growth-lead', 301);
+Route::redirect('/pricing/prime-lead', '/pricing/elite-lead', 301);
 
 Route::get('/packages/{packageSlug}/checkout', [PricingController::class, 'checkout'])->name('packages.checkout');
 Route::get('/packages/{packageSlug}/success', [PricingController::class, 'success'])->name('packages.success');
@@ -128,7 +131,9 @@ Route::get('/onboarding/{role}', function (string $role): RedirectResponse {
         'buyer' => route('dashboard.buyer'),
         'seller' => route('dashboard.seller'),
         'admin' => route('admin.dashboard'),
+        'agent' => route('dashboard.agent'),
         default => route('dashboard.agent'),
+
     };
 
     if (Auth::check()) {
@@ -154,9 +159,14 @@ Route::get('/agents', [RealtorController::class, 'index'])->name('agents.index')
 Route::get('/agents/{location}', [RealtorController::class, 'location'])
     ->where('location', '[a-z0-9\-]+')
     ->name('agents.location');
-Route::get('/agent/{agent}', [RealtorController::class, 'profile'])->name('agents.profile');
-Route::get('/agent/{agent}/preview', [RealtorController::class, 'preview'])->name('agents.preview');
+Route::get('/agent/{agent}', [RealtorController::class, 'profile'])
+    ->where('agent', '(?!dashboard|profile|leads|listings|messages)[a-z0-9]+(?:-[a-z0-9]+)*')
+    ->name('agents.profile');
+Route::get('/agent/{agent}/preview', [RealtorController::class, 'preview'])
+    ->where('agent', '(?!dashboard|profile|leads|listings|messages)[a-z0-9]+(?:-[a-z0-9]+)*')
+    ->name('agents.preview');
 Route::post('/agent/{agent}/inquiry', [RealtorController::class, 'inquiry'])
+    ->where('agent', '(?!dashboard|profile|leads|listings|messages)[a-z0-9]+(?:-[a-z0-9]+)*')
     ->middleware('throttle:contact')
     ->name('agents.inquiry');
 Route::redirect('/join-as-agent', '/agents', 301);
@@ -242,6 +252,14 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::get('/properties/{property}/edit', [PropertyController::class, 'edit'])->name('properties.edit');
         Route::put('/properties/{property}', [PropertyController::class, 'update'])->name('properties.update');
         Route::delete('/properties/{property}', [PropertyController::class, 'destroy'])->name('properties.destroy');
+    });
+
+    Route::middleware(['role:staff'])->group(function () {
+        Route::get('/staff/dashboard', [AdminDashboardController::class, 'staff'])->name('staff.dashboard');
+    });
+
+    Route::middleware(['can:super-admin.access'])->group(function () {
+        Route::get('/super-admin/dashboard', [AdminDashboardController::class, 'superAdmin'])->name('super-admin.dashboard');
     });
 
     Route::middleware(['can:admin.access'])->group(function () {

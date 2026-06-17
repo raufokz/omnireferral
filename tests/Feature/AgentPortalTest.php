@@ -19,9 +19,9 @@ class AgentPortalTest extends TestCase
     public function test_agent_cannot_create_more_active_listings_than_the_package_allows(): void
     {
         $package = Package::create([
-            'name' => 'Quick Lead',
+            'name' => 'Starter Lead',
             'description' => 'Entry plan',
-            'slug' => 'quick-leads',
+            'slug' => 'starter-leads',
             'category' => 'lead',
             'billing_type' => 'one_time',
             'is_featured' => false,
@@ -195,9 +195,9 @@ class AgentPortalTest extends TestCase
     public function test_agent_can_open_each_portal_page(): void
     {
         $package = Package::create([
-            'name' => 'Power Lead',
+            'name' => 'Growth Lead',
             'description' => 'Growth plan',
-            'slug' => 'power-leads',
+            'slug' => 'growth-leads',
             'category' => 'lead',
             'billing_type' => 'one_time',
             'is_featured' => true,

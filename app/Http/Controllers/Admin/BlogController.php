@@ -12,6 +12,8 @@ class BlogController extends Controller
 {
     public function index(): View
     {
+        $this->authorizeBlogManagement();
+
         return view('pages.admin.blog.index', [
             'blogs' => Blog::latest()->paginate(10),
         ]);
@@ -19,11 +21,15 @@ class BlogController extends Controller
 
     public function create(): View
     {
+        $this->authorizeBlogManagement();
+
         return view('pages.admin.blog.create');
     }
 
     public function store(Request $request)
     {
+        $this->authorizeBlogManagement();
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'category' => 'required|string|max:100',
@@ -46,11 +52,15 @@ class BlogController extends Controller
 
     public function edit(Blog $blog): View
     {
+        $this->authorizeBlogManagement();
+
         return view('pages.admin.blog.edit', compact('blog'));
     }
 
     public function update(Request $request, Blog $blog)
     {
+        $this->authorizeBlogManagement();
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'category' => 'required|string|max:100',
@@ -70,7 +80,14 @@ class BlogController extends Controller
 
     public function destroy(Blog $blog)
     {
+        $this->authorizeBlogManagement();
+
         $blog->delete();
         return redirect()->route('admin.blog.index')->with('success', 'Blog post deleted successfully.');
+    }
+
+    private function authorizeBlogManagement(): void
+    {
+        abort_unless(request()->user()?->can('blog.manage'), 403);
     }
 }
