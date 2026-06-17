@@ -37,7 +37,8 @@ class TestimonialLibrarySeeder extends Seeder
                     'sort_order' => $group['sort_offset'] + $number,
                     'submission_status' => Testimonial::STATUS_APPROVED,
                     'reviewed_by_user_id' => null,
-                    'reviewed_at' => $createdAt,
+                    // Ensure reviewed_at is always a valid SQL datetime (avoid edge cases with older/invalid existing rows)
+                    'reviewed_at' => $createdAt ? $createdAt->copy()->setSecond(0) : now(),
                     'created_at' => $createdAt,
                     'updated_at' => now(),
                 ];
