@@ -76,8 +76,8 @@
                     </svg>
                 </span>
                 <div>
-                    <strong>3,200+ Verified Leads</strong>
-                    <p>Proven pipeline volume for active teams.</p>
+                    <strong>Verified Leads</strong>
+                    <p>Every lead is verified and qualified before delivery.</p>
                 </div>
             </article>
             <article class="footer-trust-card footer-trust-card--network">

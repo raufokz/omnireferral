@@ -25,7 +25,7 @@
             'slug' => 'quick-leads',
             'fallback_name' => 'Quick Lead',
             'badge' => 'Starter',
-            'price' => 499,
+            'price' => 369,
             'billing' => '/ Yearly',
             'subtitle' => 'Starter-friendly. City-focused.',
             'description' => 'Perfect for agents entering new markets who need verified referrals, local visibility, and predictable lead opportunities.',
@@ -35,7 +35,7 @@
             'slug' => 'power-leads',
             'fallback_name' => 'Power Lead',
             'badge' => 'Most Popular',
-            'price' => 797,
+            'price' => 697,
             'billing' => '/ One-Time',
             'subtitle' => 'Multi-city. Scalable support.',
             'description' => 'Designed for growing teams that need more referrals, broader coverage, virtual assistance, and stronger lead qualification.',
@@ -45,7 +45,7 @@
             'slug' => 'prime-leads',
             'fallback_name' => 'Prime Lead',
             'badge' => 'Premium',
-            'price' => 2299,
+            'price' => 1979,
             'billing' => '/ One-Time',
             'subtitle' => 'Premium reach. Full-service.',
             'description' => 'Built for top-producing agents seeking maximum exposure, priority support, premium placement, and advanced lead qualification.',
@@ -191,12 +191,6 @@
 
     <section class="omni-pricing-section" id="pricing-packages">
         <div class="container">
-            <div class="omni-section-head" data-animate="up">
-                <span class="omni-kicker">Plans</span>
-                <h2>Choose your growth path</h2>
-                <p>Switch between real estate lead packages and virtual assistant services without scrolling through both at once.</p>
-            </div>
-
             <div class="omni-package-switcher" role="tablist" aria-label="Pricing package groups" data-animate="up">
                 <button class="omni-package-switcher__button is-active" id="pricing-tab-real-estate" type="button" role="tab" aria-selected="true" aria-controls="pricing-panel-real-estate" tabindex="0" data-tab-trigger="real-estate">
                     Real Estate Plans
