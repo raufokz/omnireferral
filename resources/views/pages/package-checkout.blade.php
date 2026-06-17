@@ -118,33 +118,22 @@
                         <span class="package-detail-guarantee__shield" aria-hidden="true">
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L3 6v6c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V6l-9-4Z" fill="currentColor" opacity=".18"/><path d="M12 2L3 6v6c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V6l-9-4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m8.5 12 2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                         </span>
-                        <span class="package-detail-guarantee__title">Our Guarantees</span>
+                        <div class="package-detail-guarantee__title-group">
+                            <span class="package-detail-guarantee__eyebrow">Backed By OmniReferral</span>
+                            <span class="package-detail-guarantee__title">Our Guarantees</span>
+                        </div>
                     </div>
-                    <ul class="package-detail-guarantee__list">
-                        @foreach($guaranteeLabel as $label)
+                    <ul class="package-detail-guarantee__list package-detail-guarantee__list--grid">
+                        @foreach($guaranteeLabel as $index => $label)
                             <li class="package-detail-guarantee__bullet">
-                                <span class="package-detail-guarantee__check" aria-hidden="true">✓</span>
+                                <span class="package-detail-guarantee__num" aria-hidden="true">{{ $index + 1 }}</span>
                                 <span>{{ $label }}</span>
                             </li>
                         @endforeach
                     </ul>
                 </section>
             @endif
-            @if(!empty($savingsLabel))
-                <section class="package-detail-guarantee package-detail-guarantee--value" aria-label="Package value">
-                    <div class="package-detail-guarantee__header">
-                        <span class="package-detail-guarantee__title">Package Value</span>
-                    </div>
-                    <ul class="package-detail-guarantee__list">
-                        @foreach($savingsLabel as $label)
-                            <li class="package-detail-guarantee__bullet">
-                                <span class="package-detail-guarantee__check" aria-hidden="true">✓</span>
-                                <span>{{ $label }}</span>
-                            </li>
-                        @endforeach
-                    </ul>
-                </section>
-            @endif
+
 
             <section class="package-plan-detail__section">
                 <h3>What Happens After Submission</h3>

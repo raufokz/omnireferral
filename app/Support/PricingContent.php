@@ -320,6 +320,7 @@ class PricingContent
                     'Closing Guarantee Under 150 Days',
                     'First TWO (2) Referrals for FREE',
                     '150 Day Money Back Guarantee',
+                    'Fee credited back toward your first referral payment',
                 ],
                 'savings_label' => [
                     'Fee credited back toward your first referral payment',
