@@ -172,6 +172,7 @@
                         $workspaceUser && $workspaceUser->can('viewAuditLog', $workspaceUser)
                             ? ['label' => 'Audit Log', 'route' => route('admin.activity.index'), 'active' => ['admin.activity.*'], 'icon' => 'audit']
                             : null,
+                        ['label' => 'GoHighLevel', 'route' => route('admin.ghl.index'), 'active' => ['admin.ghl.*'], 'icon' => 'audit'],
                     ])),
                 ],
                 ['label' => 'Marketplace', 'route' => route('listings'), 'active' => ['listings', 'properties.show'], 'icon' => 'marketplace'],

@@ -87,6 +87,11 @@ class User extends Authenticatable
         return $this->hasOne(RealtorProfile::class);
     }
 
+    public function buyerProfile(): HasOne
+    {
+        return $this->hasOne(BuyerProfile::class);
+    }
+
     /**
      * Public agent profile URL for directory cards; null when there is no profile or approval is still pending.
      */

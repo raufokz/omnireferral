@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Package;
+use App\Services\StripeCheckoutService;
 use App\Support\AgentDirectory;
 use App\Support\PricingContent;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -93,19 +95,80 @@ class PricingController extends Controller
         ]);
     }
 
+    public function stripeCheckout(string $packageSlug): RedirectResponse
+    {
+        $package = $this->checkoutPackage($packageSlug);
+        $user = Auth::user();
+        $checkout = app(StripeCheckoutService::class);
+
+        if (! $checkout->configured()) {
+            return redirect()
+                ->route('packages.checkout', $packageSlug)
+                ->with('error', 'Payment processing is currently unavailable. Please contact support.');
+        }
+
+        $successUrl = route('packages.success', $packageSlug).'?session_id={CHECKOUT_SESSION_ID}';
+        $cancelUrl = route('packages.checkout', $packageSlug);
+
+        $session = $checkout->createPackageCheckout($package, $user, [
+            'success_url' => $successUrl,
+            'cancel_url' => $cancelUrl,
+            'billing' => $package->billing_type,
+            'customer_email' => $user?->email,
+        ]);
+
+        if (! $session) {
+            return redirect()
+                ->route('packages.checkout', $packageSlug)
+                ->with('error', 'Unable to create payment session. Please try again or contact support.');
+        }
+
+        return redirect()->away($session->url);
+    }
+
     public function success(string $packageSlug): View
     {
         $package = $this->checkoutPackage($packageSlug);
+        $user = Auth::user();
+        $sessionId = request()->query('session_id');
+
+        $displaySlug = $this->normalizePackageSlug($package->slug);
+        $embedConfig = $this->packageEmbeds()[$displaySlug] ?? $this->packageEmbeds()[$package->slug] ?? [];
+        $baseFormUrl = $embedConfig['src'] ?? $package->ghl_form_url;
+
+        $onboardingFormUrl = null;
+        if ($baseFormUrl) {
+            $params = array_filter([
+                'email'                  => $user?->email,
+                'phone'                  => $user?->phone,
+                'name'                   => $user?->name,
+                'field_user_id'          => $user?->id,
+                'field_package'          => $package->slug,
+                'field_plan_id'          => $package->id ?: null,
+                'field_role'             => $user?->role ?? 'agent',
+                'field_source'           => 'omnireferral_checkout',
+                'field_checkout_session' => $sessionId ?: null,
+                'field_payment_id'       => $sessionId ?: null,
+            ], fn ($v) => $v !== null && $v !== '');
+            $separator = str_contains($baseFormUrl, '?') ? '&' : '?';
+            $onboardingFormUrl = $params
+                ? $baseFormUrl.$separator.http_build_query($params)
+                : $baseFormUrl;
+        }
+
         $postPurchaseAction = $this->postPurchaseAction();
 
         return view('pages.package-success', [
-            'package' => $package,
-            'sessionId' => null,
-            'postPurchaseActionUrl' => $postPurchaseAction['url'],
-            'postPurchaseActionLabel' => $postPurchaseAction['label'],
-            'meta' => [
-                'title' => 'Package Next Steps | OmniReferral',
-                'description' => 'Your OmniReferral package next step is available.',
+            'package'                   => $package,
+            'sessionId'                 => $sessionId,
+            'onboardingFormUrl'         => $onboardingFormUrl,
+            'onboardingFormTitle'       => $embedConfig['title'] ?? ($package->displayName().' Onboarding'),
+            'onboardingFormDescription' => $embedConfig['description'] ?? 'Complete the secure form to activate your account and receive your login credentials.',
+            'postPurchaseActionUrl'     => $postPurchaseAction['url'],
+            'postPurchaseActionLabel'   => $postPurchaseAction['label'],
+            'meta'                      => [
+                'title'       => 'Complete Your Onboarding | OmniReferral',
+                'description' => 'Your payment was successful. Complete the onboarding form to activate your OmniReferral portal access.',
             ],
         ]);
     }

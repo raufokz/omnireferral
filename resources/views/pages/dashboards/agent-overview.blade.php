@@ -370,8 +370,8 @@
         <article class="workspace-card">
             <div class="workspace-actions" style="justify-content:space-between; margin-bottom:0.75rem;">
                 <div>
-                    <span class="eyebrow">Recent Messages</span>
-                    <h2>Latest Inbox Activity</h2>
+                    <span class="eyebrow">Messages &amp; Enquiries</span>
+                    <h2>Inbox &amp; Listing Enquiries</h2>
                 </div>
                 <a href="{{ route('agent.messages.index') }}" class="button button--ghost-blue">Open Inbox</a>
             </div>
@@ -444,11 +444,6 @@
                 <svg class="agent-quick-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                 <strong>Review Packages</strong>
                 <span>{{ $activePlan ? 'Current plan: ' . $activePlan->displayName() . '. Compare upgrades.' : 'No active plan. Review options to access more leads.' }}</span>
-            </a>
-            <a href="{{ route('dashboard.enquiries.index') }}" class="agent-quick-action">
-                <svg class="agent-quick-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                <strong>Enquiry Threads</strong>
-                <span>View and reply to property listing enquiry conversations.</span>
             </a>
         </div>
     </article>

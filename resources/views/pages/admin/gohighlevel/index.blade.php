@@ -1,0 +1,169 @@
+@extends('layouts.dashboard')
+
+@section('dashboard_eyebrow', 'Admin Workspace')
+@section('dashboard_title', 'GoHighLevel Integration')
+@section('dashboard_description', 'Monitor connection health, sync activity, and webhook delivery for the GoHighLevel CRM integration.')
+
+@section('dashboard_actions')
+    <a href="{{ route('admin.ghl.settings') }}" class="button button--ghost-blue">Settings</a>
+    <a href="{{ route('admin.ghl.mappings') }}" class="button button--ghost-blue">Field Mappings</a>
+    <a href="{{ route('admin.ghl.logs') }}" class="button button--ghost-blue">Logs</a>
+    <a href="{{ route('admin.ghl.testing') }}" class="button">Test Tools</a>
+@endsection
+
+@push('styles')
+<style>
+.ghl-status-bar { display:flex; align-items:center; gap:1rem; padding:1rem 1.25rem; border-radius:10px; background:var(--color-surface-subtle,#f8fafc); border:1px solid var(--color-border,#e5e7eb); }
+.ghl-status-indicator { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+.ghl-status-indicator--connected { background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.2); }
+.ghl-status-indicator--invalid   { background:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.2); }
+.ghl-status-indicator--error     { background:#f97316; box-shadow:0 0 0 3px rgba(249,115,22,.2); }
+.ghl-status-indicator--unknown   { background:#9ca3af; }
+.ghl-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; }
+.ghl-kpi { background:var(--color-surface-subtle,#f8fafc); border:1px solid var(--color-border,#e5e7eb); border-radius:10px; padding:1.1rem 1.25rem; }
+.ghl-kpi span { display:block; font-size:.8rem; color:var(--color-text-muted,#6b7280); margin-bottom:.3rem; }
+.ghl-kpi strong { font-size:1.6rem; font-weight:700; color:var(--color-text,#111827); }
+</style>
+@endpush
+
+@section('content')
+<div class="workspace-stack">
+
+    {{-- Connection status bar --}}
+    <section class="workspace-card">
+        <div class="ghl-status-bar">
+            <span class="ghl-status-indicator ghl-status-indicator--{{ $settings->connection_status }}"></span>
+            <div>
+                <strong>{{ $settings->statusLabel() }}</strong>
+                @if($settings->last_tested_at)
+                    <span style="font-size:.8rem; color:var(--color-text-muted,#6b7280); margin-left:.5rem;">Last tested {{ $settings->last_tested_at->diffForHumans() }}</span>
+                @endif
+            </div>
+            <div style="margin-left:auto; display:flex; gap:.75rem; flex-wrap:wrap;">
+                @if($settings->hasCredentials())
+                    <span class="workspace-pill workspace-pill--green">API Key set</span>
+                    <span class="workspace-pill workspace-pill--green">Location ID set</span>
+                @else
+                    <span class="workspace-pill workspace-pill--red">Missing credentials</span>
+                @endif
+                <span class="workspace-pill">{{ ucfirst($settings->environment) }}</span>
+            </div>
+        </div>
+    </section>
+
+    {{-- KPI stats --}}
+    <section class="workspace-card">
+        <span class="eyebrow">Integration Stats</span>
+        <h2>Platform overview</h2>
+        <div class="ghl-kpi-grid" style="margin-top:1rem;">
+            <div class="ghl-kpi">
+                <span>Total Webhooks</span>
+                <strong>{{ number_format($stats['webhooks_total']) }}</strong>
+            </div>
+            <div class="ghl-kpi">
+                <span>Processed</span>
+                <strong>{{ number_format($stats['webhooks_processed']) }}</strong>
+            </div>
+            <div class="ghl-kpi">
+                <span>Pending</span>
+                <strong>{{ number_format($stats['webhooks_pending']) }}</strong>
+            </div>
+            <div class="ghl-kpi">
+                <span>Onboarding Events</span>
+                <strong>{{ number_format($stats['onboarding_total']) }}</strong>
+            </div>
+            <div class="ghl-kpi">
+                <span>GHL-Synced Users</span>
+                <strong>{{ number_format($stats['users_ghl_synced']) }}</strong>
+            </div>
+        </div>
+    </section>
+
+    {{-- Form URLs quick view --}}
+    <section class="workspace-card">
+        <span class="eyebrow">Active Form Configuration</span>
+        <h2>Configured form URLs</h2>
+        <div class="workspace-table-wrap" style="margin-top:1rem;">
+            <table class="workspace-table">
+                <thead><tr><th>Form</th><th>URL</th><th></th></tr></thead>
+                <tbody>
+                    @foreach([
+                        'Pre-payment Survey'     => $settings->pre_payment_survey_url,
+                        'Post-payment Onboarding'=> $settings->post_payment_onboarding_url,
+                        'Buyer Onboarding'       => $settings->buyer_onboarding_form_url,
+                        'Agent Onboarding'       => $settings->agent_onboarding_form_url,
+                        'Realtor Onboarding'     => $settings->realtor_onboarding_form_url,
+                    ] as $label => $url)
+                    <tr>
+                        <td><strong>{{ $label }}</strong></td>
+                        <td>
+                            @if($url)
+                                <code style="font-size:.78rem; word-break:break-all;">{{ $url }}</code>
+                            @else
+                                <span style="color:var(--color-text-muted,#9ca3af);">Not configured</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($url)
+                                <a href="{{ $url }}" target="_blank" rel="noopener" class="button button--ghost-blue" style="font-size:.8rem; padding:.3rem .75rem;">Open</a>
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        <div style="margin-top:1rem;">
+            <a href="{{ route('admin.ghl.settings') }}" class="button button--ghost-blue">Edit settings</a>
+        </div>
+    </section>
+
+    {{-- Recent webhook activity --}}
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+        <section class="workspace-card">
+            <span class="eyebrow">Recent Webhooks</span>
+            <h2>Last 5 GHL events</h2>
+            <div class="workspace-table-wrap" style="margin-top:.75rem;">
+                <table class="workspace-table">
+                    <thead><tr><th>Event</th><th>Status</th><th>When</th></tr></thead>
+                    <tbody>
+                        @forelse($recentWebhooks as $wh)
+                        <tr>
+                            <td>{{ $wh->event }}</td>
+                            <td><span class="workspace-pill {{ $wh->statusBadgeClass() }}">{{ $wh->statusLabel() }}</span></td>
+                            <td>{{ $wh->created_at?->diffForHumans() }}</td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="3"><div class="workspace-empty">No webhooks yet.</div></td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top:.75rem;"><a href="{{ route('admin.ghl.logs') }}" class="button button--ghost-blue" style="font-size:.85rem;">View all logs</a></div>
+        </section>
+
+        <section class="workspace-card">
+            <span class="eyebrow">Recent Onboarding</span>
+            <h2>Last 5 submissions</h2>
+            <div class="workspace-table-wrap" style="margin-top:.75rem;">
+                <table class="workspace-table">
+                    <thead><tr><th>User</th><th>Type</th><th>When</th></tr></thead>
+                    <tbody>
+                        @forelse($recentOnboarding as $log)
+                        <tr>
+                            <td>{{ $log->triggered_by ?? $log->user?->email ?? '—' }}</td>
+                            <td>{{ $log->event_type }}</td>
+                            <td>{{ $log->created_at?->diffForHumans() }}</td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="3"><div class="workspace-empty">No onboarding events yet.</div></td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div style="margin-top:.75rem;"><a href="{{ route('admin.ghl.logs') }}#onboarding" class="button button--ghost-blue" style="font-size:.85rem;">View onboarding logs</a></div>
+        </section>
+    </div>
+
+</div>
+@endsection

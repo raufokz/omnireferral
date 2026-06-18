@@ -129,7 +129,7 @@
                 <p>AI + ISA screening, smart routing, and conversion-first delivery built for modern teams.</p>
 
                 <div class="hero__actions hero__actions--spacious">
-                    <a href="#lead-forms" class="button button--orange">Get Started</a>
+                    <a href="{{ route('pricing') }}" class="button button--orange">Get Started</a>
                     <a href="{{ route('pricing') }}" class="button button--ghost-light">View Leads</a>
                 </div>
 

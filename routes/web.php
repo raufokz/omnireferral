@@ -4,6 +4,7 @@ use App\Http\Controllers\Account\ProfileController;
 use App\Http\Controllers\Account\SecurityController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\GoHighLevelController as AdminGoHighLevelController;
 use App\Http\Controllers\Admin\EnquiryController as AdminEnquiryController;
 use App\Http\Controllers\Admin\LeadManagementController as AdminLeadManagementController;
 use App\Http\Controllers\Admin\PlatformSearchController;
@@ -81,6 +82,7 @@ Route::redirect('/pricing/power-lead', '/pricing/growth-lead', 301);
 Route::redirect('/pricing/prime-lead', '/pricing/elite-lead', 301);
 
 Route::get('/packages/{packageSlug}/checkout', [PricingController::class, 'checkout'])->name('packages.checkout');
+Route::post('/packages/{packageSlug}/stripe-checkout', [PricingController::class, 'stripeCheckout'])->name('packages.stripe-checkout');
 Route::get('/packages/{packageSlug}/success', [PricingController::class, 'success'])->name('packages.success');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/faq', [HomeController::class, 'faq'])->name('faq');
@@ -346,6 +348,21 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
 
         Route::get('admin/webhook-events', [AdminWebhookEventController::class, 'index'])->name('admin.webhook-events.index');
         Route::get('admin/webhook-events/{webhookEvent}', [AdminWebhookEventController::class, 'show'])->name('admin.webhook-events.show');
+
+        // GoHighLevel control panel — view for all admins, write for super-admin only
+        Route::get('admin/gohighlevel', [AdminGoHighLevelController::class, 'index'])->name('admin.ghl.index');
+        Route::get('admin/gohighlevel/settings', [AdminGoHighLevelController::class, 'settings'])->name('admin.ghl.settings');
+        Route::put('admin/gohighlevel/settings', [AdminGoHighLevelController::class, 'updateSettings'])->name('admin.ghl.settings.update');
+        Route::get('admin/gohighlevel/mappings', [AdminGoHighLevelController::class, 'mappings'])->name('admin.ghl.mappings');
+        Route::post('admin/gohighlevel/mappings', [AdminGoHighLevelController::class, 'addMapping'])->name('admin.ghl.mappings.add');
+        Route::post('admin/gohighlevel/mappings/{mapping}/toggle', [AdminGoHighLevelController::class, 'toggleMapping'])->name('admin.ghl.mappings.toggle');
+        Route::delete('admin/gohighlevel/mappings/{mapping}', [AdminGoHighLevelController::class, 'deleteMapping'])->name('admin.ghl.mappings.delete');
+        Route::get('admin/gohighlevel/logs', [AdminGoHighLevelController::class, 'logs'])->name('admin.ghl.logs');
+        Route::post('admin/gohighlevel/logs/{webhookEventId}/retry', [AdminGoHighLevelController::class, 'retrySync'])->name('admin.ghl.retry');
+        Route::get('admin/gohighlevel/testing', [AdminGoHighLevelController::class, 'testing'])->name('admin.ghl.testing');
+        Route::post('admin/gohighlevel/test/connection', [AdminGoHighLevelController::class, 'testConnection'])->name('admin.ghl.test.connection');
+        Route::post('admin/gohighlevel/test/webhook', [AdminGoHighLevelController::class, 'testWebhook'])->name('admin.ghl.test.webhook');
+        Route::post('admin/gohighlevel/test/sync', [AdminGoHighLevelController::class, 'testSync'])->name('admin.ghl.test.sync');
 
         Route::post('admin/leads/{lead}/status', [App\Http\Controllers\Admin\LeadController::class, 'status'])->name('admin.leads.status');
         Route::post('admin/leads/{lead}/assign', [App\Http\Controllers\Admin\LeadController::class, 'assign'])->name('admin.leads.assign');

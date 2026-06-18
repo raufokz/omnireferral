@@ -35,6 +35,7 @@ class RealtorProfile extends Model
         'bio',
         'headshot',
         'profile_status',
+        'years_of_experience',
         'languages',
         'market_areas',
         'social_links',
