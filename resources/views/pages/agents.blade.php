@@ -110,8 +110,8 @@
                     </select>
                 </label>
                 <div class="omni-agent-search__actions">
-                    <button type="submit" class="agent-btn agent-btn--orange">Search Agents</button>
                     <a href="{{ route('agents.index') }}" class="agent-btn agent-btn--ghost">Reset</a>
+                    <button type="submit" class="agent-btn agent-btn--orange">Search Agents</button>
                 </div>
             </form>
         </div>

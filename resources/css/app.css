@@ -2,6 +2,7 @@
 @import "./modules/dashboard-shell.css";
 @import "./modules/admin-users.css";
 @import "./modules/agent-directory.css";
+@import "./modules/testimonials.css";
 
 .visually-hidden {
     position: absolute;

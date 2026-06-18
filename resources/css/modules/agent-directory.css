@@ -1331,7 +1331,16 @@
 }
 
 .omni-agent-search__actions {
-    grid-column: span 2;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.55rem;
+    align-self: end;
+}
+
+.omni-agent-search__actions {
+    grid-column: -3 / -1;
+    width: 100%;
+    margin-left: auto;
 }
 
 .omni-agent-search input,
@@ -1539,8 +1548,10 @@
     }
 
     .omni-agent-search__actions {
-        grid-column: span 6;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: space-between;
+        gap: 0.55rem;
     }
 
     .omni-agent-modal__side {
@@ -1672,9 +1683,13 @@
 }
 
 .omni-agent-search__actions {
-    grid-column: span 2;
-    grid-template-columns: minmax(0, 1fr) minmax(6.5rem, 0.72fr);
+    grid-column: -3 / -1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.55rem;
     align-self: end;
+    width: 100%;
+    margin-left: auto;
 }
 
 .omni-agent-card-grid {
@@ -1766,7 +1781,8 @@
 
     .omni-agent-search__actions {
         grid-column: auto;
-        grid-template-columns: 1fr;
+        flex-direction: column;
+        display: flex;
     }
 
     .omni-agent-results__tools,
