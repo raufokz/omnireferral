@@ -21,16 +21,29 @@ class StaffAgentProfileController extends Controller
         $this->authorize('viewAny', RealtorProfile::class);
 
         $status = $request->string('status', 'all')->value();
+        $status = array_key_exists($status, ['all' => true] + RealtorProfile::statusOptions()) ? $status : 'all';
+        $perPage = (int) $request->integer('per_page', 25);
+        $perPage = in_array($perPage, [10, 25, 50, 100], true) ? $perPage : 25;
+        $filters = [
+            'q' => trim((string) $request->query('q', '')),
+            'status' => $status,
+            'state' => strtoupper(trim((string) $request->query('state', ''))),
+            'market' => trim((string) $request->query('market', '')),
+            'brokerage' => trim((string) $request->query('brokerage', '')),
+            'featured' => trim((string) $request->query('featured', '')),
+            'per_page' => $perPage,
+        ];
 
         $query = RealtorProfile::query()
-            ->with(['user:id,name,display_name,email,status', 'createdByUser:id,name'])
+            ->with(['user:id,name,display_name,email,phone,status', 'createdByUser:id,name'])
             ->latest();
 
         if ($status !== 'all') {
             $query->where('profile_status', $status);
         }
 
-        if ($search = trim((string) $request->query('q', ''))) {
+        if ($filters['q'] !== '') {
+            $search = $filters['q'];
             $query->where(function ($profileQuery) use ($search) {
                 $like = '%'.$search.'%';
                 $profileQuery
@@ -43,15 +56,40 @@ class StaffAgentProfileController extends Controller
                         $userQuery
                             ->where('name', 'like', $like)
                             ->orWhere('display_name', 'like', $like)
-                            ->orWhere('email', 'like', $like);
+                            ->orWhere('email', 'like', $like)
+                            ->orWhere('phone', 'like', $like);
                     });
             });
         }
 
+        if ($filters['state'] !== '') {
+            $query->where('service_state', $filters['state']);
+        }
+
+        if ($filters['market'] !== '') {
+            $market = '%'.$filters['market'].'%';
+            $query->where(function ($marketQuery) use ($market) {
+                $marketQuery
+                    ->where('service_city', 'like', $market)
+                    ->orWhere('market_areas', 'like', $market);
+            });
+        }
+
+        if ($filters['brokerage'] !== '') {
+            $query->where('brokerage_name', 'like', '%'.$filters['brokerage'].'%');
+        }
+
+        if ($filters['featured'] === 'yes') {
+            $query->where('profile_status', RealtorProfile::STATUS_FEATURED);
+        } elseif ($filters['featured'] === 'no') {
+            $query->where('profile_status', '!=', RealtorProfile::STATUS_FEATURED);
+        }
+
         return view('pages.admin.agent-profiles.index', [
-            'profiles' => $query->paginate(25)->withQueryString(),
+            'profiles' => $query->paginate($perPage)->withQueryString(),
             'status' => $status,
-            'search' => $search ?? '',
+            'search' => $filters['q'],
+            'filters' => $filters,
             'counts' => [
                 'all' => RealtorProfile::count(),
                 'draft' => RealtorProfile::draft()->count(),
@@ -59,6 +97,26 @@ class StaffAgentProfileController extends Controller
                 'featured' => RealtorProfile::featured()->count(),
                 'suspended' => RealtorProfile::suspended()->count(),
             ],
+            'filterStates' => RealtorProfile::query()
+                ->whereNotNull('service_state')
+                ->select('service_state')
+                ->distinct()
+                ->orderBy('service_state')
+                ->pluck('service_state'),
+            'filterBrokerages' => RealtorProfile::query()
+                ->whereNotNull('brokerage_name')
+                ->select('brokerage_name')
+                ->distinct()
+                ->orderBy('brokerage_name')
+                ->limit(100)
+                ->pluck('brokerage_name'),
+            'filterMarkets' => RealtorProfile::query()
+                ->whereNotNull('service_city')
+                ->select('service_city')
+                ->distinct()
+                ->orderBy('service_city')
+                ->limit(100)
+                ->pluck('service_city'),
             'meta' => [
                 'title' => 'Agent Profiles | Admin | OmniReferral',
                 'description' => 'Staff workspace for creating and publishing agent directory profiles.',
@@ -223,7 +281,7 @@ class StaffAgentProfileController extends Controller
         return back()->with('success', 'Agent profile updated.');
     }
 
-    public function feature(Request $request, RealtorProfile $agentProfile): RedirectResponse
+    public function feature(Request $request, RealtorProfile $agentProfile)
     {
         $this->authorize('update', $agentProfile);
 
@@ -234,10 +292,26 @@ class StaffAgentProfileController extends Controller
 
         AdminAudit::log($request, 'realtor_profile.featured', 'realtor_profile', $agentProfile->id);
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile marked as Featured.',
+                'profile_status' => RealtorProfile::STATUS_FEATURED,
+                'status_label' => $agentProfile->statusLabel(),
+                'counts' => [
+                    'all' => RealtorProfile::count(),
+                    'draft' => RealtorProfile::draft()->count(),
+                    'published' => RealtorProfile::published()->count(),
+                    'featured' => RealtorProfile::featured()->count(),
+                    'suspended' => RealtorProfile::suspended()->count(),
+                ]
+            ]);
+        }
+
         return back()->with('success', 'Profile marked as Featured.');
     }
 
-    public function publish(Request $request, RealtorProfile $agentProfile): RedirectResponse
+    public function publish(Request $request, RealtorProfile $agentProfile)
     {
         $this->authorize('update', $agentProfile);
 
@@ -246,10 +320,26 @@ class StaffAgentProfileController extends Controller
         ]);
         $agentProfile->user?->update(['status' => 'active']);
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile approved and published.',
+                'profile_status' => RealtorProfile::STATUS_PUBLISHED,
+                'status_label' => $agentProfile->statusLabel(),
+                'counts' => [
+                    'all' => RealtorProfile::count(),
+                    'draft' => RealtorProfile::draft()->count(),
+                    'published' => RealtorProfile::published()->count(),
+                    'featured' => RealtorProfile::featured()->count(),
+                    'suspended' => RealtorProfile::suspended()->count(),
+                ]
+            ]);
+        }
+
         return back()->with('success', 'Profile published.');
     }
 
-    public function suspend(Request $request, RealtorProfile $agentProfile): RedirectResponse
+    public function suspend(Request $request, RealtorProfile $agentProfile)
     {
         $this->authorize('update', $agentProfile);
 
@@ -259,6 +349,22 @@ class StaffAgentProfileController extends Controller
         $agentProfile->user?->update(['status' => 'suspended']);
 
         AdminAudit::log($request, 'realtor_profile.suspended', 'realtor_profile', $agentProfile->id);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile suspended and removed from public directory.',
+                'profile_status' => RealtorProfile::STATUS_SUSPENDED,
+                'status_label' => $agentProfile->statusLabel(),
+                'counts' => [
+                    'all' => RealtorProfile::count(),
+                    'draft' => RealtorProfile::draft()->count(),
+                    'published' => RealtorProfile::published()->count(),
+                    'featured' => RealtorProfile::featured()->count(),
+                    'suspended' => RealtorProfile::suspended()->count(),
+                ]
+            ]);
+        }
 
         return back()->with('success', 'Profile suspended and removed from public directory.');
     }

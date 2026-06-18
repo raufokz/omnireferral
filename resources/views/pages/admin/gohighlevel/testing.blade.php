@@ -138,24 +138,24 @@
                 <thead><tr><th>Endpoint</th><th>URL</th><th>Secret Header</th></tr></thead>
                 <tbody>
                     <tr>
-                        <td><strong>Onboarding Completed</strong></td>
-                        <td><code style="font-size:.78rem;">{{ route('webhooks.gohighlevel.onboarding') }}</code></td>
-                        <td><code style="font-size:.78rem;">X-OmniReferral-Webhook</code></td>
+                        <td data-label="Endpoint"><strong>Onboarding Completed</strong></td>
+                        <td data-label="URL"><code style="font-size:.78rem;">{{ route('webhooks.gohighlevel.onboarding') }}</code></td>
+                        <td data-label="Secret Header"><code style="font-size:.78rem;">X-OmniReferral-Webhook</code></td>
                     </tr>
                     <tr>
-                        <td><strong>Package Purchased</strong></td>
-                        <td><code style="font-size:.78rem;">{{ route('webhooks.gohighlevel.purchase') }}</code></td>
-                        <td><code style="font-size:.78rem;">X-OmniReferral-Webhook</code></td>
+                        <td data-label="Endpoint"><strong>Package Purchased</strong></td>
+                        <td data-label="URL"><code style="font-size:.78rem;">{{ route('webhooks.gohighlevel.purchase') }}</code></td>
+                        <td data-label="Secret Header"><code style="font-size:.78rem;">X-OmniReferral-Webhook</code></td>
                     </tr>
                     <tr>
-                        <td><strong>Lead Status Updated</strong></td>
-                        <td><code style="font-size:.78rem;">{{ route('webhooks.gohighlevel.lead-status') }}</code></td>
-                        <td><code style="font-size:.78rem;">X-OmniReferral-Webhook</code></td>
+                        <td data-label="Endpoint"><strong>Lead Status Updated</strong></td>
+                        <td data-label="URL"><code style="font-size:.78rem;">{{ route('webhooks.gohighlevel.lead-status') }}</code></td>
+                        <td data-label="Secret Header"><code style="font-size:.78rem;">X-OmniReferral-Webhook</code></td>
                     </tr>
                     <tr>
-                        <td><strong>General Events</strong></td>
-                        <td><code style="font-size:.78rem;">{{ route('webhooks.gohighlevel.events') }}</code></td>
-                        <td><code style="font-size:.78rem;">X-OmniReferral-Webhook</code></td>
+                        <td data-label="Endpoint"><strong>General Events</strong></td>
+                        <td data-label="URL"><code style="font-size:.78rem;">{{ route('webhooks.gohighlevel.events') }}</code></td>
+                        <td data-label="Secret Header"><code style="font-size:.78rem;">X-OmniReferral-Webhook</code></td>
                     </tr>
                 </tbody>
             </table>

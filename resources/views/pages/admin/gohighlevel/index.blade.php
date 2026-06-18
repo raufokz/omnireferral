@@ -23,6 +23,10 @@
 .ghl-kpi { background:var(--color-surface-subtle,#f8fafc); border:1px solid var(--color-border,#e5e7eb); border-radius:10px; padding:1.1rem 1.25rem; }
 .ghl-kpi span { display:block; font-size:.8rem; color:var(--color-text-muted,#6b7280); margin-bottom:.3rem; }
 .ghl-kpi strong { font-size:1.6rem; font-weight:700; color:var(--color-text,#111827); }
+.ghl-two-column { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:1.5rem; }
+@media (max-width: 900px) {
+    .ghl-two-column { grid-template-columns: 1fr; }
+}
 </style>
 @endpush
 
@@ -95,15 +99,15 @@
                         'Realtor Onboarding'     => $settings->realtor_onboarding_form_url,
                     ] as $label => $url)
                     <tr>
-                        <td><strong>{{ $label }}</strong></td>
-                        <td>
+                        <td data-label="Form"><strong>{{ $label }}</strong></td>
+                        <td data-label="URL">
                             @if($url)
                                 <code style="font-size:.78rem; word-break:break-all;">{{ $url }}</code>
                             @else
                                 <span style="color:var(--color-text-muted,#9ca3af);">Not configured</span>
                             @endif
                         </td>
-                        <td>
+                        <td data-label="">
                             @if($url)
                                 <a href="{{ $url }}" target="_blank" rel="noopener" class="button button--ghost-blue" style="font-size:.8rem; padding:.3rem .75rem;">Open</a>
                             @endif
@@ -119,7 +123,7 @@
     </section>
 
     {{-- Recent webhook activity --}}
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+    <div class="ghl-two-column">
         <section class="workspace-card">
             <span class="eyebrow">Recent Webhooks</span>
             <h2>Last 5 GHL events</h2>
@@ -129,12 +133,12 @@
                     <tbody>
                         @forelse($recentWebhooks as $wh)
                         <tr>
-                            <td>{{ $wh->event }}</td>
-                            <td><span class="workspace-pill {{ $wh->statusBadgeClass() }}">{{ $wh->statusLabel() }}</span></td>
-                            <td>{{ $wh->created_at?->diffForHumans() }}</td>
+                            <td data-label="Event">{{ $wh->event }}</td>
+                            <td data-label="Status"><span class="workspace-pill {{ $wh->statusBadgeClass() }}">{{ $wh->statusLabel() }}</span></td>
+                            <td data-label="When">{{ $wh->created_at?->diffForHumans() }}</td>
                         </tr>
                         @empty
-                        <tr><td colspan="3"><div class="workspace-empty">No webhooks yet.</div></td></tr>
+                        <tr><td colspan="3" data-label=""><div class="workspace-empty">No webhooks yet.</div></td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -151,12 +155,12 @@
                     <tbody>
                         @forelse($recentOnboarding as $log)
                         <tr>
-                            <td>{{ $log->triggered_by ?? $log->user?->email ?? '—' }}</td>
-                            <td>{{ $log->event_type }}</td>
-                            <td>{{ $log->created_at?->diffForHumans() }}</td>
+                            <td data-label="User">{{ $log->triggered_by ?? $log->user?->email ?? '—' }}</td>
+                            <td data-label="Type">{{ $log->event_type }}</td>
+                            <td data-label="When">{{ $log->created_at?->diffForHumans() }}</td>
                         </tr>
                         @empty
-                        <tr><td colspan="3"><div class="workspace-empty">No onboarding events yet.</div></td></tr>
+                        <tr><td colspan="3" data-label=""><div class="workspace-empty">No onboarding events yet.</div></td></tr>
                         @endforelse
                     </tbody>
                 </table>

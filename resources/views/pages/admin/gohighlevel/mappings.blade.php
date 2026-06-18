@@ -85,18 +85,18 @@
                     <tbody>
                         @foreach($tableMappings as $mapping)
                         <tr>
-                            <td><code>{{ $mapping->ghl_field }}</code></td>
-                            <td style="color:var(--color-text-muted,#6b7280);">→</td>
-                            <td><code>{{ $mapping->db_column }}</code></td>
-                            <td>{{ $mapping->label ?: '—' }}</td>
-                            <td>
+                            <td data-label="GHL Field"><code>{{ $mapping->ghl_field }}</code></td>
+                            <td data-label="" style="color:var(--color-text-muted,#6b7280);">→</td>
+                            <td data-label="DB Column"><code>{{ $mapping->db_column }}</code></td>
+                            <td data-label="Label">{{ $mapping->label ?: '—' }}</td>
+                            <td data-label="Active">
                                 <span class="workspace-pill {{ $mapping->is_active ? 'workspace-pill--green' : 'workspace-pill--grey' }}">
                                     {{ $mapping->is_active ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
-                            <td>{{ $mapping->sort_order }}</td>
+                            <td data-label="Order">{{ $mapping->sort_order }}</td>
                             @if($canEdit)
-                            <td style="display:flex; gap:.5rem; flex-wrap:wrap;">
+                            <td data-label="" style="display:flex; gap:.5rem; flex-wrap:wrap;">
                                 <form action="{{ route('admin.ghl.mappings.toggle', $mapping) }}" method="POST">
                                     @csrf
                                     <button type="submit" class="button button--ghost-blue" style="font-size:.78rem; padding:.25rem .6rem;">

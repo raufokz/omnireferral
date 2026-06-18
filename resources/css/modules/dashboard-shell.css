@@ -23,6 +23,8 @@
 
 .dashboard-shell {
     min-height: 100vh;
+    max-width: 100%;
+    overflow-x: clip;
 }
 
 .dashboard-shell__sidebar {
@@ -223,6 +225,7 @@
 .dashboard-shell__main {
     margin-left: var(--dash-shell-sidebar-width);
     min-height: 100vh;
+    min-width: 0;
 }
 
 .dashboard-shell__header {
@@ -238,6 +241,7 @@
     background: rgba(244, 247, 251, 0.78);
     backdrop-filter: blur(8px);
     border-bottom: 1px solid rgba(11, 54, 104, 0.1);
+    min-width: 0;
 }
 
 .dashboard-shell__menu-toggle {
@@ -267,6 +271,9 @@
     display: flex;
     align-items: center;
     gap: 0.6rem;
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .dashboard-shell__avatar {
@@ -372,6 +379,8 @@
 
 .dashboard-shell__content {
     padding: 1.3rem;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .dashboard-shell__page-head {
@@ -380,6 +389,7 @@
     justify-content: space-between;
     gap: 1rem;
     margin-bottom: 1.1rem;
+    min-width: 0;
 }
 
 .dashboard-shell__page-head h1 {
@@ -397,6 +407,7 @@
 .dashboard-shell__page-actions {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.6rem;
 }
 
@@ -650,6 +661,7 @@
     .dashboard-shell__sidebar {
         transform: translateX(-100%);
         transition: transform 220ms ease;
+        box-shadow: 18px 0 45px rgba(6, 21, 43, 0.18);
     }
 
     .dashboard-shell.sidebar-open .dashboard-shell__sidebar {
@@ -677,6 +689,25 @@
 @media (max-width: 760px) {
     .dashboard-shell__header {
         padding: 0.75rem;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        min-height: 0;
+    }
+
+    .dashboard-shell__header-copy {
+        order: 3;
+        width: 100%;
+    }
+
+    .dashboard-shell__actions {
+        gap: 0.45rem;
+        flex: 1;
+    }
+
+    .dashboard-shell__quick-link,
+    .dashboard-shell__settings,
+    .dashboard-shell__actions form {
+        display: none;
     }
 
     .dashboard-shell__settings-trigger {
@@ -693,6 +724,12 @@
 
     .dashboard-shell__page-head {
         flex-direction: column;
+        gap: 0.8rem;
+    }
+
+    .dashboard-shell__page-actions,
+    .dashboard-shell__page-actions .button {
+        width: 100%;
     }
 
     .workspace-grid--2,

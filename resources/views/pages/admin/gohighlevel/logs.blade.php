@@ -66,12 +66,12 @@
                 <tbody>
                     @forelse($webhooks as $wh)
                     <tr>
-                        <td><strong>#{{ $wh->id }}</strong></td>
-                        <td><code>{{ $wh->event }}</code></td>
-                        <td>{{ $wh->remote_id ?: '—' }}</td>
-                        <td><span class="workspace-pill {{ $wh->statusBadgeClass() }}">{{ $wh->statusLabel() }}</span></td>
-                        <td>{{ $wh->created_at?->format('M j, Y g:i A') }}</td>
-                        <td style="display:flex; gap:.5rem; flex-wrap:wrap;">
+                        <td data-label="ID"><strong>#{{ $wh->id }}</strong></td>
+                        <td data-label="Event"><code>{{ $wh->event }}</code></td>
+                        <td data-label="Remote ID">{{ $wh->remote_id ?: '—' }}</td>
+                        <td data-label="Status"><span class="workspace-pill {{ $wh->statusBadgeClass() }}">{{ $wh->statusLabel() }}</span></td>
+                        <td data-label="Received">{{ $wh->created_at?->format('M j, Y g:i A') }}</td>
+                        <td data-label="" style="display:flex; gap:.5rem; flex-wrap:wrap;">
                             <a href="{{ route('admin.webhook-events.show', $wh->id) }}" class="button button--ghost-blue" style="font-size:.8rem; padding:.25rem .6rem;">Detail</a>
                             @if(! $wh->processed_at)
                             <form action="{{ route('admin.ghl.retry', $wh->id) }}" method="POST">
@@ -109,9 +109,9 @@
                 <tbody>
                     @forelse($onboardingLogs as $log)
                     <tr>
-                        <td><strong>#{{ $log->id }}</strong></td>
-                        <td>{{ $log->triggered_by ?? '—' }}</td>
-                        <td>
+                        <td data-label="ID"><strong>#{{ $log->id }}</strong></td>
+                        <td data-label="Triggered By">{{ $log->triggered_by ?? '—' }}</td>
+                        <td data-label="User">
                             @if($log->user)
                                 <a href="{{ route('admin.users.show', $log->user) }}" style="color:inherit;">{{ $log->user->name }}</a>
                                 <span class="workspace-pill" style="font-size:.7rem;">{{ $log->user->role }}</span>
@@ -119,13 +119,13 @@
                                 <span style="color:var(--color-text-muted,#9ca3af);">No user linked</span>
                             @endif
                         </td>
-                        <td><code>{{ $log->event_type }}</code></td>
-                        <td>
+                        <td data-label="Event"><code>{{ $log->event_type }}</code></td>
+                        <td data-label="Processed">
                             <span class="workspace-pill {{ $log->processed_at ? 'workspace-pill--green' : 'workspace-pill--orange' }}">
                                 {{ $log->processed_at ? 'Done' : 'Pending' }}
                             </span>
                         </td>
-                        <td>{{ $log->created_at?->format('M j, Y g:i A') }}</td>
+                        <td data-label="When">{{ $log->created_at?->format('M j, Y g:i A') }}</td>
                     </tr>
                     @empty
                     <tr><td colspan="6"><div class="workspace-empty">No onboarding logs found.</div></td></tr>
