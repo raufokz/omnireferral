@@ -29,7 +29,7 @@ class GoHighLevelService
 
         try {
             $response = Http::withToken($this->resolveApiKey())
-                ->acceptJson()
+                ->withHeaders($this->apiHeaders())
                 ->timeout(10)
                 ->get(rtrim($this->resolveBaseUrl(), '/').'/contacts/', [
                     'locationId' => $this->resolveLocationId(),
@@ -63,7 +63,7 @@ class GoHighLevelService
         }
 
         $response = Http::withToken($this->resolveApiKey())
-            ->acceptJson()
+            ->withHeaders($this->apiHeaders())
             ->timeout($this->resolveHttpTimeout())
             ->retry($this->resolveHttpRetries(), $this->resolveHttpRetrySleepMs(), throw: false)
             ->post(rtrim($this->resolveBaseUrl(), '/').'/contacts/', [
@@ -146,7 +146,7 @@ class GoHighLevelService
         }
 
         $response = Http::withToken($this->resolveApiKey())
-            ->acceptJson()
+            ->withHeaders($this->apiHeaders())
             ->timeout($this->resolveHttpTimeout())
             ->retry($this->resolveHttpRetries(), $this->resolveHttpRetrySleepMs(), throw: false)
             ->put(rtrim($this->resolveBaseUrl(), '/').'/contacts/'.$contactId, [
@@ -191,6 +191,26 @@ class GoHighLevelService
     public function resolveBaseUrl(): string
     {
         return (string) config('services.gohighlevel.base_url', 'https://services.leadconnectorhq.com');
+    }
+
+    public function resolveApiVersion(): string
+    {
+        $version = trim((string) config('services.gohighlevel.api_version', '2021-07-28'));
+
+        return $version !== '' ? $version : '2021-07-28';
+    }
+
+    /**
+     * Headers required on every GoHighLevel v2 (LeadConnector) request. The Version header is
+     * mandatory — without it the API responds 401 "version header was not found".
+     * Authorization (Bearer token) is applied separately via Http::withToken().
+     */
+    private function apiHeaders(): array
+    {
+        return [
+            'Version' => $this->resolveApiVersion(),
+            'Accept'  => 'application/json',
+        ];
     }
 
     private function resolveHttpTimeout(): int

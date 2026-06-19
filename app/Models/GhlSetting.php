@@ -51,7 +51,7 @@ class GhlSetting extends Model
         return static::firstOrCreate([], [
             'environment'      => 'production',
             'connection_status' => 'unknown',
-            'hidden_fields'    => ['user_id', 'email', 'phone', 'role', 'plan_id'],
+            'hidden_fields'    => ['user_id', 'email', 'phone', 'name', 'role', 'plan_id', 'payment_id'],
         ]);
     }
 

@@ -48,11 +48,12 @@
         <span class="eyebrow">2 — Form URL Check</span>
         <h2>Verify form URLs</h2>
         @foreach([
-            'Pre-payment Survey'     => $settings->pre_payment_survey_url,
-            'Post-payment Onboarding'=> $settings->post_payment_onboarding_url,
-            'Buyer Onboarding'       => $settings->buyer_onboarding_form_url,
-            'Agent Onboarding'       => $settings->agent_onboarding_form_url,
-            'Realtor Onboarding'     => $settings->realtor_onboarding_form_url,
+            'Pre-payment Survey'      => $settings->pre_payment_survey_url,
+            'Post-payment Onboarding' => $settings->post_payment_onboarding_url,
+            'Buyer Onboarding'        => $settings->buyer_onboarding_form_url,
+            'Agent Onboarding'        => $settings->agent_onboarding_form_url,
+            'Realtor Onboarding'      => $settings->realtor_onboarding_form_url,
+            'Redirect URL After Submission' => $settings->redirect_url_after_submission,
         ] as $label => $url)
         <div style="display:flex; align-items:center; gap:.75rem; padding:.6rem 0; border-bottom:1px solid var(--color-border,#e5e7eb); flex-wrap:wrap;">
             <strong style="min-width:200px; font-size:.875rem;">{{ $label }}</strong>

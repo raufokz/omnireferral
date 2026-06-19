@@ -40,6 +40,8 @@ return [
         'api_key' => env('GOHIGHLEVEL_API_KEY'),
         'location_id' => env('GOHIGHLEVEL_LOCATION_ID'),
         'base_url' => env('GOHIGHLEVEL_BASE_URL', 'https://services.leadconnectorhq.com'),
+        // GoHighLevel v2 (LeadConnector) requires the API version header on every request.
+        'api_version' => env('GOHIGHLEVEL_API_VERSION', '2021-07-28'),
         'webhook_secret' => env('GOHIGHLEVEL_WEBHOOK_SECRET'),
         'http_timeout' => (int) env('GOHIGHLEVEL_HTTP_TIMEOUT', 10),
         'http_retries' => (int) env('GOHIGHLEVEL_HTTP_RETRIES', 3),
