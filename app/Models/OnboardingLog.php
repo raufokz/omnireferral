@@ -14,6 +14,7 @@ class OnboardingLog extends Model
         'triggered_by',
         'payload',
         'processed_at',
+        'email_sent',
     ];
 
     protected function casts(): array

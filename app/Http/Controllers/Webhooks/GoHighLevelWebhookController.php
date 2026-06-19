@@ -182,7 +182,8 @@ class GoHighLevelWebhookController extends Controller
 
             SyncUserToGoHighLevel::dispatch($user->id);
 
-            if ($result['isFirstOnboarding'] && $result['plainPassword']) {
+            // Send portal access email if password was generated
+            if ($result['plainPassword']) {
                 SendPortalLoginAccessEmailJob::dispatch(
                     userId: $user->id,
                     plainPassword: $result['plainPassword'],

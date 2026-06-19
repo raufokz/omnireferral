@@ -92,9 +92,13 @@ class OnboardingSyncService
         }
 
         // --- Password provisioning ---
+        // Always provision password for onboarding completion to ensure portal access email is sent
         $plainPassword = null;
         if ($isFirstOnboarding) {
             $plainPassword = $this->passwordService->provision($user);
+        } elseif ($user->must_reset_password) {
+            // User exists but needs password reset - generate new password
+            $plainPassword = $this->passwordService->forceProvision($user);
         }
 
         $user->save();
@@ -115,6 +119,7 @@ class OnboardingSyncService
             'triggered_by' => $email,
             'payload'      => $safePayload,
             'processed_at' => now(),
+            'email_sent'   => $plainPassword ? true : false,
         ]);
 
         return [

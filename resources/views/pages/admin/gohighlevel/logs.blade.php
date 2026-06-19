@@ -104,7 +104,9 @@
                         <th>User</th>
                         <th>Event</th>
                         <th>Processed</th>
+                        <th>Email Sent</th>
                         <th>When</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -116,6 +118,9 @@
                             @if($log->user)
                                 <a href="{{ route('admin.users.show', $log->user) }}" style="color:inherit;">{{ $log->user->name }}</a>
                                 <span class="workspace-pill" style="font-size:.7rem;">{{ $log->user->role }}</span>
+                                @if($log->user->status !== 'active')
+                                <span class="workspace-pill workspace-pill--orange" style="font-size:.7rem;">{{ $log->user->status }}</span>
+                                @endif
                             @else
                                 <span style="color:var(--color-text-muted,#9ca3af);">No user linked</span>
                             @endif
@@ -126,10 +131,24 @@
                                 {{ $log->processed_at ? 'Done' : 'Pending' }}
                             </span>
                         </td>
+                        <td data-label="Email Sent">
+                            @if(isset($log->email_sent))
+                                <span class="workspace-pill {{ $log->email_sent ? 'workspace-pill--green' : 'workspace-pill--orange' }}">
+                                    {{ $log->email_sent ? 'Yes' : 'No' }}
+                                </span>
+                            @else
+                                <span style="color:var(--color-text-muted,#9ca3af);">—</span>
+                            @endif
+                        </td>
                         <td data-label="When">{{ $log->created_at?->format('M j, Y g:i A') }}</td>
+                        <td data-label="" style="display:flex; gap:.5rem; flex-wrap:wrap;">
+                            @if($log->user && $log->processed_at)
+                            <button onclick="resendPortalEmail({{ $log->id }})" class="button button--ghost-blue" style="font-size:.8rem; padding:.25rem .6rem;">Resend Email</button>
+                            @endif
+                        </td>
                     </tr>
                     @empty
-                    <tr><td colspan="6"><div class="workspace-empty">No onboarding logs found.</div></td></tr>
+                    <tr><td colspan="8"><div class="workspace-empty">No onboarding logs found.</div></td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -138,4 +157,40 @@
     </section>
 
 </div>
+
+<script>
+function resendPortalEmail(logId) {
+    if (!confirm('Resend portal access email for this user?')) {
+        return;
+    }
+
+    const button = event.target;
+    button.disabled = true;
+    button.textContent = 'Sending...';
+
+    fetch(`{{ route('admin.ghl.resend-email', 0) }}`.replace('0', logId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.ok) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + data.message + (data.reasons ? '\n\nReasons:\n' + data.reasons.join('\n') : ''));
+        }
+    })
+    .catch(error => {
+        alert('Failed to resend email: ' + error.message);
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.textContent = 'Resend Email';
+    });
+}
+</script>
 @endsection

@@ -354,6 +354,7 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::get('admin/gohighlevel/debug', [AdminGoHighLevelController::class, 'debug'])->name('admin.ghl.debug');
         Route::get('admin/gohighlevel/logs', [AdminGoHighLevelController::class, 'logs'])->name('admin.ghl.logs');
         Route::post('admin/gohighlevel/logs/{webhookEventId}/retry', [AdminGoHighLevelController::class, 'retrySync'])->name('admin.ghl.retry');
+        Route::post('admin/gohighlevel/logs/{onboardingLogId}/resend-email', [AdminGoHighLevelController::class, 'resendPortalAccessEmail'])->name('admin.ghl.resend-email');
         Route::get('admin/gohighlevel/testing', [AdminGoHighLevelController::class, 'testing'])->name('admin.ghl.testing');
         Route::post('admin/gohighlevel/test/connection', [AdminGoHighLevelController::class, 'testConnection'])->name('admin.ghl.test.connection');
         Route::post('admin/gohighlevel/test/webhook', [AdminGoHighLevelController::class, 'testWebhook'])->name('admin.ghl.test.webhook');

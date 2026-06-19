@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendPortalLoginAccessEmailJob;
 use App\Models\GhlFieldMapping;
 use App\Models\GhlSetting;
 use App\Models\GoHighLevelWebhookLog;
@@ -10,6 +11,7 @@ use App\Models\Lead;
 use App\Models\OnboardingLog;
 use App\Models\User;
 use App\Services\GoHighLevelService;
+use App\Services\PasswordProvisioningService;
 use App\Services\WebhookInboxService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -224,7 +226,7 @@ class GoHighLevelController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        $onboardingLogs = OnboardingLog::with('user:id,name,email,role')
+        $onboardingLogs = OnboardingLog::with('user:id,name,email,role,status,onboarding_completed_at,must_reset_password')
             ->where('source', 'ghl')
             ->when($search, fn ($q) => $q->where('triggered_by', 'like', "%{$search}%"))
             ->latest()
@@ -389,6 +391,83 @@ class GoHighLevelController extends Controller
             ]);
         } catch (\Throwable $e) {
             return response()->json(['ok' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    public function resendPortalAccessEmail(Request $request, int $onboardingLogId): JsonResponse
+    {
+        $log = OnboardingLog::with('user')->findOrFail($onboardingLogId);
+
+        if (! $log->user) {
+            return response()->json(['ok' => false, 'message' => 'User not found for this onboarding log.']);
+        }
+
+        $user = $log->user;
+
+        // Check eligibility
+        $reasons = [];
+
+        if (! $user->email) {
+            $reasons[] = 'Missing email';
+        }
+
+        if (! $log->processed_at) {
+            $reasons[] = 'Webhook not processed';
+        }
+
+        if (! $user->onboarding_completed_at) {
+            $reasons[] = 'Onboarding not completed';
+        }
+
+        if (! in_array($user->status, ['active', 'approved'], true)) {
+            $reasons[] = 'User status is not active/approved (current: '.$user->status.')';
+        }
+
+        if ($reasons) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'User not eligible for portal access email.',
+                'reasons' => $reasons,
+            ]);
+        }
+
+        try {
+            // Generate new password
+            $plainPassword = $this->passwordService->forceProvision($user);
+            $user->save();
+
+            // Send email
+            SendPortalLoginAccessEmailJob::dispatch(
+                userId: $user->id,
+                plainPassword: $plainPassword,
+                loginUrl: route('login'),
+                dashboardUrl: $user->dashboardRoute(),
+            );
+
+            // Update log
+            $log->email_sent = true;
+            $log->save();
+
+            Log::info('Portal access email resent via admin', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'onboarding_log_id' => $onboardingLogId,
+            ]);
+
+            return response()->json([
+                'ok' => true,
+                'message' => 'Portal access email sent successfully to '.$user->email,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to resend portal access email', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'ok' => false,
+                'message' => 'Failed to send email: '.$e->getMessage(),
+            ]);
         }
     }
 
