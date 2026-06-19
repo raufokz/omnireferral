@@ -401,7 +401,9 @@
                                 <template x-if="!profile.has_active_plan">
                                     <div class="omni-agent-modal__lock-note" role="status">
                                         <span class="omni-agent-modal__lock-tag">Plan inactive</span>
-                                        <strong>Full profile locked</strong>
+                                        <strong>Profile Not Claimed Yet</strong>
+                                        <small>Sign Up & Unlock Full Profile</small>
+
                                         <a href="{{ route('pricing') }}" class="agent-btn agent-btn--orange">View Pricing</a>
                                     </div>
                                 </template>
