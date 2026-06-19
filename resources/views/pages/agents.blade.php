@@ -212,9 +212,9 @@
                 <button type="button" class="omni-agent-signup-modal__close" x-on:click="closeAgentSignup()" aria-label="Close">&times;</button>
 
                 <div class="omni-agent-signup-modal__head">
-                    <span class="agent-kicker">Add Agent Profile</span>
-                    <h2 id="agent-signup-title">Submit your agent profile</h2>
-                    <p>Add a Preferred Agents profile directly to the public directory. OmniReferral admins can update or remove profiles later if needed.</p>
+                    <span class="agent-kicker">Preferred Agents Directory</span>
+                    <h2 id="agent-signup-title">Add Your Agent Profile</h2>
+                    <p>Submit your details to appear in the OmniReferral Preferred Agents directory.</p>
                 </div>
 
                 @if($showAgentSignupForm)
@@ -236,7 +236,7 @@
 
                     <label>
                         <span>Full Name *</span>
-                        <input type="text" name="name" value="{{ old('name') }}" required autocomplete="name" placeholder="Taylor Morgan">
+                        <input type="text" name="name" value="{{ old('name') }}" required autocomplete="name" placeholder="Enter your full name">
                     </label>
                     <label>
                         <span>Email</span>
@@ -278,14 +278,14 @@
                             <span>I agree to the Terms and Privacy Policy.</span>
                         </label>
                         <label>
-                            <input type="checkbox" name="communication_accepted" value="1" required @checked(old('communication_accepted'))>
-                            <span>I agree to receive account and onboarding communications by email/SMS.</span>
+                            <input type="checkbox" name="communication_accepted" value="1" @checked(old('communication_accepted'))>
+                            <span>I agree to receive account and onboarding communications by email/SMS. <em>Optional</em></span>
                         </label>
                     </div>
 
                     <div class="omni-agent-signup-form__actions">
                         <button type="button" class="agent-btn agent-btn--ghost" x-on:click="closeAgentSignup()">Cancel</button>
-                        <button type="submit" class="agent-btn agent-btn--orange" data-saving-label="Saving...">Submit Agent Profile</button>
+                        <button type="submit" class="agent-btn agent-btn--orange" data-saving-label="Submitting...">Submit Agent Profile</button>
                     </div>
                 </form>
             </section>
@@ -305,10 +305,10 @@
                 <template x-if="profile && !loading">
                     <div class="omni-agent-modal__content">
                         <aside class="omni-agent-modal__side">
-                            <img :src="profile.headshot_url" :alt="profile.name" loading="lazy">
+                            <img :src="profile.headshot_url" :alt="profile.name" loading="lazy" x-on:error="$event.target.onerror=null; $event.target.src='{{ asset('images/realtors/logo-bydefault_agent.png') }}'">
                             <div class="omni-agent-contact-card">
                                 <div><span>Phone</span><strong x-text="profile.phone_label"></strong></div>
-                                <div><span>Email</span><strong x-text="profile.email_label"></strong></div>
+                                <div><span>Email <em>Optional</em></span><strong x-text="profile.email_label"></strong></div>
                                 <div><span>Website</span><strong x-text="profile.website_label"></strong></div>
                                 <div><span>Status</span><strong x-text="profile.active_agent_label"></strong></div>
                             </div>
@@ -344,7 +344,7 @@
                                     <div class="omni-agent-rating omni-agent-rating--modal">
                                         <strong x-text="profile.rating"></strong>
                                         <span>&#9733;&#9733;&#9733;&#9733;&#9733;</span>
-                                        <small><span x-text="profile.review_count"></span> reviews</small>
+                                        <small x-show="Number(profile.review_count) > 0"><span x-text="profile.review_count"></span> reviews</small>
                                     </div>
                                 </div>
                             </div>
@@ -357,8 +357,8 @@
                             <p class="omni-agent-modal__notice" x-show="successMessage" x-text="successMessage"></p>
 
                             <div class="omni-agent-modal__metrics">
-                                <div><strong x-text="profile.years_of_experience ? profile.years_of_experience + '+' : '8+'"></strong><span>Years Experience</span></div>
-                                <div><strong x-text="profile.leads_closed + '+'"></strong><span>Deals Closed</span></div>
+                                <div><strong x-text="Math.max(2, Number(profile.years_of_experience) || 2) + '+'"></strong><span>Years Experience</span></div>
+                                <div x-show="Number(profile.leads_closed) > 0"><strong x-text="profile.leads_closed + '+'"></strong><span>Deals Closed</span></div>
                                 <div><strong x-text="profile.satisfaction_rate"></strong><span>Client Satisfaction</span></div>
                                 <div><strong x-text="profile.rank_label"></strong><span>Agent Nationwide</span></div>
                             </div>

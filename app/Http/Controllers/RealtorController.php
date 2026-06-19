@@ -144,7 +144,7 @@ class RealtorController extends Controller
             'city' => ['required', 'string', 'max:100'],
             'state' => ['required', 'string', 'size:2'],
             'terms_accepted' => ['required', 'accepted'],
-            'communication_accepted' => ['required', 'accepted'],
+            'communication_accepted' => ['nullable', 'accepted'],
         ]);
 
         $email = trim((string) ($validated['email'] ?? ''));

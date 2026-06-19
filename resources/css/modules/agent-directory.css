@@ -2209,6 +2209,20 @@
     min-height: 2.75rem;
 }
 
+.omni-agent-signup-form__consent input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    min-height: 1rem;
+    margin: 0;
+    padding: 0;
+    flex: 0 0 1rem;
+}
+
+.omni-agent-signup-form__consent label {
+    align-items: center;
+    min-height: 1.5rem;
+}
+
 @media (min-width: 769px) {
     .omni-agent-modal__panel {
         width: min(68rem, 75vw);
