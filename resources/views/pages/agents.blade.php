@@ -304,7 +304,7 @@
 
                 <template x-if="profile && !loading">
                     <div class="omni-agent-modal__content">
-                        <aside class="omni-agent-modal__side">
+                        <aside class="omni-agent-modal__side" :class="{ 'is-plan-locked': !profile.has_active_plan }">
                             <img :src="profile.headshot_url" :alt="profile.name" loading="lazy" x-on:error="$event.target.onerror=null; $event.target.src='{{ asset('images/realtors/logo-bydefault_agent.png') }}'">
                             <div class="omni-agent-contact-card">
                                 <div><span>Phone</span><strong x-text="profile.phone_label"></strong></div>
@@ -363,37 +363,49 @@
                                 <div><strong x-text="profile.rank_label"></strong><span>Agent Nationwide</span></div>
                             </div>
 
-                            <section class="omni-agent-modal__section">
-                                <h3>About <span x-text="profile.name?.split(' ')[0] || 'Agent'"></span></h3>
-                                <p x-text="profile.bio"></p>
-                            </section>
+                            <div class="omni-agent-modal__gated" :class="{ 'is-locked': !profile.has_active_plan }">
+                                <div class="omni-agent-modal__gated-content">
+                                    <section class="omni-agent-modal__section">
+                                        <h3>About <span x-text="profile.name?.split(' ')[0] || 'Agent'"></span></h3>
+                                        <p x-text="profile.bio"></p>
+                                    </section>
 
-                            <section class="omni-agent-modal__section">
-                                <h3>Specialties</h3>
-                                <div class="omni-agent-modal__pills">
-                                    <template x-for="specialty in profile.specialties || []" :key="specialty">
-                                        <span x-text="specialty"></span>
-                                    </template>
-                                </div>
-                            </section>
+                                    <section class="omni-agent-modal__section">
+                                        <h3>Specialties</h3>
+                                        <div class="omni-agent-modal__pills">
+                                            <template x-for="specialty in profile.specialties || []" :key="specialty">
+                                                <span x-text="specialty"></span>
+                                            </template>
+                                        </div>
+                                    </section>
 
-                            <section class="omni-agent-modal__section">
-                                <h3>Service Areas</h3>
-                                <div class="omni-agent-modal__pills">
-                                    <template x-for="area in profile.service_areas || []" :key="area">
-                                        <span x-text="area"></span>
-                                    </template>
-                                </div>
-                            </section>
+                                    <section class="omni-agent-modal__section">
+                                        <h3>Service Areas</h3>
+                                        <div class="omni-agent-modal__pills">
+                                            <template x-for="area in profile.service_areas || []" :key="area">
+                                                <span x-text="area"></span>
+                                            </template>
+                                        </div>
+                                    </section>
 
-                            <section class="omni-agent-modal__section">
-                                <h3>Languages</h3>
-                                <div class="omni-agent-modal__pills">
-                                    <template x-for="language in profile.languages_list || []" :key="language">
-                                        <span x-text="language"></span>
-                                    </template>
+                                    <section class="omni-agent-modal__section">
+                                        <h3>Languages</h3>
+                                        <div class="omni-agent-modal__pills">
+                                            <template x-for="language in profile.languages_list || []" :key="language">
+                                                <span x-text="language"></span>
+                                            </template>
+                                        </div>
+                                    </section>
                                 </div>
-                            </section>
+
+                                <template x-if="!profile.has_active_plan">
+                                    <div class="omni-agent-modal__lock-note" role="status">
+                                        <span class="omni-agent-modal__lock-tag">Plan inactive</span>
+                                        <strong>Full profile locked</strong>
+                                        <a href="{{ route('pricing') }}" class="agent-btn agent-btn--orange">View Pricing</a>
+                                    </div>
+                                </template>
+                            </div>
 
                             <form class="omni-agent-inquiry" x-show="showForm" x-on:submit.prevent="submitInquiry()">
                                 <input type="hidden" name="inquiry_type" :value="inquiryType">

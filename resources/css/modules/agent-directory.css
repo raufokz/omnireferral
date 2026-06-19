@@ -2320,3 +2320,69 @@
         line-height: 1.5;
     }
 }
+
+/* Plan-gated profile content — blurs the lower profile sections (About and below)
+   for agents who have not activated a plan. Top content (headshot, name, rating,
+   metrics) stays sharp because it sits above this wrapper in the modal. */
+.omni-agent-modal__gated {
+    position: relative;
+}
+
+.omni-agent-modal__gated.is-locked .omni-agent-modal__gated-content {
+    filter: blur(7px);
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.85;
+}
+
+.omni-agent-modal__side.is-plan-locked .omni-agent-contact-card,
+.omni-agent-modal__side.is-plan-locked .omni-agent-socials {
+    filter: blur(7px);
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.72;
+}
+
+.omni-agent-modal__lock-note {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 0.65rem;
+    padding: 1.5rem;
+    border-radius: 14px;
+    background: rgba(247, 249, 252, 0.55);
+}
+
+.omni-agent-modal__lock-tag {
+    display: inline-flex;
+    padding: 0.28rem 0.65rem;
+    border: 1px solid rgba(255, 96, 0, 0.24);
+    border-radius: 999px;
+    background: rgba(255, 96, 0, 0.1);
+    color: #b54708;
+    font-size: 0.7rem;
+    font-weight: 850;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.omni-agent-modal__lock-note .agent-btn {
+    min-height: 2.35rem;
+    padding: 0.55rem 1rem;
+    text-decoration: none;
+}
+
+.omni-agent-modal__lock-note strong {
+    font-size: 1.02rem;
+    color: var(--agent-blue, #0b3668);
+}
+
+.omni-agent-modal__lock-note span {
+    max-width: 22rem;
+    font-size: 0.86rem;
+    color: var(--agent-ink, #0f213d);
+}

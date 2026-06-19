@@ -195,6 +195,9 @@ class AgentDirectory
             'is_featured' => $profile->isFeatured(),
             'is_active_agent' => (bool) ($profile->is_active_agent ?? true),
             'active_agent_label' => ($profile->is_active_agent ?? true) ? 'Active Agent' : 'Not Active',
+            // True when the owning account has an active plan. Used to gate (blur) the lower
+            // profile sections for agents who have not purchased/activated a plan yet.
+            'has_active_plan' => $user !== null && filled($user->current_plan_id),
 
             'headshot_url' => $profile->headshotPublicUrl($user),
             'profile_url' => route('agents.profile', $profile),

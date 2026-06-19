@@ -40,7 +40,7 @@ class RealtorController extends Controller
     public function profile(RealtorProfile $agent): View
     {
         abort_unless($agent->isPublicVisible(), 404);
-        $agent->load(['user:id,name,display_name,avatar']);
+        $agent->load(['user:id,name,display_name,avatar,current_plan_id']);
 
         return view('pages.agent-profile-seo', [
             'profile' => $agent,
@@ -56,7 +56,7 @@ class RealtorController extends Controller
     public function preview(RealtorProfile $agent): JsonResponse
     {
         abort_unless($agent->isPublicVisible(), 404);
-        $agent->load(['user:id,name,display_name,avatar']);
+        $agent->load(['user:id,name,display_name,avatar,current_plan_id']);
 
         return response()->json([
             'profile' => AgentDirectory::publicCardPayload($agent),
@@ -247,7 +247,7 @@ class RealtorController extends Controller
     {
         $query = AgentDirectory::publicQuery()
             ->with(['user' => fn ($userQuery) => $userQuery->select([
-                'id', 'name', 'display_name', 'avatar', 'role', 'status',
+                'id', 'name', 'display_name', 'avatar', 'role', 'status', 'current_plan_id',
             ])])
             ->select([
                 'id', 'user_id', 'slug', 'brokerage_name', 'service_city', 'service_state',
