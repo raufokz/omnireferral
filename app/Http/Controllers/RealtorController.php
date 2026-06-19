@@ -138,7 +138,7 @@ class RealtorController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['required', 'string', 'max:30'],
-            'profile_image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'profile_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'brokerage_name' => ['required', 'string', 'max:255'],
             'is_active_agent' => ['required', 'boolean'],
             'city' => ['required', 'string', 'max:100'],
@@ -146,7 +146,6 @@ class RealtorController extends Controller
             'terms_accepted' => ['required', 'accepted'],
             'communication_accepted' => ['nullable', 'accepted'],
         ], [
-            'profile_image.required' => 'Please upload a profile image for your agent listing.',
             'profile_image.image' => 'The profile image must be a valid image file (JPG, PNG, or WEBP).',
         ]);
 

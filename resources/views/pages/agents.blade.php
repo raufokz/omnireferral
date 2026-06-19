@@ -247,8 +247,8 @@
                         <input type="tel" name="phone" value="{{ old('phone') }}" required autocomplete="tel" placeholder="(555) 123-4567">
                     </label>
                     <label>
-                        <span>Profile Image *</span>
-                        <input type="file" name="profile_image" accept="image/*" required>
+                        <span>Profile Image</span>
+                        <input type="file" name="profile_image" accept="image/*">
                     </label>
                     <label>
                         <span>Brokerage *</span>
