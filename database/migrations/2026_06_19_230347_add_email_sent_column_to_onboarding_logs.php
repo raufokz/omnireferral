@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('onboarding_logs', function (Blueprint $table) {
-            $table->boolean('email_sent')->default(false)->after('processed_at');
+            if (! Schema::hasColumn('onboarding_logs', 'email_sent')) {
+                $table->boolean('email_sent')->default(false)->after('processed_at');
+            }
         });
     }
 
