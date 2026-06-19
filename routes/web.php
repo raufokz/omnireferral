@@ -24,6 +24,7 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\Dashboard\EnquiryController as DashboardEnquiryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GuestFavouritesController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\PricingController;
@@ -162,6 +163,9 @@ Route::post('/properties/{property}/enquiry', [PropertyController::class, 'store
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{blog}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/agents', [RealtorController::class, 'index'])->name('agents.index');
+Route::post('/agents', [RealtorController::class, 'submitAgentProfile'])
+    ->middleware('throttle:auth-register')
+    ->name('agents.submit');
 Route::get('/agents/{location}', [RealtorController::class, 'location'])
     ->where('location', '[a-z0-9\-]+')
     ->name('agents.location');
@@ -347,6 +351,7 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::post('admin/gohighlevel/mappings', [AdminGoHighLevelController::class, 'addMapping'])->name('admin.ghl.mappings.add');
         Route::post('admin/gohighlevel/mappings/{mapping}/toggle', [AdminGoHighLevelController::class, 'toggleMapping'])->name('admin.ghl.mappings.toggle');
         Route::delete('admin/gohighlevel/mappings/{mapping}', [AdminGoHighLevelController::class, 'deleteMapping'])->name('admin.ghl.mappings.delete');
+        Route::get('admin/gohighlevel/debug', [AdminGoHighLevelController::class, 'debug'])->name('admin.ghl.debug');
         Route::get('admin/gohighlevel/logs', [AdminGoHighLevelController::class, 'logs'])->name('admin.ghl.logs');
         Route::post('admin/gohighlevel/logs/{webhookEventId}/retry', [AdminGoHighLevelController::class, 'retrySync'])->name('admin.ghl.retry');
         Route::get('admin/gohighlevel/testing', [AdminGoHighLevelController::class, 'testing'])->name('admin.ghl.testing');

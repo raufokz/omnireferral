@@ -237,7 +237,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('register') }}" enctype="multipart/form-data" class="omni-agent-signup-form">
+                <form method="POST" action="{{ route('agents.submit') }}" enctype="multipart/form-data" class="omni-agent-signup-form">
                     @csrf
                     <input type="hidden" name="role" value="agent">
                     <input type="hidden" name="agent_directory_submission" value="1">

@@ -8,7 +8,9 @@
     <a href="{{ route('admin.ghl.settings') }}" class="button button--ghost-blue">Settings</a>
     <a href="{{ route('admin.ghl.mappings') }}" class="button button--ghost-blue">Field Mappings</a>
     <a href="{{ route('admin.ghl.logs') }}" class="button button--ghost-blue">Logs</a>
-    <a href="{{ route('admin.ghl.testing') }}" class="button">Test Tools</a>
+    <a href="{{ route('admin.ghl.debug') }}" class="button button--ghost-blue">Debug</a>
+    <a href="{{ route('admin.ghl.testing') }}" class="button button--ghost-blue">Test Tools</a>
+    <button type="button" class="button" id="ghlTestConnectionBtn" data-url="{{ $testConnectionUrl }}">Test Connection</button>
 @endsection
 
 @push('styles')
@@ -51,6 +53,25 @@
                     <span class="workspace-pill workspace-pill--red">Missing credentials</span>
                 @endif
                 <span class="workspace-pill">{{ ucfirst($settings->environment) }}</span>
+            </div>
+        </div>
+        <div id="ghlTestResult" style="display:none; margin-top:1rem; padding:.75rem 1rem; border-radius:8px; font-size:.88rem;"></div>
+        <div class="ghl-kpi-grid" style="margin-top:1rem;">
+            <div class="ghl-kpi">
+                <span>Last Webhook Received</span>
+                <strong style="font-size:1rem;">{{ $stats['last_webhook_at']?->diffForHumans() ?? 'Never' }}</strong>
+            </div>
+            <div class="ghl-kpi">
+                <span>Last Tested</span>
+                <strong style="font-size:1rem;">{{ $settings->last_tested_at?->diffForHumans() ?? 'Never' }}</strong>
+            </div>
+            <div class="ghl-kpi">
+                <span>Failed / Pending Webhooks</span>
+                <strong>{{ number_format($stats['webhooks_pending']) }}</strong>
+            </div>
+            <div class="ghl-kpi">
+                <span>Leads Synced to GHL</span>
+                <strong>{{ number_format($stats['leads_ghl_synced']) }}</strong>
             </div>
         </div>
     </section>
@@ -170,4 +191,45 @@
     </div>
 
 </div>
+
+@push('scripts')
+<script>
+(function () {
+    const btn = document.getElementById('ghlTestConnectionBtn');
+    const out = document.getElementById('ghlTestResult');
+    if (!btn || !out) return;
+
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    btn.addEventListener('click', async function () {
+        const original = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = 'Testing…';
+        out.style.display = 'block';
+        out.style.background = '#f1f5f9';
+        out.style.color = '#334155';
+        out.textContent = 'Contacting GoHighLevel…';
+
+        try {
+            const res = await fetch(btn.dataset.url, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+            });
+            const data = await res.json();
+            const ok = data.ok === true;
+            out.style.background = ok ? 'rgba(34,197,94,.12)' : 'rgba(239,68,68,.12)';
+            out.style.color = ok ? '#15803d' : '#b91c1c';
+            out.textContent = (ok ? '✓ ' : '✕ ') + (data.message || (ok ? 'Connection successful.' : 'Connection failed.'));
+        } catch (e) {
+            out.style.background = 'rgba(239,68,68,.12)';
+            out.style.color = '#b91c1c';
+            out.textContent = '✕ Request failed: ' + e.message;
+        } finally {
+            btn.disabled = false;
+            btn.textContent = original;
+        }
+    });
+})();
+</script>
+@endpush
 @endsection

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\GhlFieldMapping;
 use App\Models\GhlSetting;
 use App\Models\GoHighLevelWebhookLog;
+use App\Models\Lead;
 use App\Models\OnboardingLog;
 use App\Models\User;
 use App\Services\GoHighLevelService;
@@ -15,6 +16,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class GoHighLevelController extends Controller
@@ -39,6 +42,9 @@ class GoHighLevelController extends Controller
             'webhooks_pending'   => GoHighLevelWebhookLog::whereNull('processed_at')->count(),
             'onboarding_total'   => OnboardingLog::where('source', 'ghl')->count(),
             'users_ghl_synced'   => User::whereNotNull('ghl_contact_id')->count(),
+            'leads_ghl_synced'   => Lead::whereNotNull('ghl_contact_id')->count(),
+            'last_webhook_at'    => GoHighLevelWebhookLog::latest()->value('created_at'),
+            'configured'         => $ghl->configured(),
         ];
 
         return view('pages.admin.gohighlevel.index', [
@@ -47,6 +53,7 @@ class GoHighLevelController extends Controller
             'recentWebhooks'   => $recentWebhooks,
             'recentOnboarding' => $recentOnboarding,
             'stats'            => $stats,
+            'testConnectionUrl'=> route('admin.ghl.test.connection'),
             'meta'             => ['title' => 'GoHighLevel — Admin | OmniReferral'],
         ]);
     }
@@ -383,5 +390,185 @@ class GoHighLevelController extends Controller
         } catch (\Throwable $e) {
             return response()->json(['ok' => false, 'message' => $e->getMessage()]);
         }
+    }
+
+    // ─── Debugging Center ───────────────────────────────────────────────────────
+
+    /**
+     * Run a battery of read-only health checks across connection, webhooks, and
+     * database layers and surface each as problem / cause / fix / severity / status.
+     * Nothing here mutates data — it is purely diagnostic.
+     */
+    public function debug(): View
+    {
+        $settings = GhlSetting::instance();
+        $ghl      = app(GoHighLevelService::class);
+
+        $checks = [];
+
+        // ── Connection ───────────────────────────────────────────────────────
+        $hasKey = filled($ghl->resolveApiKey());
+        $checks[] = $this->check(
+            'Connection', 'Private integration key configured',
+            $hasKey ? 'working' : 'broken',
+            $hasKey ? 'low' : 'high',
+            $hasKey ? 'API key is present (DB or env).' : 'No API key found in ghl_settings or GOHIGHLEVEL_API_KEY env.',
+            $hasKey ? null : 'Add the key under GoHighLevel → Settings, or set GOHIGHLEVEL_API_KEY in .env.',
+            'app/Services/GoHighLevelService.php · resolveApiKey()'
+        );
+
+        $hasLocation = filled($ghl->resolveLocationId());
+        $checks[] = $this->check(
+            'Connection', 'Location / Business ID configured',
+            $hasLocation ? 'working' : 'broken',
+            $hasLocation ? 'low' : 'high',
+            $hasLocation ? 'Location ID is present.' : 'No Location ID in ghl_settings or GOHIGHLEVEL_LOCATION_ID env.',
+            $hasLocation ? null : 'Add the Location ID under GoHighLevel → Settings.',
+            'app/Services/GoHighLevelService.php · resolveLocationId()'
+        );
+
+        $statusMap = [
+            'connected' => ['working', 'low', 'Last test succeeded.'],
+            'invalid'   => ['broken', 'high', 'Last test returned 401 — the key is invalid or lacks scope.'],
+            'error'     => ['warning', 'medium', 'Last test failed with a network/API error.'],
+            'unknown'   => ['warning', 'medium', 'Connection has not been tested since the last settings change.'],
+        ];
+        [$cStatus, $cSev, $cCause] = $statusMap[$settings->connection_status] ?? $statusMap['unknown'];
+        $checks[] = $this->check(
+            'Connection', 'Last verified API connection',
+            $cStatus, $cSev, $cCause,
+            $settings->connection_status === 'connected' ? null : 'Open the overview and click "Test Connection" to re-verify credentials and scope.',
+            'GoHighLevelController@testConnection',
+            $settings->last_tested_at?->diffForHumans()
+        );
+
+        // ── Webhooks ─────────────────────────────────────────────────────────
+        $routesOk = Route::has('webhooks.gohighlevel.onboarding')
+            && Route::has('webhooks.gohighlevel.purchase')
+            && Route::has('webhooks.gohighlevel.lead-status');
+        $checks[] = $this->check(
+            'Webhooks', 'Inbound webhook routes registered',
+            $routesOk ? 'working' : 'broken',
+            $routesOk ? 'low' : 'high',
+            $routesOk ? 'onboarding, purchase, and lead-status endpoints are routed.' : 'One or more GHL webhook routes are missing.',
+            $routesOk ? null : 'Verify the webhooks.gohighlevel.* routes in routes/web.php.',
+            'routes/web.php'
+        );
+
+        $secret = filled($settings->webhook_secret) || filled(config('services.gohighlevel.webhook_secret'));
+        $isProd = app()->environment('production');
+        $checks[] = $this->check(
+            'Webhooks', 'Webhook secret / signature validation',
+            $secret ? 'working' : ($isProd ? 'broken' : 'warning'),
+            $secret ? 'low' : ($isProd ? 'high' : 'medium'),
+            $secret
+                ? 'A shared secret is configured; inbound webhooks must send the X-OmniReferral-Webhook header.'
+                : 'No webhook secret configured. In local/testing the endpoint accepts unsigned calls; in production it would reject everything.',
+            $secret ? null : 'Set a webhook secret under Settings and configure the same value in GoHighLevel.',
+            'GoHighLevelWebhookController@isAuthorized'
+        );
+
+        $recentCount = GoHighLevelWebhookLog::where('created_at', '>=', now()->subDays(7))->count();
+        $lastWebhookAt = GoHighLevelWebhookLog::latest()->value('created_at');
+        $checks[] = $this->check(
+            'Webhooks', 'Events received in the last 7 days',
+            $recentCount > 0 ? 'working' : 'warning',
+            $recentCount > 0 ? 'low' : 'medium',
+            $recentCount > 0 ? "{$recentCount} event(s) received recently." : 'No GoHighLevel webhook events received in the last 7 days.',
+            $recentCount > 0 ? null : 'Confirm the webhook URL in GoHighLevel matches this site and that the workflow/automation is active.',
+            'webhook_events table (provider=gohighlevel)',
+            $lastWebhookAt?->diffForHumans()
+        );
+
+        $pending = GoHighLevelWebhookLog::whereNull('processed_at')->count();
+        $checks[] = $this->check(
+            'Webhooks', 'Unprocessed webhook backlog',
+            $pending === 0 ? 'working' : 'warning',
+            $pending === 0 ? 'low' : 'medium',
+            $pending === 0 ? 'All received events have been processed.' : "{$pending} event(s) recorded but not marked processed.",
+            $pending === 0 ? null : 'Open Logs, inspect the payload, and use Retry. Persistent failures are logged to storage/logs/laravel.log.',
+            'GoHighLevelController@retrySync'
+        );
+
+        // ── Database ─────────────────────────────────────────────────────────
+        foreach (['webhook_events', 'ghl_settings', 'ghl_field_mappings', 'onboarding_logs'] as $table) {
+            $exists = Schema::hasTable($table);
+            $checks[] = $this->check(
+                'Database', "Table `{$table}` exists",
+                $exists ? 'working' : 'broken',
+                $exists ? 'low' : 'high',
+                $exists ? 'Table is present.' : 'Required table is missing.',
+                $exists ? null : 'Run `php artisan migrate` — a GHL migration has not been applied.',
+                'database/migrations'
+            );
+        }
+
+        $ghlColumn = Schema::hasColumn('users', 'ghl_contact_id');
+        $checks[] = $this->check(
+            'Database', 'users.ghl_contact_id column present',
+            $ghlColumn ? 'working' : 'broken',
+            $ghlColumn ? 'low' : 'high',
+            $ghlColumn ? 'Contacts can be linked back to GoHighLevel.' : 'The ghl_contact_id column is missing from users.',
+            $ghlColumn ? null : 'Run pending migrations.',
+            'users table'
+        );
+
+        $activeMappings = GhlFieldMapping::active()->count();
+        $checks[] = $this->check(
+            'Database', 'Active field mappings configured',
+            $activeMappings > 0 ? 'working' : 'warning',
+            $activeMappings > 0 ? 'low' : 'medium',
+            $activeMappings > 0 ? "{$activeMappings} active mapping(s)." : 'No active field mappings — onboarding webhooks fall back to built-in defaults in OnboardingSyncService.',
+            $activeMappings > 0 ? null : 'Add mappings under Field Mappings to control how GHL fields land in your tables.',
+            'app/Models/GhlFieldMapping.php'
+        );
+
+        // ── Summary ──────────────────────────────────────────────────────────
+        $summary = [
+            'broken'  => collect($checks)->where('status', 'broken')->count(),
+            'warning' => collect($checks)->where('status', 'warning')->count(),
+            'working' => collect($checks)->where('status', 'working')->count(),
+        ];
+
+        $endpointDocs = [
+            'onboarding' => route('webhooks.gohighlevel.onboarding'),
+            'purchase'   => route('webhooks.gohighlevel.purchase'),
+            'leadStatus' => route('webhooks.gohighlevel.lead-status'),
+            'events'     => route('webhooks.gohighlevel.events'),
+        ];
+
+        return view('pages.admin.gohighlevel.debug', [
+            'checks'        => $checks,
+            'summary'       => $summary,
+            'settings'      => $settings,
+            'endpointDocs'  => $endpointDocs,
+            'secretEnabled' => $secret,
+            'meta'          => ['title' => 'GHL Debugging Center — Admin | OmniReferral'],
+        ]);
+    }
+
+    /**
+     * Build a single diagnostic row.
+     */
+    private function check(
+        string $area,
+        string $label,
+        string $status,
+        string $severity,
+        string $cause,
+        ?string $fix = null,
+        ?string $file = null,
+        ?string $meta = null,
+    ): array {
+        return [
+            'area'     => $area,
+            'label'    => $label,
+            'status'   => $status,   // working | warning | broken
+            'severity' => $severity, // low | medium | high
+            'cause'    => $cause,
+            'fix'      => $fix,
+            'file'     => $file,
+            'meta'     => $meta,
+        ];
     }
 }

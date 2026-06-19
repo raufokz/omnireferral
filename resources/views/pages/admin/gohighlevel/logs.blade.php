@@ -6,6 +6,7 @@
 
 @section('dashboard_actions')
     <a href="{{ route('admin.ghl.index') }}" class="button button--ghost-blue">Overview</a>
+    <a href="{{ route('admin.ghl.debug') }}" class="button button--ghost-blue">Debug</a>
     <a href="{{ route('admin.ghl.testing') }}" class="button">Test Tools</a>
 @endsection
 

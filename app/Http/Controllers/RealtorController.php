@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Contact;
 use App\Models\Lead;
 use App\Models\RealtorProfile;
+use App\Models\User;
 use App\Support\AgentDirectory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -124,6 +126,73 @@ class RealtorController extends Controller
         }
 
         return back()->with('success', $message);
+    }
+
+    public function submitAgentProfile(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'role' => ['required', 'in:agent'],
+            'agent_directory_submission' => ['required', 'accepted'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'phone' => ['required', 'string', 'max:30'],
+            'profile_image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'brokerage_name' => ['required', 'string', 'max:255'],
+            'license_number' => ['required', 'string', 'max:100'],
+            'address_line_1' => ['required', 'string', 'max:255'],
+            'address_line_2' => ['nullable', 'string', 'max:255'],
+            'city' => ['required', 'string', 'max:100'],
+            'state' => ['required', 'string', 'size:2'],
+            'zip_code' => ['required', 'string', 'max:10'],
+            'terms_accepted' => ['required', 'accepted'],
+            'communication_accepted' => ['required', 'accepted'],
+        ]);
+
+        DB::transaction(function () use ($request, $validated) {
+            $stored = $request->file('profile_image')->store('avatars', 'public');
+
+            $user = User::create([
+                'name' => $validated['name'],
+                'display_name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Str::password(32),
+                'phone' => $validated['phone'],
+                'address_line_1' => $validated['address_line_1'],
+                'address_line_2' => $validated['address_line_2'] ?? null,
+                'city' => $validated['city'],
+                'state' => strtoupper($validated['state']),
+                'zip_code' => $validated['zip_code'],
+                'avatar' => $stored,
+                'role' => 'agent',
+                'status' => 'pending',
+                'must_reset_password' => true,
+                'notify_email' => true,
+                'notify_marketing' => true,
+            ]);
+
+            RealtorProfile::updateOrCreate(['user_id' => $user->id], [
+                'user_id' => $user->id,
+                'slug' => RealtorProfile::generateUniqueSlug($validated['name']),
+                'service_city' => $validated['city'],
+                'service_state' => strtoupper($validated['state']),
+                'service_zip_code' => $validated['zip_code'],
+                'brokerage_name' => $validated['brokerage_name'],
+                'license_number' => $validated['license_number'],
+                'specialties' => 'Buyer Representation, Seller Strategy, Lead Conversion',
+                'bio' => 'Agent profile submitted from the public OmniReferral directory and awaiting admin review.',
+                'headshot' => 'storage/'.$stored,
+                'profile_status' => RealtorProfile::STATUS_DRAFT,
+                'approved_at' => null,
+                'approved_by_user_id' => null,
+                'rejected_at' => null,
+                'rejected_by_user_id' => null,
+                'approval_notes' => 'Public directory submission pending review.',
+            ]);
+        });
+
+        return redirect()
+            ->route('agents.index')
+            ->with('success', 'Your agent profile was submitted for review. Our team will follow up after approval.');
     }
 
     private function renderDirectory(Request $request, ?array $location = null): View
