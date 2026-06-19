@@ -181,7 +181,7 @@
                         <tr>
                             <td>
                                 <div class="agent-admin__identity">
-                                    <img src="{{ $profile->headshotPublicUrl($user) }}" alt="" width="40" height="40" loading="lazy">
+                                    <img src="{{ $profile->headshotPublicUrl($user) }}" alt="" width="40" height="40" loading="lazy" onerror="this.onerror=null;this.src='{{ asset('images/realtors/logo-bydefault_agent.png') }}'">
                                     <div>
                                         <strong>{{ $user?->publicDisplayName() ?? 'Unnamed agent' }}</strong>
                                         <span>{{ $profile->slug }}</span>
@@ -273,7 +273,7 @@
                 <article class="agent-admin__mobile-card">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:0.5rem;">
                         <div class="agent-admin__identity">
-                            <img src="{{ $profile->headshotPublicUrl($user) }}" alt="" width="40" height="40" loading="lazy">
+                            <img src="{{ $profile->headshotPublicUrl($user) }}" alt="" width="40" height="40" loading="lazy" onerror="this.onerror=null;this.src='{{ asset('images/realtors/logo-bydefault_agent.png') }}'">
                             <div>
                                 <strong>{{ $user?->publicDisplayName() ?? 'Unnamed agent' }}</strong>
                                 <span>{{ $user?->email ?? '-' }}</span>

@@ -200,11 +200,24 @@ class RealtorProfile extends Model
     }
 
 
+    /**
+     * Public-facing headshot URL. Sourced ONLY from realtor_profiles.headshot with a
+     * default-image fallback — never the user avatar or a random placeholder, so the
+     * directory, modal, and admin tables always show the correct agent (or the default).
+     * The $user argument is retained for backwards compatibility and intentionally unused.
+     */
     public function headshotPublicUrl(?User $user = null): string
     {
-        $user ??= $this->relationLoaded('user') ? $this->user : null;
+        return AgentAvatar::publicHeadshotUrl($this);
+    }
 
-        return AgentAvatar::url($user, $this);
+    /**
+     * Computed accessor so views can use $profile->headshot_url. This is NOT a database
+     * column — it is derived from the headshot column via AgentAvatar::publicHeadshotUrl().
+     */
+    public function getHeadshotUrlAttribute(): string
+    {
+        return AgentAvatar::publicHeadshotUrl($this);
     }
 
     public function publicShowUrl(): ?string

@@ -136,7 +136,7 @@
                     <article class="omni-agent-card" data-agent-card>
                         <button type="button" class="omni-agent-card__save" aria-label="Save {{ $card['name'] }}" x-on:click="quickSave('{{ $profile->slug }}')">&#9825;</button>
                         <div class="omni-agent-card__media">
-                            <img src="{{ $card['headshot_url'] }}" alt="{{ $card['name'] }}" loading="lazy" width="180" height="180" onerror="this.onerror=null;this.src='{{ asset('images/omnireferral-logo.png') }}'">
+                            <img src="{{ $card['headshot_url'] }}" alt="{{ $card['name'] }}" loading="lazy" width="180" height="180" onerror="this.onerror=null;this.src='{{ asset('images/realtors/logo-bydefault_agent.png') }}'">
                         </div>
                         <div class="omni-agent-card__body">
                             <div class="omni-agent-card__top">
@@ -247,8 +247,8 @@
                         <input type="tel" name="phone" value="{{ old('phone') }}" required autocomplete="tel" placeholder="(555) 123-4567">
                     </label>
                     <label>
-                        <span>Profile Image</span>
-                        <input type="file" name="profile_image" accept="image/*">
+                        <span>Profile Image *</span>
+                        <input type="file" name="profile_image" accept="image/*" required>
                     </label>
                     <label>
                         <span>Brokerage *</span>

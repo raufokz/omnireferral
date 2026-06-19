@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\RealtorProfile;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
 
 class AgentAvatar
 {
@@ -12,6 +13,12 @@ class AgentAvatar
     public const FALLBACK_SVG = 'images/about/about-omnireferral.svg';
 
     public const DEFAULT_PATH = 'assets/images/default-agent-avatar.svg';
+
+    /**
+     * Canonical default image for public realtor/agent headshots.
+     * Returned whenever realtor_profiles.headshot is null / empty / unresolvable.
+     */
+    public const DEFAULT_AGENT_IMAGE = 'images/realtors/logo-bydefault_agent.png';
 
     private const PLACEHOLDER_HEADSHOTS = [
         'images/realtors/10.png',
@@ -44,6 +51,60 @@ class AgentAvatar
         }
 
         return self::placeholderUrl($user, $profile);
+    }
+
+    /**
+     * Public realtor headshot resolver.
+     *
+     * Uses ONLY realtor_profiles.headshot as the source of truth (no users.avatar,
+     * no random placeholder) so cards/modals never show the wrong person's photo.
+     * Falls back to the canonical default agent image when headshot is missing.
+     */
+    public static function publicHeadshotUrl(?RealtorProfile $profile = null): string
+    {
+        $headshot = $profile?->headshot;
+
+        if (is_string($headshot) && trim($headshot) !== '') {
+            $resolved = self::resolveHeadshot(trim($headshot));
+            if ($resolved !== null) {
+                return $resolved;
+            }
+        }
+
+        return asset(self::DEFAULT_AGENT_IMAGE);
+    }
+
+    /**
+     * Build a web URL from a stored headshot value. Handles full URLs, /storage and
+     * storage/ web paths, bundled images/ or assets/ paths, and bare public-disk paths.
+     * Genuinely broken files are caught by the frontend onerror fallback.
+     */
+    private static function resolveHeadshot(string $path): ?string
+    {
+        $path = trim($path);
+        if ($path === '') {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        if (str_starts_with($path, '/storage/')) {
+            return $path;
+        }
+
+        if (str_starts_with($path, 'storage/')) {
+            return '/'.$path;
+        }
+
+        if (str_starts_with($path, '/images/') || str_starts_with($path, 'images/')
+            || str_starts_with($path, '/assets/') || str_starts_with($path, 'assets/')) {
+            return asset(ltrim($path, '/'));
+        }
+
+        // Bare path stored on the public disk (e.g. "avatars/photo.jpg").
+        return Storage::disk('public')->url($path);
     }
 
     public static function logoUrl(): string

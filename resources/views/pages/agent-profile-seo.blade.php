@@ -12,7 +12,7 @@
                 <span class="agent-card-premium__featured">⭐ Featured Agent</span>
             @endif
             <div style="display:grid;grid-template-columns:200px 1fr;gap:1.25rem;margin-top:1rem;">
-                <img src="{{ $card['headshot_url'] }}" alt="{{ $card['name'] }}" style="width:100%;border-radius:16px;object-fit:cover;" loading="lazy">
+                <img src="{{ $card['headshot_url'] }}" alt="{{ $card['name'] }}" style="width:100%;border-radius:16px;object-fit:cover;" loading="lazy" onerror="this.onerror=null;this.src='{{ asset('images/realtors/logo-bydefault_agent.png') }}'">
                 <div>
                     <h1 style="margin:0 0 0.35rem;">{{ $card['name'] }}</h1>
                     <p>{{ $card['brokerage'] }}</p>
