@@ -248,7 +248,7 @@
                     </label>
                     <label>
                         <span>Email *</span>
-                        <input type="email" name="email" value="{{ old('email') }}" required autocomplete="email" placeholder="you@example.com">
+                        <input type="email" name="email" value="{{ old('email') }}"  autocomplete="email" placeholder="you@example.com">
                     </label>
                     <label>
                         <span>Phone *</span>
@@ -262,18 +262,7 @@
                         <span>Brokerage *</span>
                         <input type="text" name="brokerage_name" value="{{ old('brokerage_name') }}" required placeholder="Premier Realty Group">
                     </label>
-                    <label>
-                        <span>License Number *</span>
-                        <input type="text" name="license_number" value="{{ old('license_number') }}" required placeholder="TX-1234567">
-                    </label>
-                    <label class="omni-agent-signup-form__full">
-                        <span>Street Address *</span>
-                        <input type="text" name="address_line_1" value="{{ old('address_line_1') }}" required autocomplete="street-address" placeholder="123 Main Street">
-                    </label>
-                    <label class="omni-agent-signup-form__full">
-                        <span>Address Line 2</span>
-                        <input type="text" name="address_line_2" value="{{ old('address_line_2') }}" placeholder="Suite, unit, or apartment">
-                    </label>
+
                     <label>
                         <span>City *</span>
                         <input type="text" name="city" value="{{ old('city') }}" required autocomplete="address-level2" placeholder="Dallas">
@@ -282,10 +271,7 @@
                         <span>State *</span>
                         <input type="text" name="state" value="{{ old('state') }}" required maxlength="2" autocomplete="address-level1" placeholder="TX">
                     </label>
-                    <label>
-                        <span>ZIP Code *</span>
-                        <input type="text" name="zip_code" value="{{ old('zip_code') }}" required autocomplete="postal-code" placeholder="75201">
-                    </label>
+
                     <div class="omni-agent-signup-form__consent">
                         <label>
                             <input type="checkbox" name="terms_accepted" value="1" required @checked(old('terms_accepted'))>
