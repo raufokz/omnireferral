@@ -181,6 +181,7 @@ class StaffAgentProfileController extends Controller
                 'service_zip_code' => $validated['service_zip_code'] ?? null,
                 'brokerage_name' => $validated['brokerage_name'],
                 'license_number' => $validated['license_number'] ?? null,
+                'is_active_agent' => (bool) ($validated['is_active_agent'] ?? true),
                 'years_of_experience' => $validated['years_of_experience'] ?? null,
                 'languages' => $validated['languages'] ?? null,
                 'market_areas' => $validated['market_areas'] ?? null,
@@ -197,6 +198,7 @@ class StaffAgentProfileController extends Controller
                 'rejected_at' => $profileStatus === RealtorProfile::STATUS_SUSPENDED ? now() : null,
                 'rejected_by_user_id' => $profileStatus === RealtorProfile::STATUS_SUSPENDED ? $request->user()?->id : null,
                 'source_url' => $validated['source_url'] ?? null,
+                'submission_source' => $validated['submission_source'] ?? null,
             ]);
         });
 
@@ -260,6 +262,7 @@ class StaffAgentProfileController extends Controller
         $agentProfile->update([
             'brokerage_name' => $validated['brokerage_name'],
             'license_number' => $validated['license_number'] ?? null,
+            'is_active_agent' => (bool) ($validated['is_active_agent'] ?? true),
             'service_city' => $validated['service_city'],
             'service_state' => strtoupper($validated['service_state']),
             'service_zip_code' => $validated['service_zip_code'] ?? null,
@@ -274,6 +277,7 @@ class StaffAgentProfileController extends Controller
             'social_links' => $this->socialLinksFromPayload($validated),
             'profile_status' => $validated['profile_status'],
             'source_url' => $validated['source_url'] ?? null,
+            'submission_source' => $validated['submission_source'] ?? $agentProfile->submission_source,
         ] + $approvalFields);
 
         AdminAudit::log($request, 'realtor_profile.updated', 'realtor_profile', $agentProfile->id);
@@ -378,6 +382,7 @@ class StaffAgentProfileController extends Controller
             'phone' => ['nullable', 'string', 'max:20'],
             'brokerage_name' => ['required', 'string', 'max:255'],
             'license_number' => ['nullable', 'string', 'max:100'],
+            'is_active_agent' => ['nullable', 'boolean'],
             'service_city' => ['required', 'string', 'max:100'],
             'service_state' => ['required', 'string', 'size:2'],
             'service_zip_code' => ['nullable', 'string', 'max:10'],
@@ -397,6 +402,7 @@ class StaffAgentProfileController extends Controller
             'leads_closed' => ['nullable', 'integer', 'min:0'],
             'profile_status' => ['required', Rule::in(array_keys(RealtorProfile::statusOptions()))],
             'source_url' => ['nullable', 'url', 'max:500'],
+            'submission_source' => ['nullable', 'string', 'max:80'],
             'headshot' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'headshot_url' => ['nullable', 'string', 'max:500'],
         ]);

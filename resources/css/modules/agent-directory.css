@@ -638,6 +638,47 @@
     white-space: nowrap;
 }
 
+.omni-agent-success {
+    margin-bottom: 1rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid rgba(22, 163, 74, 0.22);
+    border-radius: 8px;
+    background: #ecfdf5;
+    color: #047857;
+    font-size: 0.9rem;
+    font-weight: 850;
+}
+
+.omni-agent-card__badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.35rem;
+}
+
+.omni-agent-active-badge {
+    display: inline-flex;
+    min-height: 1.35rem;
+    align-items: center;
+    width: fit-content;
+    padding: 0.24rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    font-weight: 900;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.omni-agent-active-badge.is-active {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.omni-agent-active-badge.is-inactive {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
 .omni-agent-rating {
     display: flex;
     flex-wrap: wrap;
@@ -1980,7 +2021,8 @@
     font-weight: 850;
 }
 
-.omni-agent-signup-form input {
+.omni-agent-signup-form input,
+.omni-agent-signup-form select {
     width: 100%;
     min-height: 2.9rem;
     border: 1px solid rgba(15, 33, 61, 0.13);
@@ -1996,9 +2038,19 @@
     padding: 0.55rem;
 }
 
-.omni-agent-signup-form input:focus {
+.omni-agent-signup-form input:focus,
+.omni-agent-signup-form select:focus {
     border-color: rgba(255, 96, 0, 0.5);
     box-shadow: 0 0 0 4px rgba(255, 96, 0, 0.1);
+}
+
+.omni-agent-honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .omni-agent-signup-form__full,

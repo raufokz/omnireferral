@@ -119,6 +119,10 @@
 
     <section class="omni-agent-results" id="agent-directory-results">
         <div class="container">
+            @if(session('success'))
+                <div class="omni-agent-success" role="status">{{ session('success') }}</div>
+            @endif
+
             <div class="omni-agent-results__bar" data-animate="up">
                 <p>Showing {{ number_format($profiles->firstItem() ?? 0) }} to {{ number_format($profiles->lastItem() ?? 0) }} of {{ number_format($totalCount) }} agents</p>
                 <div class="omni-agent-results__tools">
@@ -155,7 +159,6 @@
                                         <span>{{ $location }}</span>
                                     @endif
                                 </div>
-                                <span class="omni-agent-card__verified">{{ $card['is_featured'] ? 'Featured Agent' : 'Verified' }}</span>
                             </div>
 
                             <div class="omni-agent-rating">
@@ -222,8 +225,8 @@
 
                 <div class="omni-agent-signup-modal__head">
                     <span class="agent-kicker">Add Agent Profile</span>
-                    <h2 id="agent-signup-title">Submit your agent profile for review</h2>
-                    <p>Create a pending OmniReferral agent profile. Our admin team reviews each submission before it appears in the public directory.</p>
+                    <h2 id="agent-signup-title">Submit your agent profile</h2>
+                    <p>Add a Preferred Agents profile directly to the public directory. OmniReferral admins can update or remove profiles later if needed.</p>
                 </div>
 
                 @if($showAgentSignupForm)
@@ -241,13 +244,14 @@
                     @csrf
                     <input type="hidden" name="role" value="agent">
                     <input type="hidden" name="agent_directory_submission" value="1">
+                    <input type="text" name="website" value="" tabindex="-1" autocomplete="off" class="omni-agent-honeypot" aria-hidden="true">
 
                     <label>
                         <span>Full Name *</span>
                         <input type="text" name="name" value="{{ old('name') }}" required autocomplete="name" placeholder="Taylor Morgan">
                     </label>
                     <label>
-                        <span>Email *</span>
+                        <span>Email</span>
                         <input type="email" name="email" value="{{ old('email') }}"  autocomplete="email" placeholder="you@example.com">
                     </label>
                     <label>
@@ -255,12 +259,20 @@
                         <input type="tel" name="phone" value="{{ old('phone') }}" required autocomplete="tel" placeholder="(555) 123-4567">
                     </label>
                     <label>
-                        <span>Profile Image *</span>
-                        <input type="file" name="profile_image" accept="image/*" required>
+                        <span>Profile Image</span>
+                        <input type="file" name="profile_image" accept="image/*">
                     </label>
                     <label>
                         <span>Brokerage *</span>
                         <input type="text" name="brokerage_name" value="{{ old('brokerage_name') }}" required placeholder="Premier Realty Group">
+                    </label>
+                    <label>
+                        <span>Are you currently active as an agent? *</span>
+                        <select name="is_active_agent" required>
+                            <option value="">Select status</option>
+                            <option value="1" @selected(old('is_active_agent') === '1')>Yes, I am active</option>
+                            <option value="0" @selected(old('is_active_agent') === '0')>No, I am not active</option>
+                        </select>
                     </label>
 
                     <label>
@@ -285,7 +297,7 @@
 
                     <div class="omni-agent-signup-form__actions">
                         <button type="button" class="agent-btn agent-btn--ghost" x-on:click="closeAgentSignup()">Cancel</button>
-                        <button type="submit" class="agent-btn agent-btn--orange">Submit Agent Profile</button>
+                        <button type="submit" class="agent-btn agent-btn--orange" data-saving-label="Saving...">Submit Agent Profile</button>
                     </div>
                 </form>
             </section>
@@ -310,7 +322,7 @@
                                 <div><span>Phone</span><strong x-text="profile.phone_label"></strong></div>
                                 <div><span>Email</span><strong x-text="profile.email_label"></strong></div>
                                 <div><span>Website</span><strong x-text="profile.website_label"></strong></div>
-                                <div><span>License</span><strong x-text="profile.license_label"></strong></div>
+                                <div><span>Status</span><strong x-text="profile.active_agent_label"></strong></div>
                             </div>
                             <div class="omni-agent-socials">
                                 <span>Connect With Agent</span>
@@ -337,6 +349,7 @@
                                     <div class="omni-agent-modal__title-row">
                                         <h2 x-text="profile.name"></h2>
                                         <span x-text="profile.is_featured ? 'Featured Agent' : ('Verified' + ' Agent')"></span>
+                                        <span class="omni-agent-active-badge" :class="profile.is_active_agent ? 'is-active' : 'is-inactive'" x-text="profile.active_agent_label"></span>
                                     </div>
                                     <p x-text="profile.brokerage"></p>
                                     <small x-text="profile.service_area"></small>
@@ -530,6 +543,17 @@ function agentDirectoryModal(config = {}) {
         },
     };
 }
+
+document.addEventListener('submit', (event) => {
+    const form = event.target.closest('.omni-agent-signup-form');
+    if (!form) return;
+
+    const submit = form.querySelector('[data-saving-label]');
+    if (!submit) return;
+
+    submit.disabled = true;
+    submit.textContent = submit.dataset.savingLabel || 'Saving...';
+});
 </script>
 @endpush
 @endsection

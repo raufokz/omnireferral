@@ -25,7 +25,7 @@
             $user?->email,
             $user?->phone,
             $profile->brokerage_name,
-            $profile->license_number,
+            $profile->is_active_agent === null ? true : $profile->is_active_agent,
             $profile->service_city,
             $profile->service_state,
             $profile->service_zip_code,
@@ -162,7 +162,7 @@
                     <tr>
                         <th>Agent Info</th>
                         <th>Contact info</th>
-                        <th>Brokerage &amp; License</th>
+                        <th>Brokerage &amp; Active Status</th>
                         <th>Market Location</th>
                         <th>Status</th>
                         <th>Completion</th>
@@ -197,7 +197,8 @@
                             <td>
                                 <div class="agent-admin__stack">
                                     <span>{{ $profile->brokerage_name ?: '-' }}</span>
-                                    <small>License: {{ $profile->license_number ?: '-' }}</small>
+                                    <small>{{ ($profile->is_active_agent ?? true) ? 'Active Agent' : 'Not Active' }}</small>
+                                    <small>Source: {{ $profile->submission_source === 'public_agents_page' ? 'Public Agents Page' : ($profile->submission_source ?: 'Admin') }}</small>
                                 </div>
                             </td>
                             <td>
@@ -291,8 +292,12 @@
                             <dd>{{ $profile->service_city ?: '-' }}, {{ $profile->service_state ?: '-' }}</dd>
                         </div>
                         <div>
-                            <dt>License</dt>
-                            <dd>{{ $profile->license_number ?: '-' }}</dd>
+                            <dt>Active Agent</dt>
+                            <dd>{{ ($profile->is_active_agent ?? true) ? 'Yes' : 'No' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Source</dt>
+                            <dd>{{ $profile->submission_source === 'public_agents_page' ? 'Public Agents Page' : ($profile->submission_source ?: 'Admin') }}</dd>
                         </div>
                         <div>
                             <dt>Completion</dt>
@@ -359,6 +364,8 @@
                     <div><span>Phone</span><strong>{{ $user?->phone ?? '-' }}</strong></div>
                     <div><span>Brokerage</span><strong>{{ $profile->brokerage_name ?: '-' }}</strong></div>
                     <div><span>License</span><strong>{{ $profile->license_number ?: '-' }}</strong></div>
+                    <div><span>Active Agent</span><strong>{{ ($profile->is_active_agent ?? true) ? 'Yes' : 'No' }}</strong></div>
+                    <div><span>Source</span><strong>{{ $profile->submission_source === 'public_agents_page' ? 'Public Agents Page' : ($profile->submission_source ?: 'Admin') }}</strong></div>
                     <div><span>Market Area</span><strong>{{ $profile->market_areas ?: $profile->service_city ?: '-' }}</strong></div>
                     <div><span>City / State</span><strong>{{ $profile->service_city ?: '-' }}, {{ $profile->service_state ?: '-' }}</strong></div>
                     <div><span>ZIP Code</span><strong>{{ $profile->service_zip_code ?: '-' }}</strong></div>
@@ -405,6 +412,12 @@
                             <label><span>Phone Number</span><input type="text" name="phone" value="{{ old('phone', $user?->phone) }}"></label>
                             <label><span>Brokerage Name</span><input type="text" name="brokerage_name" value="{{ old('brokerage_name', $profile->brokerage_name) }}" required></label>
                             <label><span>License Number</span><input type="text" name="license_number" value="{{ old('license_number', $profile->license_number) }}"></label>
+                            <label><span>Active Agent</span>
+                                <select name="is_active_agent">
+                                    <option value="1" @selected((string) old('is_active_agent', (int) ($profile->is_active_agent ?? true)) === '1')>Yes</option>
+                                    <option value="0" @selected((string) old('is_active_agent', (int) ($profile->is_active_agent ?? true)) === '0')>No</option>
+                                </select>
+                            </label>
                             <label><span>City</span><input type="text" name="service_city" value="{{ old('service_city', $profile->service_city) }}" required></label>
                             <label><span>State</span><input type="text" name="service_state" value="{{ old('service_state', $profile->service_state) }}" maxlength="2" required></label>
                             <label><span>ZIP Code</span><input type="text" name="service_zip_code" value="{{ old('service_zip_code', $profile->service_zip_code) }}"></label>
@@ -429,6 +442,7 @@
                             <label class="agent-admin__field-full"><span>Profile Image</span><input type="file" name="headshot" accept="image/*"></label>
                             <label class="agent-admin__field-full"><span>Image URL</span><input type="url" name="headshot_url" value="{{ old('headshot_url') }}"></label>
                             <label class="agent-admin__field-full"><span>Source URL</span><input type="url" name="source_url" value="{{ old('source_url', $profile->source_url) }}"></label>
+                            <input type="hidden" name="submission_source" value="{{ old('submission_source', $profile->submission_source) }}">
                             <label class="agent-admin__field-full"><span>Bio</span><textarea name="bio" rows="6" required>{{ old('bio', $profile->bio) }}</textarea></label>
                         </div>
                     </div>

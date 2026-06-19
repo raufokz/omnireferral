@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class RealtorController extends Controller
@@ -133,66 +134,104 @@ class RealtorController extends Controller
         $validated = $request->validate([
             'role' => ['required', 'in:agent'],
             'agent_directory_submission' => ['required', 'accepted'],
+            'website' => ['nullable', 'max:0'],
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['required', 'string', 'max:30'],
-            'profile_image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'profile_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'brokerage_name' => ['required', 'string', 'max:255'],
-            'license_number' => ['required', 'string', 'max:100'],
-            'address_line_1' => ['required', 'string', 'max:255'],
-            'address_line_2' => ['nullable', 'string', 'max:255'],
+            'is_active_agent' => ['required', 'boolean'],
             'city' => ['required', 'string', 'max:100'],
             'state' => ['required', 'string', 'size:2'],
-            'zip_code' => ['required', 'string', 'max:10'],
             'terms_accepted' => ['required', 'accepted'],
             'communication_accepted' => ['required', 'accepted'],
         ]);
 
-        DB::transaction(function () use ($request, $validated) {
-            $stored = $request->file('profile_image')->store('avatars', 'public');
+        $email = trim((string) ($validated['email'] ?? ''));
+        $phone = trim((string) $validated['phone']);
+        $name = trim((string) $validated['name']);
+        $brokerage = trim((string) $validated['brokerage_name']);
 
-            $user = User::create([
-                'name' => $validated['name'],
-                'display_name' => $validated['name'],
-                'email' => $validated['email'],
+        DB::transaction(function () use ($request, $validated, $email, $phone, $name, $brokerage) {
+            $existingProfile = RealtorProfile::query()
+                ->with('user')
+                ->where(function ($query) use ($email, $phone, $name, $brokerage) {
+                    if ($email !== '') {
+                        $query->orWhereHas('user', fn ($userQuery) => $userQuery->where('email', $email));
+                    }
+
+                    $query->orWhereHas('user', fn ($userQuery) => $userQuery->where('phone', $phone));
+                    $query->orWhere(function ($profileQuery) use ($name, $brokerage) {
+                        $profileQuery
+                            ->whereRaw('LOWER(brokerage_name) = ?', [mb_strtolower($brokerage)])
+                            ->whereHas('user', fn ($userQuery) => $userQuery->whereRaw('LOWER(name) = ?', [mb_strtolower($name)]));
+                    });
+                })
+                ->first();
+
+            if ($existingProfile?->profile_status === RealtorProfile::STATUS_SUSPENDED) {
+                throw ValidationException::withMessages([
+                    'phone' => 'This agent profile already exists. Contact OmniReferral to update a suspended profile.',
+                ]);
+            }
+
+            $stored = $request->hasFile('profile_image')
+                ? $request->file('profile_image')->store('avatars', 'public')
+                : null;
+
+            $user = $existingProfile?->user;
+            $userPayload = [
+                'name' => $name,
+                'display_name' => $name,
+                'email' => $email !== '' ? $email : ($user?->email ?: 'agent+'.Str::lower(Str::random(12)).'@public-agents.omnireferral.local'),
                 'password' => Str::password(32),
-                'phone' => $validated['phone'],
-                'address_line_1' => $validated['address_line_1'],
-                'address_line_2' => $validated['address_line_2'] ?? null,
+                'phone' => $phone,
                 'city' => $validated['city'],
                 'state' => strtoupper($validated['state']),
-                'zip_code' => $validated['zip_code'],
-                'avatar' => $stored,
                 'role' => 'agent',
-                'status' => 'pending',
+                'status' => 'active',
                 'must_reset_password' => true,
+                'email_verified_at' => now(),
                 'notify_email' => true,
                 'notify_marketing' => true,
-            ]);
+            ];
+
+            if ($stored) {
+                $userPayload['avatar'] = $stored;
+            }
+
+            if ($user) {
+                $user->forceFill($userPayload)->save();
+            } else {
+                $user = User::create($userPayload);
+            }
 
             RealtorProfile::updateOrCreate(['user_id' => $user->id], [
                 'user_id' => $user->id,
-                'slug' => RealtorProfile::generateUniqueSlug($validated['name']),
+                'slug' => $existingProfile?->slug ?: RealtorProfile::generateUniqueSlug($name),
                 'service_city' => $validated['city'],
                 'service_state' => strtoupper($validated['state']),
-                'service_zip_code' => $validated['zip_code'],
-                'brokerage_name' => $validated['brokerage_name'],
-                'license_number' => $validated['license_number'],
+                'service_zip_code' => null,
+                'brokerage_name' => $brokerage,
+                'license_number' => $existingProfile?->license_number,
                 'specialties' => 'Buyer Representation, Seller Strategy, Lead Conversion',
-                'bio' => 'Agent profile submitted from the public OmniReferral directory and awaiting admin review.',
-                'headshot' => 'storage/'.$stored,
-                'profile_status' => RealtorProfile::STATUS_DRAFT,
-                'approved_at' => null,
+                'bio' => 'Preferred agent profile submitted from the public OmniReferral directory.',
+                'headshot' => $stored ? 'storage/'.$stored : ($existingProfile?->headshot ?? null),
+                'profile_status' => RealtorProfile::STATUS_PUBLISHED,
+                'is_active_agent' => (bool) $validated['is_active_agent'],
+                'approved_at' => now(),
                 'approved_by_user_id' => null,
                 'rejected_at' => null,
                 'rejected_by_user_id' => null,
-                'approval_notes' => 'Public directory submission pending review.',
+                'source_url' => null,
+                'submission_source' => 'public_agents_page',
+                'approval_notes' => 'Auto-approved from public Preferred Agents submission.',
             ]);
         });
 
         return redirect()
             ->route('agents.index')
-            ->with('success', 'Your agent profile was submitted for review. Our team will follow up after approval.');
+            ->with('success', 'Your agent profile has been added successfully and is now visible on the Preferred Agents page.');
     }
 
     private function renderDirectory(Request $request, ?array $location = null): View
@@ -204,7 +243,7 @@ class RealtorController extends Controller
             ->select([
                 'id', 'user_id', 'slug', 'brokerage_name', 'service_city', 'service_state',
                 'service_zip_code', 'rating', 'review_count',
-                'leads_closed', 'specialties', 'bio', 'headshot', 'profile_status',
+                'leads_closed', 'specialties', 'bio', 'headshot', 'profile_status', 'is_active_agent',
                 'years_of_experience', 'license_number', 'languages', 'market_areas', 'social_links',
                 'created_at', 'approved_at', 'rejected_at',
                 'rejected_by_user_id',

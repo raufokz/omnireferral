@@ -187,10 +187,10 @@ class AgentDirectory
             'market_areas' => $profile->market_areas,
             'service_areas' => $serviceAreas,
             'years_of_experience' => $profile->years_of_experience,
-            'license_number' => $profile->license_number,
-            'license_label' => $profile->license_number ?: 'Verified on request',
             'social_links' => $profile->social_links ?: [],
             'is_featured' => $profile->isFeatured(),
+            'is_active_agent' => (bool) ($profile->is_active_agent ?? true),
+            'active_agent_label' => ($profile->is_active_agent ?? true) ? 'Active Agent' : 'Not Active',
 
             'headshot_url' => $profile->headshotPublicUrl($user),
             'profile_url' => route('agents.profile', $profile),
