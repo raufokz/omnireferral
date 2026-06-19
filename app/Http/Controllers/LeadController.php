@@ -9,13 +9,15 @@ use App\Services\LeadRoutingService;
 use App\Models\Package;
 use App\Models\User;
 use App\Notifications\NewLeadCreatedNotification;
+use App\Events\LeadReceived;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 
 class LeadController extends Controller
 {
-    public function store(StoreLeadRequest $request, LeadRoutingService $leadRouting): RedirectResponse
+    public function store(StoreLeadRequest $request, LeadRoutingService $leadRouting): RedirectResponse|JsonResponse
     {
         $validated = $request->validated();
 
@@ -38,6 +40,12 @@ class LeadController extends Controller
         $existingLead = Lead::duplicateQuery($normalizedEmail, $normalizedPhone)->latest('id')->first();
 
         if ($existingLead) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This lead is already in the system. We kept the original record and avoided a duplicate entry.',
+                ], 409);
+            }
             return back()->with('info', 'This lead is already in the system. We kept the original record and avoided a duplicate entry.');
         }
 
@@ -66,6 +74,9 @@ class LeadController extends Controller
             'is_priority' => in_array($request->input('timeline'), ['ASAP', '0-30 days'], true),
         ]);
 
+        // Fire LeadReceived event
+        event(new LeadReceived($lead, 'website'));
+
         // Notify admin/staff operations throughput.
         $watchers = User::whereIn('role', ['admin', 'staff'])->get();
         Notification::send($watchers, new NewLeadCreatedNotification($lead));
@@ -78,6 +89,14 @@ class LeadController extends Controller
         $message = $lead?->assigned_agent_id
             ? 'Welcome aboard! Your request is in our system and has been routed to a partner agent for follow-up.'
             : 'Welcome aboard! Your request has been captured in the OmniReferral review queue and is awaiting routing.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'lead_number' => $lead->lead_number,
+            ]);
+        }
 
         return back()->with('success', $message);
     }

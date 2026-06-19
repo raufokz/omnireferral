@@ -18,6 +18,27 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
+    <style>
+        /* Guest favourites styles */
+        .favourite-btn .heart-filled { display: none; }
+        .favourite-btn.is-favourite .heart-outline { display: none; }
+        .favourite-btn.is-favourite .heart-filled { display: block; }
+
+        #fav-toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #1a202c;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        #fav-toast.show { opacity: 1; }
+    </style>
 
     @if(request()->routeIs('login', 'register', 'password.*'))
         <link rel="stylesheet" href="{{ asset('css/auth-custom.css') }}">
@@ -123,5 +144,6 @@
     @include('partials.footer')
 
     @stack('scripts')
+    <script src="{{ asset('js/favourites.js') }}"></script>
 </body>
 </html>

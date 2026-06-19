@@ -10,6 +10,7 @@ use App\Models\Lead;
 use App\Models\Package;
 use App\Models\RealtorProfile;
 use App\Models\User;
+use App\Notifications\NewAgentOnboardingNotification;
 use App\Services\LeadCustomerNotifier;
 use App\Services\OnboardingSyncService;
 use App\Services\PasswordProvisioningService;
@@ -18,6 +19,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 class GoHighLevelWebhookController extends Controller
@@ -118,6 +120,12 @@ class GoHighLevelWebhookController extends Controller
                     loginUrl: route('login'),
                     dashboardUrl: $user->dashboardRoute(),
                 );
+            }
+
+            // Notify admin of new agent onboarding
+            if ($result['isNewUser'] && $user->role === 'agent') {
+                $adminUsers = User::where('role', 'admin')->get();
+                Notification::send($adminUsers, new NewAgentOnboardingNotification($user));
             }
 
             app(WebhookInboxService::class)->markProcessed($record);

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\SyncUserToGoHighLevel;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
@@ -28,7 +27,7 @@ class AuthController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'role' => ['required', 'string', 'in:buyer,seller,agent,admin,staff'],
+            'role' => ['required', 'string', 'in:agent,admin,staff'],
             'email' => ['required', 'email'],
             'password' => ['required'],
             'remember' => ['nullable', 'boolean'],
@@ -90,120 +89,6 @@ class AuthController extends Controller
         return back()->withErrors([
             'email' => 'We could not find a matching account with those details.',
         ])->onlyInput('email', 'role');
-    }
-
-    public function showRegister(Request $request): View
-    {
-        $workspaces = $this->registrationWorkspaces();
-
-        return view('pages.register', [
-            'workspaces' => $workspaces,
-            'selectedWorkspace' => $this->selectedWorkspace($request, $workspaces),
-        ]);
-    }
-
-    public function register(Request $request): RedirectResponse
-    {
-        $isAgentDirectorySubmission = $request->string('role')->value() === 'agent'
-            && $request->boolean('agent_directory_submission');
-
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => [$isAgentDirectorySubmission ? 'nullable' : 'required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'string', 'in:buyer,seller,agent'],
-            'agent_directory_submission' => ['nullable', 'boolean'],
-            'phone' => ['required', 'string', 'max:20'],
-            'profile_image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
-            'address_line_1' => ['required', 'string', 'max:255'],
-            'address_line_2' => ['nullable', 'string', 'max:255'],
-            'city' => ['required', 'string', 'max:100'],
-            'state' => ['required', 'string', 'size:2'],
-            'zip_code' => ['required', 'string', 'max:10'],
-            'brokerage_name' => ['required_if:role,agent', 'nullable', 'string', 'max:255'],
-            'license_number' => ['required_if:role,agent', 'nullable', 'string', 'max:100'],
-            'terms_accepted' => ['accepted'],
-            'communication_accepted' => ['accepted'],
-        ], [
-            'role.required' => 'Choose the workspace you want us to create.',
-            'role.in' => 'Choose a valid signup workspace.',
-            'name.required' => 'Tell us your name so we can personalize your setup.',
-            'email.required' => 'Oops, looks like you missed your email!',
-            'email.unique' => 'That email is already connected to an OmniReferral account.',
-            'password.min' => 'Use at least 8 characters so your account stays secure.',
-            'password.confirmed' => 'Your password confirmation does not match yet.',
-            'phone.required' => 'Add your phone number so your account is ready for follow-up.',
-            'profile_image.required' => 'Upload a profile image so your account looks complete from day one.',
-            'profile_image.image' => 'Please upload a valid profile photo.',
-            'address_line_1.required' => 'Add your address so we can complete your profile.',
-            'state.size' => 'Use the 2-letter state code, like TX or FL.',
-            'brokerage_name.required_if' => 'Add your brokerage so we can review your agent profile.',
-            'license_number.required_if' => 'Add your license number so we can review your agent profile.',
-            'terms_accepted.accepted' => 'Please accept the Terms and Privacy Policy before continuing.',
-            'communication_accepted.accepted' => 'Please agree to onboarding communication so we can activate your account.',
-        ]);
-
-        $this->rememberSelectedWorkspace($request, $request->string('role')->value());
-
-        $avatarPath = $request->hasFile('profile_image')
-            ? $request->file('profile_image')->store('avatars', 'public')
-            : null;
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => $request->filled('password')
-                ? $request->string('password')->value()
-                : Str::password(32),
-            'role' => $request->role,
-            'phone' => $request->phone,
-            'address_line_1' => $request->address_line_1,
-            'address_line_2' => $request->address_line_2,
-            'city' => $request->city,
-            'state' => strtoupper($request->state),
-            'zip_code' => $request->zip_code,
-            'status' => 'pending',
-            'must_reset_password' => $isAgentDirectorySubmission,
-            'avatar' => $avatarPath,
-            'affiliate_code' => strtoupper(Str::random(8)),
-        ]);
-
-        if ($user->role === 'agent') {
-            $user->realtorProfile()->update([
-                'brokerage_name' => $request->string('brokerage_name')->value(),
-                'license_number' => $request->string('license_number')->value(),
-                'service_city' => $request->string('city')->value(),
-                'service_state' => strtoupper($request->string('state')->value()),
-                'service_zip_code' => $request->string('zip_code')->value(),
-                'bio' => 'Agent profile submitted through public OmniReferral registration and awaiting admin review.',
-            ]);
-        }
-
-        if ($request->hasCookie('omnireferral_affiliate')) {
-            $affiliateProfile = \App\Models\AffiliateProfile::where('referral_code', $request->cookie('omnireferral_affiliate'))->first();
-            if ($affiliateProfile) {
-                $user->update(['referred_by_user_id' => $affiliateProfile->user_id]);
-                $affiliateProfile->increment('conversion_count');
-            }
-        }
-
-        SyncUserToGoHighLevel::dispatch($user->id);
-
-        if ($isAgentDirectorySubmission) {
-            return redirect()
-                ->route('agents.index')
-                ->with(
-                    'success',
-                    'Thanks for submitting your agent profile. Our admin team will review it before it appears in the directory.'
-                );
-        }
-
-        return redirect()
-            ->route('login')
-            ->with(
-                'success',
-                'Thanks for registering. An administrator will review and activate your account. You can sign in from this page once your workspace is approved.'
-            );
     }
 
     public function showForgotPassword(): View
@@ -286,18 +171,6 @@ class AuthController extends Controller
                 'icon' => 'agent',
             ],
             [
-                'value' => 'buyer',
-                'label' => 'Buyer',
-                'description' => 'Track favorites, saved homes, and enquiries.',
-                'icon' => 'buyer',
-            ],
-            [
-                'value' => 'seller',
-                'label' => 'Seller',
-                'description' => 'Review your properties, enquiries, and performance.',
-                'icon' => 'seller',
-            ],
-            [
                 'value' => 'admin',
                 'label' => 'Admin',
                 'description' => 'Control users, properties, revenue, and analytics.',
@@ -308,30 +181,6 @@ class AuthController extends Controller
                 'label' => 'Staff',
                 'description' => 'Handle assigned tasks, support, and operations.',
                 'icon' => 'staff',
-            ],
-        ];
-    }
-
-    private function registrationWorkspaces(): array
-    {
-        return [
-            [
-                'value' => 'agent',
-                'label' => 'Agent',
-                'description' => 'Submit your agent profile for public directory review.',
-                'icon' => 'agent',
-            ],
-            [
-                'value' => 'buyer',
-                'label' => 'Buyer',
-                'description' => 'Save homes and send property enquiries faster.',
-                'icon' => 'buyer',
-            ],
-            [
-                'value' => 'seller',
-                'label' => 'Seller',
-                'description' => 'List properties and monitor inbound buyer activity.',
-                'icon' => 'seller',
             ],
         ];
     }

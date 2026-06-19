@@ -41,16 +41,20 @@
     </a>
 
     <div class="property-card__save-group">
-        <form method="POST" action="{{ route('properties.favorite.toggle', $property) }}" class="property-card__save-form">
-            @csrf
-            <button
-                type="submit"
-                class="property-card__save {{ $property->is_favorited ? 'is-active' : '' }}"
-                aria-label="{{ $property->is_favorited ? 'Remove listing from favorites' : 'Add listing to favorites' }}"
-            >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="{{ $property->is_favorited ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-            </button>
-        </form>
+        {{-- Cookie-based guest favourite button --}}
+        <button
+            data-listing-id="{{ $property->id }}"
+            class="property-card__save favourite-btn {{ $property->is_favorited ? 'is-favourite' : '' }}"
+            title="Save to Favourites"
+            aria-label="Toggle Favourite"
+        >
+            <svg class="heart-outline" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+            </svg>
+            <svg class="heart-filled" width="18" height="18" viewBox="0 0 24 24" fill="#e53e3e" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+            </svg>
+        </button>
         <span class="property-card__save-count">{{ number_format($property->favorites_count ?? 0) }}</span>
     </div>
 

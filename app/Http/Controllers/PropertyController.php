@@ -4,12 +4,20 @@ namespace App\Http\Controllers;
 
 use App\Models\Property;
 use App\Models\RealtorProfile;
+use App\Models\Enquiry;
+use App\Models\User;
+use App\Models\Lead;
 use App\Support\AdminAudit;
+use App\Http\Requests\StoreListingEnquiryRequest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -315,6 +323,66 @@ class PropertyController extends Controller
                 ? 'Listing approved and moved into the public marketplace.'
                 : 'Listing rejected. The agent can update it and resubmit for review.'
         );
+    }
+
+    public function storeEnquiry(StoreListingEnquiryRequest $request, Property $property): JsonResponse
+    {
+        try {
+            $validated = $request->validated();
+
+            $receiverUser = $property->realtorProfile?->user ?? $property->listedBy;
+
+            $lead = DB::transaction(function () use ($validated, $property, $receiverUser) {
+                return Lead::create([
+                    'lead_number' => Lead::generateLeadNumber(),
+                    'type' => 'listing_enquiry',
+                    'intent' => 'buyer',
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'phone' => $validated['phone'],
+                    'enquiry_type' => $validated['enquiry_type'],
+                    'message' => $validated['message'],
+                    'property_id' => $property->id,
+                    'assigned_agent_id' => $receiverUser?->id,
+                    'source' => 'listing_enquiry_form',
+                    'status' => 'new',
+                    'form_data' => [
+                        'submitted_from' => url()->previous(),
+                        'ip_address' => $request->ip(),
+                        'user_agent' => $request->userAgent(),
+                        'property_title' => $property->title,
+                        'property_slug' => $property->slug,
+                    ],
+                ]);
+            });
+
+            // Notify admin
+            $adminEmail = config('omnireferral.company.support_email') ?? config('mail.from.address');
+            if ($adminEmail) {
+                Mail::to($adminEmail)->queue(new \App\Mail\ListingEnquiryMail($property, $lead, 'admin'));
+            }
+
+            // Notify assigned agent if exists
+            if ($receiverUser && $receiverUser->email) {
+                Mail::to($receiverUser->email)->queue(new \App\Mail\ListingEnquiryMail($property, $lead, 'agent'));
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Your enquiry has been sent. You will hear back shortly.',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Property enquiry submission failed', [
+                'property_id' => $property->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred. Please try again.',
+            ], 500);
+        }
     }
 
     public function toggleFavorite(Request $request, Property $property): RedirectResponse

@@ -36,7 +36,7 @@
                         discovery, qualification, and direct follow-up.
                     </p>
                     <div class="hero__actions">
-                        <a href="{{ route('contact') }}?property={{ urlencode($property->title) }}" class="button">Contact Agent</a>
+                        <button type="button" class="button" id="enquiry-modal-trigger">Contact Agent</button>
                         @if($property->realtorProfile)
                             <a href="{{ route('agents.show', $property->realtorProfile) }}" class="button button--ghost-blue">View Agent Profile</a>
                         @else
@@ -112,3 +112,178 @@
     </div>
 </section>
 @endsection
+
+<!-- Enquiry Modal -->
+<div id="enquiry-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Enquire About This Property</h3>
+            <button type="button" class="modal-close" id="enquiry-modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p class="modal-property-title">{{ $property->title }}</p>
+            <form id="enquiry-form" method="POST" action="{{ route('properties.enquiry.store', $property) }}">
+                @csrf
+                <div class="form-group">
+                    <label for="enquiry-name">Full Name *</label>
+                    <input type="text" id="enquiry-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="enquiry-email">Email Address *</label>
+                    <input type="email" id="enquiry-email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="enquiry-phone">Phone Number *</label>
+                    <input type="tel" id="enquiry-phone" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="enquiry-type">Enquiry Type *</label>
+                    <select id="enquiry-type" name="enquiry_type" required>
+                        <option value="">Select enquiry type</option>
+                        <option value="request_info">Request More Information</option>
+                        <option value="schedule_viewing">Schedule a Viewing</option>
+                        <option value="make_offer">Make an Offer</option>
+                        <option value="ask_question">Ask a Question</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="enquiry-message">Message *</label>
+                    <textarea id="enquiry-message" name="message" rows="4" required>Hi, I'm interested in {{ $property->title }}. Please contact me.</textarea>
+                </div>
+                <button type="submit" class="button">Send Enquiry</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('enquiry-modal');
+    const trigger = document.getElementById('enquiry-modal-trigger');
+    const close = document.getElementById('enquiry-modal-close');
+    const form = document.getElementById('enquiry-form');
+
+    if (trigger && modal) {
+        trigger.addEventListener('click', function() {
+            modal.style.display = 'block';
+        });
+    }
+
+    if (close && modal) {
+        close.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+    }
+
+    if (modal) {
+        window.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    form.innerHTML = '<div style="text-align: center; padding: 20px;"><svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#38a169" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><h3 style="color: #38a169; margin: 15px 0 10px;">Enquiry Sent Successfully!</h3><p style="color: #666;">' + data.message + '</p></div>';
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                        location.reload();
+                    }, 3000);
+                } else {
+                    alert(data.message || 'An error occurred. Please try again.');
+                }
+            })
+            .catch(error => {
+                alert('An error occurred. Please try again.');
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Enquiry';
+            });
+        });
+    }
+});
+</script>
+<style>
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    display: none;
+}
+.modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.modal-header h3 {
+    margin: 0;
+}
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+.modal-property-title {
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #0b3668;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+.form-group textarea {
+    resize: vertical;
+}
+</style>
+@endpush

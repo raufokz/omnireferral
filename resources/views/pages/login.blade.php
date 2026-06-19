@@ -65,7 +65,7 @@
                 <button type="submit" class="btn-submit">Log In</button>
 
                 <div class="auth-bottom-links">
-                    Don't have an account? <a href="{{ route('register') }}">Sign Up</a>
+                    <a href="{{ route('contact') }}">Contact us to get started</a>
                 </div>
             </form>
         </div>

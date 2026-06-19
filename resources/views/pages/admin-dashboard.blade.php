@@ -14,6 +14,7 @@
     @endif
     <a href="{{ route('admin.leads.index') }}" class="button">Lead registry</a>
     <a href="{{ route('admin.properties.index') }}" class="button button--ghost-blue">Properties</a>
+    <a href="{{ route('admin.ghl.index') }}" class="button button--ghost-blue">GoHighLevel</a>
 @endsection
 
 @push('styles')
@@ -44,6 +45,47 @@
             <button type="button" data-dashboard-period="weekly">Weekly</button>
             <button type="button" data-dashboard-period="monthly" class="is-active">Monthly</button>
             <button type="button" data-dashboard-period="yearly">Yearly</button>
+        </div>
+    </section>
+
+    {{-- GoHighLevel Widget --}}
+    <section class="workspace-card">
+        <div class="workspace-actions" style="justify-content: space-between; margin-bottom: 0.7rem;">
+            <div>
+                <span class="eyebrow">GoHighLevel Integration</span>
+                <h2>Connection Status</h2>
+            </div>
+            <a href="{{ route('admin.ghl.index') }}" class="button button--ghost-blue">Manage GHL</a>
+        </div>
+        @php
+            $ghlSettings = \App\Models\GhlSetting::instance();
+            $ghlConnected = $ghlSettings->isConnected();
+            $recentWebhooks = \App\Models\GoHighLevelWebhookLog::latest()->take(3)->get();
+        @endphp
+        <div class="workspace-stack">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <span class="status-pill status-pill--{{ $ghlConnected ? 'green' : 'grey' }}">
+                    {{ $ghlConnected ? 'Connected' : 'Not Connected' }}
+                </span>
+                @if($ghlSettings->last_tested_at)
+                    <small>Last tested: {{ $ghlSettings->last_tested_at->diffForHumans() }}</small>
+                @endif
+            </div>
+            @if($recentWebhooks->isNotEmpty())
+                <div>
+                    <strong>Recent Webhooks</strong>
+                    <ul class="workspace-list" style="margin-top: 0.5rem;">
+                        @foreach($recentWebhooks as $webhook)
+                            <li>
+                                <strong>{{ ucfirst($webhook->event) }}</strong>
+                                <small>{{ $webhook->created_at->diffForHumans() }} · {{ $webhook->processed_at ? 'Processed' : 'Pending' }}</small>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @else
+                <p style="color: #64748b; font-size: 0.9rem;">No webhook activity yet.</p>
+            @endif
         </div>
     </section>
 

@@ -120,6 +120,7 @@ Route::get('/careers', [HomeController::class, 'careers'])->name('careers');
 Route::get('/surveys-campaigns', [HomeController::class, 'surveys'])->name('surveys');
 Route::get('/listings', [HomeController::class, 'listings'])->name('listings');
 Route::get('/listings/{property}', [PropertyController::class, 'show'])->name('properties.show');
+Route::get('/my-favourites', [GuestFavouritesController::class, 'index'])->name('guest.favourites');
 Route::post('/properties/{property}/favorite', [PropertyController::class, 'toggleFavorite'])
     ->middleware('throttle:property-favorite')
     ->name('properties.favorite.toggle');
@@ -155,6 +156,9 @@ Route::get('/form-submission', [HomeController::class, 'formSubmission'])->name(
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'submit'])->middleware('throttle:contact')->name('contact.submit');
 Route::post('/lead-store', [LeadController::class, 'store'])->middleware('throttle:leads')->name('leads.store');
+Route::post('/properties/{property}/enquiry', [PropertyController::class, 'storeEnquiry'])
+    ->middleware('throttle:property-enquiry')
+    ->name('properties.enquiry.store');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{blog}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/agents', [RealtorController::class, 'index'])->name('agents.index');
@@ -175,8 +179,6 @@ Route::redirect('/join-as-agent', '/agents', 301);
 Route::redirect('/join-as-agent/success', '/agents', 301);
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth-login');
-Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth-register');
 Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
 Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware('throttle:auth-password-reset')->name('password.email');
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
@@ -215,7 +217,7 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/affiliate', [DashboardController::class, 'affiliate'])->name('dashboard.affiliate');
 
-    Route::middleware(['role:buyer,seller,agent'])->group(function () {
+    Route::middleware(['role:agent'])->group(function () {
         Route::get('/dashboard/enquiries', [DashboardEnquiryController::class, 'index'])->name('dashboard.enquiries.index');
         Route::get('/dashboard/enquiries/{enquiry}', [DashboardEnquiryController::class, 'show'])->name('dashboard.enquiries.show');
         Route::post('/dashboard/enquiries/{enquiry}/replies', [DashboardEnquiryController::class, 'storeReply'])
@@ -225,19 +227,7 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
             ->name('dashboard.enquiries.status');
     });
 
-    Route::middleware(['role:buyer'])->group(function () {
-        Route::get('/buyer/dashboard', [DashboardController::class, 'buyer'])->name('dashboard.buyer');
-        Route::get('/buyer/dashboard/saved-homes', [DashboardController::class, 'buyerSavedHomes'])->name('dashboard.buyer.saved');
-        Route::get('/buyer/dashboard/requests', [DashboardController::class, 'buyerRequests'])->name('dashboard.buyer.requests');
-    });
-
-    Route::middleware(['role:seller'])->group(function () {
-        Route::get('/seller/dashboard', [DashboardController::class, 'seller'])->name('dashboard.seller');
-        Route::get('/seller/dashboard/listings', [DashboardController::class, 'sellerListings'])->name('dashboard.seller.listings');
-        Route::get('/seller/dashboard/requests', [DashboardController::class, 'sellerRequests'])->name('dashboard.seller.requests');
-        Route::post('/seller/properties', [PropertyController::class, 'store'])->name('properties.store');
-    });
-
+    
     Route::middleware(['role:agent'])->group(function () {
         Route::get('/agent/dashboard', [AgentPortalController::class, 'overview'])->name('dashboard.agent');
         Route::get('/agent/profile', [AgentPortalController::class, 'profile'])->name('agent.profile');
