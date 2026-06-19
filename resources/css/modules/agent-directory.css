@@ -539,6 +539,20 @@
     gap: 1rem;
 }
 
+/* Balanced layouts for sparse result sets so single/double cards never stretch awkwardly.
+   Scoped to >=981px so the existing mobile/tablet breakpoints (1 column) still win below. */
+@media (min-width: 981px) {
+    .omni-agent-card-grid[data-result-count="1"] {
+        grid-template-columns: minmax(0, 34rem);
+        justify-content: center;
+    }
+
+    .omni-agent-card-grid[data-result-count="2"] {
+        grid-template-columns: repeat(2, minmax(0, 26rem));
+        justify-content: center;
+    }
+}
+
 .omni-agent-card {
     position: relative;
     display: grid;

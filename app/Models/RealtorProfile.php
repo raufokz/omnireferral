@@ -172,13 +172,16 @@ class RealtorProfile extends Model
 
     public function isPublicVisible(): bool
     {
-        $accountIsActive = $this->relationLoaded('user')
-            ? $this->user?->status === 'active'
-            : $this->user()->where('status', 'active')->exists();
+        // Public listing visibility is decoupled from portal/login access: a "pending" agent account
+        // (public submission awaiting plan purchase + onboarding) still lists publicly. Only suspended
+        // accounts are hidden. See App\Support\AgentDirectory::publicQuery().
+        $accountIsNotSuspended = $this->relationLoaded('user')
+            ? ($this->user?->status ?? 'pending') !== 'suspended'
+            : ! $this->user()->where('status', 'suspended')->exists();
 
         return in_array($this->profile_status, [self::STATUS_PUBLISHED, self::STATUS_FEATURED], true)
             && $this->rejected_at === null
-            && $accountIsActive;
+            && $accountIsNotSuspended;
     }
 
     public function isFeatured(): bool

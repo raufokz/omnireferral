@@ -93,10 +93,6 @@
                     </select>
                 </label>
                 <label>
-                    <span>ZIP</span>
-                    <input type="search" name="zip" value="{{ $filters['zip'] ?? '' }}" placeholder="33101">
-                </label>
-                <label>
                     <span>Specialty</span>
                     <input type="search" name="specialty" value="{{ $filters['specialty'] ?? '' }}" placeholder="Luxury, relocation">
                 </label>
@@ -127,18 +123,10 @@
                 <p>Showing {{ number_format($profiles->firstItem() ?? 0) }} to {{ number_format($profiles->lastItem() ?? 0) }} of {{ number_format($totalCount) }} agents</p>
                 <div class="omni-agent-results__tools">
                     <button type="button" class="agent-btn agent-btn--orange" x-on:click="openAgentSignup()">Add Agent Profile</button>
-                    <label>
-                        <span>Sort by</span>
-                        <select aria-label="Sort agents">
-                            <option>Most Recommended</option>
-                            <option>Highest Rated</option>
-                            <option>Most Reviews</option>
-                        </select>
-                    </label>
                 </div>
             </div>
 
-            <div class="omni-agent-card-grid" data-stagger>
+            <div class="omni-agent-card-grid" data-stagger data-result-count="{{ $profiles->count() }}">
                 @forelse($profiles as $profile)
                     @php
                         $card = \App\Support\AgentDirectory::publicCardPayload($profile);

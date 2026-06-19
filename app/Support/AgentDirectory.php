@@ -27,9 +27,13 @@ class AgentDirectory
 
     public static function publicQuery(): Builder
     {
+        // A publicly listed agent profile is decoupled from portal/login access: profiles submitted
+        // through the public Preferred Agents form are auto-approved and visible while their owning
+        // user account remains "pending" (no login until plan purchase + onboarding). We therefore
+        // gate visibility on profile_status (via publicVisible) and only exclude suspended accounts.
         return RealtorProfile::query()
             ->publicVisible()
-            ->whereHas('user', fn (Builder $userQuery) => $userQuery->where('status', 'active'));
+            ->whereHas('user', fn (Builder $userQuery) => $userQuery->where('status', '!=', 'suspended'));
     }
 
 

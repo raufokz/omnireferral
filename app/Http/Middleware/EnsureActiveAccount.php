@@ -22,7 +22,7 @@ class EnsureActiveAccount
         $request->session()->regenerateToken();
 
         $message = $user->status === 'pending'
-            ? 'Your account is waiting for administrator approval. You will be able to sign in once an admin activates your workspace.'
+            ? 'Your portal access is not active yet. Please purchase a plan and complete onboarding to activate your account.'
             : 'This account is not active. Contact OmniReferral support if you believe this is a mistake.';
 
         return redirect()

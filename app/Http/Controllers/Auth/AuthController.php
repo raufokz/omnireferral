@@ -59,7 +59,7 @@ class AuthController extends Controller
                 $request->session()->regenerateToken();
 
                 return back()->withErrors([
-                    'email' => 'Your account is waiting for administrator approval. You will be able to sign in once an admin activates your workspace.',
+                    'email' => 'Your portal access is not active yet. Your profile may be listed publicly, but signing in requires an active plan and completed GoHighLevel onboarding.',
                 ])->onlyInput('email', 'role');
             }
 

@@ -180,30 +180,37 @@ class RealtorController extends Controller
                 : null;
 
             $user = $existingProfile?->user;
-            $userPayload = [
-                'name' => $name,
-                'display_name' => $name,
-                'email' => $email !== '' ? $email : ($user?->email ?: 'agent+'.Str::lower(Str::random(12)).'@public-agents.omnireferral.local'),
-                'password' => Str::password(32),
-                'phone' => $phone,
-                'city' => $validated['city'],
-                'state' => strtoupper($validated['state']),
-                'role' => 'agent',
-                'status' => 'active',
-                'must_reset_password' => true,
-                'email_verified_at' => now(),
-                'notify_email' => true,
-                'notify_marketing' => true,
-            ];
-
-            if ($stored) {
-                $userPayload['avatar'] = $stored;
-            }
 
             if ($user) {
-                $user->forceFill($userPayload)->save();
+                // Public listing update only — never mutate login/account state (password, status,
+                // email) of an existing account from an unauthenticated public form.
+                $user->display_name = $name;
+                $user->phone = $phone;
+                $user->city = $validated['city'];
+                $user->state = strtoupper($validated['state']);
+                if ($stored) {
+                    $user->avatar = $stored;
+                }
+                $user->save();
             } else {
-                $user = User::create($userPayload);
+                // New account stays PENDING: the public directory listing is separate from portal
+                // access. Login is unlocked only after plan purchase + GoHighLevel onboarding.
+                $user = User::create([
+                    'name' => $name,
+                    'display_name' => $name,
+                    'email' => $email !== '' ? $email : 'agent+'.Str::lower(Str::random(12)).'@public-agents.omnireferral.local',
+                    'password' => Str::password(32),
+                    'phone' => $phone,
+                    'city' => $validated['city'],
+                    'state' => strtoupper($validated['state']),
+                    'role' => 'agent',
+                    'status' => 'pending',
+                    'must_reset_password' => true,
+                    'email_verified_at' => null,
+                    'notify_email' => true,
+                    'notify_marketing' => true,
+                    'avatar' => $stored,
+                ]);
             }
 
             RealtorProfile::updateOrCreate(['user_id' => $user->id], [
