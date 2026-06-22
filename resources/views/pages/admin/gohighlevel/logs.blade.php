@@ -73,7 +73,7 @@
                         <td data-label="Status"><span class="workspace-pill {{ $wh->statusBadgeClass() }}">{{ $wh->statusLabel() }}</span></td>
                         <td data-label="Received">{{ $wh->created_at?->format('M j, Y g:i A') }}</td>
                         <td data-label="" style="display:flex; gap:.5rem; flex-wrap:wrap;">
-                            <a href="{{ route('admin.webhook-events.show', $wh->id) }}" class="button button--ghost-blue" style="font-size:.8rem; padding:.25rem .6rem;">Detail</a>
+                            <a href="{{ route('admin.ghl.webhook-detail', $wh->id) }}" class="button button--ghost-blue" style="font-size:.8rem; padding:.25rem .6rem;">Detail</a>
                             @if(! $wh->processed_at)
                             <form action="{{ route('admin.ghl.retry', $wh->id) }}" method="POST">
                                 @csrf

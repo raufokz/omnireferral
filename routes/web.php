@@ -380,6 +380,13 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::post('admin/gohighlevel/test/webhook', [AdminGoHighLevelController::class, 'testWebhook'])->name('admin.ghl.test.webhook');
         Route::post('admin/gohighlevel/test/sync', [AdminGoHighLevelController::class, 'testSync'])->name('admin.ghl.test.sync');
 
+        // Onboarding users tracking
+        Route::get('admin/onboarding/users', [AdminGoHighLevelController::class, 'onboardingUsers'])->name('admin.ghl.manage-users');
+        Route::post('admin/onboarding/users/{userId}/send-email', [AdminGoHighLevelController::class, 'manualSendPortalAccessEmail'])->name('admin.ghl.manual-send-email');
+
+        // Webhook detail (full payload inspection)
+        Route::get('admin/webhooks/gohighlevel/{eventId}', [AdminGoHighLevelController::class, 'webhookDetail'])->name('admin.ghl.webhook-detail');
+
         Route::post('admin/leads/{lead}/status', [App\Http\Controllers\Admin\LeadController::class, 'status'])->name('admin.leads.status');
         Route::post('admin/leads/{lead}/assign', [App\Http\Controllers\Admin\LeadController::class, 'assign'])->name('admin.leads.assign');
         Route::post('admin/leads/{lead}/activity', [App\Http\Controllers\Admin\LeadController::class, 'activity'])->name('admin.leads.activity');

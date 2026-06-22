@@ -519,6 +519,29 @@
                 ]
             }
         },
+        "/admin/onboarding/users": {
+            "get": {
+                "tags": [
+                    "Admin",
+                    "GoHighLevel"
+                ],
+                "summary": "List all GoHighLevel onboarded users",
+                "operationId": "a9c6ebe847d1e840cb720283636c1bd9",
+                "responses": {
+                    "200": {
+                        "description": "Onboarding users page"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/admin/mail-settings": {
             "get": {
                 "tags": [

@@ -173,7 +173,12 @@
                         $workspaceUser && $workspaceUser->can('viewAuditLog', $workspaceUser)
                             ? ['label' => 'Audit Log', 'route' => route('admin.activity.index'), 'active' => ['admin.activity.*'], 'icon' => 'audit']
                             : null,
-                        ['label' => 'GoHighLevel', 'route' => route('admin.ghl.index'), 'active' => ['admin.ghl.*'], 'icon' => 'audit'],
+                        ['label' => 'GoHighLevel', 'active' => ['admin.ghl.*'], 'icon' => 'audit', 'children' => [
+                            ['label' => 'Overview', 'route' => route('admin.ghl.index'), 'active' => ['admin.ghl.index'], 'icon' => 'audit'],
+                            ['label' => 'Onboarding Users', 'route' => route('admin.ghl.manage-users'), 'active' => ['admin.ghl.manage-users'], 'icon' => 'audit'],
+                            ['label' => 'Logs', 'route' => route('admin.ghl.logs'), 'active' => ['admin.ghl.logs'], 'icon' => 'audit'],
+                            ['label' => 'Test Tools', 'route' => route('admin.ghl.testing'), 'active' => ['admin.ghl.testing'], 'icon' => 'audit'],
+                        ]],
                         ['label' => 'Mail Settings', 'route' => route('admin.mail-settings.index'), 'active' => ['admin.mail-settings.*'], 'icon' => 'audit'],
                         ['label' => 'Email & Auth Logs', 'route' => route('admin.email.index'), 'active' => ['admin.email.*'], 'icon' => 'audit'],
                     ])),

@@ -830,4 +830,118 @@ class GoHighLevelController extends Controller
             'meta'     => $meta,
         ];
     }
+
+    // ─── Onboarding Users ──────────────────────────────────────────────────────
+
+    #[OA\Get(
+        path: '/admin/onboarding/users',
+        tags: ['Admin', 'GoHighLevel'],
+        summary: 'List all GoHighLevel onboarded users',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(response: 200, description: 'Onboarding users page'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+        ]
+    )]
+    public function onboardingUsers(Request $request): View
+    {
+        $query = User::where('role', 'agent')
+            ->whereNotNull('ghl_contact_id')
+            ->whereNotNull('onboarding_completed_at')
+            ->with('realtorProfile');
+
+        $search = $request->string('search')->value();
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        $statusFilter = $request->string('status')->value();
+        if ($statusFilter && in_array($statusFilter, ['pending', 'active', 'suspended', 'approved'], true)) {
+            $query->where('status', $statusFilter);
+        }
+
+        $users = $query->latest('onboarding_completed_at')->paginate(25);
+
+        $stats = [
+            'total'     => User::where('role', 'agent')->whereNotNull('ghl_contact_id')->count(),
+            'pending'   => User::where('role', 'agent')->whereNotNull('ghl_contact_id')->where('status', 'pending')->count(),
+            'active'    => User::where('role', 'agent')->whereNotNull('ghl_contact_id')->where('status', 'active')->count(),
+            'suspended' => User::where('role', 'agent')->whereNotNull('ghl_contact_id')->where('status', 'suspended')->count(),
+            'email_sent_today' => OnboardingLog::whereDate('created_at', today())->where('email_sent', true)->count(),
+            'webhooks_today'   => GoHighLevelWebhookLog::whereDate('created_at', today())->count(),
+        ];
+
+        return view('pages.admin.gohighlevel.onboarding-users', [
+            'users'  => $users,
+            'stats'  => $stats,
+            'meta'   => ['title' => 'Onboarding Users — Admin | OmniReferral'],
+        ]);
+    }
+
+    // ─── Manual Send Portal Email (for any user) ────────────────────────────────
+
+    /**
+     * Send (or resend) portal access setup email for ANY user by user ID.
+     * Generates a fresh token and dispatches the email immediately.
+     * Does NOT require an existing onboarding log entry.
+     */
+    public function manualSendPortalAccessEmail(Request $request, int $userId): JsonResponse
+    {
+        $user = User::find($userId);
+
+        if (! $user) {
+            return response()->json(['ok' => false, 'message' => 'User not found.'], 404);
+        }
+
+        if (blank($user->email)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'User has no email address.',
+            ]);
+        }
+
+        try {
+            SendPortalAccessSetupEmailJob::dispatchSync(
+                userId: $user->id,
+                onboardingLogId: null,
+                via: 'admin_manual_send',
+            );
+
+            Log::info('Portal access email manually sent via admin', [
+                'user_id' => $user->id,
+                'email'   => $user->email,
+            ]);
+
+            return response()->json([
+                'ok' => true,
+                'message' => 'Portal access email sent successfully to '.$user->email,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to manually send portal access email', [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'ok' => false,
+                'message' => 'Mail config failed: '.$e->getMessage(),
+            ]);
+        }
+    }
+
+    // ─── Webhook Detail (full payload inspection) ──────────────────────────────
+
+    public function webhookDetail(int $eventId): View
+    {
+        $event = GoHighLevelWebhookLog::findOrFail($eventId);
+
+        return view('pages.admin.gohighlevel.webhook-detail', [
+            'event' => $event,
+            'meta'  => ['title' => 'Webhook Detail — Admin | OmniReferral'],
+        ]);
+    }
 }
