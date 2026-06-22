@@ -12,6 +12,17 @@ class OnboardingLog extends Model
         'source',
         'event_type',
         'triggered_by',
+        'user_action',
+        'profile_action',
+        'portal_access_enabled',
+        'email_status',
+        'email_sent_at',
+        'error_message',
+        'form_name',
+        'form_id',
+        'ghl_contact_id',
+        'contact_name',
+        'contact_phone',
         'payload',
         'processed_at',
         'email_sent',
@@ -22,6 +33,9 @@ class OnboardingLog extends Model
         return [
             'payload' => 'array',
             'processed_at' => 'datetime',
+            'email_sent_at' => 'datetime',
+            'email_sent' => 'boolean',
+            'portal_access_enabled' => 'boolean',
         ];
     }
 

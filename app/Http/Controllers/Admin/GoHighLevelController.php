@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\SendPortalLoginAccessEmailJob;
+use App\Jobs\SendPortalAccessSetupEmailJob;
 use App\Models\GhlFieldMapping;
 use App\Models\GhlSetting;
 use App\Models\GoHighLevelWebhookLog;
@@ -11,7 +11,6 @@ use App\Models\Lead;
 use App\Models\OnboardingLog;
 use App\Models\User;
 use App\Services\GoHighLevelService;
-use App\Services\PasswordProvisioningService;
 use App\Services\WebhookInboxService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -404,15 +403,11 @@ class GoHighLevelController extends Controller
 
         $user = $log->user;
 
-        // Check eligibility
+        // Eligibility (spec wording). Resend only when the user can actually use the portal.
         $reasons = [];
 
-        if (! $user->email) {
+        if (blank($user->email)) {
             $reasons[] = 'Missing email';
-        }
-
-        if (! $log->processed_at) {
-            $reasons[] = 'Webhook not processed';
         }
 
         if (! $user->onboarding_completed_at) {
@@ -420,7 +415,7 @@ class GoHighLevelController extends Controller
         }
 
         if (! in_array($user->status, ['active', 'approved'], true)) {
-            $reasons[] = 'User status is not active/approved (current: '.$user->status.')';
+            $reasons[] = 'User still pending';
         }
 
         if ($reasons) {
@@ -432,25 +427,25 @@ class GoHighLevelController extends Controller
         }
 
         try {
-            // Generate new password
-            $plainPassword = $this->passwordService->forceProvision($user);
-            $user->save();
-
-            // Send email
-            SendPortalLoginAccessEmailJob::dispatch(
+            // Run synchronously so a mail/SMTP failure surfaces immediately to the admin.
+            SendPortalAccessSetupEmailJob::dispatchSync(
                 userId: $user->id,
-                plainPassword: $plainPassword,
-                loginUrl: route('login'),
-                dashboardUrl: $user->dashboardRoute(),
+                onboardingLogId: $log->id,
+                via: 'admin_resend',
             );
 
-            // Update log
-            $log->email_sent = true;
-            $log->save();
+            $log->refresh();
 
-            Log::info('Portal access email resent via admin', [
-                'user_id' => $user->id,
-                'email' => $user->email,
+            if ($log->email_status === 'failed') {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Mail config failed: '.($log->error_message ?: 'unknown mailer error'),
+                ]);
+            }
+
+            Log::info('Portal access setup email resent via admin', [
+                'user_id'           => $user->id,
+                'email'             => $user->email,
                 'onboarding_log_id' => $onboardingLogId,
             ]);
 
@@ -466,7 +461,7 @@ class GoHighLevelController extends Controller
 
             return response()->json([
                 'ok' => false,
-                'message' => 'Failed to send email: '.$e->getMessage(),
+                'message' => 'Mail config failed: '.$e->getMessage(),
             ]);
         }
     }

@@ -58,12 +58,12 @@ class ProcessGoHighLevelWebhookJob implements ShouldQueue
 
             $inbox->markProcessed($record);
 
-            if ($result['isFirstOnboarding'] && $result['plainPassword']) {
-                SendPortalLoginAccessEmailJob::dispatch(
+            // Email a secure one-time password-setup link (never a plaintext password).
+            if ($result['shouldSendSetup']) {
+                SendPortalAccessSetupEmailJob::dispatch(
                     userId: $user->id,
-                    plainPassword: $result['plainPassword'],
-                    loginUrl: route('login'),
-                    dashboardUrl: $user->dashboardRoute(),
+                    onboardingLogId: $result['onboardingLog']->id ?? null,
+                    via: 'ghl_onboarding',
                 );
             }
 

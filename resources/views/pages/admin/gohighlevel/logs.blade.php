@@ -95,60 +95,124 @@
     <section class="workspace-card" id="onboarding">
         <span class="eyebrow">Onboarding Sync Logs</span>
         <h2>GHL onboarding submissions <span style="font-size:.9rem; font-weight:400; color:var(--color-text-muted,#6b7280);">({{ $onboardingLogs->total() }} total)</span></h2>
-        <div class="workspace-table-wrap" style="margin-top:.75rem;">
+        <div class="workspace-table-wrap" style="margin-top:.75rem; overflow-x:auto;">
             <table class="workspace-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Triggered By</th>
+                        <th>ID / When</th>
+                        <th>Contact</th>
+                        <th>Form</th>
+                        <th>Webhook</th>
                         <th>User</th>
-                        <th>Event</th>
-                        <th>Processed</th>
-                        <th>Email Sent</th>
-                        <th>When</th>
-                        <th></th>
+                        <th>Profile</th>
+                        <th>Onboarded</th>
+                        <th>Portal</th>
+                        <th>Email</th>
+                        <th>Error</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($onboardingLogs as $log)
+                    @php
+                        $contactName = $log->contact_name ?: ($log->user?->name ?: data_get($log->payload, 'name'));
+                        $contactEmail = $log->triggered_by ?: $log->user?->email;
+                        $contactPhone = $log->contact_phone ?: data_get($log->payload, 'phone');
+                        $ghlId = $log->ghl_contact_id ?: ($log->user?->ghl_contact_id ?: data_get($log->payload, 'contact_id'));
+                        $formName = $log->form_name ?: data_get($log->payload, 'form_name');
+                        $formId = $log->form_id ?: data_get($log->payload, 'form_id');
+                        $onboarded = (bool) $log->user?->onboarding_completed_at;
+                        $eligible = $log->user && filled($log->user->email) && $log->user->onboarding_completed_at && in_array($log->user->status, ['active','approved'], true);
+                        $emailStatus = $log->email_status ?? ($log->email_sent ? 'sent' : 'pending');
+                        $emailPill = match($emailStatus) {
+                            'sent' => 'workspace-pill--green',
+                            'failed' => 'workspace-pill--red',
+                            'skipped' => '',
+                            default => 'workspace-pill--orange',
+                        };
+                    @endphp
                     <tr>
-                        <td data-label="ID"><strong>#{{ $log->id }}</strong></td>
-                        <td data-label="Triggered By">{{ $log->triggered_by ?? '—' }}</td>
-                        <td data-label="User">
-                            @if($log->user)
-                                <a href="{{ route('admin.users.show', $log->user) }}" style="color:inherit;">{{ $log->user->name }}</a>
-                                <span class="workspace-pill" style="font-size:.7rem;">{{ $log->user->role }}</span>
-                                @if($log->user->status !== 'active')
-                                <span class="workspace-pill workspace-pill--orange" style="font-size:.7rem;">{{ $log->user->status }}</span>
-                                @endif
-                            @else
-                                <span style="color:var(--color-text-muted,#9ca3af);">No user linked</span>
-                            @endif
+                        <td data-label="ID / When">
+                            <strong>#{{ $log->id }}</strong><br>
+                            <span style="font-size:.75rem; color:var(--color-text-muted,#9ca3af);">{{ $log->created_at?->format('M j, Y g:i A') }}</span>
                         </td>
-                        <td data-label="Event"><code>{{ $log->event_type }}</code></td>
-                        <td data-label="Processed">
+                        <td data-label="Contact">
+                            @if($log->user)
+                                <a href="{{ route('admin.users.show', $log->user) }}" style="color:inherit; font-weight:600;">{{ $contactName ?: '—' }}</a>
+                                <span class="workspace-pill" style="font-size:.7rem;">{{ $log->user->role }}</span>
+                            @else
+                                <strong>{{ $contactName ?: '—' }}</strong>
+                                <span class="workspace-pill workspace-pill--orange" style="font-size:.7rem;">no user</span>
+                            @endif
+                            <div style="font-size:.75rem; color:var(--color-text-muted,#6b7280); margin-top:2px;">
+                                {{ $contactEmail ?: 'no email' }}<br>
+                                {{ $contactPhone ?: '—' }}
+                                @if($ghlId)<br><span title="GoHighLevel Contact ID">GHL: <code>{{ $ghlId }}</code></span>@endif
+                            </div>
+                        </td>
+                        <td data-label="Form">
+                            {{ $formName ?: '—' }}
+                            @if($formId)<br><span style="font-size:.72rem; color:var(--color-text-muted,#9ca3af);">ID: {{ $formId }}</span>@endif
+                        </td>
+                        <td data-label="Webhook">
                             <span class="workspace-pill {{ $log->processed_at ? 'workspace-pill--green' : 'workspace-pill--orange' }}">
-                                {{ $log->processed_at ? 'Done' : 'Pending' }}
+                                {{ $log->processed_at ? 'Received' : 'Pending' }}
                             </span>
                         </td>
-                        <td data-label="Email Sent">
-                            @if(isset($log->email_sent))
-                                <span class="workspace-pill {{ $log->email_sent ? 'workspace-pill--green' : 'workspace-pill--orange' }}">
-                                    {{ $log->email_sent ? 'Yes' : 'No' }}
-                                </span>
+                        <td data-label="User">
+                            @if($log->user_action)
+                                <span class="workspace-pill workspace-pill--green" style="font-size:.7rem;">{{ ucfirst($log->user_action) }}</span>
                             @else
                                 <span style="color:var(--color-text-muted,#9ca3af);">—</span>
                             @endif
                         </td>
-                        <td data-label="When">{{ $log->created_at?->format('M j, Y g:i A') }}</td>
-                        <td data-label="" style="display:flex; gap:.5rem; flex-wrap:wrap;">
-                            @if($log->user && $log->processed_at)
-                            <button onclick="resendPortalEmail({{ $log->id }})" class="button button--ghost-blue" style="font-size:.8rem; padding:.25rem .6rem;">Resend Email</button>
+                        <td data-label="Profile">
+                            @if($log->profile_action)
+                                <span class="workspace-pill workspace-pill--green" style="font-size:.7rem;">{{ ucfirst($log->profile_action) }}</span>
+                            @else
+                                <span style="color:var(--color-text-muted,#9ca3af);">—</span>
+                            @endif
+                        </td>
+                        <td data-label="Onboarded">
+                            <span class="workspace-pill {{ $onboarded ? 'workspace-pill--green' : 'workspace-pill--orange' }}">{{ $onboarded ? 'Yes' : 'No' }}</span>
+                        </td>
+                        <td data-label="Portal">
+                            <span class="workspace-pill {{ $log->portal_access_enabled ? 'workspace-pill--green' : 'workspace-pill--orange' }}">{{ $log->portal_access_enabled ? 'Yes' : 'No' }}</span>
+                        </td>
+                        <td data-label="Email">
+                            <span class="workspace-pill {{ $emailPill }}">{{ ucfirst($emailStatus) }}</span>
+                            @if($log->email_sent_at)<br><span style="font-size:.7rem; color:var(--color-text-muted,#9ca3af);">{{ $log->email_sent_at->format('M j, g:i A') }}</span>@endif
+                        </td>
+                        <td data-label="Error">
+                            @if($log->error_message)
+                                <span style="font-size:.72rem; color:#b91c1c;" title="{{ $log->error_message }}">{{ \Illuminate\Support\Str::limit($log->error_message, 60) }}</span>
+                            @else
+                                <span style="color:var(--color-text-muted,#9ca3af);">—</span>
+                            @endif
+                        </td>
+                        <td data-label="Actions" style="white-space:nowrap;">
+                            @if($log->user)
+                            <button onclick="resendPortalEmail({{ $log->id }})"
+                                    class="button button--ghost-blue"
+                                    style="font-size:.8rem; padding:.25rem .6rem;"
+                                    @unless($eligible) title="Not eligible — click to see why" @endunless>
+                                Resend Email
+                            </button>
+                            @unless($eligible)
+                                <div style="font-size:.68rem; color:#b45309; margin-top:3px;">
+                                    @if(blank($log->user->email)) Missing email
+                                    @elseif(! $log->user->onboarding_completed_at) Onboarding not completed
+                                    @elseif(! in_array($log->user->status, ['active','approved'], true)) User still pending
+                                    @endif
+                                </div>
+                            @endunless
+                            @else
+                                <span style="color:var(--color-text-muted,#9ca3af);">—</span>
                             @endif
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="8"><div class="workspace-empty">No onboarding logs found.</div></td></tr>
+                    <tr><td colspan="11"><div class="workspace-empty">No onboarding logs found.</div></td></tr>
                     @endforelse
                 </tbody>
             </table>

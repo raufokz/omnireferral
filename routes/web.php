@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\WebhookEventController as AdminWebhookEventContro
 use App\Http\Controllers\Agent\LeadController as AgentLeadController;
 use App\Http\Controllers\Agent\PortalController as AgentPortalController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\PasswordSetupController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\Dashboard\EnquiryController as DashboardEnquiryController;
@@ -187,6 +188,12 @@ Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->n
 Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->middleware('throttle:auth-password-reset')->name('password.email');
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+
+// Secure one-time password-setup links emailed after GoHighLevel onboarding (24h expiry, single use).
+Route::get('/password/setup/{token}', [PasswordSetupController::class, 'show'])->name('password.setup');
+Route::post('/password/setup/{token}', [PasswordSetupController::class, 'store'])
+    ->middleware('throttle:auth-password-reset')
+    ->name('password.setup.store');
 
 Route::post('/webhooks/gohighlevel/onboarding', [GoHighLevelWebhookController::class, 'onboardingCompleted'])
     ->withoutMiddleware([VerifyCsrfToken::class])

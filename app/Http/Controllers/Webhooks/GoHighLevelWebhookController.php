@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Webhooks;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\SendPortalLoginAccessEmailJob;
+use App\Jobs\SendPortalAccessSetupEmailJob;
 use App\Jobs\SyncUserToGoHighLevel;
 use App\Models\GhlSetting;
 use App\Models\Lead;
@@ -113,12 +113,12 @@ class GoHighLevelWebhookController extends Controller
 
             SyncUserToGoHighLevel::dispatch($user->id);
 
-            if ($result['isNewUser'] && $result['plainPassword']) {
-                SendPortalLoginAccessEmailJob::dispatch(
+            if ($result['isNewUser']) {
+                // Email a secure password-setup link instead of a plaintext password.
+                SendPortalAccessSetupEmailJob::dispatch(
                     userId: $user->id,
-                    plainPassword: $result['plainPassword'],
-                    loginUrl: route('login'),
-                    dashboardUrl: $user->dashboardRoute(),
+                    onboardingLogId: null,
+                    via: 'package_purchase',
                 );
             }
 
@@ -165,9 +165,9 @@ class GoHighLevelWebhookController extends Controller
 
         $email = $request->string('email')->value() ?: data_get($request->all(), 'contact.email');
         if (! $email) {
-            Log::warning('GHL onboarding_completed webhook missing email.', ['payload' => $request->all()]);
+            Log::warning('GHL onboarding_completed webhook: email missing from payload.', ['payload' => $request->all()]);
 
-            return response()->json(['message' => 'Missing email address.'], 422);
+            return response()->json(['message' => 'Email missing from GoHighLevel payload.'], 422);
         }
 
         try {
@@ -182,13 +182,12 @@ class GoHighLevelWebhookController extends Controller
 
             SyncUserToGoHighLevel::dispatch($user->id);
 
-            // Send portal access email if password was generated
-            if ($result['plainPassword']) {
-                SendPortalLoginAccessEmailJob::dispatch(
+            // Email a secure one-time password-setup link (never a plaintext password).
+            if ($result['shouldSendSetup']) {
+                SendPortalAccessSetupEmailJob::dispatch(
                     userId: $user->id,
-                    plainPassword: $result['plainPassword'],
-                    loginUrl: route('login'),
-                    dashboardUrl: $user->dashboardRoute(),
+                    onboardingLogId: $result['onboardingLog']->id ?? null,
+                    via: 'ghl_onboarding',
                 );
             }
 

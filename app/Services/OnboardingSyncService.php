@@ -23,7 +23,8 @@ class OnboardingSyncService
      *   - user              (User)
      *   - isNewUser         (bool)
      *   - isFirstOnboarding (bool)
-     *   - plainPassword     (?string) – null means don't send credentials email
+     *   - shouldSendSetup   (bool)  – true means email a password-setup link
+     *   - onboardingLog     (OnboardingLog)
      */
     public function sync(array $payload, ?int $explicitUserId = null): array
     {
@@ -91,42 +92,55 @@ class OnboardingSyncService
             $user->current_plan_id = $package->id;
         }
 
-        // --- Password provisioning ---
-        // Always provision password for onboarding completion to ensure portal access email is sent
-        $plainPassword = null;
-        if ($isFirstOnboarding) {
-            $plainPassword = $this->passwordService->provision($user);
-        } elseif ($user->must_reset_password) {
-            // User exists but needs password reset - generate new password
-            $plainPassword = $this->passwordService->forceProvision($user);
+        // --- Password setup (no plaintext password is ever generated or emailed) ---
+        // On first onboarding (or for a user who still owes a password reset) we set a
+        // random, unknown password so the account is unusable until they activate it via
+        // the one-time setup link. The link itself is dispatched by the caller.
+        $shouldSendSetup = $isFirstOnboarding || ($user->exists && $user->must_reset_password);
+        if ($shouldSendSetup) {
+            $user->password            = Str::password(32, true, true, true, false); // hashed by cast; discarded
+            $user->must_reset_password = true;
         }
 
         $user->save();
 
         // --- Role-based profile upsert ---
+        $profileAction = null;
         if ($role === 'agent') {
-            $this->upsertRealtorProfile($user, $payload, $city, $state, $zipCode);
+            $profileAction = $this->upsertRealtorProfile($user, $payload, $city, $state, $zipCode);
         } elseif (in_array($role, ['buyer', 'seller'], true)) {
-            $this->upsertBuyerProfile($user, $payload, $city, $zipCode);
+            $profileAction = $this->upsertBuyerProfile($user, $payload, $city, $zipCode);
         }
+
+        $portalAccessEnabled = in_array($user->status, ['active', 'approved'], true);
 
         // --- Audit log ---
         $safePayload = $this->stripSensitiveKeys($payload);
-        OnboardingLog::create([
-            'user_id'      => $user->id,
-            'source'       => 'ghl',
-            'event_type'   => 'onboarding_completed',
-            'triggered_by' => $email,
-            'payload'      => $safePayload,
-            'processed_at' => now(),
-            'email_sent'   => $plainPassword ? true : false,
+        $log = OnboardingLog::create([
+            'user_id'               => $user->id,
+            'source'                => 'ghl',
+            'event_type'            => 'onboarding_completed',
+            'triggered_by'          => $email,
+            'user_action'           => $isNewUser ? 'created' : 'updated',
+            'profile_action'        => $profileAction,
+            'portal_access_enabled' => $portalAccessEnabled,
+            'email_status'          => $shouldSendSetup ? 'pending' : 'skipped',
+            'form_name'             => $this->scalar($payload, ['form_name', 'form.name']),
+            'form_id'               => $this->scalar($payload, ['form_id', 'form.id']),
+            'ghl_contact_id'        => $contactId ?: $user->ghl_contact_id,
+            'contact_name'          => $name,
+            'contact_phone'         => $phone,
+            'payload'               => $safePayload,
+            'processed_at'          => now(),
+            'email_sent'            => false,
         ]);
 
         return [
             'user'              => $user,
             'isNewUser'         => $isNewUser,
             'isFirstOnboarding' => $isFirstOnboarding,
-            'plainPassword'     => $plainPassword,
+            'shouldSendSetup'   => $shouldSendSetup,
+            'onboardingLog'     => $log,
         ];
     }
 
@@ -153,9 +167,15 @@ class OnboardingSyncService
         return in_array($lower, $allowed, true) ? $lower : 'agent';
     }
 
-    private function upsertRealtorProfile(User $user, array $payload, ?string $city, ?string $state, ?string $zipCode): void
+    private function upsertRealtorProfile(User $user, array $payload, ?string $city, ?string $state, ?string $zipCode): string
     {
-        $slug = RealtorProfile::where('user_id', $user->id)->value('slug')
+        $existing = RealtorProfile::where('user_id', $user->id)->first();
+        // The UserObserver auto-creates a blank stub profile when an agent user is saved, so a
+        // row may already exist. Treat a stub (never populated by an onboarding submission) as
+        // "created"; only a profile previously populated via onboarding counts as "updated".
+        $action = ($existing && filled($existing->submission_source)) ? 'updated' : 'created';
+
+        $slug = $existing?->slug
             ?: Str::slug($user->name . '-' . Str::lower(Str::random(6)));
 
         $brokerage = $this->scalar($payload, ['brokerage_name', 'brokerage']) ?: 'OmniReferral Partner';
@@ -192,15 +212,26 @@ class OnboardingSyncService
             'headshot'            => AgentAvatar::defaultStorageHeadshot(),
         ], fn ($v) => $v !== null && $v !== '');
 
+        // Onboarding approves the profile for public visibility (profile_status=published +
+        // approved_at) and marks the agent active. approved_at is only stamped once.
+        $updates['profile_status']    = RealtorProfile::STATUS_PUBLISHED;
+        $updates['submission_source'] = 'gohighlevel_onboarding';
+        $updates['is_active_agent']   = $this->boolFrom($payload, ['is_active_agent', 'active_agent', 'is_active']) ?? true;
+        $updates['approved_at']       = $existing?->approved_at ?? now();
+
         // Preserve existing slug on update
         RealtorProfile::updateOrCreate(
             ['user_id' => $user->id],
             $updates,
         );
+
+        return $action;
     }
 
-    private function upsertBuyerProfile(User $user, array $payload, ?string $city, ?string $zipCode): void
+    private function upsertBuyerProfile(User $user, array $payload, ?string $city, ?string $zipCode): string
     {
+        $action = BuyerProfile::where('user_id', $user->id)->exists() ? 'updated' : 'created';
+
         $preferredLocations = array_values(array_filter([
             $this->scalar($payload, ['preferred_location', 'city']) ?: $city,
             $this->scalar($payload, ['zip_code', 'postal_code']) ?: $zipCode,
@@ -217,6 +248,26 @@ class OnboardingSyncService
             'notes'                => $this->scalar($payload, ['notes', 'buyer_notes']) ?: null,
             'onboarding_data'      => $safePayload,
         ]);
+
+        return $action;
+    }
+
+    /** Parse a boolean-ish value from the payload using dot-notation key candidates. */
+    private function boolFrom(array $payload, array $keys): ?bool
+    {
+        foreach ($keys as $key) {
+            $val = data_get($payload, $key);
+            if ($val === null || $val === '') {
+                continue;
+            }
+            if (is_bool($val)) {
+                return $val;
+            }
+
+            return in_array(strtolower(trim((string) $val)), ['1', 'true', 'yes', 'y', 'on', 'active'], true);
+        }
+
+        return null;
     }
 
     /** Extract a scalar value from nested payload using dot-notation key candidates. */
