@@ -10,9 +10,37 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
+use OpenApi\Attributes as OA;
 
+#[OA\Schema(
+    schema: 'MailSettings',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'mailer', type: 'string', enum: ['smtp', 'sendmail', 'ses', 'postmark', 'resend', 'log', 'mailgun']),
+        new OA\Property(property: 'host', type: 'string'),
+        new OA\Property(property: 'port', type: 'integer'),
+        new OA\Property(property: 'encryption', type: 'string', nullable: true),
+        new OA\Property(property: 'username', type: 'string'),
+        new OA\Property(property: 'password', type: 'string', format: 'password', description: 'Leave blank to keep existing'),
+        new OA\Property(property: 'from_address', type: 'string', format: 'email'),
+        new OA\Property(property: 'from_name', type: 'string'),
+        new OA\Property(property: 'credentials_from_address', type: 'string', format: 'email'),
+        new OA\Property(property: 'credentials_from_name', type: 'string'),
+    ]
+)]
 class MailSettingsController extends Controller
 {
+    #[OA\Get(
+        path: '/admin/mail-settings',
+        tags: ['Admin', 'Email System'],
+        summary: 'View mail settings',
+        description: 'Shows current effective mail configuration (DB + .env fallback). Admin access required.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(response: 200, description: 'Mail settings page'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+        ]
+    )]
     public function index(): View
     {
         $settings = MailSetting::instance();
@@ -40,6 +68,22 @@ class MailSettingsController extends Controller
         ]);
     }
 
+    #[OA\Put(
+        path: '/admin/mail-settings',
+        tags: ['Admin', 'Email System'],
+        summary: 'Update mail configuration',
+        description: 'Updates SMTP/mail driver credentials. Super admin only. Password is stored encrypted.',
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/MailSettings')
+        ),
+        responses: [
+            new OA\Response(response: 302, description: 'Redirect with success message'),
+            new OA\Response(response: 403, description: 'Forbidden - super admin only'),
+            new OA\Response(response: 422, description: 'Validation error'),
+        ]
+    )]
     public function update(Request $request): RedirectResponse
     {
         abort_unless($request->user()?->isSuperAdmin(), 403, 'Only super admins can edit mail settings.');
@@ -84,6 +128,23 @@ class MailSettingsController extends Controller
             ->with('success', 'Mail settings saved. Use the test tools below to verify delivery.');
     }
 
+    #[OA\Post(
+        path: '/admin/mail-settings/test-connection',
+        tags: ['Admin', 'Email System'],
+        summary: 'Test SMTP connection',
+        description: 'Attempts to connect to the configured SMTP server. Returns success or error message.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(response: 200, description: 'Connection test result',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'ok', type: 'boolean'),
+                        new OA\Property(property: 'message', type: 'string'),
+                    ]
+                )
+            ),
+        ]
+    )]
     public function testConnection(Request $request): JsonResponse
     {
         $settings = MailSetting::instance();
@@ -124,6 +185,33 @@ class MailSettingsController extends Controller
         }
     }
 
+    #[OA\Post(
+        path: '/admin/mail-settings/test',
+        tags: ['Admin', 'Email System'],
+        summary: 'Send test email',
+        description: 'Sends a raw test email to verify mail delivery is working end-to-end.',
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string', format: 'email'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Test result',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'ok', type: 'boolean'),
+                        new OA\Property(property: 'message', type: 'string'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 422, description: 'Validation error'),
+        ]
+    )]
     public function sendTest(Request $request): JsonResponse
     {
         $validated = $request->validate([

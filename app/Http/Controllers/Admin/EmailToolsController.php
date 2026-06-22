@@ -10,9 +10,21 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
+use OpenApi\Attributes as OA;
 
 class EmailToolsController extends Controller
 {
+    #[OA\Get(
+        path: '/admin/email',
+        tags: ['Admin', 'Email System'],
+        summary: 'View email and auth diagnostics',
+        description: 'Shows current mail configuration, delivery stats, email logs, and auth activity. Admin only.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(response: 200, description: 'Email diagnostics page'),
+            new OA\Response(response: 403, description: 'Forbidden - admin access required'),
+        ]
+    )]
     public function index(): View
     {
         $driver       = config('mail.default');
@@ -48,7 +60,33 @@ class EmailToolsController extends Controller
         ]);
     }
 
-    /** Send a test email synchronously so SMTP errors surface immediately. */
+    #[OA\Post(
+        path: '/admin/email/test',
+        tags: ['Admin', 'Email System'],
+        summary: 'Send test email from admin panel',
+        description: 'Sends a plain text test email to verify mail delivery. Admin only.',
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string', format: 'email'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Test result',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'ok', type: 'boolean'),
+                        new OA\Property(property: 'message', type: 'string'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 422, description: 'Validation error'),
+        ]
+    )]
     public function sendTest(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -90,7 +128,23 @@ class EmailToolsController extends Controller
         }
     }
 
-    /** Test that the configured mail transport can establish a connection. */
+    #[OA\Post(
+        path: '/admin/email/smtp-test',
+        tags: ['Admin', 'Email System'],
+        summary: 'Test SMTP connection from admin panel',
+        description: 'Tests the TCP connection to the configured SMTP server. Admin only.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(response: 200, description: 'Connection test result',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'ok', type: 'boolean'),
+                        new OA\Property(property: 'message', type: 'string'),
+                    ]
+                )
+            ),
+        ]
+    )]
     public function smtpTest(Request $request): JsonResponse
     {
         $driver = config('mail.default');

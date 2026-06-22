@@ -218,7 +218,7 @@ class OnboardingSyncService
         // Onboarding approves the profile for public visibility (profile_status=published +
         // approved_at) and marks the agent active. approved_at is only stamped once.
         $updates['profile_status']    = RealtorProfile::STATUS_PUBLISHED;
-        $updates['submission_source'] = 'gohighlevel_onboarding';
+        $updates['submission_source'] = 'gohighlevel';
         $updates['is_active_agent']   = $this->boolFrom($payload, ['is_active_agent', 'active_agent', 'is_active']) ?? true;
         $updates['approved_at']       = $existing?->approved_at ?? now();
 

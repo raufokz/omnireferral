@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'must_reset_password' => \App\Http\Middleware\MustResetPassword::class,
             'active.account' => \App\Http\Middleware\EnsureActiveAccount::class,
+            'swagger.access' => \App\Http\Middleware\SwaggerAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

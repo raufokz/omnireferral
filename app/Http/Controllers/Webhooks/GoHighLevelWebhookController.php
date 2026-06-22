@@ -21,7 +21,47 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
+use OpenApi\Attributes as OA;
 
+#[OA\Schema(
+    schema: 'OnboardingWebhookPayload',
+    type: 'object',
+    required: ['email'],
+    properties: [
+        new OA\Property(property: 'contact_id', type: 'string', description: 'GoHighLevel contact ID'),
+        new OA\Property(property: 'email', type: 'string', format: 'email'),
+        new OA\Property(property: 'name', type: 'string'),
+        new OA\Property(property: 'first_name', type: 'string'),
+        new OA\Property(property: 'last_name', type: 'string'),
+        new OA\Property(property: 'phone', type: 'string'),
+        new OA\Property(property: 'role', type: 'string', enum: ['agent', 'realtor', 'buyer', 'seller']),
+        new OA\Property(property: 'city', type: 'string'),
+        new OA\Property(property: 'state', type: 'string'),
+        new OA\Property(property: 'zip_code', type: 'string'),
+        new OA\Property(property: 'brokerage_name', type: 'string'),
+        new OA\Property(property: 'license_number', type: 'string'),
+        new OA\Property(property: 'specialties', type: 'string'),
+        new OA\Property(property: 'bio', type: 'string'),
+        new OA\Property(property: 'form_id', type: 'string'),
+        new OA\Property(property: 'form_name', type: 'string'),
+    ]
+)]
+#[OA\Schema(
+    schema: 'PurchaseWebhookPayload',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'email', type: 'string', format: 'email'),
+        new OA\Property(property: 'name', type: 'string'),
+        new OA\Property(property: 'phone', type: 'string'),
+        new OA\Property(property: 'role', type: 'string'),
+        new OA\Property(property: 'package_slug', type: 'string'),
+        new OA\Property(property: 'package_id', type: 'integer'),
+        new OA\Property(property: 'contact_id', type: 'string'),
+        new OA\Property(property: 'brokerage_name', type: 'string'),
+        new OA\Property(property: 'city', type: 'string'),
+        new OA\Property(property: 'state', type: 'string'),
+    ]
+)]
 class GoHighLevelWebhookController extends Controller
 {
     public function __construct(
@@ -29,6 +69,22 @@ class GoHighLevelWebhookController extends Controller
         private readonly PasswordProvisioningService $passwordService,
     ) {}
 
+    #[OA\Post(
+        path: '/webhooks/gohighlevel/purchase',
+        tags: ['Webhooks', 'GoHighLevel'],
+        summary: 'Handle package purchase webhook from GoHighLevel',
+        description: 'Receives a package purchase notification from GHL, creates/updates the user and realtor profile, dispatches sync and setup email.',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/PurchaseWebhookPayload')
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Purchase processed successfully'),
+            new OA\Response(response: 401, description: 'Unauthorized - invalid webhook secret'),
+            new OA\Response(response: 422, description: 'Missing email address'),
+            new OA\Response(response: 500, description: 'Account provisioning failed'),
+        ]
+    )]
     public function packagePurchased(Request $request): JsonResponse
     {
         if (! $this->isAuthorized($request)) {
@@ -114,7 +170,6 @@ class GoHighLevelWebhookController extends Controller
             SyncUserToGoHighLevel::dispatch($user->id);
 
             if ($result['isNewUser']) {
-                // Email a secure password-setup link instead of a plaintext password.
                 SendPortalAccessSetupEmailJob::dispatch(
                     userId: $user->id,
                     onboardingLogId: null,
@@ -122,7 +177,6 @@ class GoHighLevelWebhookController extends Controller
                 );
             }
 
-            // Notify admin of new agent onboarding
             if ($result['isNewUser'] && $user->role === 'agent') {
                 $adminUsers = User::where('role', 'admin')->get();
                 Notification::send($adminUsers, new NewAgentOnboardingNotification($user));
@@ -151,6 +205,31 @@ class GoHighLevelWebhookController extends Controller
         }
     }
 
+    #[OA\Post(
+        path: '/webhooks/gohighlevel/onboarding',
+        tags: ['Webhooks', 'GoHighLevel'],
+        summary: 'Receive onboarding completion from GoHighLevel',
+        description: 'Handles onboarding form submission webhook. Creates/updates user, realtor/buyer profile, generates password token, and queues setup email.',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/OnboardingWebhookPayload')
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Onboarding processed successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'message', type: 'string'),
+                        new OA\Property(property: 'user_id', type: 'integer'),
+                        new OA\Property(property: 'role', type: 'string'),
+                        new OA\Property(property: 'dashboard', type: 'string'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Unauthorized - invalid webhook secret'),
+            new OA\Response(response: 422, description: 'Missing email'),
+            new OA\Response(response: 500, description: 'Account provisioning failed'),
+        ]
+    )]
     public function onboardingCompleted(Request $request): JsonResponse
     {
         if (! $this->isAuthorized($request)) {
@@ -182,7 +261,6 @@ class GoHighLevelWebhookController extends Controller
 
             SyncUserToGoHighLevel::dispatch($user->id);
 
-            // Email a secure one-time password-setup link (never a plaintext password).
             if ($result['shouldSendSetup']) {
                 SendPortalAccessSetupEmailJob::dispatch(
                     userId: $user->id,
@@ -218,6 +296,28 @@ class GoHighLevelWebhookController extends Controller
         }
     }
 
+    #[OA\Post(
+        path: '/webhooks/gohighlevel/lead-status',
+        tags: ['Webhooks', 'GoHighLevel'],
+        summary: 'Receive lead status update from GoHighLevel',
+        description: 'Updates lead status (contacted, closed, etc.) and notifies the customer if needed.',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'lead_number', type: 'string'),
+                    new OA\Property(property: 'ghl_contact_id', type: 'string'),
+                    new OA\Property(property: 'status', type: 'string', enum: ['new', 'contacted', 'qualified', 'closed', 'lost']),
+                    new OA\Property(property: 'notes', type: 'string'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Lead status synced'),
+            new OA\Response(response: 401, description: 'Unauthorized'),
+            new OA\Response(response: 404, description: 'Lead not found'),
+        ]
+    )]
     public function leadStatusUpdated(Request $request): JsonResponse
     {
         if (! $this->isAuthorized($request)) {
@@ -316,14 +416,12 @@ class GoHighLevelWebhookController extends Controller
      */
     private function isAuthorized(Request $request): bool
     {
-        // DB-stored secret takes precedence over config
         $dbSetting = GhlSetting::instance();
         $secret = '';
 
         try {
             $secret = $dbSetting->webhook_secret ? trim((string) $dbSetting->webhook_secret) : '';
         } catch (\Throwable) {
-            // Decryption failure or DB unavailable → fall through to config
         }
 
         if ($secret === '') {

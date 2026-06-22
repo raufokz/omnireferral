@@ -20,11 +20,40 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
+use OpenApi\Attributes as OA;
 
+#[OA\Schema(
+    schema: 'GhlSettings',
+    type: 'object',
+    properties: [
+        new OA\Property(property: 'api_key', type: 'string', description: 'GHL API key (encrypted)'),
+        new OA\Property(property: 'location_id', type: 'string'),
+        new OA\Property(property: 'agency_id', type: 'string'),
+        new OA\Property(property: 'webhook_secret', type: 'string', description: 'Webhook secret (encrypted)'),
+        new OA\Property(property: 'environment', type: 'string', enum: ['production', 'sandbox']),
+        new OA\Property(property: 'pre_payment_survey_url', type: 'string', format: 'url'),
+        new OA\Property(property: 'post_payment_onboarding_url', type: 'string', format: 'url'),
+        new OA\Property(property: 'buyer_onboarding_form_url', type: 'string', format: 'url'),
+        new OA\Property(property: 'agent_onboarding_form_url', type: 'string', format: 'url'),
+        new OA\Property(property: 'realtor_onboarding_form_url', type: 'string', format: 'url'),
+        new OA\Property(property: 'hidden_fields', type: 'array', items: new OA\Items(type: 'string')),
+    ]
+)]
 class GoHighLevelController extends Controller
 {
     // ─── Overview ─────────────────────────────────────────────────────────────
 
+    #[OA\Get(
+        path: '/admin/gohighlevel',
+        tags: ['Admin', 'GoHighLevel'],
+        summary: 'GHL integration dashboard',
+        description: 'Shows connection status, KPI stats, recent webhooks/onboarding activity, and configured form URLs.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(response: 200, description: 'GHL overview page'),
+            new OA\Response(response: 403, description: 'Forbidden - admin access required'),
+        ]
+    )]
     public function index(): View
     {
         $settings = GhlSetting::instance();
@@ -61,6 +90,17 @@ class GoHighLevelController extends Controller
 
     // ─── Settings ─────────────────────────────────────────────────────────────
 
+    #[OA\Get(
+        path: '/admin/gohighlevel/settings',
+        tags: ['Admin', 'GoHighLevel'],
+        summary: 'View GHL integration settings',
+        description: 'Shows API credentials, form URLs, and hidden field configuration.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(response: 200, description: 'GHL settings page'),
+            new OA\Response(response: 403, description: 'Forbidden - admin access required'),
+        ]
+    )]
     public function settings(): View
     {
         $settings = GhlSetting::instance();
@@ -71,6 +111,22 @@ class GoHighLevelController extends Controller
         ]);
     }
 
+    #[OA\Put(
+        path: '/admin/gohighlevel/settings',
+        tags: ['Admin', 'GoHighLevel'],
+        summary: 'Update GHL integration settings',
+        description: 'Updates API credentials, form URLs, and hidden field mapping. Super admin only.',
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/GhlSettings')
+        ),
+        responses: [
+            new OA\Response(response: 302, description: 'Redirect with success message'),
+            new OA\Response(response: 403, description: 'Forbidden - super admin only'),
+            new OA\Response(response: 422, description: 'Validation error'),
+        ]
+    )]
     public function updateSettings(Request $request): RedirectResponse
     {
         abort_unless($request->user()?->isSuperAdmin(), 403, 'Only super admins can edit GoHighLevel credentials.');
@@ -207,6 +263,22 @@ class GoHighLevelController extends Controller
 
     // ─── Logs ─────────────────────────────────────────────────────────────────
 
+    #[OA\Get(
+        path: '/admin/gohighlevel/logs',
+        tags: ['Admin', 'GoHighLevel'],
+        summary: 'View GHL webhook and onboarding logs',
+        description: 'Filterable logs showing all GoHighLevel webhook deliveries and onboarding submissions. Includes retry and resend actions.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(name: 'event_type', in: 'query', schema: new OA\Schema(type: 'string')),
+            new OA\Parameter(name: 'status', in: 'query', schema: new OA\Schema(type: 'string', enum: ['processed', 'pending'])),
+            new OA\Parameter(name: 'search', in: 'query', schema: new OA\Schema(type: 'string')),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Logs page'),
+            new OA\Response(response: 403, description: 'Forbidden'),
+        ]
+    )]
     public function logs(Request $request): View
     {
         $eventType = $request->query('event_type');
@@ -245,6 +317,17 @@ class GoHighLevelController extends Controller
 
     // ─── Testing ──────────────────────────────────────────────────────────────
 
+    #[OA\Get(
+        path: '/admin/gohighlevel/testing',
+        tags: ['Admin', 'GoHighLevel'],
+        summary: 'GHL testing dashboard',
+        description: 'Shows a dashboard for testing GHL webhooks, connection, and sync functionality.',
+        security: [['bearerAuth' => []]],
+        responses: [
+            new OA\Response(response: 200, description: 'Testing page'),
+            new OA\Response(response: 403, description: 'Forbidden - admin access required'),
+        ]
+    )]
     public function testing(): View
     {
         $settings       = GhlSetting::instance();
@@ -259,6 +342,21 @@ class GoHighLevelController extends Controller
         ]);
     }
 
+    #[OA\Post(
+        path: '/admin/gohighlevel/test/connection',
+        tags: ['Admin', 'GoHighLevel'],
+        summary: 'Test GHL API connection',
+        description: 'Tests the configured GoHighLevel API key and location ID by pinging the GHL API. Updates last tested timestamp.',
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            required: false,
+            content: new OA\JsonContent(type: 'object')
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Connection test result'),
+            new OA\Response(response: 403, description: 'Forbidden - admin access required'),
+        ]
+    )]
     public function testConnection(Request $request): JsonResponse
     {
         $ghl    = app(GoHighLevelService::class);
@@ -272,6 +370,30 @@ class GoHighLevelController extends Controller
         return response()->json($result);
     }
 
+    #[OA\Post(
+        path: '/admin/gohighlevel/test/webhook',
+        tags: ['Admin', 'GoHighLevel'],
+        summary: 'Test GHL webhook delivery',
+        description: 'Sends a simulated webhook payload to the local onboarding or purchase webhook endpoint for testing.',
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['event_type', 'email'],
+                properties: [
+                    new OA\Property(property: 'event_type', type: 'string', enum: ['onboarding_completed', 'package_purchased']),
+                    new OA\Property(property: 'email', type: 'string', format: 'email'),
+                    new OA\Property(property: 'name', type: 'string'),
+                    new OA\Property(property: 'role', type: 'string', enum: ['buyer', 'seller', 'agent']),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Webhook test result'),
+            new OA\Response(response: 403, description: 'Forbidden - admin access required'),
+            new OA\Response(response: 422, description: 'Validation error'),
+        ]
+    )]
     public function testWebhook(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -325,6 +447,27 @@ class GoHighLevelController extends Controller
         }
     }
 
+    #[OA\Post(
+        path: '/admin/gohighlevel/test/sync',
+        tags: ['Admin', 'GoHighLevel'],
+        summary: 'Test user sync to GHL',
+        description: 'Attempts to sync a specific user to GoHighLevel as a contact and returns the result.',
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['user_id'],
+                properties: [
+                    new OA\Property(property: 'user_id', type: 'integer', description: 'User ID to sync'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'Sync result'),
+            new OA\Response(response: 403, description: 'Forbidden - admin access required'),
+            new OA\Response(response: 422, description: 'Validation error'),
+        ]
+    )]
     public function testSync(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -351,6 +494,27 @@ class GoHighLevelController extends Controller
         }
     }
 
+    #[OA\Post(
+        path: '/admin/gohighlevel/logs/{webhookEventId}/retry',
+        tags: ['Admin', 'GoHighLevel'],
+        summary: 'Retry a webhook event',
+        description: 'Re-fires an unprocessed webhook event payload against the local webhook endpoint for reprocessing.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'webhookEventId',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'Webhook log event ID'
+            ),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Retry result'),
+            new OA\Response(response: 403, description: 'Forbidden - admin access required'),
+            new OA\Response(response: 404, description: 'Event not found'),
+        ]
+    )]
     public function retrySync(Request $request, int $webhookEventId): JsonResponse
     {
         $event = GoHighLevelWebhookLog::findOrFail($webhookEventId);
@@ -393,6 +557,27 @@ class GoHighLevelController extends Controller
         }
     }
 
+    #[OA\Post(
+        path: '/admin/gohighlevel/logs/{onboardingLogId}/resend-email',
+        tags: ['Admin', 'GoHighLevel'],
+        summary: 'Resend portal access email',
+        description: 'Re-sends the portal access setup email to the user associated with a given onboarding log entry.',
+        security: [['bearerAuth' => []]],
+        parameters: [
+            new OA\Parameter(
+                name: 'onboardingLogId',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer'),
+                description: 'Onboarding log ID'
+            ),
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Email resend result'),
+            new OA\Response(response: 403, description: 'Forbidden - admin access required'),
+            new OA\Response(response: 404, description: 'Onboarding log not found'),
+        ]
+    )]
     public function resendPortalAccessEmail(Request $request, int $onboardingLogId): JsonResponse
     {
         $log = OnboardingLog::with('user')->findOrFail($onboardingLogId);

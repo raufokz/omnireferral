@@ -1,0 +1,1421 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "OmniReferral API",
+        "description": "REST API for the OmniReferral real estate referral and lead management platform.\n\nProvides authentication, user management, realtor profiles, GoHighLevel CRM integration,\nonboarding webhooks, and administrative functions.\n\n## Authentication\nMost endpoints require a Bearer token obtained via the Login or Register endpoints.\nPass the token in the `Authorization` header as `Bearer <token>`.\n\n## Webhooks\nGoHighLevel webhook endpoints are public (CSRF exempt) and authenticated via\nthe `X-OmniReferral-Webhook` header secret.",
+        "contact": {
+            "email": "admin@omnireferrals.com"
+        },
+        "license": {
+            "name": "Proprietary"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "https://omnireferrals.com",
+            "description": "OmniReferral Production API Server"
+        },
+        {
+            "url": "http://localhost:8000",
+            "description": "Local Development Server"
+        }
+    ],
+    "paths": {
+        "/admin/email": {
+            "get": {
+                "tags": [
+                    "Admin",
+                    "Email System"
+                ],
+                "summary": "View email and auth diagnostics",
+                "description": "Shows current mail configuration, delivery stats, email logs, and auth activity. Admin only.",
+                "operationId": "22283c6e9b5565754340091e053b00c6",
+                "responses": {
+                    "200": {
+                        "description": "Email diagnostics page"
+                    },
+                    "403": {
+                        "description": "Forbidden - admin access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/email/test": {
+            "post": {
+                "tags": [
+                    "Admin",
+                    "Email System"
+                ],
+                "summary": "Send test email from admin panel",
+                "description": "Sends a plain text test email to verify mail delivery. Admin only.",
+                "operationId": "add56453d6e39cfdce0b3c0148c3eaba",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Test result",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/email/smtp-test": {
+            "post": {
+                "tags": [
+                    "Admin",
+                    "Email System"
+                ],
+                "summary": "Test SMTP connection from admin panel",
+                "description": "Tests the TCP connection to the configured SMTP server. Admin only.",
+                "operationId": "91bd6632d3d20bc4b06e1efbab8fe861",
+                "responses": {
+                    "200": {
+                        "description": "Connection test result",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/gohighlevel": {
+            "get": {
+                "tags": [
+                    "Admin",
+                    "GoHighLevel"
+                ],
+                "summary": "GHL integration dashboard",
+                "description": "Shows connection status, KPI stats, recent webhooks/onboarding activity, and configured form URLs.",
+                "operationId": "5c2f46bea36fd3dcbf89b2c30ec2c928",
+                "responses": {
+                    "200": {
+                        "description": "GHL overview page"
+                    },
+                    "403": {
+                        "description": "Forbidden - admin access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/gohighlevel/settings": {
+            "get": {
+                "tags": [
+                    "Admin",
+                    "GoHighLevel"
+                ],
+                "summary": "View GHL integration settings",
+                "description": "Shows API credentials, form URLs, and hidden field configuration.",
+                "operationId": "8b0c186ddf2baabf34f6a956d09dde59",
+                "responses": {
+                    "200": {
+                        "description": "GHL settings page"
+                    },
+                    "403": {
+                        "description": "Forbidden - admin access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Admin",
+                    "GoHighLevel"
+                ],
+                "summary": "Update GHL integration settings",
+                "description": "Updates API credentials, form URLs, and hidden field mapping. Super admin only.",
+                "operationId": "6e7007baf8c6a3ac6c2cdc357cd0b5b7",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GhlSettings"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "302": {
+                        "description": "Redirect with success message"
+                    },
+                    "403": {
+                        "description": "Forbidden - super admin only"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/gohighlevel/logs": {
+            "get": {
+                "tags": [
+                    "Admin",
+                    "GoHighLevel"
+                ],
+                "summary": "View GHL webhook and onboarding logs",
+                "description": "Filterable logs showing all GoHighLevel webhook deliveries and onboarding submissions. Includes retry and resend actions.",
+                "operationId": "faf4c1ca5599b031021176b2aa564d7c",
+                "parameters": [
+                    {
+                        "name": "event_type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "processed",
+                                "pending"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Logs page"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/gohighlevel/testing": {
+            "get": {
+                "tags": [
+                    "Admin",
+                    "GoHighLevel"
+                ],
+                "summary": "GHL testing dashboard",
+                "description": "Shows a dashboard for testing GHL webhooks, connection, and sync functionality.",
+                "operationId": "d419eff4d539ffd537112a50996cb2e2",
+                "responses": {
+                    "200": {
+                        "description": "Testing page"
+                    },
+                    "403": {
+                        "description": "Forbidden - admin access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/gohighlevel/test/connection": {
+            "post": {
+                "tags": [
+                    "Admin",
+                    "GoHighLevel"
+                ],
+                "summary": "Test GHL API connection",
+                "description": "Tests the configured GoHighLevel API key and location ID by pinging the GHL API. Updates last tested timestamp.",
+                "operationId": "db5bfa4c333147b382030360bfa82e1c",
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Connection test result"
+                    },
+                    "403": {
+                        "description": "Forbidden - admin access required"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/gohighlevel/test/webhook": {
+            "post": {
+                "tags": [
+                    "Admin",
+                    "GoHighLevel"
+                ],
+                "summary": "Test GHL webhook delivery",
+                "description": "Sends a simulated webhook payload to the local onboarding or purchase webhook endpoint for testing.",
+                "operationId": "bbf921854a686181a7e0317dbbe6bfd7",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "event_type",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "event_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "onboarding_completed",
+                                            "package_purchased"
+                                        ]
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "buyer",
+                                            "seller",
+                                            "agent"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Webhook test result"
+                    },
+                    "403": {
+                        "description": "Forbidden - admin access required"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/gohighlevel/test/sync": {
+            "post": {
+                "tags": [
+                    "Admin",
+                    "GoHighLevel"
+                ],
+                "summary": "Test user sync to GHL",
+                "description": "Attempts to sync a specific user to GoHighLevel as a contact and returns the result.",
+                "operationId": "10e64a4dd79c2610d67f7ba46f4b91f9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "description": "User ID to sync",
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Sync result"
+                    },
+                    "403": {
+                        "description": "Forbidden - admin access required"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/gohighlevel/logs/{webhookEventId}/retry": {
+            "post": {
+                "tags": [
+                    "Admin",
+                    "GoHighLevel"
+                ],
+                "summary": "Retry a webhook event",
+                "description": "Re-fires an unprocessed webhook event payload against the local webhook endpoint for reprocessing.",
+                "operationId": "ad60e30bd35aefe8eb20628c2a890881",
+                "parameters": [
+                    {
+                        "name": "webhookEventId",
+                        "in": "path",
+                        "description": "Webhook log event ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Retry result"
+                    },
+                    "403": {
+                        "description": "Forbidden - admin access required"
+                    },
+                    "404": {
+                        "description": "Event not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/gohighlevel/logs/{onboardingLogId}/resend-email": {
+            "post": {
+                "tags": [
+                    "Admin",
+                    "GoHighLevel"
+                ],
+                "summary": "Resend portal access email",
+                "description": "Re-sends the portal access setup email to the user associated with a given onboarding log entry.",
+                "operationId": "e0c6047c3efe72668f1d9fb20ef1bb66",
+                "parameters": [
+                    {
+                        "name": "onboardingLogId",
+                        "in": "path",
+                        "description": "Onboarding log ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Email resend result"
+                    },
+                    "403": {
+                        "description": "Forbidden - admin access required"
+                    },
+                    "404": {
+                        "description": "Onboarding log not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/mail-settings": {
+            "get": {
+                "tags": [
+                    "Admin",
+                    "Email System"
+                ],
+                "summary": "View mail settings",
+                "description": "Shows current effective mail configuration (DB + .env fallback). Admin access required.",
+                "operationId": "ed0104dcf89bf407b3095a4124a8c150",
+                "responses": {
+                    "200": {
+                        "description": "Mail settings page"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Admin",
+                    "Email System"
+                ],
+                "summary": "Update mail configuration",
+                "description": "Updates SMTP/mail driver credentials. Super admin only. Password is stored encrypted.",
+                "operationId": "3ac24a40cf66490bd4e0028b4627f1c1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MailSettings"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "302": {
+                        "description": "Redirect with success message"
+                    },
+                    "403": {
+                        "description": "Forbidden - super admin only"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/mail-settings/test-connection": {
+            "post": {
+                "tags": [
+                    "Admin",
+                    "Email System"
+                ],
+                "summary": "Test SMTP connection",
+                "description": "Attempts to connect to the configured SMTP server. Returns success or error message.",
+                "operationId": "b3601ca3399297c9f2fab2aeeab29e17",
+                "responses": {
+                    "200": {
+                        "description": "Connection test result",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/admin/mail-settings/test": {
+            "post": {
+                "tags": [
+                    "Admin",
+                    "Email System"
+                ],
+                "summary": "Send test email",
+                "description": "Sends a raw test email to verify mail delivery is working end-to-end.",
+                "operationId": "3bc66f77632fa0e7d71cc3e7813ba41b",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Test result",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "ok": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/login": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Show login form",
+                "operationId": "749bdaf6374ca2f6fdb149d27225370e",
+                "responses": {
+                    "200": {
+                        "description": "Login page"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Authenticate user and start session",
+                "description": "Logs in a user with workspace role, email, and password. Starts a web session.",
+                "operationId": "ec9c379d2a959de66404708dd4a9322d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "302": {
+                        "description": "Redirect to dashboard on success"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/forgot-password": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Show forgot password form",
+                "operationId": "b52f4f77cb19a399fc4037fffb816b9d",
+                "responses": {
+                    "200": {
+                        "description": "Forgot password page"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Send password reset link",
+                "description": "Sends a password reset email to the given address.",
+                "operationId": "60e8a8c89f9c4d7c4e50c9ee676b1ada",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ForgotPasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "302": {
+                        "description": "Redirect with success or error message"
+                    }
+                }
+            }
+        },
+        "/reset-password/{token}": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Show password reset form",
+                "operationId": "66bf18ecbd1c28794d502de617a76578",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "email"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reset password page"
+                    }
+                }
+            }
+        },
+        "/reset-password": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Reset password with token",
+                "description": "Consumes a password reset token and sets a new password.",
+                "operationId": "3c793085ef8a11bc3209c9bc94792715",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ResetPasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "302": {
+                        "description": "Redirect to login on success"
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Log out and invalidate session",
+                "operationId": "cc14526f9abd470d63047b1c05aef0c3",
+                "responses": {
+                    "302": {
+                        "description": "Redirect to home"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/password/setup/{token}": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Show password setup form",
+                "description": "Displays the one-time password setup form for a valid token.",
+                "operationId": "a5ad4e37b85fe6223b18f3167f5c4c0b",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Password setup page"
+                    },
+                    "302": {
+                        "description": "Redirect to forgot-password if token invalid/expired"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Set password via setup token",
+                "description": "Consumes a one-time setup token, sets the user's password, and logs them in.",
+                "operationId": "e4e6baf3885dcf219e83774e29186ef3",
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordSetupRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "302": {
+                        "description": "Redirect to user dashboard"
+                    },
+                    "422": {
+                        "description": "Validation error or expired token"
+                    }
+                }
+            }
+        },
+        "/webhooks/gohighlevel/purchase": {
+            "post": {
+                "tags": [
+                    "Webhooks",
+                    "GoHighLevel"
+                ],
+                "summary": "Handle package purchase webhook from GoHighLevel",
+                "description": "Receives a package purchase notification from GHL, creates/updates the user and realtor profile, dispatches sync and setup email.",
+                "operationId": "2e8e2b0cd328d1a26de0b851b7e94393",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PurchaseWebhookPayload"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Purchase processed successfully"
+                    },
+                    "401": {
+                        "description": "Unauthorized - invalid webhook secret"
+                    },
+                    "422": {
+                        "description": "Missing email address"
+                    },
+                    "500": {
+                        "description": "Account provisioning failed"
+                    }
+                }
+            }
+        },
+        "/webhooks/gohighlevel/onboarding": {
+            "post": {
+                "tags": [
+                    "Webhooks",
+                    "GoHighLevel"
+                ],
+                "summary": "Receive onboarding completion from GoHighLevel",
+                "description": "Handles onboarding form submission webhook. Creates/updates user, realtor/buyer profile, generates password token, and queues setup email.",
+                "operationId": "9df21519ef544aec9be428c240823a74",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OnboardingWebhookPayload"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Onboarding processed successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "user_id": {
+                                            "type": "integer"
+                                        },
+                                        "role": {
+                                            "type": "string"
+                                        },
+                                        "dashboard": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized - invalid webhook secret"
+                    },
+                    "422": {
+                        "description": "Missing email"
+                    },
+                    "500": {
+                        "description": "Account provisioning failed"
+                    }
+                }
+            }
+        },
+        "/webhooks/gohighlevel/lead-status": {
+            "post": {
+                "tags": [
+                    "Webhooks",
+                    "GoHighLevel"
+                ],
+                "summary": "Receive lead status update from GoHighLevel",
+                "description": "Updates lead status (contacted, closed, etc.) and notifies the customer if needed.",
+                "operationId": "f2f807182482f992df85f438fcdd6b1e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "lead_number": {
+                                        "type": "string"
+                                    },
+                                    "ghl_contact_id": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "new",
+                                            "contacted",
+                                            "qualified",
+                                            "closed",
+                                            "lost"
+                                        ]
+                                    },
+                                    "notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Lead status synced"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Lead not found"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "GhlSettings": {
+                "properties": {
+                    "api_key": {
+                        "description": "GHL API key (encrypted)",
+                        "type": "string"
+                    },
+                    "location_id": {
+                        "type": "string"
+                    },
+                    "agency_id": {
+                        "type": "string"
+                    },
+                    "webhook_secret": {
+                        "description": "Webhook secret (encrypted)",
+                        "type": "string"
+                    },
+                    "environment": {
+                        "type": "string",
+                        "enum": [
+                            "production",
+                            "sandbox"
+                        ]
+                    },
+                    "pre_payment_survey_url": {
+                        "type": "string",
+                        "format": "url"
+                    },
+                    "post_payment_onboarding_url": {
+                        "type": "string",
+                        "format": "url"
+                    },
+                    "buyer_onboarding_form_url": {
+                        "type": "string",
+                        "format": "url"
+                    },
+                    "agent_onboarding_form_url": {
+                        "type": "string",
+                        "format": "url"
+                    },
+                    "realtor_onboarding_form_url": {
+                        "type": "string",
+                        "format": "url"
+                    },
+                    "hidden_fields": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "MailSettings": {
+                "properties": {
+                    "mailer": {
+                        "type": "string",
+                        "enum": [
+                            "smtp",
+                            "sendmail",
+                            "ses",
+                            "postmark",
+                            "resend",
+                            "log",
+                            "mailgun"
+                        ]
+                    },
+                    "host": {
+                        "type": "string"
+                    },
+                    "port": {
+                        "type": "integer"
+                    },
+                    "encryption": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "description": "Leave blank to keep existing",
+                        "type": "string",
+                        "format": "password"
+                    },
+                    "from_address": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "from_name": {
+                        "type": "string"
+                    },
+                    "credentials_from_address": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "credentials_from_name": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "LoginRequest": {
+                "required": [
+                    "role",
+                    "email",
+                    "password"
+                ],
+                "properties": {
+                    "role": {
+                        "description": "Workspace role",
+                        "type": "string",
+                        "enum": [
+                            "agent",
+                            "admin",
+                            "staff"
+                        ]
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password"
+                    },
+                    "remember": {
+                        "type": "boolean",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ForgotPasswordRequest": {
+                "required": [
+                    "email"
+                ],
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    }
+                },
+                "type": "object"
+            },
+            "ResetPasswordRequest": {
+                "required": [
+                    "token",
+                    "email",
+                    "password",
+                    "password_confirmation"
+                ],
+                "properties": {
+                    "token": {
+                        "description": "Password reset token from email",
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "minLength": 8
+                    },
+                    "password_confirmation": {
+                        "type": "string",
+                        "format": "password"
+                    }
+                },
+                "type": "object"
+            },
+            "User": {
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "agent",
+                            "admin",
+                            "staff",
+                            "buyer",
+                            "seller"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "active",
+                            "pending",
+                            "suspended"
+                        ]
+                    },
+                    "ghl_contact_id": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "onboarding_completed_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "PasswordSetupRequest": {
+                "required": [
+                    "password",
+                    "password_confirmation"
+                ],
+                "properties": {
+                    "password": {
+                        "type": "string",
+                        "format": "password",
+                        "minLength": 8
+                    },
+                    "password_confirmation": {
+                        "type": "string",
+                        "format": "password"
+                    }
+                },
+                "type": "object"
+            },
+            "OnboardingWebhookPayload": {
+                "required": [
+                    "email"
+                ],
+                "properties": {
+                    "contact_id": {
+                        "description": "GoHighLevel contact ID",
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "first_name": {
+                        "type": "string"
+                    },
+                    "last_name": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "agent",
+                            "realtor",
+                            "buyer",
+                            "seller"
+                        ]
+                    },
+                    "city": {
+                        "type": "string"
+                    },
+                    "state": {
+                        "type": "string"
+                    },
+                    "zip_code": {
+                        "type": "string"
+                    },
+                    "brokerage_name": {
+                        "type": "string"
+                    },
+                    "license_number": {
+                        "type": "string"
+                    },
+                    "specialties": {
+                        "type": "string"
+                    },
+                    "bio": {
+                        "type": "string"
+                    },
+                    "form_id": {
+                        "type": "string"
+                    },
+                    "form_name": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "PurchaseWebhookPayload": {
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    },
+                    "package_slug": {
+                        "type": "string"
+                    },
+                    "package_id": {
+                        "type": "integer"
+                    },
+                    "contact_id": {
+                        "type": "string"
+                    },
+                    "brokerage_name": {
+                        "type": "string"
+                    },
+                    "city": {
+                        "type": "string"
+                    },
+                    "state": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "sanctum",
+                "description": "Enter Sanctum token in format: Bearer <token>"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Authentication - login, logout, forgot/reset/set password"
+        },
+        {
+            "name": "GoHighLevel",
+            "description": "GoHighLevel CRM integration - webhooks, contact sync, lead sync, event tracking"
+        },
+        {
+            "name": "Webhooks",
+            "description": "Inbound webhook receivers for GoHighLevel and external systems"
+        },
+        {
+            "name": "Admin",
+            "description": "Admin endpoints - dashboard, logs, settings, user management"
+        },
+        {
+            "name": "Email System",
+            "description": "Email delivery, test tools, portal access resend, password reset emails"
+        }
+    ],
+    "security": [
+        {
+            "bearerAuth": []
+        }
+    ]
+}
