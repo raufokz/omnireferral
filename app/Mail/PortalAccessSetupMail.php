@@ -42,7 +42,7 @@ class PortalAccessSetupMail extends Mailable
                 'setupUrl'     => $this->setupUrl,
                 'loginUrl'     => $this->loginUrl,
                 'expiresHours' => PasswordSetupService::TTL_HOURS,
-                'supportEmail' => config('services.omni.support_email', 'admin@omnireferrals.com'),
+                'supportEmail' => config('omnireferral.company.support_email', 'support@omnireferrals.com'),
             ],
         );
     }

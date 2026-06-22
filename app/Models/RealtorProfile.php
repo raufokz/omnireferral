@@ -62,9 +62,11 @@ class RealtorProfile extends Model
     ];
 
     protected $attributes = [
-        'rating' => 4.5,
+        'rating' => 0,
         'review_count' => 0,
         'leads_closed' => 0,
+        'years_of_experience' => 2,
+        'is_active_agent' => true,
         'profile_status' => self::STATUS_DRAFT,
     ];
 

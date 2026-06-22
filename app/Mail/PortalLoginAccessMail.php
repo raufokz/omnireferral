@@ -44,7 +44,7 @@ class PortalLoginAccessMail extends Mailable
                 'loginUrl'          => $this->loginUrl,
                 'dashboardUrl'      => $this->dashboardUrl,
                 'planName'          => $this->user->currentPlan?->displayName(),
-                'supportEmail'      => config('services.omni.support_email', 'admin@omnireferrals.com'),
+                'supportEmail'      => config('omnireferral.company.support_email', 'support@omnireferrals.com'),
                 'dashboardPath'     => match ($this->user->role) {
                     'agent'  => '/agent/dashboard',
                     'buyer'  => '/buyer/dashboard',

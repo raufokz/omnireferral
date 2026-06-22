@@ -116,8 +116,8 @@ return [
     ],
 
     'credentials_from' => [
-        'address' => env('MAIL_CREDENTIALS_FROM_ADDRESS', 'admin@omnireferrals.com'),
-        'name' => env('MAIL_CREDENTIALS_FROM_NAME', 'OmniReferral Admin'),
+        'address' => env('MAIL_CREDENTIALS_FROM_ADDRESS', 'noreply@omnireferrals.com'),
+        'name' => env('MAIL_CREDENTIALS_FROM_NAME', 'OmniReferral'),
     ],
 
 ];

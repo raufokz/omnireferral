@@ -57,7 +57,7 @@
                         </div>
 
                         <div class="email-body">
-                            <p>Hi {{ $userName }},</p>
+                            <p>Hi {{ $userName ?: 'there' }},</p>
 
                             <p>
                                 Great news — your OmniReferral account has been successfully created
@@ -65,37 +65,20 @@
                                 Below you will find your login credentials and instructions to access your dashboard.
                             </p>
 
-                            <div class="credentials-box">
-                                <h3>Your Login Credentials</h3>
-                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                                    <tr>
-                                        <td style="color:#6b7280; font-size:13px; font-weight:500; padding:6px 12px 6px 0; width:100px; vertical-align:top;">Email</td>
-                                        <td style="color:#111827; font-size:14px; font-weight:600; padding:6px 0; word-break:break-all;">{{ $userEmail }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td style="color:#6b7280; font-size:13px; font-weight:500; padding:6px 12px 6px 0; width:100px; vertical-align:top;">Password</td>
-                                        <td style="padding:6px 0;">
-                                            <span style="font-family:'SF Mono','Fira Code','Courier New',monospace; background-color:#fef3c7; padding:3px 8px; border-radius:4px; color:#92400e; font-size:14px; font-weight:600; letter-spacing:0.03em;">{{ $temporaryPassword }}</span>
-                                        </td>
-                                    </tr>
-                                </table>
+                            <div class="cta-section">
+                                <a href="{{ $loginUrl }}" class="cta-button" target="_blank">Set Your Password &amp; Sign In &rarr;</a>
                             </div>
 
-                            <div class="cta-section">
-                                <a href="{{ $loginUrl }}" class="cta-button" target="_blank">Sign In to Your Dashboard</a>
-                            </div>
+                            <p style="font-size:13px; text-align:center; margin-top:-12px; margin-bottom:24px;">
+                                <a href="{{ $loginUrl }}" style="color:#0B3668;">{{ $loginUrl }}</a>
+                            </p>
 
                             <p style="font-weight:600; color:#0B3668; margin-bottom:8px;">Getting Started:</p>
                             <ol class="steps-list">
-                                <li data-step="1">Click the button above or go to <a href="{{ $loginUrl }}" style="color:#0B3668;">{{ $loginUrl }}</a></li>
-                                <li data-step="2">Enter your email and the temporary password shown above</li>
-                                <li data-step="3">Update your password to something secure and personal</li>
-                                <li data-step="4">Explore your dashboard — leads, listings, and tools are ready</li>
+                                <li data-step="1">Click the button above to set up your secure password</li>
+                                <li data-step="2">Log in with your email and new password</li>
+                                <li data-step="3">Explore your dashboard — leads, listings, and tools are ready</li>
                             </ol>
-
-                            <div class="security-note">
-                                <p><strong>Security reminder:</strong> Please change your password after your first login. Do not share these credentials with anyone. If you did not request this account, contact our support team immediately.</p>
-                            </div>
 
                             <p>If you have any questions or need help getting started, reply to this email or reach out to <a href="mailto:{{ $supportEmail }}" style="color:#0B3668;">{{ $supportEmail }}</a>.</p>
 

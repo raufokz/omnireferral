@@ -43,7 +43,7 @@
             &#10003; Onboarding Complete
         </div>
 
-        <h2>Hello, {{ $userName }}!</h2>
+        <h2>Hello, {{ $userName ?: 'there' }}!</h2>
         <p>
             Your onboarding is complete. You can now login to your portal and access your
             {{ ucfirst($userRole ?? 'agent') }} dashboard.
@@ -52,39 +52,22 @@
             @endif
         </p>
 
-        <div class="credentials-box">
-            <div class="cred-row">
-                <span class="cred-label">Login Email</span>
-                <span class="cred-value">{{ $userEmail }}</span>
-            </div>
-            <div class="cred-row">
-                <span class="cred-label">Temp Password</span>
-                <span class="cred-value">{{ $temporaryPassword }}</span>
-            </div>
-            <div class="cred-row">
-                <span class="cred-label">Dashboard</span>
-                <span class="cred-value">{{ $dashboardPath }}</span>
-            </div>
-        </div>
-
         <div class="cta-section">
-            <a href="{{ $loginUrl }}" class="cta-button">Login to Your Portal &rarr;</a>
+            <a href="{{ $loginUrl }}" class="cta-button">Set Your Password &amp; Login &rarr;</a>
         </div>
 
-        <div class="instructions-box">
-            <p>
-                <strong>Important:</strong> This is a temporary password. You will be prompted to choose
-                a new password immediately after your first login. Please do not share this email.
-            </p>
-        </div>
+        <p class="link-fallback" style="font-size:13px; text-align:center; margin-top:12px;">
+            If the button above doesn't work, copy and paste this URL into your browser:<br>
+            <a href="{{ $loginUrl }}" style="color:#0b3668;">{{ $loginUrl }}</a>
+        </p>
 
         <hr class="divider">
 
         <h2 style="font-size:16px; color:#475569; font-weight:600;">Your Next Steps</h2>
         <p style="font-size:14px;">
-            1. Click the login button above or go to <a href="{{ $loginUrl }}" style="color:#0b3668; font-weight:600;">{{ $loginUrl }}</a><br>
-            2. Enter your email and the temporary password above<br>
-            3. Set a new personal password when prompted<br>
+            1. Click the button above or go to <a href="{{ $loginUrl }}" style="color:#0b3668; font-weight:600;">{{ $loginUrl }}</a><br>
+            2. Set your password using the secure link<br>
+            3. Login to your portal with your email and new password<br>
             4. Complete your profile to activate full portal access
         </p>
 

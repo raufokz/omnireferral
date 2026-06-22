@@ -71,7 +71,7 @@ class OnboardingSyncService
             'phone'                   => $phone,
             'role'                    => $role,
             'staff_team'              => $staffTeam,
-            'status'                  => 'active',
+            'status'                  => 'pending',
             'ghl_contact_id'          => $contactId ?: ($user->ghl_contact_id ?? null),
             'onboarding_completed_at' => now(),
             'email_verified_at'       => $user->email_verified_at ?? now(),
@@ -182,7 +182,7 @@ class OnboardingSyncService
             ?: Str::slug($user->name . '-' . Str::lower(Str::random(6)));
 
         $brokerage = $this->scalar($payload, ['brokerage_name', 'brokerage']) ?: 'OmniReferral Partner';
-        $license   = $this->scalar($payload, ['license_number', 'license_no', 'real_estate_license_number']);
+        $license   = $this->scalar($payload, ['license_number', 'license_no', 'real_estate_license_number']) ?: 'ACTIVE';
         $bio       = $this->scalar($payload, ['bio', 'agent_bio', 'about']) ?: 'Agent profile generated from GoHighLevel onboarding.';
         $specialties = $this->scalar($payload, ['specialties', 'specialty']) ?: 'Buyer Representation, Seller Strategy, Lead Conversion';
         $yearsExp  = isset($payload['years_of_experience']) ? (int) $payload['years_of_experience'] : null;
@@ -215,12 +215,9 @@ class OnboardingSyncService
             'headshot'            => AgentAvatar::defaultStorageHeadshot(),
         ], fn ($v) => $v !== null && $v !== '');
 
-        // Onboarding approves the profile for public visibility (profile_status=published +
-        // approved_at) and marks the agent active. approved_at is only stamped once.
-        $updates['profile_status']    = RealtorProfile::STATUS_PUBLISHED;
+        // Profile is submitted for admin review (not auto-approved).
         $updates['submission_source'] = 'gohighlevel';
         $updates['is_active_agent']   = $this->boolFrom($payload, ['is_active_agent', 'active_agent', 'is_active']) ?? true;
-        $updates['approved_at']       = $existing?->approved_at ?? now();
 
         // Preserve existing slug on update
         RealtorProfile::updateOrCreate(

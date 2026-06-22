@@ -118,7 +118,7 @@ class GoHighLevelWebhookController extends Controller
                     'name'                => $name,
                     'phone'               => $phone,
                     'role'                => $this->syncService->normalizeRole($request->string('role')->value() ?: 'agent'),
-                    'status'              => 'active',
+                    'status'              => 'pending',
                     'ghl_contact_id'      => $request->string('contact_id')->value() ?: data_get($request->all(), 'contact.id'),
                     'onboarding_completed_at' => null,
                     'must_reset_password' => $isNewUser ? true : (bool) $user->must_reset_password,

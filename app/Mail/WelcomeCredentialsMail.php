@@ -43,7 +43,7 @@ class WelcomeCredentialsMail extends Mailable
                 'temporaryPassword' => $this->temporaryPassword,
                 'loginUrl' => $this->loginUrl,
                 'dashboardUrl' => $this->dashboardUrl,
-                'supportEmail' => config('services.omni.support_email', 'admin@omnireferrals.com'),
+                'supportEmail' => config('omnireferral.company.support_email', 'support@omnireferrals.com'),
                 'planName' => $this->user->currentPlan?->displayName(),
             ],
         );
