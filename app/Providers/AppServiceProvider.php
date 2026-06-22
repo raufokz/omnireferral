@@ -166,15 +166,14 @@ class AppServiceProvider extends ServiceProvider
         try {
             $mail = MailSetting::instance();
             if ($mail->exists && $mail->isConfigured()) {
-                if ($mail->mailer) {
-                    config(['mail.default' => $mail->mailer]);
-                }
-                $mc = &config("mail.mailers.{$mail->mailer}");
-                if ($mail->host) { $mc['host'] = $mail->host; }
-                if ($mail->port) { $mc['port'] = (int) $mail->port; }
-                if ($mail->encryption !== null) { $mc['encryption'] = $mail->encryption ?: null; }
-                if ($mail->username) { $mc['username'] = $mail->username; }
-                if ($mail->password) { $mc['password'] = $mail->password; }
+                $driver = $mail->mailer ?: 'smtp';
+                config(['mail.default' => $driver]);
+
+                if ($mail->host) { config(["mail.mailers.{$driver}.host" => $mail->host]); }
+                if ($mail->port) { config(["mail.mailers.{$driver}.port" => (int) $mail->port]); }
+                if ($mail->encryption !== null) { config(["mail.mailers.{$driver}.encryption" => $mail->encryption ?: null]); }
+                if ($mail->username) { config(["mail.mailers.{$driver}.username" => $mail->username]); }
+                if ($mail->password) { config(["mail.mailers.{$driver}.password" => $mail->password]); }
                 if ($mail->from_address) { config(['mail.from.address' => $mail->from_address]); }
                 if ($mail->from_name) { config(['mail.from.name' => $mail->from_name]); }
                 if ($mail->credentials_from_address) { config(['mail.credentials_from.address' => $mail->credentials_from_address]); }

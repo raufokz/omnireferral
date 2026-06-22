@@ -130,6 +130,7 @@ class MailSettingsController extends Controller
             'email' => ['required', 'email'],
         ]);
 
+        $settings = MailSetting::instance();
         $to = $validated['email'];
 
         try {
@@ -164,22 +165,22 @@ class MailSettingsController extends Controller
             config(['mail.default' => $settings->mailer]);
         }
 
-        $mailerConfig = &config("mail.mailers.{$settings->mailer}");
+        $driver = $settings->mailer;
 
         if ($settings->host) {
-            $mailerConfig['host'] = $settings->host;
+            config(["mail.mailers.{$driver}.host" => $settings->host]);
         }
         if ($settings->port) {
-            $mailerConfig['port'] = (int) $settings->port;
+            config(["mail.mailers.{$driver}.port" => (int) $settings->port]);
         }
         if ($settings->encryption !== null) {
-            $mailerConfig['encryption'] = $settings->encryption ?: null;
+            config(["mail.mailers.{$driver}.encryption" => $settings->encryption ?: null]);
         }
         if ($settings->username) {
-            $mailerConfig['username'] = $settings->username;
+            config(["mail.mailers.{$driver}.username" => $settings->username]);
         }
         if ($settings->password) {
-            $mailerConfig['password'] = $settings->password;
+            config(["mail.mailers.{$driver}.password" => $settings->password]);
         }
         if ($settings->from_address) {
             config(['mail.from.address' => $settings->from_address]);
