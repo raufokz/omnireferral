@@ -80,6 +80,12 @@ class SendPortalAccessSetupEmailJob implements ShouldQueue
         } catch (\Throwable $e) {
             $this->markLog('failed', $e->getMessage(), tokenGenerated: false);
 
+            \App\Models\EmailLog::failed($user->email, $e->getMessage(), [
+                'user_id'    => $user->id,
+                'event_type' => 'portal_access_setup',
+                'subject'    => 'Your OmniReferral Portal Access Is Ready',
+            ]);
+
             Log::error('Failed to send portal access setup email.', [
                 'user_id' => $user->id,
                 'email'   => $user->email,

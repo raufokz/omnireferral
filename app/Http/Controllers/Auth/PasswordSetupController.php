@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuthLog;
 use App\Services\PasswordSetupService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -49,6 +50,10 @@ class PasswordSetupController extends Controller
         ]);
 
         $user = $this->setupService->consume($record, $request->string('password')->value());
+
+        AuthLog::record('password_set', 'success', [
+            'user_id' => $user->id, 'email' => $user->email, 'request' => $request,
+        ]);
 
         Auth::login($user);
         $request->session()->regenerate();

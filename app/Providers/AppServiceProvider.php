@@ -157,6 +157,10 @@ class AppServiceProvider extends ServiceProvider
 
         User::observe(UserObserver::class);
 
+        // NOTE: the MessageSent → email_logs listener (App\Listeners\LogSentEmail) is
+        // auto-registered by Laravel 11's listener auto-discovery; do not register it
+        // explicitly here or every email would be logged twice.
+
         RateLimiter::for('leads', function (Request $request) {
             return Limit::perMinute(5)->by($request->ip());
         });

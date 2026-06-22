@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuthLog;
+use App\Models\EmailLog;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -58,6 +61,10 @@ class AuthController extends Controller
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
 
+                AuthLog::record('login_blocked_pending', 'failure', [
+                    'user_id' => $user->id, 'email' => $user->email, 'request' => $request,
+                ]);
+
                 return back()->withErrors([
                     'email' => 'Your portal access is not active yet. Your profile may be listed publicly, but signing in requires an active plan and completed GoHighLevel onboarding.',
                 ])->onlyInput('email', 'role');
@@ -67,6 +74,10 @@ class AuthController extends Controller
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
+
+                AuthLog::record('login_blocked_suspended', 'failure', [
+                    'user_id' => $user->id, 'email' => $user->email, 'request' => $request,
+                ]);
 
                 return back()->withErrors([
                     'email' => 'This account is not active. Contact OmniReferral support if you believe this is a mistake.',
@@ -78,13 +89,27 @@ class AuthController extends Controller
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
 
+                AuthLog::record('login_role_mismatch', 'failure', [
+                    'user_id' => $user->id, 'email' => $user->email, 'request' => $request,
+                    'context' => ['chosen_role' => $credentials['role'], 'actual_role' => $user->role],
+                ]);
+
                 return back()->withErrors([
                     'role' => 'That account belongs to the ' . $user->roleLabel() . ' workspace. Please choose the correct role and try again.',
                 ])->onlyInput('email', 'role');
             }
 
+            AuthLog::record('login_success', 'success', [
+                'user_id' => $user->id, 'email' => $user->email, 'request' => $request,
+            ]);
+
             return $this->redirectBasedOnRole($user);
         }
+
+        AuthLog::record('login_failed', 'failure', [
+            'user_id' => $user?->id, 'email' => $credentials['email'], 'request' => $request,
+            'error_message' => 'No matching account or wrong password.',
+        ]);
 
         return back()->withErrors([
             'email' => 'We could not find a matching account with those details.',
@@ -104,7 +129,24 @@ class AuthController extends Controller
             'email.required' => 'Oops, looks like you missed your email!',
         ]);
 
-        $status = Password::sendResetLink($request->only('email'));
+        $email = $request->string('email')->value();
+
+        AuthLog::record('forgot_password_requested', 'info', ['email' => $email, 'request' => $request]);
+
+        try {
+            $status = Password::sendResetLink($request->only('email'));
+        } catch (\Throwable $e) {
+            // A mailer/SMTP failure here would otherwise surface as a raw 500.
+            Log::error('Forgot-password email failed to send.', ['email' => $email, 'error' => $e->getMessage()]);
+            EmailLog::failed($email, $e->getMessage(), [
+                'event_type' => 'password_reset_link',
+                'subject'    => 'Reset Password Notification',
+            ]);
+
+            return back()->withErrors([
+                'email' => 'We could not send the reset email right now. Please try again shortly or contact support.',
+            ]);
+        }
 
         return $status === Password::RESET_LINK_SENT
             ? back()->with('success', 'A password reset link has been sent. If mail is set to log in local development, check your Laravel log file.')
@@ -132,7 +174,7 @@ class AuthController extends Controller
 
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
-            function (User $user, string $password) {
+            function (User $user, string $password) use ($request) {
                 $user->forceFill([
                     'password'             => $password,
                     'remember_token'       => Str::random(60),
@@ -141,6 +183,10 @@ class AuthController extends Controller
                 ])->save();
 
                 event(new PasswordReset($user));
+
+                AuthLog::record('password_reset', 'success', [
+                    'user_id' => $user->id, 'email' => $user->email, 'request' => $request,
+                ]);
             }
         );
 
@@ -151,6 +197,10 @@ class AuthController extends Controller
 
     public function logout(Request $request): RedirectResponse
     {
+        if ($user = $request->user()) {
+            AuthLog::record('logout', 'info', ['user_id' => $user->id, 'email' => $user->email, 'request' => $request]);
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
