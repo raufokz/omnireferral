@@ -29,7 +29,6 @@ class OnboardingSyncService
     public function sync(array $payload, ?int $explicitUserId = null): array
     {
         $email  = $this->scalar($payload, ['email', 'contact.email']);
-        $name   = $this->scalar($payload, ['name', 'contact.name', 'full_name', 'first_name']) ?: 'New OmniReferral User';
         $phone  = $this->scalar($payload, ['phone', 'contact.phone', 'phone_number']);
         $role   = $this->normalizeRole($this->scalar($payload, ['role', 'user_type', 'contact.customField.role']) ?? '');
 
@@ -55,6 +54,10 @@ class OnboardingSyncService
 
         $isNewUser        = ! $user->exists;
         $isFirstOnboarding = $isNewUser || is_null($user->onboarding_completed_at);
+
+        // --- Resolve name: prefer payload, fall back to existing name or generic default ---
+        $payloadName = $this->scalar($payload, ['name', 'contact.name', 'full_name', 'first_name']);
+        $name        = $payloadName ?: ($user->name ?: 'New OmniReferral User');
 
         // --- Address fields ---
         $city     = $this->scalar($payload, ['city', 'contact.city'])     ?: $user->city;

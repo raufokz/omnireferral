@@ -53,13 +53,24 @@ class SendPortalAccessSetupEmailJob implements ShouldQueue
             $plain = $setupService->generate($user, $this->via);
             $url   = $setupService->url($plain);
 
+            if (blank($url)) {
+                $this->markLog('failed', 'Password setup URL is empty — token generation failed.', tokenGenerated: false);
+
+                Log::error('SendPortalAccessSetupEmailJob: password setup URL is empty.', [
+                    'user_id' => $user->id,
+                    'email'   => $user->email,
+                ]);
+
+                return;
+            }
+
             Mail::to($user->email)->send(new PortalAccessSetupMail(
                 user: $user,
                 setupUrl: $url,
                 loginUrl: route('login'),
             ));
 
-            $this->markLog('sent');
+            $this->markLog('sent', tokenGenerated: true);
 
             Log::info('Portal access setup email sent.', [
                 'user_id' => $user->id,
@@ -67,7 +78,7 @@ class SendPortalAccessSetupEmailJob implements ShouldQueue
                 'via'     => $this->via,
             ]);
         } catch (\Throwable $e) {
-            $this->markLog('failed', $e->getMessage());
+            $this->markLog('failed', $e->getMessage(), tokenGenerated: false);
 
             Log::error('Failed to send portal access setup email.', [
                 'user_id' => $user->id,
@@ -89,7 +100,7 @@ class SendPortalAccessSetupEmailJob implements ShouldQueue
         ]);
     }
 
-    private function markLog(string $status, ?string $error = null): void
+    private function markLog(string $status, ?string $error = null, ?bool $tokenGenerated = null): void
     {
         if (! $this->onboardingLogId) {
             return;
@@ -104,6 +115,14 @@ class SendPortalAccessSetupEmailJob implements ShouldQueue
         $log->email_sent     = $status === 'sent';
         $log->email_sent_at  = $status === 'sent' ? now() : $log->email_sent_at;
         $log->error_message  = $error ? Str::limit($error, 1000) : ($status === 'sent' ? null : $log->error_message);
+
+        if ($tokenGenerated !== null) {
+            $log->token_generated = $tokenGenerated;
+            if ($tokenGenerated) {
+                $log->token_expires_at = now()->addHours(PasswordSetupService::TTL_HOURS);
+            }
+        }
+
         $log->save();
     }
 }

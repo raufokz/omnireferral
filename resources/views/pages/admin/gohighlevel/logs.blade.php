@@ -96,7 +96,7 @@
         <span class="eyebrow">Onboarding Sync Logs</span>
         <h2>GHL onboarding submissions <span style="font-size:.9rem; font-weight:400; color:var(--color-text-muted,#6b7280);">({{ $onboardingLogs->total() }} total)</span></h2>
         <div class="workspace-table-wrap" style="margin-top:.75rem; overflow-x:auto;">
-            <table class="workspace-table">
+                    <table class="workspace-table">
                 <thead>
                     <tr>
                         <th>ID / When</th>
@@ -107,6 +107,7 @@
                         <th>Profile</th>
                         <th>Onboarded</th>
                         <th>Portal</th>
+                        <th>Token</th>
                         <th>Email</th>
                         <th>Error</th>
                         <th>Actions</th>
@@ -179,6 +180,16 @@
                         <td data-label="Portal">
                             <span class="workspace-pill {{ $log->portal_access_enabled ? 'workspace-pill--green' : 'workspace-pill--orange' }}">{{ $log->portal_access_enabled ? 'Yes' : 'No' }}</span>
                         </td>
+                        <td data-label="Token">
+                            @if($log->token_generated)
+                                <span class="workspace-pill workspace-pill--green">Generated</span>
+                                @if($log->token_expires_at)
+                                    <br><span style="font-size:.7rem; color:var(--color-text-muted,#9ca3af);">Expires {{ $log->token_expires_at->format('M j, g:i A') }}</span>
+                                @endif
+                            @else
+                                <span class="workspace-pill workspace-pill--orange">No</span>
+                            @endif
+                        </td>
                         <td data-label="Email">
                             <span class="workspace-pill {{ $emailPill }}">{{ ucfirst($emailStatus) }}</span>
                             @if($log->email_sent_at)<br><span style="font-size:.7rem; color:var(--color-text-muted,#9ca3af);">{{ $log->email_sent_at->format('M j, g:i A') }}</span>@endif
@@ -212,7 +223,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="11"><div class="workspace-empty">No onboarding logs found.</div></td></tr>
+                    <tr><td colspan="12"><div class="workspace-empty">No onboarding logs found.</div></td></tr>
                     @endforelse
                 </tbody>
             </table>

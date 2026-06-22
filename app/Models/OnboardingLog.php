@@ -26,6 +26,8 @@ class OnboardingLog extends Model
         'payload',
         'processed_at',
         'email_sent',
+        'token_generated',
+        'token_expires_at',
     ];
 
     protected function casts(): array
@@ -36,6 +38,8 @@ class OnboardingLog extends Model
             'email_sent_at' => 'datetime',
             'email_sent' => 'boolean',
             'portal_access_enabled' => 'boolean',
+            'token_generated' => 'boolean',
+            'token_expires_at' => 'datetime',
         ];
     }
 

@@ -134,8 +134,10 @@ class AuthController extends Controller
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user, string $password) {
                 $user->forceFill([
-                    'password' => $password,
-                    'remember_token' => Str::random(60),
+                    'password'             => $password,
+                    'remember_token'       => Str::random(60),
+                    'must_reset_password'  => false,
+                    'password_set_at'      => now(),
                 ])->save();
 
                 event(new PasswordReset($user));

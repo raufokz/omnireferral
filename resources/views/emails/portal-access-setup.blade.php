@@ -38,7 +38,7 @@
             &#10003; Onboarding Complete
         </div>
 
-        <h2>Hi {{ $userName }},</h2>
+        <h2>Hi {{ $userName ?: 'there' }},</h2>
         <p>Your onboarding form has been completed successfully.</p>
         <p>Your OmniReferral portal access is ready.</p>
         <p>Please click the button below to set your password and access your account:</p>
