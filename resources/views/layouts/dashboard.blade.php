@@ -174,6 +174,7 @@
                             ? ['label' => 'Audit Log', 'route' => route('admin.activity.index'), 'active' => ['admin.activity.*'], 'icon' => 'audit']
                             : null,
                         ['label' => 'GoHighLevel', 'route' => route('admin.ghl.index'), 'active' => ['admin.ghl.*'], 'icon' => 'audit'],
+                        ['label' => 'Mail Settings', 'route' => route('admin.mail-settings.index'), 'active' => ['admin.mail-settings.*'], 'icon' => 'audit'],
                         ['label' => 'Email & Auth Logs', 'route' => route('admin.email.index'), 'active' => ['admin.email.*'], 'icon' => 'audit'],
                     ])),
                 ],

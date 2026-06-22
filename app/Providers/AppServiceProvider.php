@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Enquiry;
 use App\Models\Lead;
+use App\Models\MailSetting;
 use App\Models\Property;
 use App\Models\RealtorProfile;
 use App\Models\User;
@@ -160,6 +161,28 @@ class AppServiceProvider extends ServiceProvider
         // NOTE: the MessageSent → email_logs listener (App\Listeners\LogSentEmail) is
         // auto-registered by Laravel 11's listener auto-discovery; do not register it
         // explicitly here or every email would be logged twice.
+
+        // Apply DB-stored mail settings at boot so Mail:: uses them for the whole request.
+        try {
+            $mail = MailSetting::instance();
+            if ($mail->exists && $mail->isConfigured()) {
+                if ($mail->mailer) {
+                    config(['mail.default' => $mail->mailer]);
+                }
+                $mc = &config("mail.mailers.{$mail->mailer}");
+                if ($mail->host) { $mc['host'] = $mail->host; }
+                if ($mail->port) { $mc['port'] = (int) $mail->port; }
+                if ($mail->encryption !== null) { $mc['encryption'] = $mail->encryption ?: null; }
+                if ($mail->username) { $mc['username'] = $mail->username; }
+                if ($mail->password) { $mc['password'] = $mail->password; }
+                if ($mail->from_address) { config(['mail.from.address' => $mail->from_address]); }
+                if ($mail->from_name) { config(['mail.from.name' => $mail->from_name]); }
+                if ($mail->credentials_from_address) { config(['mail.credentials_from.address' => $mail->credentials_from_address]); }
+                if ($mail->credentials_from_name) { config(['mail.credentials_from.name' => $mail->credentials_from_name]); }
+            }
+        } catch (\Throwable $e) {
+            // Table may not exist during migrations. Silently skip.
+        }
 
         RateLimiter::for('leads', function (Request $request) {
             return Limit::perMinute(5)->by($request->ip());

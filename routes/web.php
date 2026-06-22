@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\UserModerationController;
 use App\Http\Controllers\Admin\WebhookEventController as AdminWebhookEventController;
 use App\Http\Controllers\Admin\EmailToolsController as AdminEmailToolsController;
+use App\Http\Controllers\Admin\MailSettingsController as AdminMailSettingsController;
 use App\Http\Controllers\Agent\LeadController as AgentLeadController;
 use App\Http\Controllers\Agent\PortalController as AgentPortalController;
 use App\Http\Controllers\Auth\AuthController;
@@ -355,6 +356,12 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::get('admin/email', [AdminEmailToolsController::class, 'index'])->name('admin.email.index');
         Route::post('admin/email/test', [AdminEmailToolsController::class, 'sendTest'])->name('admin.email.test');
         Route::post('admin/email/smtp-test', [AdminEmailToolsController::class, 'smtpTest'])->name('admin.email.smtp-test');
+
+        // Mail settings — SMTP / mail driver config, test tools
+        Route::get('admin/mail-settings', [AdminMailSettingsController::class, 'index'])->name('admin.mail-settings.index');
+        Route::put('admin/mail-settings', [AdminMailSettingsController::class, 'update'])->name('admin.mail-settings.update');
+        Route::post('admin/mail-settings/test-connection', [AdminMailSettingsController::class, 'testConnection'])->name('admin.mail-settings.test-connection');
+        Route::post('admin/mail-settings/test', [AdminMailSettingsController::class, 'sendTest'])->name('admin.mail-settings.test');
 
         // GoHighLevel control panel — view for all admins, write for super-admin only
         Route::get('admin/gohighlevel', [AdminGoHighLevelController::class, 'index'])->name('admin.ghl.index');
