@@ -99,9 +99,9 @@
 
                 <tr>
                     <th scope="row">Verification Level</th>
-                    <td>Verified prospects</td>
-                    <td class="is-highlight">Higher intent, multi-step verified</td>
-                    <td>AI scoring + priority routing</td>
+                    <td>1-step verified prospects</td>
+                    <td class="is-highlight">2-step verified prospects</td>
+                    <td>3-step verified + live connected</td>
                 </tr>
 
                 <tr>
