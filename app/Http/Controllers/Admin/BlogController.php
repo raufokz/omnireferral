@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Blog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -69,7 +70,12 @@ class BlogController extends Controller
             'image' => 'nullable|image|max:2048',
         ]);
 
+        $validated['slug'] = Str::slug($validated['title']);
+
         if ($request->hasFile('image')) {
+            if ($blog->image) {
+                Storage::disk('public')->delete($blog->image);
+            }
             $validated['image'] = $request->file('image')->store('blogs', 'public');
         }
 
@@ -81,6 +87,10 @@ class BlogController extends Controller
     public function destroy(Blog $blog)
     {
         $this->authorizeBlogManagement();
+
+        if ($blog->image) {
+            Storage::disk('public')->delete($blog->image);
+        }
 
         $blog->delete();
         return redirect()->route('admin.blog.index')->with('success', 'Blog post deleted successfully.');

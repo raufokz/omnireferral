@@ -14,6 +14,7 @@
         <table class="workspace-table">
             <thead>
                 <tr>
+                    <th>Image</th>
                     <th>Title</th>
                     <th>Category</th>
                     <th>Author</th>
@@ -24,6 +25,9 @@
             <tbody>
                 @forelse($blogs as $blog)
                     <tr>
+                        <td data-label="Image">
+                            <img src="{{ $blog->image_url }}" alt="" style="width:60px; height:40px; object-fit:cover; border-radius:6px;">
+                        </td>
                         <td data-label="Title"><strong>{{ $blog->title }}</strong></td>
                         <td data-label="Category">{{ $blog->category }}</td>
                         <td data-label="Author">{{ $blog->author }}</td>
@@ -41,7 +45,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5">
+                        <td colspan="6">
                             <div class="workspace-empty">No blog posts found yet. Create your first post to start publishing.</div>
                         </td>
                     </tr>

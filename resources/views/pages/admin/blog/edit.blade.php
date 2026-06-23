@@ -16,7 +16,11 @@
         <div class="workspace-form-grid">
             <label class="workspace-field">
                 <span>Title</span>
-                <input type="text" name="title" value="{{ old('title', $blog->title) }}" required>
+                <input type="text" name="title" id="blog-title" value="{{ old('title', $blog->title) }}" required>
+            </label>
+            <label class="workspace-field">
+                <span>Slug</span>
+                <input type="text" id="blog-slug" value="{{ $blog->slug }}" readonly style="background:#f5f5f5; color:#666;">
             </label>
             <label class="workspace-field">
                 <span>Category</span>
@@ -38,8 +42,11 @@
 
         @if($blog->image)
             <div style="margin-top: 0.8rem;">
-                <span class="workspace-property__meta">Current image</span>
-                <img src="{{ $blog->image_url }}" alt="Current blog image" style="max-height: 180px; margin-top: 0.4rem; border-radius: 12px;">
+                <span class="workspace-property__meta">Current featured image</span>
+                <div style="margin-top: 0.4rem;">
+                    <img src="{{ $blog->image_url }}" alt="Current blog image" style="max-height: 180px; border-radius: 12px;">
+                    <p style="font-size:0.8rem; color:#888; margin-top:0.2rem;">{{ $blog->image }}</p>
+                </div>
             </div>
         @endif
 
@@ -49,4 +56,13 @@
         </div>
     </form>
 </section>
+
+@push('footer_scripts')
+<script>
+document.getElementById('blog-title')?.addEventListener('input', function() {
+    const slug = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    document.getElementById('blog-slug').value = slug;
+});
+</script>
+@endpush
 @endsection

@@ -15,7 +15,11 @@
         <div class="workspace-form-grid">
             <label class="workspace-field">
                 <span>Title</span>
-                <input type="text" name="title" value="{{ old('title') }}" required placeholder="e.g. 5 Strategies for High-Conversion Leads">
+                <input type="text" name="title" id="blog-title" value="{{ old('title') }}" required placeholder="e.g. 5 Strategies for High-Conversion Leads">
+            </label>
+            <label class="workspace-field">
+                <span>Slug</span>
+                <input type="text" id="blog-slug" value="{{ old('slug') }}" readonly placeholder="Auto-generated from title" style="background:#f5f5f5; color:#666;">
             </label>
             <label class="workspace-field">
                 <span>Category</span>
@@ -41,4 +45,13 @@
         </div>
     </form>
 </section>
+
+@push('footer_scripts')
+<script>
+document.getElementById('blog-title')?.addEventListener('input', function() {
+    const slug = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    document.getElementById('blog-slug').value = slug;
+});
+</script>
+@endpush
 @endsection
