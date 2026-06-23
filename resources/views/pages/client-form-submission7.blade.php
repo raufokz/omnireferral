@@ -1,7 +1,58 @@
 ﻿@extends('layouts.app')
 
+@push('styles')
+<style>
+    .onboarding-page-hero {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        padding-block: clamp(3.4rem, 7vw, 6.5rem);
+        background: #06152b;
+        color: #ffffff;
+    }
+
+    .onboarding-page-hero::before,
+    .onboarding-page-hero::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+    }
+
+    .onboarding-page-hero::before {
+        background:
+            linear-gradient(135deg, rgba(2, 8, 20, 0.96) 0%, rgba(10, 26, 56, 0.86) 48%, rgba(10, 26, 56, 0.34) 100%),
+            url("{{ asset('images/home/hero_backdrop_v2.png') }}") center / cover no-repeat;
+        transform: scale(1.03);
+    }
+
+    .onboarding-page-hero::after {
+        background:
+            radial-gradient(circle at 82% 18%, rgba(255, 107, 0, 0.26), transparent 22rem),
+            radial-gradient(circle at 18% 88%, rgba(59, 130, 246, 0.22), transparent 24rem);
+    }
+
+    .onboarding-page-hero .eyebrow,
+    .onboarding-page-hero h1,
+    .onboarding-page-hero p {
+        color: #ffffff;
+    }
+
+    .onboarding-page-hero p {
+        color: rgba(255, 255, 255, 0.86);
+    }
+
+    .onboarding-page-body {
+        position: relative;
+        z-index: 2;
+        margin-top: clamp(-3.25rem, -4vw, -2rem);
+        background: linear-gradient(180deg, #f7f9fc 0%, #ffffff 38%, #f7f9fc 100%);
+    }
+</style>
+@endpush
+
 @section('content')
-<section class="page-hero">
+<section class="page-hero onboarding-page-hero">
     <div class="container-sm">
         <span class="eyebrow">Onboarding</span>
         <h1>Complete Your Onboarding</h1>
@@ -9,7 +60,7 @@
     </div>
 </section>
 
-<section class="section">
+<section class="section onboarding-page-body">
     <div class="container-sm onboarding-stack">
         <div class="onboarding-role-switch" data-dashboard-switch>
             <button type="button" class="onboarding-role-pill {{ $role === 'agent' ? 'is-active' : '' }}" data-dashboard-target="{{ route('dashboard.agent') }}">Agent</button>
