@@ -183,6 +183,15 @@ class AppServiceProvider extends ServiceProvider
             // Table may not exist during migrations. Silently skip.
         }
 
+        // Safety net: guarantee the effective sender addresses are always clean RFC 2822
+        // values regardless of source (.env, DB, or default). This prevents the
+        // "not a valid RFC 2822 address" / SMTP "553 sender not authorized" failures
+        // caused by stray <>, [] or mailto: formatting.
+        config([
+            'mail.from.address' => \App\Support\EmailSanitizer::address(config('mail.from.address')) ?: 'noreply@omnireferrals.com',
+            'mail.credentials_from.address' => \App\Support\EmailSanitizer::address(config('mail.credentials_from.address')) ?: 'noreply@omnireferrals.com',
+        ]);
+
         RateLimiter::for('leads', function (Request $request) {
             return Limit::perMinute(5)->by($request->ip());
         });

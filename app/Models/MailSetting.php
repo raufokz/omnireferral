@@ -39,6 +39,20 @@ class MailSetting extends Model
         return $this->belongsTo(User::class, 'last_tested_by_user_id');
     }
 
+    /**
+     * Sanitise sender addresses on write so invalid formatting (<>, [], mailto:)
+     * can never be persisted and break outgoing mail later.
+     */
+    public function setFromAddressAttribute($value): void
+    {
+        $this->attributes['from_address'] = \App\Support\EmailSanitizer::address($value);
+    }
+
+    public function setCredentialsFromAddressAttribute($value): void
+    {
+        $this->attributes['credentials_from_address'] = \App\Support\EmailSanitizer::address($value);
+    }
+
     public static function instance(): static
     {
         return static::firstOrCreate([], [

@@ -111,7 +111,7 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'admin@omnireferrals.com'),
+        'address' => env('MAIL_FROM_ADDRESS', 'noreply@omnireferrals.com'),
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'OmniReferral')),
     ],
 

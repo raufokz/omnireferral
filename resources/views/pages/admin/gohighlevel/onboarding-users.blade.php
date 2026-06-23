@@ -165,7 +165,7 @@ document.querySelectorAll('.send-email-btn').forEach(btn => {
         this.disabled = true;
 
         try {
-            const response = await fetch('{{ route('admin.ghl.manual-send-email', '') }}/' + userId, {
+            const response = await fetch('{{ url('admin/onboarding/users') }}/' + userId + '/send-email', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
