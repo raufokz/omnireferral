@@ -10,7 +10,7 @@ class BlogController extends Controller
     public function index(): View
     {
         return view('pages.blog', [
-            'blogs' => Blog::latest()->paginate(6),
+            'blogs' => Blog::with('user')->latest()->paginate(6),
             'meta' => [
                 'title' => 'Blog | OmniReferral Real Estate Growth Insights',
                 'description' => 'SEO-friendly real estate lead generation insights, referral strategies, and agent growth advice from OmniReferral.',
@@ -20,9 +20,11 @@ class BlogController extends Controller
 
     public function show(Blog $blog): View
     {
+        $blog->load('user');
+
         return view('pages.blog-show', [
             'blog' => $blog,
-            'related' => Blog::where('id', '!=', $blog->id)->latest()->take(3)->get(),
+            'related' => Blog::with('user')->where('id', '!=', $blog->id)->latest()->take(3)->get(),
             'meta' => [
                 'title' => $blog->meta_title ?: $blog->title,
                 'description' => $blog->meta_description ?: $blog->excerpt,

@@ -41,6 +41,7 @@ class BlogController extends Controller
 
         $validated['slug'] = Str::slug($validated['title']);
         $validated['author'] = $request->user()->name;
+        $validated['user_id'] = $request->user()->id;
 
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('blogs', 'public');
@@ -71,6 +72,8 @@ class BlogController extends Controller
         ]);
 
         $validated['slug'] = Str::slug($validated['title']);
+        $validated['author'] = $request->user()->name;
+        $validated['user_id'] = $request->user()->id;
 
         if ($request->hasFile('image')) {
             if ($blog->image) {

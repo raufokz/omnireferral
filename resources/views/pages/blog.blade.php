@@ -53,39 +53,46 @@
         </div>
 
         <div class="blog-library-grid" data-stagger>
-            @forelse($blogs as $blog)
-                @php
-                    $readTime = max(1, (int) ceil(str_word_count(strip_tags($blog->excerpt . ' ' . $blog->content)) / 220));
-                    $authorName = $blog->author ?: 'OmniReferral Team';
-                @endphp
-                <article class="blog-post-card">
-                    <a href="{{ route('blog.show', $blog) }}" class="blog-post-card__media">
-                        <img src="{{ $blog->image_url }}" alt="{{ $blog->title }} featured image" loading="lazy">
-                    </a>
+                @forelse($blogs as $blog)
+                    @php
+                        $readTime = max(1, (int) ceil(str_word_count(strip_tags($blog->excerpt . ' ' . $blog->content)) / 220));
+                        $authorName = $blog->author ?: 'OmniReferral Team';
+                        $authorUser = $blog->relationLoaded('user') ? $blog->user : null;
+                        $authorAvatar = $authorUser?->profilePhotoPublicUrl();
+                        $authorInitials = $authorUser?->profileInitials() ?? strtoupper(substr($authorName, 0, 1));
+                    @endphp
+                    <article class="blog-post-card">
+                        <a href="{{ route('blog.show', $blog) }}" class="blog-post-card__media">
+                            <img src="{{ $blog->image_url }}" alt="{{ $blog->title }} featured image" loading="lazy">
+                        </a>
 
-                    <div class="blog-post-card__body">
-                        <div class="blog-post-card__meta">
-                            <span class="blog-post-card__category">{{ $blog->category }}</span>
-                            <span>{{ $blog->created_at->format('M d, Y') }}</span>
-                            <span>{{ $readTime }} min read</span>
-                        </div>
-
-                        <h2><a href="{{ route('blog.show', $blog) }}">{{ $blog->title }}</a></h2>
-                        <p>{{ \Illuminate\Support\Str::limit($blog->excerpt, 150) }}</p>
-
-                        <div class="blog-post-card__footer">
-                            <div class="blog-post-card__author">
-                                <span class="blog-post-card__author-mark">{{ strtoupper(\Illuminate\Support\Str::substr($authorName, 0, 1)) }}</span>
-                                <div>
-                                    <strong>{{ $authorName }}</strong>
-                                    <span>OmniReferral Editorial</span>
-                                </div>
+                        <div class="blog-post-card__body">
+                            <div class="blog-post-card__meta">
+                                <span class="blog-post-card__category">{{ $blog->category }}</span>
+                                <span>{{ $blog->created_at->format('M d, Y') }}</span>
+                                <span>{{ $readTime }} min read</span>
                             </div>
-                            <a href="{{ route('blog.show', $blog) }}" class="button button--ghost-blue">Read More</a>
+
+                            <h2><a href="{{ route('blog.show', $blog) }}">{{ $blog->title }}</a></h2>
+                            <p>{{ \Illuminate\Support\Str::limit($blog->excerpt, 150) }}</p>
+
+                            <div class="blog-post-card__footer">
+                                <div class="blog-post-card__author">
+                                    @if($authorAvatar)
+                                        <img src="{{ $authorAvatar }}" alt="{{ $authorName }}" class="blog-post-card__author-avatar" style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+                                    @else
+                                        <span class="blog-post-card__author-mark">{{ $authorInitials }}</span>
+                                    @endif
+                                    <div>
+                                        <strong>{{ $authorName }}</strong>
+                                        <span>OmniReferral Editorial</span>
+                                    </div>
+                                </div>
+                                <a href="{{ route('blog.show', $blog) }}" class="button button--ghost-blue">Read More</a>
+                            </div>
                         </div>
-                    </div>
-                </article>
-            @empty
+                    </article>
+                @empty
                 <div class="blog-library-empty">
                     <span class="blog-library-empty__badge">No Posts Yet</span>
                     <h3>Fresh articles are on the way</h3>

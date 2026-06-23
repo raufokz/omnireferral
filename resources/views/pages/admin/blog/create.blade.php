@@ -8,9 +8,13 @@
     <a href="{{ route('admin.blog.index') }}" class="button button--ghost-blue">Back To Posts</a>
 @endsection
 
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+@endpush
+
 @section('content')
 <section class="workspace-card">
-    <form action="{{ route('admin.blog.store') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('admin.blog.store') }}" method="POST" enctype="multipart/form-data" id="blog-form">
         @csrf
         <div class="workspace-form-grid">
             <label class="workspace-field">
@@ -30,8 +34,9 @@
                 <textarea name="excerpt" rows="3" required>{{ old('excerpt') }}</textarea>
             </label>
             <label class="workspace-field workspace-field--full">
-                <span>Content (HTML or Markdown)</span>
-                <textarea name="content" rows="12" required>{{ old('content') }}</textarea>
+                <span>Content</span>
+                <div id="quill-editor" style="height: 360px;">{!! old('content') !!}</div>
+                <textarea name="content" id="quill-content" rows="12" required style="display:none;">{{ old('content') }}</textarea>
             </label>
             <label class="workspace-field workspace-field--full">
                 <span>Featured Image</span>
@@ -45,13 +50,32 @@
         </div>
     </form>
 </section>
+@endsection
 
-@push('footer_scripts')
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <script>
 document.getElementById('blog-title')?.addEventListener('input', function() {
     const slug = this.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     document.getElementById('blog-slug').value = slug;
 });
+
+const quill = new Quill('#quill-editor', {
+    theme: 'snow',
+    modules: {
+        toolbar: [
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'header': [1, 2, 3, false] }],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['link', 'image', 'blockquote', 'code-block'],
+            [{ 'align': [] }],
+            ['clean']
+        ]
+    }
+});
+
+document.getElementById('blog-form').addEventListener('submit', function() {
+    document.getElementById('quill-content').value = quill.root.innerHTML;
+});
 </script>
 @endpush
-@endsection

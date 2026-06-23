@@ -3,8 +3,10 @@
 @section('content')
 @php
     $authorName = $blog->author ?: 'OmniReferral Team';
+    $authorUser = $blog->relationLoaded('user') ? $blog->user : null;
+    $authorAvatar = $authorUser?->profilePhotoPublicUrl();
+    $authorInitials = $authorUser?->profileInitials() ?? strtoupper(substr($authorName, 0, 1));
     $readingTime = max(1, (int) ceil(str_word_count(strip_tags($blog->content)) / 220));
-    $articleParagraphs = preg_split("/(\r\n){2,}|\n{2,}|\r{2,}/", trim($blog->content)) ?: [];
 @endphp
 
 <section class="page-hero blog-post-hero">
@@ -17,7 +19,12 @@
             <p class="blog-post-hero__excerpt">{{ $blog->excerpt }}</p>
 
             <div class="blog-post-hero__meta">
-                <span>By {{ $authorName }}</span>
+                <span class="blog-post-hero__author">
+                    @if($authorAvatar)
+                        <img src="{{ $authorAvatar }}" alt="{{ $authorName }}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; vertical-align:middle;">
+                    @endif
+                    By {{ $authorName }}
+                </span>
                 <span>{{ $blog->created_at->format('F d, Y') }}</span>
                 <span>{{ $readingTime }} min read</span>
             </div>
@@ -56,13 +63,7 @@
             </div>
 
             <div class="blog-article-content">
-                @forelse($articleParagraphs as $paragraph)
-                    @php $paragraph = trim($paragraph); @endphp
-                    @continue($paragraph === '')
-                    <p>{!! nl2br(e($paragraph)) !!}</p>
-                @empty
-                    <p>{!! nl2br(e($blog->content)) !!}</p>
-                @endforelse
+                {!! $blog->content !!}
             </div>
         </article>
 

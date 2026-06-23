@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 
 class Blog extends Model
@@ -11,8 +12,13 @@ class Blog extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title', 'slug', 'author', 'category', 'image', 'excerpt', 'content', 'meta_title', 'meta_description',
+        'title', 'slug', 'author', 'category', 'image', 'excerpt', 'content', 'meta_title', 'meta_description', 'user_id',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
     protected $appends = ['image_url'];
 
