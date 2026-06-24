@@ -7,6 +7,7 @@ use App\Models\Blog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class BlogController extends Controller
@@ -30,16 +31,17 @@ class BlogController extends Controller
     public function store(Request $request)
     {
         $this->authorizeBlogManagement();
+        $this->normalizeSlugInput($request);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'slug' => ['required', 'string', 'max:255', Rule::unique('blogs', 'slug')],
             'category' => 'required|string|max:100',
             'excerpt' => 'required|string',
             'content' => 'required|string',
             'image' => 'nullable|image|max:2048',
         ]);
 
-        $validated['slug'] = Str::slug($validated['title']);
         $validated['author'] = $request->user()->name;
         $validated['user_id'] = $request->user()->id;
 
@@ -62,16 +64,17 @@ class BlogController extends Controller
     public function update(Request $request, Blog $blog)
     {
         $this->authorizeBlogManagement();
+        $this->normalizeSlugInput($request);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'slug' => ['required', 'string', 'max:255', Rule::unique('blogs', 'slug')->ignore($blog->id)],
             'category' => 'required|string|max:100',
             'excerpt' => 'required|string',
             'content' => 'required|string',
             'image' => 'nullable|image|max:2048',
         ]);
 
-        $validated['slug'] = Str::slug($validated['title']);
         $validated['author'] = $request->user()->name;
         $validated['user_id'] = $request->user()->id;
 
@@ -102,5 +105,16 @@ class BlogController extends Controller
     private function authorizeBlogManagement(): void
     {
         abort_unless(request()->user()?->can('blog.manage'), 403);
+    }
+
+    private function normalizeSlugInput(Request $request): void
+    {
+        $slug = Str::slug((string) $request->input('slug'));
+
+        if ($slug === '') {
+            $slug = Str::slug((string) $request->input('title'));
+        }
+
+        $request->merge(['slug' => $slug]);
     }
 }
