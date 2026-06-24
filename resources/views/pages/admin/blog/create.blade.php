@@ -36,7 +36,7 @@
             <div class="workspace-field workspace-field--full">
                 <span>Content</span>
                 <div id="quill-editor" style="height: 360px;">{!! old('content') !!}</div>
-                <textarea name="content" id="quill-content" rows="12" required style="display:none;">{{ old('content') }}</textarea>
+                <textarea name="content" id="quill-content" rows="12" style="display:none;">{{ old('content') }}</textarea>
             </div>
             <label class="workspace-field workspace-field--full">
                 <span>Featured Image</span>
