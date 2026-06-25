@@ -54,6 +54,11 @@
                             <div class="workspace-actions">
                                 <a href="{{ route('admin.seo-landing-pages.edit', $p) }}" class="button button--ghost-blue">Edit</a>
                                 <a href="{{ route('seo-landing-page.show', $p->slug) }}" target="_blank" class="button button--ghost-blue">View</a>
+                                <form method="POST" action="{{ route('admin.seo-landing-pages.destroy', $p) }}" onsubmit="return confirm('Are you sure you want to delete this SEO landing page? This action cannot be undone.');" style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="button button--ghost-blue" style="color:#dc2626;">Delete</button>
+                                </form>
                             </div>
                         </td>
                     </tr>

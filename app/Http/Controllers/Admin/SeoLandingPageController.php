@@ -90,6 +90,7 @@ class SeoLandingPageController extends Controller
     {
         $validated = $request->validate([
             'realtor_profile_id' => 'nullable|exists:realtor_profiles,id',
+            'slug' => 'nullable|string|max:255',
             'city' => 'required|string|max:100',
             'state' => 'required|string|size:2',
             'primary_keyword' => 'required|string|max:255',
@@ -113,10 +114,33 @@ class SeoLandingPageController extends Controller
             $validated['content'] = $this->normalizeContent($validated['content']);
         }
 
+        // Handle slug changes
+        if (empty($validated['slug'])) {
+            $validated['slug'] = Str::slug('best-realtor-' . $validated['city'] . '-' . $validated['state']);
+        } else {
+            $validated['slug'] = Str::slug($validated['slug']);
+        }
+
+        // Check if slug already exists (excluding current page)
+        $existing = SeoLandingPage::bySlug($validated['slug'])
+            ->where('id', '!=', $seoLandingPage->id)
+            ->first();
+        if ($existing) {
+            $validated['slug'] = $validated['slug'] . '-' . Str::random(4);
+        }
+
         $seoLandingPage->update($validated);
 
         return redirect()->route('admin.seo-landing-pages.edit', $seoLandingPage)
             ->with('success', 'SEO landing page updated successfully.');
+    }
+
+    public function destroy(SeoLandingPage $seoLandingPage): RedirectResponse
+    {
+        $seoLandingPage->delete();
+
+        return redirect()->route('admin.seo-landing-pages.index')
+            ->with('success', 'SEO landing page deleted successfully.');
     }
 
     private function normalizeContent(array $content): array
