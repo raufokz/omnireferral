@@ -157,6 +157,7 @@
                     'icon' => 'content',
                     'children' => [
                         ['label' => 'Blog', 'route' => route('admin.blog.index'), 'active' => ['admin.blog.*'], 'icon' => 'content'],
+                        ['label' => 'SEO Landing Pages', 'route' => route('admin.seo-landing-pages.index'), 'active' => ['admin.seo-landing-pages.*'], 'icon' => 'content'],
                         ['label' => 'Testimonials', 'route' => route('admin.testimonials.index'), 'active' => ['admin.testimonials.*'], 'icon' => 'saved'],
                         ['label' => 'Pricing Plans', 'route' => route('admin.pricing-plans.index'), 'active' => ['admin.pricing-plans.*'], 'icon' => 'marketplace'],
                         ['label' => 'Packages', 'route' => route('admin.packages.index'), 'active' => ['admin.packages.*'], 'icon' => 'marketplace'],

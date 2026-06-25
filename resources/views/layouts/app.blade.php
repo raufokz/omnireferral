@@ -10,6 +10,8 @@
 
     <title>{{ $meta['title'] ?? 'OmniReferral | Top-Tier Real Estate Referral Platform' }}</title>
     <meta name="description" content="{{ $meta['description'] ?? 'Connect with elite real estate agents using the modern referral workflow trusted by top US teams. Premium ISA-qualified leads and automated routing.' }}">
+    @yield('head')
+    @yield('schema')
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

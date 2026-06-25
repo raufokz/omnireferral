@@ -36,4 +36,13 @@
             <priority>0.7</priority>
         </url>
     @endforeach
+
+    @foreach($seoPages as $seo)
+        <url>
+            <loc>{{ url($seo->slug) }}</loc>
+            <lastmod>{{ $seo->updated_at->toAtomString() }}</lastmod>
+            <changefreq>weekly</changefreq>
+            <priority>0.8</priority>
+        </url>
+    @endforeach
 </urlset>

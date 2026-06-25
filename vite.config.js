@@ -17,6 +17,7 @@ export default defineConfig({
                 'resources/css/modules/listings.css',
                 'resources/css/modules/auth.css',
                 'resources/css/modules/agent-directory.css',
+                'resources/css/modules/seo-landing.css',
                 'resources/css/modules/admin-agent-profiles.css',
             ],
             refresh: true,

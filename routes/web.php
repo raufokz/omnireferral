@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\UserModerationController;
 use App\Http\Controllers\Admin\WebhookEventController as AdminWebhookEventController;
 use App\Http\Controllers\Admin\EmailToolsController as AdminEmailToolsController;
 use App\Http\Controllers\Admin\MailSettingsController as AdminMailSettingsController;
+use App\Http\Controllers\Admin\SeoLandingPageController as AdminSeoLandingPageController;
 use App\Http\Controllers\Agent\LeadController as AgentLeadController;
 use App\Http\Controllers\Agent\PortalController as AgentPortalController;
 use App\Http\Controllers\Auth\AuthController;
@@ -35,11 +36,13 @@ use App\Http\Controllers\PropertyCommentController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\RealtorController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SeoLandingPageController;
 use App\Http\Controllers\Webhooks\GoHighLevelWebhookController;
 use App\Http\Controllers\Webhooks\GoHighLevelEventWebhookController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Models\Property;
 use App\Models\RealtorProfile;
+use App\Models\SeoLandingPage;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -60,10 +63,15 @@ Route::get('/sitemap.xml', function () {
             ->take(500)
             ->get(['slug', 'updated_at']);
 
+        $seoPages = SeoLandingPage::published()
+            ->latest('updated_at')
+            ->get(['slug', 'updated_at']);
+
         return response()
             ->view('sitemap', [
                 'properties' => $properties,
                 'agents' => $agents,
+                'seoPages' => $seoPages,
             ])
             ->header('Content-Type', 'text/xml')
             ->getContent();
@@ -71,6 +79,13 @@ Route::get('/sitemap.xml', function () {
 
     return response($xml, 200)->header('Content-Type', 'text/xml');
 })->name('sitemap');
+
+Route::get('/{slug}', [SeoLandingPageController::class, 'show'])
+    ->whereIn('slug', ['best-realtor-austin-tx', 'best-realtor-ann-arbor-mi'])
+    ->name('seo-landing-page.show');
+Route::post('/{slug}/lead', [SeoLandingPageController::class, 'storeLead'])
+    ->whereIn('slug', ['best-realtor-austin-tx', 'best-realtor-ann-arbor-mi'])
+    ->name('seo-landing-page.lead');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/pricing', [PricingController::class, 'index'])->name('pricing');
@@ -315,6 +330,13 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
             'update' => 'admin.blog.update',
             'destroy' => 'admin.blog.destroy',
         ]);
+        Route::resource('admin/seo-landing-pages', AdminSeoLandingPageController::class)
+            ->only(['index', 'edit', 'update'])
+            ->names([
+                'index' => 'admin.seo-landing-pages.index',
+                'edit' => 'admin.seo-landing-pages.edit',
+                'update' => 'admin.seo-landing-pages.update',
+            ]);
         Route::resource('admin/testimonials', TestimonialController::class)
             ->except(['show'])
             ->names([

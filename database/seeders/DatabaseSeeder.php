@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->call(RolesAndPermissionsSeeder::class);
         $this->call(OmniReferralSeeder::class);
         $this->call(TestimonialLibrarySeeder::class);
+        $this->call(SeoLandingPageSeeder::class);
         $this->call(LegacyRolesToSpatieSyncSeeder::class);
     }
 }
