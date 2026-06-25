@@ -81,10 +81,10 @@ Route::get('/sitemap.xml', function () {
 })->name('sitemap');
 
 Route::get('/{slug}', [SeoLandingPageController::class, 'show'])
-    ->whereIn('slug', ['best-realtor-austin-tx', 'best-realtor-ann-arbor-mi'])
+    ->where('slug', 'best-realtor-[a-z0-9-]+')
     ->name('seo-landing-page.show');
 Route::post('/{slug}/lead', [SeoLandingPageController::class, 'storeLead'])
-    ->whereIn('slug', ['best-realtor-austin-tx', 'best-realtor-ann-arbor-mi'])
+    ->where('slug', 'best-realtor-[a-z0-9-]+')
     ->name('seo-landing-page.lead');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');

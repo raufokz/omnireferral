@@ -73,7 +73,7 @@ class SeoLandingPageController extends Controller
             $validated['content'] = $this->normalizeContent($validated['content']);
         }
 
-        $validated['slug'] = Str::slug($validated['city'] . '-' . $validated['state'] . '-real-estate-agent');
+        $validated['slug'] = Str::slug('best-realtor-' . $validated['city'] . '-' . $validated['state']);
 
         $existing = SeoLandingPage::bySlug($validated['slug'])->first();
         if ($existing) {

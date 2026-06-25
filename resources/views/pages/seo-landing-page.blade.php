@@ -99,15 +99,18 @@
 
 @section('content')
 @php
-    $contentSections = [
-        [$c['why_local_heading'] ?? 'Why Work With a Local ' . $city . ' Realtor?', $c['why_local_content'] ?? 'A local real estate agent brings hyper-local expertise that online searches cannot match. From school districts and commute patterns to neighborhood appreciation and pricing strategy, a ' . $city . '-based agent gives you practical insight at every step.'],
-        [$c['buying_heading'] ?? 'Home Buying Services in ' . $city, $c['buying_content'] ?? 'Finding the right home in ' . $city . ' takes more than browsing listings. We help with property searches, neighborhood tours, financing coordination, offer strategy, inspection support, and closing guidance.'],
-        [$c['selling_heading'] ?? 'Home Selling Services in ' . $city, $c['selling_content'] ?? 'Selling your ' . $city . ' home requires pricing clarity, strong marketing, skilled negotiation, and organized transaction management from listing through closing.'],
-        [$c['relocation_heading'] ?? 'Relocation Assistance for ' . $city, $c['relocation_content'] ?? 'Moving to ' . $city . ' is easier with area consultations, neighborhood matching, school research, service setup guidance, and steady support until you are settled.'],
-        [$c['luxury_heading'] ?? $city . ' Luxury Home Expertise', $c['luxury_content'] ?? 'Luxury clients need discretion, stronger presentation, private showing coordination, and elevated market strategy.'],
-        [$c['investment_heading'] ?? $city . ' Investment Property Guidance', $c['investment_content'] ?? 'Investors receive help with market selection, rental demand, cash-flow review, appreciation potential, and local vendor connections.'],
-        [$c['market_heading'] ?? $city . ' Local Market Knowledge', $c['market_content'] ?? 'Stay current on pricing, inventory, seasonal patterns, new construction, and neighborhood-level trends.'],
-    ];
+    $hasBodyContent = !empty($c['body_content'] ?? '');
+    if (!$hasBodyContent) {
+        $contentSections = [
+            [$c['why_local_heading'] ?? 'Why Work With a Local ' . $city . ' Realtor?', $c['why_local_content'] ?? 'A local real estate agent brings hyper-local expertise that online searches cannot match. From school districts and commute patterns to neighborhood appreciation and pricing strategy, a ' . $city . '-based agent gives you practical insight at every step.'],
+            [$c['buying_heading'] ?? 'Home Buying Services in ' . $city, $c['buying_content'] ?? 'Finding the right home in ' . $city . ' takes more than browsing listings. We help with property searches, neighborhood tours, financing coordination, offer strategy, inspection support, and closing guidance.'],
+            [$c['selling_heading'] ?? 'Home Selling Services in ' . $city, $c['selling_content'] ?? 'Selling your ' . $city . ' home requires pricing clarity, strong marketing, skilled negotiation, and organized transaction management from listing through closing.'],
+            [$c['relocation_heading'] ?? 'Relocation Assistance for ' . $city, $c['relocation_content'] ?? 'Moving to ' . $city . ' is easier with area consultations, neighborhood matching, school research, service setup guidance, and steady support until you are settled.'],
+            [$c['luxury_heading'] ?? $city . ' Luxury Home Expertise', $c['luxury_content'] ?? 'Luxury clients need discretion, stronger presentation, private showing coordination, and elevated market strategy.'],
+            [$c['investment_heading'] ?? $city . ' Investment Property Guidance', $c['investment_content'] ?? 'Investors receive help with market selection, rental demand, cash-flow review, appreciation potential, and local vendor connections.'],
+            [$c['market_heading'] ?? $city . ' Local Market Knowledge', $c['market_content'] ?? 'Stay current on pricing, inventory, seasonal patterns, new construction, and neighborhood-level trends.'],
+        ];
+    }
 @endphp
 
 <main class="seo-page-shell">
@@ -159,9 +162,9 @@
                         <span>{{ $assignedProfile->review_count }} reviews</span>
                         @if($agentServiceArea)<span>{{ $agentServiceArea }}</span>@endif
                     </div>
-                    <div class="seo-rich-copy">{!! nl2br(e($assignedProfile->bio ?: ($c['agent_bio'] ?? 'This local OmniReferral partner is ready to support buyers and sellers with responsive, market-aware guidance.'))) !!}</div>
-                @elseif($c['agent_bio'] ?? false)
-                    <div class="seo-rich-copy">{!! nl2br(e($c['agent_bio'])) !!}</div>
+                    <div class="seo-rich-copy">{!! $assignedProfile->bio ? nl2br(e($assignedProfile->bio)) : ($c['agent_bio'] ?? 'This local OmniReferral partner is ready to support buyers and sellers with responsive, market-aware guidance.') !!}</div>
+                @elseif(!empty($c['agent_bio']))
+                    <div class="seo-rich-copy">{!! $c['agent_bio'] !!}</div>
                 @else
                     <p>With years of dedicated service in the {{ $city }} metro area, our team brings local market knowledge, negotiation expertise, and a client-first approach to every transaction.</p>
                 @endif
@@ -186,19 +189,23 @@
 
     <section class="section section--gray seo-section">
         <div class="container">
-            <div class="section-heading seo-section__heading">
-                <span class="eyebrow">Market Guidance</span>
-                <h2>Real estate support built around {{ $city }} decisions</h2>
-                <p>Each section can be edited from the admin portal, while the page keeps the same site-wide visual system.</p>
-            </div>
-            <div class="seo-content-grid">
-                @foreach($contentSections as [$heading, $body])
-                    <article class="seo-content-card">
-                        <h3>{{ $heading }}</h3>
-                        <div>{!! nl2br(e($body)) !!}</div>
-                    </article>
-                @endforeach
-            </div>
+            @if($hasBodyContent)
+                <div class="seo-rich-body">{!! $c['body_content'] !!}</div>
+            @else
+                <div class="section-heading seo-section__heading">
+                    <span class="eyebrow">Market Guidance</span>
+                    <h2>Real estate support built around {{ $city }} decisions</h2>
+                    <p>Each section can be edited from the admin portal, while the page keeps the same site-wide visual system.</p>
+                </div>
+                <div class="seo-content-grid">
+                    @foreach($contentSections as [$heading, $body])
+                        <article class="seo-content-card">
+                            <h3>{{ $heading }}</h3>
+                            <div>{!! nl2br(e($body)) !!}</div>
+                        </article>
+                    @endforeach
+                </div>
+            @endif
         </div>
     </section>
 

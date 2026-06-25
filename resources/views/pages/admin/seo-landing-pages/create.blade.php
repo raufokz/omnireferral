@@ -4,13 +4,23 @@
 @section('dashboard_title', 'Create New Page')
 @section('dashboard_description', 'Create a new SEO-optimized landing page for a local real estate market.')
 
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+<style>
+.quill-wrap { margin-bottom:1.5rem; }
+.quill-wrap label { display:block; font-size:.85rem; font-weight:600; color:#334155; margin-bottom:.4rem; }
+.quill-wrap .ql-container { min-height:150px; font-size:.95rem; }
+.ql-editor { min-height:150px; }
+</style>
+@endpush
+
 @section('dashboard_actions')
     <a href="{{ route('admin.seo-landing-pages.index') }}" class="button button--ghost-blue">Back to List</a>
 @endsection
 
 @section('content')
 <section class="workspace-card">
-    <form method="POST" action="{{ route('admin.seo-landing-pages.store') }}">
+    <form method="POST" action="{{ route('admin.seo-landing-pages.store') }}" id="seo-form">
         @csrf
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:2rem;">
@@ -39,6 +49,10 @@
                         </option>
                     @endforeach
                 </select>
+            </label>
+            <label class="workspace-field">
+                <span>Slug</span>
+                <input type="text" name="slug" value="{{ old('slug') }}" placeholder="Auto-generated from city &amp; state">
             </label>
             <label class="workspace-field">
                 <span>SEO Title</span>
@@ -73,13 +87,10 @@
             </label>
         </div>
 
-        <p style="font-size:.85rem; color:#666; margin-bottom:1.5rem;">The page slug is auto-generated from the city and state. You can change it after saving.</p>
-
         <hr style="margin:2rem 0; border:none; border-top:1px solid #eee;">
 
-        <h3 style="margin-bottom:1.5rem;">Page Content Sections</h3>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+        <h3 style="margin-bottom:1.5rem;">Hero Section</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:2rem;">
             <label class="workspace-field">
                 <span>Hero Heading</span>
                 <input type="text" name="content[hero_heading]" value="{{ old('content.hero_heading') }}">
@@ -88,6 +99,12 @@
                 <span>Hero Subheading</span>
                 <input type="text" name="content[hero_subheading]" value="{{ old('content.hero_subheading') }}">
             </label>
+        </div>
+
+        <hr style="margin:2rem 0; border:none; border-top:1px solid #eee;">
+
+        <h3 style="margin-bottom:1.5rem;">Agent Info</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:2rem;">
             <label class="workspace-field">
                 <span>Agent Name</span>
                 <input type="text" name="content[agent_name]" value="{{ old('content.agent_name') }}">
@@ -96,66 +113,26 @@
                 <span>Agent Title</span>
                 <input type="text" name="content[agent_title]" value="{{ old('content.agent_title') }}">
             </label>
-            <label class="workspace-field workspace-field--full">
-                <span>Agent Bio</span>
-                <textarea name="content[agent_bio]" rows="6">{{ old('content.agent_bio') }}</textarea>
-            </label>
-            <label class="workspace-field workspace-field--full">
-                <span>Why Work With a Local Realtor (heading)</span>
-                <input type="text" name="content[why_local_heading]" value="{{ old('content.why_local_heading') }}">
-            </label>
-            <label class="workspace-field workspace-field--full">
-                <span>Why Work With a Local Realtor (content)</span>
-                <textarea name="content[why_local_content]" rows="6">{{ old('content.why_local_content') }}</textarea>
-            </label>
-            <label class="workspace-field workspace-field--full">
-                <span>Home Buying heading</span>
-                <input type="text" name="content[buying_heading]" value="{{ old('content.buying_heading') }}">
-            </label>
-            <label class="workspace-field workspace-field--full">
-                <span>Home Buying content</span>
-                <textarea name="content[buying_content]" rows="6">{{ old('content.buying_content') }}</textarea>
-            </label>
-            <label class="workspace-field workspace-field--full">
-                <span>Home Selling heading</span>
-                <input type="text" name="content[selling_heading]" value="{{ old('content.selling_heading') }}">
-            </label>
-            <label class="workspace-field workspace-field--full">
-                <span>Home Selling content</span>
-                <textarea name="content[selling_content]" rows="6">{{ old('content.selling_content') }}</textarea>
-            </label>
-            <label class="workspace-field workspace-field--full">
-                <span>Relocation heading</span>
-                <input type="text" name="content[relocation_heading]" value="{{ old('content.relocation_heading') }}">
-            </label>
-            <label class="workspace-field workspace-field--full">
-                <span>Relocation content</span>
-                <textarea name="content[relocation_content]" rows="6">{{ old('content.relocation_content') }}</textarea>
-            </label>
-            <label class="workspace-field workspace-field--full">
-                <span>Luxury heading</span>
-                <input type="text" name="content[luxury_heading]" value="{{ old('content.luxury_heading') }}">
-            </label>
-            <label class="workspace-field workspace-field--full">
-                <span>Luxury content</span>
-                <textarea name="content[luxury_content]" rows="6">{{ old('content.luxury_content') }}</textarea>
-            </label>
-            <label class="workspace-field workspace-field--full">
-                <span>Investment heading</span>
-                <input type="text" name="content[investment_heading]" value="{{ old('content.investment_heading') }}">
-            </label>
-            <label class="workspace-field workspace-field--full">
-                <span>Investment content</span>
-                <textarea name="content[investment_content]" rows="6">{{ old('content.investment_content') }}</textarea>
-            </label>
-            <label class="workspace-field workspace-field--full">
-                <span>Local Market heading</span>
-                <input type="text" name="content[market_heading]" value="{{ old('content.market_heading') }}">
-            </label>
-            <label class="workspace-field workspace-field--full">
-                <span>Local Market content</span>
-                <textarea name="content[market_content]" rows="6">{{ old('content.market_content') }}</textarea>
-            </label>
+            <div class="workspace-field workspace-field--full quill-wrap">
+                <label>Agent Bio</label>
+                <div id="quill-agent-bio"></div>
+                <textarea name="content[agent_bio]" id="quill-agent-bio-content" style="display:none;">{{ old('content.agent_bio') }}</textarea>
+            </div>
+        </div>
+
+        <hr style="margin:2rem 0; border:none; border-top:1px solid #eee;">
+
+        <h3 style="margin-bottom:1.5rem;">Body Content</h3>
+        <p style="font-size:.85rem; color:#666; margin-bottom:.5rem;">Main page content. Paste any formatted blocks here — headings, paragraphs, lists, etc.</p>
+        <div class="workspace-field workspace-field--full quill-wrap">
+            <div id="quill-body-content"></div>
+            <textarea name="content[body_content]" id="quill-body-content-field" style="display:none;">{{ old('content.body_content') }}</textarea>
+        </div>
+
+        <hr style="margin:2rem 0; border:none; border-top:1px solid #eee;">
+
+        <h3 style="margin-bottom:1rem;">CTA &amp; Form Settings</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
             <label class="workspace-field workspace-field--full">
                 <span>CTA Heading</span>
                 <input type="text" name="content[cta_heading]" value="{{ old('content.cta_heading') }}">
@@ -201,8 +178,46 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <script>
 let faqIndex = 0;
+
+function initQuill(id, textareaId) {
+    const editor = document.getElementById(id);
+    if (!editor) return null;
+    const quill = new Quill('#' + id, {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [2, 3, 4, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['blockquote', 'link'],
+                ['clean']
+            ]
+        }
+    });
+    quill.format('bold', false);
+    quill.format('header', false);
+
+    quill.on('text-change', function() {
+        document.getElementById(textareaId).value = quill.root.innerHTML;
+    });
+    return quill;
+}
+
+const quillAgentBio = initQuill('quill-agent-bio', 'quill-agent-bio-content');
+const quillBodyContent = initQuill('quill-body-content', 'quill-body-content-field');
+
+document.getElementById('seo-form').addEventListener('submit', function() {
+    if (quillAgentBio) {
+        document.getElementById('quill-agent-bio-content').value = quillAgentBio.root.innerHTML;
+    }
+    if (quillBodyContent) {
+        document.getElementById('quill-body-content-field').value = quillBodyContent.root.innerHTML;
+    }
+});
+
 function addFaq() {
     const container = document.getElementById('faqs-container');
     const div = document.createElement('div');
