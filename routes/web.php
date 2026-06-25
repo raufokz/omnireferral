@@ -331,9 +331,11 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
             'destroy' => 'admin.blog.destroy',
         ]);
         Route::resource('admin/seo-landing-pages', AdminSeoLandingPageController::class)
-            ->only(['index', 'edit', 'update'])
+            ->only(['index', 'create', 'store', 'edit', 'update'])
             ->names([
                 'index' => 'admin.seo-landing-pages.index',
+                'create' => 'admin.seo-landing-pages.create',
+                'store' => 'admin.seo-landing-pages.store',
                 'edit' => 'admin.seo-landing-pages.edit',
                 'update' => 'admin.seo-landing-pages.update',
             ]);

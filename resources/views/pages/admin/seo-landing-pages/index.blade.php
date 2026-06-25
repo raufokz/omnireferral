@@ -5,7 +5,7 @@
 @section('dashboard_description', 'Manage SEO-optimized landing pages for local real estate markets.')
 
 @section('dashboard_actions')
-    <span style="font-size:.85rem; color:#666;">Pages are created via database seeds</span>
+    <a href="{{ route('admin.seo-landing-pages.create') }}" class="button">+ Create New Page</a>
 @endsection
 
 @section('content')

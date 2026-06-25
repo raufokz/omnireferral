@@ -7,6 +7,7 @@ use App\Models\RealtorProfile;
 use App\Models\SeoLandingPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class SeoLandingPageController extends Controller
@@ -32,6 +33,57 @@ class SeoLandingPageController extends Controller
             'page' => $seoLandingPage,
             'realtorProfiles' => $realtorProfiles,
         ]);
+    }
+
+    public function create(): View
+    {
+        $realtorProfiles = RealtorProfile::query()
+            ->with('user:id,name,display_name,email')
+            ->orderBy('service_state')
+            ->orderBy('service_city')
+            ->get();
+
+        return view('pages.admin.seo-landing-pages.create', compact('realtorProfiles'));
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'realtor_profile_id' => 'nullable|exists:realtor_profiles,id',
+            'city' => 'required|string|max:100',
+            'state' => 'required|string|size:2',
+            'primary_keyword' => 'required|string|max:255',
+            'secondary_keywords' => 'nullable|string',
+            'seo_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:500',
+            'canonical_url' => 'nullable|url|max:500',
+            'hero_image' => 'nullable|string|max:500',
+            'og_image' => 'nullable|string|max:500',
+            'is_published' => 'boolean',
+            'content' => 'nullable|array',
+        ]);
+
+        $validated['is_published'] = $request->boolean('is_published');
+
+        if ($request->has('secondary_keywords')) {
+            $validated['secondary_keywords'] = $this->linesToArray($request->input('secondary_keywords'));
+        }
+
+        if (isset($validated['content'])) {
+            $validated['content'] = $this->normalizeContent($validated['content']);
+        }
+
+        $validated['slug'] = Str::slug($validated['city'] . '-' . $validated['state'] . '-real-estate-agent');
+
+        $existing = SeoLandingPage::bySlug($validated['slug'])->first();
+        if ($existing) {
+            $validated['slug'] = $validated['slug'] . '-' . Str::random(4);
+        }
+
+        $page = SeoLandingPage::create($validated);
+
+        return redirect()->route('admin.seo-landing-pages.edit', $page)
+            ->with('success', 'SEO landing page created successfully.');
     }
 
     public function update(Request $request, SeoLandingPage $seoLandingPage): RedirectResponse
