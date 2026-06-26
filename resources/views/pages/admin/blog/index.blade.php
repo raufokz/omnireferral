@@ -34,6 +34,7 @@
                         <td data-label="Date">{{ $blog->created_at->format('M d, Y') }}</td>
                         <td data-label="Actions">
                             <div class="workspace-actions">
+                                <a href="{{ route('blog.show', $blog) }}" target="_blank" class="button button--ghost-blue">View</a>
                                 <a href="{{ route('admin.blog.edit', $blog) }}" class="button button--ghost-blue">Edit</a>
                                 <form action="{{ route('admin.blog.destroy', $blog) }}" method="POST" onsubmit="return confirm('Delete this post?')">
                                     @csrf
