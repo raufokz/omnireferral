@@ -1,11 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
-<section class="page-hero dashboard-page-hero dashboard-page-hero--agent">
-    <div class="container page-hero__content">
-        <span class="eyebrow">Account Security</span>
-        <h1>Update your password</h1>
-        <p>For your protection, set a new password before continuing into your workspace.</p>
+<section class="hero hero--premium account-page-hero" aria-labelledby="account-security-title">
+    <div class="hero__backdrop">
+        <img src="{{ asset('images/home/hero_backdrop_v2.png') }}" alt="" class="hero__backdrop-img" aria-hidden="true">
+        <div class="hero__backdrop-overlay"></div>
+    </div>
+    <div class="container account-page-hero__content">
+        <div class="account-page-hero__copy">
+            <span class="eyebrow">Account Security</span>
+            <h1 id="account-security-title">Update your password</h1>
+            <p>For your protection, set a new password before continuing into your workspace.</p>
+        </div>
     </div>
 </section>
 
@@ -47,4 +53,3 @@
     </div>
 </section>
 @endsection
-
