@@ -22,11 +22,11 @@ class HomeController extends Controller
     {
         $viewer = auth()->user();
         $realtors = Cache::remember('home:featured-agents', now()->addMinutes(30), fn () => AgentDirectory::publicQuery()
-            ->where('rating', '>=', 3)
-            ->with(['user:id,name,display_name,avatar'])
+            ->where('realtor_profiles.rating', '>=', 3)
+            ->with(['user:id,name,display_name,avatar,current_plan_id', 'user.currentPlan:id,name,slug'])
             ->orderedForDirectory()
-            ->orderByDesc('rating')
-            ->orderByDesc('created_at')
+            ->orderByDesc('realtor_profiles.rating')
+            ->orderByDesc('realtor_profiles.created_at')
             ->limit(12)
             ->get());
 

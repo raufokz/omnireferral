@@ -17,12 +17,17 @@ class PricingController extends Controller
     {
         $pricingPlans = PricingContent::plans();
         $featuredAgents = AgentDirectory::publicQuery()
-            ->with(['user:id,name,display_name,avatar,status'])
+            ->with(['user:id,name,display_name,avatar,status,current_plan_id', 'user.currentPlan:id,name,slug'])
             ->select([
-                'id', 'user_id', 'slug', 'brokerage_name', 'service_city', 'service_state',
-                'service_zip_code', 'rating', 'review_count', 'leads_closed', 'specialties',
-                'bio', 'headshot', 'profile_status', 'years_of_experience', 'languages',
-                'market_areas', 'social_links', 'created_at',
+                'realtor_profiles.id', 'realtor_profiles.user_id', 'realtor_profiles.slug',
+                'realtor_profiles.brokerage_name', 'realtor_profiles.service_city',
+                'realtor_profiles.service_state', 'realtor_profiles.service_zip_code',
+                'realtor_profiles.rating', 'realtor_profiles.review_count',
+                'realtor_profiles.leads_closed', 'realtor_profiles.specialties',
+                'realtor_profiles.bio', 'realtor_profiles.headshot',
+                'realtor_profiles.profile_status', 'realtor_profiles.years_of_experience',
+                'realtor_profiles.languages', 'realtor_profiles.market_areas',
+                'realtor_profiles.social_links', 'realtor_profiles.created_at',
             ])
             ->orderedForDirectory()
             ->take(3)

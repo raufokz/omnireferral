@@ -318,7 +318,7 @@ class RealtorController extends Controller
                     ->whereRaw('LENGTH(TRIM(realtor_profiles.service_city)) > 0')
                     ->distinct()
                     ->count('realtor_profiles.service_city'),
-                'referral_matches' => (int) (clone $base)->sum('leads_closed'),
+                'referral_matches' => (int) (clone $base)->sum('realtor_profiles.leads_closed'),
                 'featured_agents' => (clone $base)->featured()->count(),
             ];
         });
