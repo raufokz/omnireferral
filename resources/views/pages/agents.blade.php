@@ -146,6 +146,7 @@
                                     @if($location !== '')
                                         <span>{{ $location }}</span>
                                     @endif
+                                    <small>License: {{ $card['license_number'] }}</small>
                                 </div>
                             </div>
 
@@ -153,6 +154,9 @@
                                 <strong>{{ $card['rating'] }}</strong>
                                 <span aria-label="{{ $card['rating'] }} out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
                                 <small>({{ number_format($card['review_count']) }} reviews)</small>
+                                @if($card['is_elite'])
+                                    <small>Elite Tier</small>
+                                @endif
                             </div>
 
                             <div class="omni-agent-card__chips">
@@ -310,6 +314,7 @@
                                 <div><span>Phone</span><strong x-text="profile.phone_label"></strong></div>
                                 <div><span>Email <em>Optional</em></span><strong x-text="profile.email_label"></strong></div>
                                 <div><span>Website</span><strong x-text="profile.website_label"></strong></div>
+                                <div><span>License</span><strong x-text="profile.license_number"></strong></div>
                                 <div><span>Status</span><strong x-text="profile.active_agent_label"></strong></div>
                             </div>
                             <div class="omni-agent-socials">
@@ -336,7 +341,7 @@
                                 <div>
                                     <div class="omni-agent-modal__title-row">
                                         <h2 x-text="profile.name"></h2>
-                                        <span x-text="profile.is_featured ? 'Featured Agent' : ('Verified' + ' Agent')"></span>
+                                        <span x-text="profile.is_elite ? 'Elite Tier' : (profile.is_featured ? 'Featured Agent' : ('Verified' + ' Agent'))"></span>
                                         <span class="omni-agent-active-badge" :class="profile.is_active_agent ? 'is-active' : 'is-inactive'" x-text="profile.active_agent_label"></span>
                                     </div>
                                     <p x-text="profile.brokerage"></p>

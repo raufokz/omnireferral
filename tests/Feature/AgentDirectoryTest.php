@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\RealtorProfile;
+use App\Models\Package;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -34,7 +35,8 @@ class AgentDirectoryTest extends TestCase
             'bio' => 'Experienced Dallas agent helping buyers and sellers across North Texas with responsive communication.',
             'headshot' => 'images/about/about-omnireferral.svg',
             'rating' => 4.5,
-            'profile_status' => RealtorProfile::STATUS_PUBLISHED,
+            'profile_status' => RealtorProfile::STATUS_APPROVED,
+            'is_active_agent' => true,
         ], $profileOverrides));
     }
 
@@ -47,6 +49,61 @@ class AgentDirectoryTest extends TestCase
             ->assertSee('Taylor Agent')
             ->assertSee('Premier Realty')
             ->assertDontSee('Verified Agent');
+    }
+
+    public function test_inactive_or_non_active_accounts_are_hidden(): void
+    {
+        $this->createPublishedAgent(['slug' => 'visible-agent']);
+        $this->createPublishedAgent(['slug' => 'inactive-profile'], [
+            'name' => 'Inactive Profile',
+            'email' => 'inactive-profile@example.com',
+        ])->update(['is_active_agent' => false]);
+        $this->createPublishedAgent(['slug' => 'pending-user'], [
+            'name' => 'Pending User',
+            'email' => 'pending-user@example.com',
+            'status' => 'pending',
+        ]);
+
+        $this->get(route('agents.index'))
+            ->assertOk()
+            ->assertSee('Taylor Agent')
+            ->assertDontSee('Inactive Profile')
+            ->assertDontSee('Pending User');
+    }
+
+    public function test_elite_tier_agents_sort_before_newer_normal_agents(): void
+    {
+        $elitePackage = Package::create([
+            'name' => 'Elite Tier',
+            'slug' => 'elite-tier',
+            'category' => 'lead',
+            'is_active' => true,
+            'features' => [],
+        ]);
+
+        $this->createPublishedAgent([
+            'slug' => 'newer-normal-agent',
+            'created_at' => now(),
+        ], [
+            'name' => 'Newer Normal',
+            'email' => 'normal@example.com',
+        ]);
+
+        $this->createPublishedAgent([
+            'slug' => 'older-elite-agent',
+            'created_at' => now()->subDay(),
+        ], [
+            'name' => 'Older Elite',
+            'email' => 'elite@example.com',
+            'current_plan_id' => $elitePackage->id,
+        ]);
+
+        $response = $this->get(route('agents.index'))->assertOk();
+
+        $response->assertSeeInOrder([
+            'Older Elite',
+            'Newer Normal',
+        ]);
     }
 
     public function test_draft_profiles_are_hidden(): void

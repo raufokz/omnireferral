@@ -40,7 +40,7 @@ class RealtorController extends Controller
     public function profile(RealtorProfile $agent): View
     {
         abort_unless($agent->isPublicVisible(), 404);
-        $agent->load(['user:id,name,display_name,avatar,current_plan_id']);
+        $agent->load(['user:id,name,display_name,avatar,current_plan_id,status,city,state,zip_code', 'user.currentPlan:id,name,slug']);
 
         return view('pages.agent-profile-seo', [
             'profile' => $agent,
@@ -56,7 +56,7 @@ class RealtorController extends Controller
     public function preview(RealtorProfile $agent): JsonResponse
     {
         abort_unless($agent->isPublicVisible(), 404);
-        $agent->load(['user:id,name,display_name,avatar,current_plan_id']);
+        $agent->load(['user:id,name,display_name,avatar,current_plan_id,status,city,state,zip_code', 'user.currentPlan:id,name,slug']);
 
         return response()->json([
             'profile' => AgentDirectory::publicCardPayload($agent),
@@ -190,13 +190,14 @@ class RealtorController extends Controller
                 $user->phone = $phone;
                 $user->city = $validated['city'];
                 $user->state = strtoupper($validated['state']);
+                if ($user->status !== 'suspended') {
+                    $user->status = 'active';
+                }
                 if ($stored) {
                     $user->avatar = $stored;
                 }
                 $user->save();
             } else {
-                // New account stays PENDING: the public directory listing is separate from portal
-                // access. Login is unlocked only after plan purchase + GoHighLevel onboarding.
                 $user = User::create([
                     'name' => $name,
                     'display_name' => $name,
@@ -206,7 +207,7 @@ class RealtorController extends Controller
                     'city' => $validated['city'],
                     'state' => strtoupper($validated['state']),
                     'role' => 'agent',
-                    'status' => 'pending',
+                    'status' => 'active',
                     'must_reset_password' => true,
                     'email_verified_at' => null,
                     'notify_email' => true,
@@ -226,7 +227,7 @@ class RealtorController extends Controller
                 'specialties' => 'Buyer Representation, Seller Strategy, Lead Conversion',
                 'bio' => 'Preferred agent profile submitted from the public OmniReferral directory.',
                 'headshot' => $stored ? 'storage/'.$stored : ($existingProfile?->headshot ?? null),
-                'profile_status' => RealtorProfile::STATUS_PUBLISHED,
+                'profile_status' => RealtorProfile::STATUS_APPROVED,
                 'is_active_agent' => (bool) $validated['is_active_agent'],
                 'approved_at' => now(),
                 'approved_by_user_id' => null,
@@ -246,16 +247,25 @@ class RealtorController extends Controller
     private function renderDirectory(Request $request, ?array $location = null): View
     {
         $query = AgentDirectory::publicQuery()
-            ->with(['user' => fn ($userQuery) => $userQuery->select([
-                'id', 'name', 'display_name', 'avatar', 'role', 'status', 'current_plan_id',
-            ])])
+            ->with([
+                'user' => fn ($userQuery) => $userQuery->select([
+                    'id', 'name', 'display_name', 'avatar', 'role', 'status', 'current_plan_id', 'city', 'state', 'zip_code',
+                ]),
+                'user.currentPlan:id,name,slug',
+            ])
             ->select([
-                'id', 'user_id', 'slug', 'brokerage_name', 'service_city', 'service_state',
-                'service_zip_code', 'rating', 'review_count',
-                'leads_closed', 'specialties', 'bio', 'headshot', 'profile_status', 'is_active_agent',
-                'years_of_experience', 'license_number', 'languages', 'market_areas', 'social_links',
-                'created_at', 'approved_at', 'rejected_at',
-                'rejected_by_user_id',
+                'realtor_profiles.id', 'realtor_profiles.user_id', 'realtor_profiles.slug',
+                'realtor_profiles.brokerage_name', 'realtor_profiles.service_city',
+                'realtor_profiles.service_state', 'realtor_profiles.service_zip_code',
+                'realtor_profiles.rating', 'realtor_profiles.review_count',
+                'realtor_profiles.leads_closed', 'realtor_profiles.specialties',
+                'realtor_profiles.bio', 'realtor_profiles.headshot',
+                'realtor_profiles.profile_status', 'realtor_profiles.is_active_agent',
+                'realtor_profiles.years_of_experience', 'realtor_profiles.license_number',
+                'realtor_profiles.languages', 'realtor_profiles.market_areas',
+                'realtor_profiles.social_links', 'realtor_profiles.created_at',
+                'realtor_profiles.approved_at', 'realtor_profiles.rejected_at',
+                'realtor_profiles.rejected_by_user_id',
 
             ]);
 
@@ -277,29 +287,23 @@ class RealtorController extends Controller
         );
 
         $profiles = $query
-            ->whereNotNull('bio')
-            ->whereRaw('LENGTH(TRIM(bio)) > 0')
-            ->whereNotNull('service_city')
-            ->whereRaw('LENGTH(TRIM(service_city)) > 0')
-            ->whereNotNull('service_state')
-            ->whereRaw('LENGTH(TRIM(service_state)) > 0')
             ->tap(fn ($q) => AgentDirectory::applyFeaturedSort($q))
             ->paginate(12)
             ->withQueryString();
 
 
         $filterCities = Cache::remember('agents:filter-cities', now()->addHour(), fn () => AgentDirectory::publicQuery()
-            ->select('service_city')
+            ->select('realtor_profiles.service_city')
             ->distinct()
-            ->orderBy('service_city')
+            ->orderBy('realtor_profiles.service_city')
             ->pluck('service_city')
             ->filter()
             ->values());
 
         $filterStates = Cache::remember('agents:filter-states', now()->addHour(), fn () => AgentDirectory::publicQuery()
-            ->select('service_state')
+            ->select('realtor_profiles.service_state')
             ->distinct()
-            ->orderBy('service_state')
+            ->orderBy('realtor_profiles.service_state')
             ->pluck('service_state')
             ->filter()
             ->values());
@@ -310,10 +314,10 @@ class RealtorController extends Controller
             return [
                 'total_agents' => (clone $base)->count(),
                 'cities_covered' => (clone $base)
-                    ->whereNotNull('service_city')
-                    ->whereRaw('LENGTH(TRIM(service_city)) > 0')
+                    ->whereNotNull('realtor_profiles.service_city')
+                    ->whereRaw('LENGTH(TRIM(realtor_profiles.service_city)) > 0')
                     ->distinct()
-                    ->count('service_city'),
+                    ->count('realtor_profiles.service_city'),
                 'referral_matches' => (int) (clone $base)->sum('leads_closed'),
                 'featured_agents' => (clone $base)->featured()->count(),
             ];

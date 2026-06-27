@@ -27,23 +27,25 @@ class AgentDirectory
 
     public static function publicQuery(): Builder
     {
-        // A publicly listed agent profile is decoupled from portal/login access: profiles submitted
-        // through the public Preferred Agents form are auto-approved and visible while their owning
-        // user account remains "pending" (no login until plan purchase + onboarding). We therefore
-        // gate visibility on profile_status (via publicVisible) and only exclude suspended accounts.
         return RealtorProfile::query()
-            ->publicVisible()
-            ->whereHas('user', fn (Builder $userQuery) => $userQuery->where('status', '!=', 'suspended'));
+            ->select('realtor_profiles.*')
+            ->join('users', 'realtor_profiles.user_id', '=', 'users.id')
+            ->leftJoin('packages', 'users.current_plan_id', '=', 'packages.id')
+            ->whereIn('realtor_profiles.profile_status', RealtorProfile::publicStatusValues())
+            ->where('realtor_profiles.is_active_agent', true)
+            ->where('users.status', 'active')
+            ->whereNull('realtor_profiles.rejected_at');
     }
 
 
     public static function applyFeaturedSort(Builder $query): Builder
     {
         return $query
-            ->orderByRaw('CASE WHEN profile_status = ? THEN 0 ELSE 1 END', [RealtorProfile::STATUS_FEATURED])
-            ->orderByDesc('rating')
-            ->orderByDesc('review_count')
-            ->orderByDesc('created_at');
+            ->orderByRaw(
+                "CASE WHEN packages.slug = ? OR LOWER(packages.name) = ? THEN 0 ELSE 1 END",
+                ['elite-tier', 'elite tier']
+            )
+            ->orderByDesc('realtor_profiles.created_at');
     }
 
 
@@ -58,28 +60,25 @@ class AgentDirectory
 
         return $query->where(function (Builder $profileQuery) use ($like) {
             $profileQuery
-                ->where('brokerage_name', 'like', $like)
-                ->orWhere('specialties', 'like', $like)
-                ->orWhere('service_city', 'like', $like)
-                ->orWhere('service_state', 'like', $like)
-                ->orWhere('service_zip_code', 'like', $like)
-                ->orWhere('bio', 'like', $like)
-                ->orWhereHas('user', function (Builder $userQuery) use ($like) {
-                    $userQuery
-                        ->where('name', 'like', $like)
-                        ->orWhere('display_name', 'like', $like);
-                });
+                ->where('realtor_profiles.brokerage_name', 'like', $like)
+                ->orWhere('realtor_profiles.specialties', 'like', $like)
+                ->orWhere('realtor_profiles.service_city', 'like', $like)
+                ->orWhere('realtor_profiles.service_state', 'like', $like)
+                ->orWhere('realtor_profiles.service_zip_code', 'like', $like)
+                ->orWhere('realtor_profiles.bio', 'like', $like)
+                ->orWhere('users.name', 'like', $like)
+                ->orWhere('users.display_name', 'like', $like);
         });
     }
 
     public static function applyLocationFilter(Builder $query, ?string $state, ?string $city): Builder
     {
         if ($state) {
-            $query->whereRaw('UPPER(service_state) = ?', [strtoupper($state)]);
+            $query->whereRaw('UPPER(realtor_profiles.service_state) = ?', [strtoupper($state)]);
         }
 
         if ($city) {
-            $query->whereRaw('LOWER(service_city) = ?', [mb_strtolower($city)]);
+            $query->whereRaw('LOWER(realtor_profiles.service_city) = ?', [mb_strtolower($city)]);
         }
 
         return $query;
@@ -97,34 +96,34 @@ class AgentDirectory
         $name = trim((string) $name);
         if ($name !== '') {
             $like = '%'.$name.'%';
-            $query->whereHas('user', function (Builder $userQuery) use ($like) {
-                $userQuery
-                    ->where('name', 'like', $like)
-                    ->orWhere('display_name', 'like', $like);
+            $query->where(function (Builder $nameQuery) use ($like) {
+                $nameQuery
+                    ->where('users.name', 'like', $like)
+                    ->orWhere('users.display_name', 'like', $like);
             });
         }
 
         $brokerage = trim((string) $brokerage);
         if ($brokerage !== '') {
-            $query->where('brokerage_name', 'like', '%'.$brokerage.'%');
+            $query->where('realtor_profiles.brokerage_name', 'like', '%'.$brokerage.'%');
         }
 
         $zip = trim((string) $zip);
         if ($zip !== '') {
-            $query->where('service_zip_code', 'like', $zip.'%');
+            $query->where('realtor_profiles.service_zip_code', 'like', $zip.'%');
         }
 
         $specialty = trim((string) $specialty);
         if ($specialty !== '') {
-            $query->whereRaw('LOWER(specialties) LIKE ?', ['%'.mb_strtolower($specialty).'%']);
+            $query->whereRaw('LOWER(realtor_profiles.specialties) LIKE ?', ['%'.mb_strtolower($specialty).'%']);
         }
 
         if (is_numeric($minimumRating)) {
-            $query->where('rating', '>=', max(0, min(5, (float) $minimumRating)));
+            $query->where('realtor_profiles.rating', '>=', max(0, min(5, (float) $minimumRating)));
         }
 
         if ($featured === '1') {
-            $query->where('profile_status', RealtorProfile::STATUS_FEATURED);
+            $query->where('realtor_profiles.profile_status', RealtorProfile::STATUS_FEATURED);
         }
 
         return $query;
@@ -161,9 +160,15 @@ class AgentDirectory
     public static function publicCardPayload(RealtorProfile $profile): array
     {
         $user = $profile->user;
+        $city = $profile->service_city ?: $user?->city;
+        $state = $profile->service_state ?: $user?->state;
+        $zip = $profile->service_zip_code ?: $user?->zip_code;
+        $serviceArea = collect([$city, $state, $zip])
+            ->filter(fn ($part) => is_string($part) && trim($part) !== '')
+            ->implode(', ');
         $serviceAreas = self::listFromText($profile->market_areas);
-        if ($serviceAreas === [] && $profile->serviceAreaLabel() !== '') {
-            $serviceAreas = [$profile->serviceAreaLabel()];
+        if ($serviceAreas === [] && $serviceArea !== '') {
+            $serviceAreas = [$serviceArea];
         }
 
         $languages = self::listFromText($profile->languages);
@@ -176,9 +181,10 @@ class AgentDirectory
             'slug' => $profile->slug,
             'name' => $user?->publicDisplayName() ?: 'Real Estate Agent',
             'brokerage' => $profile->brokerage_name ?: 'Independent Brokerage',
-            'city' => $profile->service_city,
-            'state' => $profile->service_state,
-            'service_area' => $profile->serviceAreaLabel(),
+            'city' => $city,
+            'state' => $state,
+            'service_area' => $serviceArea,
+            'license_number' => $profile->license_number ?: 'License on file',
 
             'rating' => number_format((float) ($profile->rating ?? 0), 1),
             'review_count' => self::publicReviewCount($profile),
@@ -198,6 +204,9 @@ class AgentDirectory
             // True when the owning account has an active plan. Used to gate (blur) the lower
             // profile sections for agents who have not purchased/activated a plan yet.
             'has_active_plan' => $user !== null && filled($user->current_plan_id),
+            'is_elite' => $user?->relationLoaded('currentPlan')
+                ? self::isElitePackage($user->currentPlan)
+                : false,
 
             'headshot_url' => $profile->headshotPublicUrl($user),
             'profile_url' => route('agents.profile', $profile),
@@ -208,6 +217,16 @@ class AgentDirectory
             'satisfaction_rate' => '98%',
             'rank_label' => $profile->isFeatured() ? 'Top 1%' : 'Verified',
         ];
+    }
+
+    private static function isElitePackage(mixed $package): bool
+    {
+        if (! $package) {
+            return false;
+        }
+
+        return ($package->slug ?? null) === 'elite-tier'
+            || mb_strtolower((string) ($package->name ?? '')) === 'elite tier';
     }
 
     /**

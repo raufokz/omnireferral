@@ -93,6 +93,7 @@ class StaffAgentProfileController extends Controller
             'counts' => [
                 'all' => RealtorProfile::count(),
                 'draft' => RealtorProfile::draft()->count(),
+                'approved' => RealtorProfile::query()->where('profile_status', RealtorProfile::STATUS_APPROVED)->count(),
                 'published' => RealtorProfile::published()->count(),
                 'featured' => RealtorProfile::featured()->count(),
                 'suspended' => RealtorProfile::suspended()->count(),
@@ -153,7 +154,7 @@ class StaffAgentProfileController extends Controller
             }
 
             $profileStatus = $validated['profile_status'];
-            $isApproved = in_array($profileStatus, [RealtorProfile::STATUS_PUBLISHED, RealtorProfile::STATUS_FEATURED], true);
+            $isApproved = in_array($profileStatus, RealtorProfile::publicStatusValues(), true);
 
             $user = User::create([
                 'name' => $validated['name'],
@@ -252,7 +253,7 @@ class StaffAgentProfileController extends Controller
             'state' => strtoupper($validated['service_state']),
             'zip_code' => $validated['service_zip_code'] ?? null,
             'status' => $this->userStatusForProfileStatus($validated['profile_status']),
-            'email_verified_at' => in_array($validated['profile_status'], [RealtorProfile::STATUS_PUBLISHED, RealtorProfile::STATUS_FEATURED], true)
+            'email_verified_at' => in_array($validated['profile_status'], RealtorProfile::publicStatusValues(), true)
                 ? ($user->email_verified_at ?: now())
                 : $user->email_verified_at,
         ]);
@@ -305,6 +306,7 @@ class StaffAgentProfileController extends Controller
                 'counts' => [
                     'all' => RealtorProfile::count(),
                     'draft' => RealtorProfile::draft()->count(),
+                    'approved' => RealtorProfile::query()->where('profile_status', RealtorProfile::STATUS_APPROVED)->count(),
                     'published' => RealtorProfile::published()->count(),
                     'featured' => RealtorProfile::featured()->count(),
                     'suspended' => RealtorProfile::suspended()->count(),
@@ -319,8 +321,8 @@ class StaffAgentProfileController extends Controller
     {
         $this->authorize('update', $agentProfile);
 
-        $agentProfile->update($this->approvalFieldsForStatus($request, $agentProfile, RealtorProfile::STATUS_PUBLISHED) + [
-            'profile_status' => RealtorProfile::STATUS_PUBLISHED,
+        $agentProfile->update($this->approvalFieldsForStatus($request, $agentProfile, RealtorProfile::STATUS_APPROVED) + [
+            'profile_status' => RealtorProfile::STATUS_APPROVED,
         ]);
         $agentProfile->user?->update(['status' => 'active']);
 
@@ -328,11 +330,12 @@ class StaffAgentProfileController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Profile approved and published.',
-                'profile_status' => RealtorProfile::STATUS_PUBLISHED,
+                'profile_status' => RealtorProfile::STATUS_APPROVED,
                 'status_label' => $agentProfile->statusLabel(),
                 'counts' => [
                     'all' => RealtorProfile::count(),
                     'draft' => RealtorProfile::draft()->count(),
+                    'approved' => RealtorProfile::query()->where('profile_status', RealtorProfile::STATUS_APPROVED)->count(),
                     'published' => RealtorProfile::published()->count(),
                     'featured' => RealtorProfile::featured()->count(),
                     'suspended' => RealtorProfile::suspended()->count(),
@@ -363,6 +366,7 @@ class StaffAgentProfileController extends Controller
                 'counts' => [
                     'all' => RealtorProfile::count(),
                     'draft' => RealtorProfile::draft()->count(),
+                    'approved' => RealtorProfile::query()->where('profile_status', RealtorProfile::STATUS_APPROVED)->count(),
                     'published' => RealtorProfile::published()->count(),
                     'featured' => RealtorProfile::featured()->count(),
                     'suspended' => RealtorProfile::suspended()->count(),
@@ -426,7 +430,7 @@ class StaffAgentProfileController extends Controller
             ];
         }
 
-        if (in_array($profileStatus, [RealtorProfile::STATUS_PUBLISHED, RealtorProfile::STATUS_FEATURED], true)) {
+        if (in_array($profileStatus, RealtorProfile::publicStatusValues(), true)) {
             return [
                 'approved_at' => $profile->approved_at ?: now(),
                 'approved_by_user_id' => $profile->approved_by_user_id ?: $request->user()?->id,

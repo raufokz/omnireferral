@@ -16,6 +16,7 @@ class RealtorProfile extends Model
     use HasFactory;
 
     public const STATUS_DRAFT = 'draft';
+    public const STATUS_APPROVED = 'approved';
     public const STATUS_PUBLISHED = 'published';
     public const STATUS_FEATURED = 'featured';
     public const STATUS_SUSPENDED = 'suspended';
@@ -114,7 +115,8 @@ class RealtorProfile extends Model
     public function scopePublicEligible(Builder $query): Builder
     {
         return $query
-            ->whereIn('profile_status', [self::STATUS_PUBLISHED, self::STATUS_FEATURED])
+            ->whereIn('profile_status', self::publicStatusValues())
+            ->where('is_active_agent', true)
             ->whereNull('rejected_at');
     }
 
@@ -174,21 +176,24 @@ class RealtorProfile extends Model
 
     public function isPublicVisible(): bool
     {
-        // Public listing visibility is decoupled from portal/login access: a "pending" agent account
-        // (public submission awaiting plan purchase + onboarding) still lists publicly. Only suspended
-        // accounts are hidden. See App\Support\AgentDirectory::publicQuery().
-        $accountIsNotSuspended = $this->relationLoaded('user')
-            ? ($this->user?->status ?? 'pending') !== 'suspended'
-            : ! $this->user()->where('status', 'suspended')->exists();
+        $accountIsActive = $this->relationLoaded('user')
+            ? ($this->user?->status ?? null) === 'active'
+            : $this->user()->where('status', 'active')->exists();
 
-        return in_array($this->profile_status, [self::STATUS_PUBLISHED, self::STATUS_FEATURED], true)
+        return in_array($this->profile_status, self::publicStatusValues(), true)
+            && (bool) ($this->is_active_agent ?? false)
             && $this->rejected_at === null
-            && $accountIsNotSuspended;
+            && $accountIsActive;
     }
 
     public function isFeatured(): bool
     {
         return $this->profile_status === self::STATUS_FEATURED;
+    }
+
+    public function isApproved(): bool
+    {
+        return in_array($this->profile_status, self::publicStatusValues(), true);
     }
 
     public function isDraft(): bool
@@ -285,9 +290,25 @@ class RealtorProfile extends Model
     {
         return [
             self::STATUS_DRAFT => 'Pending Review',
-            self::STATUS_PUBLISHED => 'Approved',
+            self::STATUS_APPROVED => 'Approved',
+            self::STATUS_PUBLISHED => 'Approved (Legacy)',
             self::STATUS_FEATURED => 'Featured',
             self::STATUS_SUSPENDED => 'Suspended',
+        ];
+    }
+
+    /**
+     * Public status values include legacy values so existing approved directory profiles
+     * remain visible while new code writes the explicit "approved" status.
+     *
+     * @return array<int, string>
+     */
+    public static function publicStatusValues(): array
+    {
+        return [
+            self::STATUS_APPROVED,
+            self::STATUS_PUBLISHED,
+            self::STATUS_FEATURED,
         ];
     }
 

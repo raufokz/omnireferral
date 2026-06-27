@@ -14,7 +14,7 @@
 
 @section('content')
 @php
-    $statusTabs = ['all' => 'All', 'draft' => 'Pending', 'published' => 'Approved', 'featured' => 'Featured', 'suspended' => 'Suspended'];
+    $statusTabs = ['all' => 'All', 'draft' => 'Pending', 'approved' => 'Approved', 'published' => 'Approved (Legacy)', 'featured' => 'Featured', 'suspended' => 'Suspended'];
     $perPageOptions = [10, 25, 50, 100];
     
     $completionFor = function ($profile): int {
@@ -229,7 +229,7 @@
                                     <div class="agent-admin__status-actions-group">
                                         @if($profile->profile_status === \App\Models\RealtorProfile::STATUS_DRAFT)
                                             <button type="button" class="button agent-admin__button-success" data-action="approve" data-url="{{ route('admin.agent-profiles.publish', $profile) }}">Approve</button>
-                                        @elseif($profile->profile_status === \App\Models\RealtorProfile::STATUS_PUBLISHED)
+                                        @elseif(in_array($profile->profile_status, [\App\Models\RealtorProfile::STATUS_APPROVED, \App\Models\RealtorProfile::STATUS_PUBLISHED], true))
                                             <button type="button" class="button agent-admin__button-feature" data-action="feature" data-url="{{ route('admin.agent-profiles.feature', $profile) }}">Feature</button>
                                             <button type="button" class="button agent-admin__button-danger" data-action="suspend" data-url="{{ route('admin.agent-profiles.suspend', $profile) }}">Suspend</button>
                                         @elseif($profile->profile_status === \App\Models\RealtorProfile::STATUS_FEATURED)
@@ -309,7 +309,7 @@
                         <div class="agent-admin__status-actions-group" style="display:contents;">
                             @if($profile->profile_status === \App\Models\RealtorProfile::STATUS_DRAFT)
                                 <button type="button" class="button agent-admin__button-success" data-action="approve" data-url="{{ route('admin.agent-profiles.publish', $profile) }}">Approve</button>
-                            @elseif($profile->profile_status === \App\Models\RealtorProfile::STATUS_PUBLISHED)
+                            @elseif(in_array($profile->profile_status, [\App\Models\RealtorProfile::STATUS_APPROVED, \App\Models\RealtorProfile::STATUS_PUBLISHED], true))
                                 <button type="button" class="button agent-admin__button-feature" data-action="feature" data-url="{{ route('admin.agent-profiles.feature', $profile) }}">Feature</button>
                                 <button type="button" class="button agent-admin__button-danger" data-action="suspend" data-url="{{ route('admin.agent-profiles.suspend', $profile) }}">Suspend</button>
                             @elseif($profile->profile_status === \App\Models\RealtorProfile::STATUS_FEATURED)
@@ -688,7 +688,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Toggle view public profile link
                     const viewLink = container.querySelector('.data-view-link');
                     if (viewLink) {
-                        if (data.profile_status === 'published' || data.profile_status === 'featured') {
+                        if (data.profile_status === 'approved' || data.profile_status === 'published' || data.profile_status === 'featured') {
                             viewLink.style.display = 'inline-flex';
                         } else {
                             viewLink.style.display = 'none';
@@ -717,7 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const baseUrl = `{{ url('admin/agent-profiles') }}/${slug}`;
         if (status === 'draft') {
             return `<button type="button" class="button agent-admin__button-success" data-action="approve" data-url="${baseUrl}/publish">Approve</button>`;
-        } else if (status === 'published') {
+        } else if (status === 'approved' || status === 'published') {
             return `
                 <button type="button" class="button agent-admin__button-feature" data-action="feature" data-url="${baseUrl}/feature">Feature</button>
                 <button type="button" class="button agent-admin__button-danger" data-action="suspend" data-url="${baseUrl}/suspend">Suspend</button>

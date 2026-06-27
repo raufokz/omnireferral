@@ -9,11 +9,19 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement('ALTER TABLE `users` ALTER COLUMN `status` SET DEFAULT ?', ['pending']);
     }
 
     public function down(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement('ALTER TABLE `users` ALTER COLUMN `status` SET DEFAULT ?', ['active']);
     }
 };
