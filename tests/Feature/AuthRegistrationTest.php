@@ -3,9 +3,13 @@
 namespace Tests\Feature;
 
 use App\Jobs\SyncUserToGoHighLevel;
+use App\Models\RealtorProfile;
 use App\Models\User;
+use App\Notifications\AgentCredentialsNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -262,5 +266,260 @@ class AuthRegistrationTest extends TestCase
 
         $this->get(route('client.form.submission', ['role' => 'agent']))
             ->assertOk();
+    }
+
+    public function test_onboarding_form_renders(): void
+    {
+        $this->get(route('onboarding.form'))
+            ->assertOk()
+            ->assertSee('Complete Your Onboarding')
+            ->assertSee('full_name')
+            ->assertSee('email')
+            ->assertSee('upload_picture');
+    }
+
+    public function test_onboarding_creates_user_and_realtor_profile(): void
+    {
+        Storage::fake('public');
+        Notification::fake();
+
+        $this->post(route('onboarding.submit'), [
+            'full_name' => 'Alex Morgan',
+            'phone' => '(555) 111-2222',
+            'email' => 'alex@example.com',
+            'license_number' => 'TX-1234567',
+            'brokerage_name' => 'Premier Realty Group',
+            'city' => 'Dallas',
+            'state' => 'TX',
+            'postal_code' => '75201',
+            'primary_area_of_service' => 'Dallas-Fort Worth',
+            'radius_miles' => '50',
+            'secondary_area' => 'Fort Worth',
+            'lead_types' => 'Buyer Representation, Seller Strategy',
+            'languages' => 'English, Spanish',
+            'upload_picture' => $this->fakePngUpload('headshot.png'),
+            'terms' => true,
+        ])
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('success');
+
+        $user = User::where('email', 'alex@example.com')->firstOrFail();
+
+        $this->assertSame('Alex Morgan', $user->name);
+        $this->assertSame('agent', $user->role);
+        $this->assertSame('pending', $user->status);
+        $this->assertSame('Dallas', $user->city);
+        $this->assertSame('TX', $user->state);
+        $this->assertSame('75201', $user->zip_code);
+        $this->assertNotNull($user->onboarding_completed_at);
+        $this->assertTrue((bool) $user->must_reset_password);
+        $this->assertNull($user->password_set_at);
+        $this->assertNotNull($user->avatar);
+        $this->assertNotEmpty($user->password);
+
+        Storage::disk('public')->assertExists($user->avatar);
+
+        $profile = $user->realtorProfile()->first();
+
+        $this->assertNotNull($profile);
+        $this->assertSame('Dallas', $profile->service_city);
+        $this->assertSame('TX', $profile->service_state);
+        $this->assertSame('75201', $profile->service_zip_code);
+        $this->assertSame('Premier Realty Group', $profile->brokerage_name);
+        $this->assertSame('TX-1234567', $profile->license_number);
+        $this->assertSame(2, $profile->years_of_experience);
+        $this->assertSame('English, Spanish', $profile->languages);
+        $this->assertSame('Buyer Representation, Seller Strategy', $profile->specialties);
+        $this->assertSame('draft', $profile->profile_status);
+        $this->assertTrue($profile->is_active_agent);
+        $this->assertSame('onboarding_form', $profile->submission_source);
+        $this->assertNull($profile->approved_at);
+        $this->assertNotNull($profile->headshot);
+
+        Storage::disk('public')->assertExists($profile->headshot);
+
+        Notification::assertSentTo($user, AgentCredentialsNotification::class);
+    }
+
+    public function test_onboarding_requires_terms_acceptance(): void
+    {
+        $this->post(route('onboarding.submit'), [
+            'full_name' => 'No Terms',
+            'phone' => '(555) 000-0000',
+            'email' => 'noterms@example.com',
+            'city' => 'Austin',
+            'state' => 'TX',
+            'postal_code' => '73301',
+            'terms' => false,
+        ])->assertSessionHasErrors('terms');
+    }
+
+    public function test_onboarding_requires_required_fields(): void
+    {
+        $this->post(route('onboarding.submit'), [])
+            ->assertSessionHasErrors(['full_name', 'phone', 'email', 'city', 'state', 'postal_code', 'terms']);
+    }
+
+    public function test_onboarding_uses_transaction_and_rolls_back_on_failure(): void
+    {
+        Storage::fake('public');
+        Notification::fake();
+
+        $this->post(route('onboarding.submit'), [
+            'full_name' => 'Rollback Test',
+            'phone' => '(555) 999-9999',
+            'email' => 'rollback-' . uniqid() . '@example.com',
+            'city' => 'Houston',
+            'state' => 'TX',
+            'postal_code' => '77001',
+            'terms' => true,
+        ])->assertRedirect(route('login'));
+
+        $this->assertCount(1, User::where('email', 'like', 'rollback-%@example.com')->get());
+    }
+
+    public function test_must_reset_password_redirects_to_password_change(): void
+    {
+        $user = User::withoutEvents(fn () => User::factory()->create([
+            'email' => 'must-reset@example.com',
+            'password' => bcrypt('password'),
+            'must_reset_password' => true,
+            'status' => 'active',
+            'role' => 'agent',
+        ]));
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertRedirect(route('password.change'))
+            ->assertSessionHas('info');
+
+        $this->actingAs($user)
+            ->get(route('password.change'))
+            ->assertOk();
+    }
+
+    public function test_password_change_page_requires_auth(): void
+    {
+        $this->get(route('password.change'))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_password_change_updates_password_and_clears_flag(): void
+    {
+        $user = User::withoutEvents(fn () => User::factory()->create([
+            'email' => 'pw-change@example.com',
+            'password' => bcrypt('old-password'),
+            'must_reset_password' => true,
+            'password_set_at' => null,
+            'status' => 'active',
+            'role' => 'agent',
+        ]));
+
+        $this->actingAs($user);
+
+        $this->post(route('password.change.update'), [
+            'password' => 'new-secure-password',
+            'password_confirmation' => 'new-secure-password',
+        ])->assertRedirect($user->dashboardRoute());
+
+        $user->refresh();
+
+        $this->assertFalse((bool) $user->must_reset_password);
+        $this->assertNotNull($user->password_set_at);
+        $this->assertTrue($user->passwordMatches('new-secure-password'));
+    }
+
+    public function test_password_change_requires_current_password_when_set(): void
+    {
+        $user = User::withoutEvents(fn () => User::factory()->create([
+            'email' => 'pw-has-set@example.com',
+            'password' => bcrypt('existing-pass'),
+            'must_reset_password' => false,
+            'password_set_at' => now()->subDay(),
+            'status' => 'active',
+            'role' => 'agent',
+        ]));
+
+        $this->actingAs($user);
+
+        $this->post(route('password.change.update'), [
+            'current_password' => 'wrong-password',
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+        ])->assertSessionHasErrors('current_password');
+
+        $this->post(route('password.change.update'), [
+            'current_password' => 'existing-pass',
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+        ])->assertRedirect($user->dashboardRoute());
+
+        $user->refresh();
+        $this->assertTrue($user->passwordMatches('new-password'));
+    }
+
+    public function test_onboarding_welcome_email_sent(): void
+    {
+        Notification::fake();
+        Storage::fake('public');
+
+        $this->post(route('onboarding.submit'), [
+            'full_name' => 'Email Test',
+            'phone' => '(555) 111-2222',
+            'email' => 'emailtest@example.com',
+            'city' => 'Dallas',
+            'state' => 'TX',
+            'postal_code' => '75201',
+            'terms' => true,
+        ])->assertRedirect(route('login'));
+
+        $user = User::where('email', 'emailtest@example.com')->firstOrFail();
+
+        Notification::assertSentTo($user, AgentCredentialsNotification::class);
+    }
+
+    public function test_forgot_password_sends_reset_link(): void
+    {
+        Notification::fake();
+
+        $user = User::withoutEvents(fn () => User::factory()->create([
+            'email' => 'forgot-test@example.com',
+            'password' => bcrypt('password'),
+            'status' => 'active',
+            'role' => 'agent',
+        ]));
+
+        $this->post(route('password.email'), [
+            'email' => 'forgot-test@example.com',
+        ])->assertSessionHas('success');
+
+        Notification::assertSentTo($user, \Illuminate\Auth\Notifications\ResetPassword::class);
+    }
+
+    public function test_reset_password_clears_must_reset_password_flag(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'reset-clears@example.com',
+            'password' => bcrypt('old-password'),
+            'must_reset_password' => true,
+            'password_set_at' => null,
+            'status' => 'active',
+            'role' => 'buyer',
+        ]);
+
+        $token = \Illuminate\Support\Facades\Password::createToken($user);
+
+        $this->post(route('password.update'), [
+            'token' => $token,
+            'email' => 'reset-clears@example.com',
+            'password' => 'new-secure-password',
+            'password_confirmation' => 'new-secure-password',
+        ])->assertRedirect(route('login'));
+
+        $user->refresh();
+
+        $this->assertFalse((bool) $user->must_reset_password);
+        $this->assertNotNull($user->password_set_at);
+        $this->assertTrue($user->passwordMatches('new-secure-password'));
     }
 }

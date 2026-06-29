@@ -23,6 +23,8 @@ use App\Http\Controllers\Admin\SeoLandingPageController as AdminSeoLandingPageCo
 use App\Http\Controllers\Agent\LeadController as AgentLeadController;
 use App\Http\Controllers\Agent\PortalController as AgentPortalController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\OnboardingController;
+use App\Http\Controllers\Auth\PasswordChangeController;
 use App\Http\Controllers\Auth\PasswordSetupController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
@@ -146,6 +148,12 @@ Route::post('/properties/{property}/favorite', [PropertyController::class, 'togg
 Route::post('/properties/{property}/comments', [PropertyCommentController::class, 'store'])
     ->middleware('throttle:property-comments')
     ->name('properties.comments.store');
+// Native onboarding form (for non-GHL submissions) — must be before /onboarding/{role}
+Route::get('/onboarding/complete', [OnboardingController::class, 'show'])->name('onboarding.form');
+Route::post('/onboarding/complete', [OnboardingController::class, 'store'])
+    ->middleware('throttle:auth-register')
+    ->name('onboarding.submit');
+
 Route::get('/onboarding/{role}', function (string $role): RedirectResponse {
     abort_unless(in_array($role, ['buyer', 'seller', 'agent', 'admin'], true), 404);
 
@@ -232,6 +240,12 @@ Route::post('/webhooks/gohighlevel/events', GoHighLevelEventWebhookController::c
 
 Route::middleware(['auth', 'active.account'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // Password change — accessible even when must_reset_password is true
+    Route::get('/password/change', [PasswordChangeController::class, 'show'])->name('password.change');
+    Route::post('/password/change', [PasswordChangeController::class, 'store'])
+        ->middleware('throttle:auth-password-reset')
+        ->name('password.change.update');
 });
 
 Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(function () {

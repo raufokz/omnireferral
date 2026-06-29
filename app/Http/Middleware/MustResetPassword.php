@@ -16,10 +16,10 @@ class MustResetPassword
             return $next($request);
         }
 
-        // Allow the user to reach the security page (and logout) even when forced.
+        // Allow the user to reach the password change page and logout even when forced.
         if ($request->routeIs(
-            'account.security',
-            'account.password.update',
+            'password.change',
+            'password.change.update',
             'logout',
         )) {
             return $next($request);
@@ -27,7 +27,7 @@ class MustResetPassword
 
         if ((bool) $user->must_reset_password) {
             return redirect()
-                ->route('account.security')
+                ->route('password.change')
                 ->with('info', 'For security, please set a new password before continuing.');
         }
 

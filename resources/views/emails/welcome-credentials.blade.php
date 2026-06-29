@@ -62,23 +62,40 @@
                             <p>
                                 Great news — your OmniReferral account has been successfully created
                                 @if($planName) for the <strong>{{ $planName }}</strong> plan@endif.
-                                Below you will find your login credentials and instructions to access your dashboard.
+                                Below you will find your temporary login credentials and instructions to access your dashboard.
                             </p>
 
-                            <div class="cta-section">
-                                <a href="{{ $loginUrl }}" class="cta-button" target="_blank">Set Your Password &amp; Sign In &rarr;</a>
+                            <div class="credentials-box">
+                                <h3>Your Login Credentials</h3>
+                                <div class="credential-row">
+                                    <span class="credential-label">Login URL:</span>
+                                    <span class="credential-value"><a href="{{ $loginUrl }}" style="color:#0B3668;">{{ $loginUrl }}</a></span>
+                                </div>
+                                <div class="credential-row">
+                                    <span class="credential-label">Email:</span>
+                                    <span class="credential-value">{{ $userEmail }}</span>
+                                </div>
+                                <div class="credential-row">
+                                    <span class="credential-label">Password:</span>
+                                    <span class="credential-value password">{{ $temporaryPassword }}</span>
+                                </div>
                             </div>
 
-                            <p style="font-size:13px; text-align:center; margin-top:-12px; margin-bottom:24px;">
-                                <a href="{{ $loginUrl }}" style="color:#0B3668;">{{ $loginUrl }}</a>
-                            </p>
+                            <div class="cta-section">
+                                <a href="{{ $loginUrl }}" class="cta-button" target="_blank">Sign In &rarr;</a>
+                            </div>
 
                             <p style="font-weight:600; color:#0B3668; margin-bottom:8px;">Getting Started:</p>
                             <ol class="steps-list">
-                                <li data-step="1">Click the button above to set up your secure password</li>
-                                <li data-step="2">Log in with your email and new password</li>
-                                <li data-step="3">Explore your dashboard — leads, listings, and tools are ready</li>
+                                <li data-step="1">Go to the login page using the button or URL above</li>
+                                <li data-step="2">Sign in with your email and the temporary password shown above</li>
+                                <li data-step="3">You will be prompted to change your password immediately after signing in</li>
+                                <li data-step="4">Explore your dashboard — leads, listings, and tools are ready</li>
                             </ol>
+
+                            <div class="security-note">
+                                <p><strong>Important:</strong> For security reasons, you must change your temporary password after your first login. Choose a strong, unique password that you do not use on other sites.</p>
+                            </div>
 
                             <p>If you have any questions or need help getting started, reply to this email or reach out to <a href="mailto:{{ $supportEmail }}" style="color:#0B3668;">{{ $supportEmail }}</a>.</p>
 
