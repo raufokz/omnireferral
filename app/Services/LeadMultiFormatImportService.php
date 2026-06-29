@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Lead;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\IOFactory as SpreadsheetIOFactory;
 use PhpOffice\PhpWord\IOFactory as WordIOFactory;
@@ -33,48 +34,82 @@ class LeadMultiFormatImportService
     {
         $created = 0;
         $skipped = 0;
+        $failed = 0;
+        $failedRows = [];
 
-        foreach ($rows as $row) {
+        foreach ($rows as $index => $row) {
             if (! is_array($row) || ($row['_duplicate'] ?? false) || ($row['_invalid'] ?? false)) {
                 $skipped++;
                 continue;
             }
 
-            $lead = new Lead();
-            $lead->fill([
-                'lead_number' => Lead::generateLeadNumber(),
-                'source' => (string) ($row['_source'] ?? 'file_import'),
-                'source_timestamp' => $row['source_timestamp'] ?? null,
-                'package_type' => 'starter',
-                'name' => (string) ($row['name'] ?? ''),
-                'email' => (string) ($row['email'] ?? ''),
-                'phone' => (string) ($row['phone'] ?? ''),
-                'intent' => (string) ($row['intent'] ?? 'buyer'),
-                'status' => (string) ($row['status'] ?? 'new'),
-                'zip_code' => (string) ($row['zip_code'] ?? '00000'),
-                'property_address' => (string) ($row['property_address'] ?? ''),
-                'beds_baths' => (string) ($row['beds_baths'] ?? ''),
-                'working_with_realtor' => $row['working_with_realtor'] ?? null,
-                'dnc_disclaimer' => (string) ($row['dnc_disclaimer'] ?? ''),
-                'property_type' => (string) ($row['property_type'] ?? ''),
-                'budget' => $row['budget'] ?? null,
-                'asking_price' => $row['asking_price'] ?? null,
-                'timeline' => (string) ($row['timeline'] ?? ''),
-                'preferences' => (string) ($row['preferences'] ?? ''),
-                'notes' => (string) ($row['notes'] ?? ''),
-                'rep_name' => (string) ($row['rep_name'] ?? ''),
-                'state' => (string) ($row['state'] ?? ''),
-                'sent_to' => (string) ($row['sent_to'] ?? ''),
-                'assignment' => (string) ($row['assignment'] ?? ''),
-                'reason_in_house' => (string) ($row['reason_in_house'] ?? ''),
-                'realtor_response' => (string) ($row['realtor_response'] ?? ''),
-                'form_data' => $row['form_data'] ?? [],
-            ]);
-            $lead->save();
-            $created++;
+            try {
+                $lead = new Lead();
+                $lead->fill([
+                    'lead_number' => Lead::generateLeadNumber(),
+                    'source' => (string) ($row['_source'] ?? 'file_import'),
+                    'source_timestamp' => $row['source_timestamp'] ?? null,
+                    'package_type' => $this->normalizePackageType($row['package_type'] ?? null),
+                    'name' => (string) ($row['name'] ?? ''),
+                    'email' => (string) ($row['email'] ?? ''),
+                    'phone' => (string) ($row['phone'] ?? ''),
+                    'intent' => (string) ($row['intent'] ?? 'buyer'),
+                    'status' => (string) ($row['status'] ?? 'new'),
+                    'zip_code' => (string) ($row['zip_code'] ?? '00000'),
+                    'property_address' => (string) ($row['property_address'] ?? ''),
+                    'beds_baths' => (string) ($row['beds_baths'] ?? ''),
+                    'working_with_realtor' => $row['working_with_realtor'] ?? null,
+                    'dnc_disclaimer' => (string) ($row['dnc_disclaimer'] ?? ''),
+                    'property_type' => (string) ($row['property_type'] ?? ''),
+                    'budget' => $row['budget'] ?? null,
+                    'asking_price' => $row['asking_price'] ?? null,
+                    'timeline' => (string) ($row['timeline'] ?? ''),
+                    'preferences' => (string) ($row['preferences'] ?? ''),
+                    'notes' => (string) ($row['notes'] ?? ''),
+                    'rep_name' => (string) ($row['rep_name'] ?? ''),
+                    'state' => (string) ($row['state'] ?? ''),
+                    'sent_to' => (string) ($row['sent_to'] ?? ''),
+                    'assignment' => (string) ($row['assignment'] ?? ''),
+                    'reason_in_house' => (string) ($row['reason_in_house'] ?? ''),
+                    'realtor_response' => (string) ($row['realtor_response'] ?? ''),
+                    'form_data' => $row['form_data'] ?? [],
+                ]);
+                $lead->save();
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                $rowNum = $index + 1;
+                $reason = $e->getMessage();
+                $failedRows[] = [
+                    'row' => $rowNum,
+                    'reason' => $reason,
+                    'name' => $row['name'] ?? 'N/A',
+                    'email' => $row['email'] ?? 'N/A',
+                ];
+                Log::warning('Lead import row failed', [
+                    'row' => $rowNum,
+                    'reason' => $reason,
+                    'name' => $row['name'] ?? '',
+                    'email' => $row['email'] ?? '',
+                ]);
+            }
         }
 
-        return ['created' => $created, 'skipped' => $skipped];
+        return [
+            'created' => $created,
+            'skipped' => $skipped,
+            'failed' => $failed,
+            'failed_rows' => $failedRows,
+        ];
+    }
+
+    private function normalizePackageType(mixed $value): ?string
+    {
+        if ($value === null || trim((string) $value) === '') {
+            return null;
+        }
+
+        return trim((string) $value);
     }
 
     public function importRawRows(array $rawRows, string $source = 'google_sheets'): array
@@ -122,6 +157,7 @@ class LeadMultiFormatImportService
                 'intent' => $this->normalizeIntent((string) ($line['intent'] ?? 'buyer')),
                 'status' => $status,
                 'source_timestamp' => $this->parseTimestamp($line['source_timestamp'] ?? null),
+                'package_type' => $line['package_type'] ?? null,
                 'zip_code' => $zipCode,
                 'property_address' => $propertyAddress,
                 'beds_baths' => trim((string) ($line['beds_baths'] ?? '')),
@@ -502,6 +538,14 @@ class LeadMultiFormatImportService
             ]),
             'color' => $this->valueFromAliases($line, ['color']),
             'status_color' => $this->valueFromAliases($line, ['status_color']),
+            'package_type' => $this->valueFromAliases($line, [
+                'package_type',
+                'plan_type',
+                'lead_package',
+                'package',
+                'plan_name',
+                'package_name',
+            ]),
         ];
     }
 

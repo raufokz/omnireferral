@@ -89,7 +89,7 @@ CSV;
 
         $result = $service->importPreparedRows($preview);
 
-        $this->assertSame(['created' => 1, 'skipped' => 1], $result);
+        $this->assertSame(['created' => 1, 'skipped' => 1, 'failed' => 0, 'failed_rows' => []], $result);
         $this->assertSame(2, Lead::count());
 
         $importedLead = Lead::where('email', 'casey@example.com')->firstOrFail();

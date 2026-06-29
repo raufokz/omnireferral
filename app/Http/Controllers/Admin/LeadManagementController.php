@@ -189,9 +189,14 @@ class LeadManagementController extends Controller
         if ($mode !== 'preview') {
             $result = $importService->importPreparedRows($rows);
 
+            $message = "Import complete. Added {$result['created']} new leads, skipped {$result['skipped']} duplicate/invalid rows.";
+            if (($result['failed'] ?? 0) > 0) {
+                $message .= " {$result['failed']} rows failed. Check the logs for details.";
+            }
+
             return redirect()
                 ->route('admin.leads.index')
-                ->with('success', "Import complete. Added {$result['created']} new leads, skipped {$result['skipped']} duplicate rows.");
+                ->with('success', $message);
         }
 
         $previewKey = 'lead_import_preview_' . Str::uuid();
@@ -239,9 +244,14 @@ class LeadManagementController extends Controller
         $result = $importService->importPreparedRows($rows);
         Cache::forget($key);
 
+        $message = "Import complete. Added {$result['created']} new leads, skipped {$result['skipped']} duplicate/invalid rows.";
+        if (($result['failed'] ?? 0) > 0) {
+            $message .= " {$result['failed']} rows failed. Check the logs for details.";
+        }
+
         return redirect()
             ->route('admin.leads.index')
-            ->with('success', "Import complete. Added {$result['created']} new leads, skipped {$result['skipped']} duplicate rows.");
+            ->with('success', $message);
     }
 
     public function syncGoogleSheet(SyncGoogleSheetRequest $request, LeadMultiFormatImportService $importService): RedirectResponse
@@ -299,7 +309,12 @@ class LeadManagementController extends Controller
 
         $result = $importService->importRawRows($rawRows, 'google_sheets');
 
-        return back()->with('success', "Google Sheets sync complete. Added {$result['created']} new leads, skipped {$result['skipped']} duplicate/invalid rows.");
+        $message = "Google Sheets sync complete. Added {$result['created']} new leads, skipped {$result['skipped']} duplicate/invalid rows.";
+        if (($result['failed'] ?? 0) > 0) {
+            $message .= " {$result['failed']} rows failed. Check the logs for details.";
+        }
+
+        return back()->with('success', $message);
     }
 
     private function normalizeLeadFilters(Request $request): array

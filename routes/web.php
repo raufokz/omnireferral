@@ -226,6 +226,9 @@ Route::post('/password/setup/{token}', [PasswordSetupController::class, 'store']
 Route::post('/webhooks/gohighlevel/onboarding', [GoHighLevelWebhookController::class, 'onboardingCompleted'])
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('webhooks.gohighlevel.onboarding');
+Route::post('/webhooks/gohighlevel/onboarding-payment', [GoHighLevelWebhookController::class, 'onboardingPaymentCompleted'])
+    ->withoutMiddleware([VerifyCsrfToken::class])
+    ->name('webhooks.gohighlevel.onboarding-payment');
 Route::post('/webhooks/gohighlevel/purchase', [GoHighLevelWebhookController::class, 'packagePurchased'])
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('webhooks.gohighlevel.purchase');

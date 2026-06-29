@@ -13,6 +13,8 @@ class AgentSubscription extends Model
         'payment_status',
         'payment_provider',
         'payment_reference',
+        'payment_amount',
+        'ghl_contact_id',
         'starts_at',
         'ends_at',
         'is_active',

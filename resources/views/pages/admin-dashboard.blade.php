@@ -126,6 +126,12 @@
             <strong>{{ number_format($stats['featuredListings'] ?? 0) }}</strong>
             <span>{{ number_format($stats['propertyFavorites'] ?? 0) }} saved listing signals</span>
         </article>
+        <article class="workspace-card workspace-kpi" data-trend="GHL paid agents">
+            <div class="admin-kpi-icon admin-kpi-icon--teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <span>Paid Agents (GHL)</span>
+            <strong>{{ number_format($stats['ghlPaidAgents'] ?? 0) }}</strong>
+            <span>{{ number_format($stats['paidAgents'] ?? 0) }} total active, {{ number_format($stats['pendingPaymentAgents'] ?? 0) }} pending payment</span>
+        </article>
     </section>
 
     <section class="dashboard-analytics-grid">

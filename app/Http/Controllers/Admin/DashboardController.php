@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AdminActivityLog;
+use App\Models\AgentSubscription;
 use App\Models\Contact;
 use App\Models\Enquiry;
 use App\Models\Lead;
@@ -133,6 +134,10 @@ class DashboardController extends Controller
             ->join('packages', 'packages.id', '=', 'users.current_plan_id')
             ->sum(DB::raw('COALESCE(packages.monthly_price, 0)'));
 
+        $paidAgentCount = AgentSubscription::where('payment_status', 'paid')->where('is_active', true)->count();
+        $pendingPaymentCount = AgentSubscription::where('payment_status', 'pending')->count();
+        $ghlPaidAgentCount = AgentSubscription::where('payment_provider', 'gohighlevel')->where('payment_status', 'paid')->count();
+
         $analyticsTrends = collect(['daily', 'weekly', 'monthly', 'yearly'])
             ->mapWithKeys(fn (string $period) => [
                 $period => [
@@ -198,6 +203,9 @@ class DashboardController extends Controller
                 'usersActive' => User::where('status', 'active')->count(),
                 'usersSuspended' => User::where('status', 'suspended')->count(),
                 'testimonials' => Testimonial::count(),
+                'paidAgents' => $paidAgentCount,
+                'pendingPaymentAgents' => $pendingPaymentCount,
+                'ghlPaidAgents' => $ghlPaidAgentCount,
             ],
             'recentLeads' => $recentLeads,
             'pendingAccounts' => $pendingAccounts,

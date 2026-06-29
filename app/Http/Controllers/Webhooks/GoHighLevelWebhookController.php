@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Webhooks;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendPortalAccessSetupEmailJob;
 use App\Jobs\SyncUserToGoHighLevel;
+use App\Models\AgentLeadQuota;
+use App\Models\AgentSubscription;
 use App\Models\GhlSetting;
 use App\Models\Lead;
 use App\Models\Package;
 use App\Models\RealtorProfile;
 use App\Models\User;
+use App\Notifications\AgentCredentialsNotification;
 use App\Notifications\NewAgentOnboardingNotification;
 use App\Services\LeadCustomerNotifier;
 use App\Services\OnboardingSyncService;
@@ -203,6 +206,240 @@ class GoHighLevelWebhookController extends Controller
 
             return response()->json(['message' => 'Account provisioning failed. Our team has been notified.'], 500);
         }
+    }
+
+    public function onboardingPaymentCompleted(Request $request): JsonResponse
+    {
+        if (! $this->isAuthorized($request)) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $payload = $request->all();
+        $email = $request->string('email')->value() ?: data_get($payload, 'contact.email');
+
+        if (! $email) {
+            Log::warning('GHL onboarding_payment webhook missing email.', ['payload' => $payload]);
+
+            return response()->json(['message' => 'Missing email address.'], 422);
+        }
+
+        try {
+            $result = DB::transaction(function () use ($request, $payload, $email) {
+                $name        = $request->string('full_name')->value() ?: $request->string('name')->value() ?: data_get($payload, 'contact.name', 'New Agent');
+                $phone       = $request->string('phone')->value() ?: data_get($payload, 'contact.phone');
+                $contactId   = $request->string('ghl_contact_id')->value() ?: $request->string('contact_id')->value() ?: data_get($payload, 'contact.id');
+                $packageSlug = $request->string('package_slug')->value() ?: data_get($payload, 'package.slug');
+                $packageName = $request->string('package_name')->value() ?: data_get($payload, 'package.name');
+                $paymentStatus = strtolower($request->string('payment_status')->value() ?: 'pending');
+                $paymentAmount = $request->string('payment_amount')->value();
+                $paymentRef    = $request->string('payment_reference')->value() ?: $request->string('payment_ref')->value();
+
+                $user      = User::firstOrNew(['email' => $email]);
+                $isNewUser = ! $user->exists;
+
+                $user->fill([
+                    'name'                => $name,
+                    'phone'               => $phone,
+                    'role'                => 'agent',
+                    'status'              => in_array($paymentStatus, ['paid', 'completed', 'success']) ? 'active' : 'pending',
+                    'ghl_contact_id'      => $contactId ?: $user->ghl_contact_id,
+                    'onboarding_completed_at' => now(),
+                    'must_reset_password' => $isNewUser ? true : (bool) $user->must_reset_password,
+                    'email_verified_at'   => $user->email_verified_at ?? now(),
+                    'city'                => $request->string('city')->value() ?: $user->city,
+                    'state'               => strtoupper($request->string('state')->value() ?: ($user->state ?? '')),
+                    'zip_code'            => $request->string('postal_code')->value() ?: $user->zip_code,
+                ]);
+
+                $plainPassword = null;
+                if ($isNewUser) {
+                    $plainPassword = $this->passwordService->provision($user);
+                }
+
+                $package = $this->matchPackage($packageSlug, $packageName, $paymentAmount);
+
+                if ($package) {
+                    $user->current_plan_id = $package->id;
+                }
+
+                if (! $user->affiliate_code) {
+                    $user->affiliate_code = strtoupper(Str::random(8));
+                }
+
+                $user->save();
+
+                // Realtor profile
+                $this->upsertRealtorProfileFromPayment($user, $request, $payload);
+
+                // Agent subscription
+                $subscription = null;
+                if ($package && in_array($paymentStatus, ['paid', 'completed', 'success'])) {
+                    $existing = AgentSubscription::where('payment_reference', $paymentRef)->first();
+                    if (! $existing) {
+                        $oldSub = AgentSubscription::where('user_id', $user->id)->where('is_active', true)->first();
+                        if ($oldSub) {
+                            $oldSub->update(['is_active' => false, 'payment_status' => 'cancelled']);
+                        }
+
+                        $subscription = AgentSubscription::create([
+                            'user_id'           => $user->id,
+                            'package_id'        => $package->id,
+                            'payment_status'    => 'paid',
+                            'payment_provider'  => 'gohighlevel',
+                            'payment_reference' => $paymentRef,
+                            'payment_amount'    => $paymentAmount,
+                            'ghl_contact_id'    => $contactId,
+                            'starts_at'         => now(),
+                            'ends_at'           => $package->billing_type === 'yearly' ? now()->addYear() : null,
+                            'is_active'         => true,
+                        ]);
+
+                        // Agent lead quota
+                        $this->upsertLeadQuota($user->id, $package->id, $package->monthly_lead_quota ?? 0);
+                    }
+                } elseif ($package) {
+                    $subscription = AgentSubscription::create([
+                        'user_id'           => $user->id,
+                        'package_id'        => $package->id,
+                        'payment_status'    => 'pending',
+                        'payment_provider'  => 'gohighlevel',
+                        'payment_reference' => $paymentRef,
+                        'payment_amount'    => $paymentAmount,
+                        'ghl_contact_id'    => $contactId,
+                        'starts_at'         => null,
+                        'ends_at'           => null,
+                        'is_active'         => false,
+                    ]);
+                }
+
+                return [
+                    'user'          => $user,
+                    'isNewUser'     => $isNewUser,
+                    'plainPassword' => $plainPassword,
+                    'package'       => $package,
+                    'subscription'  => $subscription,
+                ];
+            });
+
+            $user = $result['user'];
+
+            SyncUserToGoHighLevel::dispatch($user->id);
+
+            if ($result['isNewUser'] && $result['plainPassword']) {
+                $user->notify(new AgentCredentialsNotification($result['plainPassword']));
+            }
+
+            if ($result['isNewUser'] && $user->role === 'agent') {
+                $adminUsers = User::where('role', 'admin')->get();
+                Notification::send($adminUsers, new NewAgentOnboardingNotification($user));
+            }
+
+            Log::info('GHL onboarding_payment processed.', [
+                'user_id'  => $user->id,
+                'email'    => $email,
+                'new_user' => $result['isNewUser'],
+                'package'  => $result['package']?->slug,
+                'paid'     => $result['subscription']?->payment_status === 'paid',
+            ]);
+
+            return response()->json([
+                'message'          => 'Onboarding payment processed successfully.',
+                'user_id'          => $user->id,
+                'subscription_id'  => $result['subscription']?->id,
+                'package'          => $result['package']?->slug,
+                'login_url'        => route('login'),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('GHL onboarding_payment failed.', [
+                'email' => $email,
+                'error' => $e->getMessage(),
+                'trace' => mb_substr($e->getTraceAsString(), 0, 2000),
+            ]);
+
+            return response()->json(['message' => 'Onboarding payment processing failed. Our team has been notified.'], 500);
+        }
+    }
+
+    private function matchPackage(?string $slug, ?string $name, ?string $amount): ?Package
+    {
+        if ($slug) {
+            $package = Package::where('slug', $slug)->first();
+            if ($package) {
+                return $package;
+            }
+        }
+
+        if ($name) {
+            $normalized = strtolower(trim($name));
+            $package = Package::all()->first(fn ($p) => str_contains($normalized, strtolower($p->slug))
+                || str_contains($normalized, strtolower($p->name)));
+            if ($package) {
+                return $package;
+            }
+        }
+
+        if ($amount) {
+            $cleanAmount = preg_replace('/[^0-9.]/', '', $amount);
+            if ($cleanAmount) {
+                $package = Package::where('one_time_price', (float) $cleanAmount)
+                    ->orWhere('monthly_price', (float) $cleanAmount)
+                    ->first();
+                if ($package) {
+                    return $package;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function upsertRealtorProfileFromPayment(User $user, Request $request, array $payload): void
+    {
+        $existing = RealtorProfile::where('user_id', $user->id)->first();
+        $slug = $existing?->slug ?: Str::slug($user->name . '-' . Str::lower(Str::random(6)));
+
+        $headshotUrl = $request->string('headshot_url')->value()
+            ?: data_get($payload, 'headshot_url')
+            ?: ($existing?->headshot ?: \App\Support\AgentAvatar::defaultStorageHeadshot());
+
+        RealtorProfile::updateOrCreate(['user_id' => $user->id], [
+            'slug'                => $slug,
+            'brokerage_name'      => $request->string('brokerage_name')->value() ?: $request->string('brokerage')->value() ?: ($existing?->brokerage_name ?: 'OmniReferral Partner'),
+            'license_number'      => $request->string('license_number')->value() ?: ($existing?->license_number ?: 'ACTIVE'),
+            'service_city'        => $request->string('city')->value() ?: ($user->city ?: 'Dallas'),
+            'service_state'       => strtoupper($request->string('state')->value() ?: ($user->state ?: 'TX')),
+            'service_zip_code'    => $request->string('postal_code')->value() ?: ($user->zip_code ?: '75201'),
+            'specialties'         => $request->string('lead_types')->value() ?: ($existing?->specialties ?: 'Buyer Representation, Seller Strategy, Lead Conversion'),
+            'bio'                 => $request->string('bio')->value() ?: ($existing?->bio ?: 'Agent profile created from GoHighLevel onboarding payment.'),
+            'years_of_experience' => $request->integer('years_of_experience') ?: ($existing?->years_of_experience ?? 2),
+            'languages'           => $request->string('languages')->value() ?: $existing?->languages,
+            'market_areas'        => $request->string('primary_area_of_service')->value() ?: $existing?->market_areas,
+            'headshot'            => $headshotUrl,
+            'submission_source'   => 'gohighlevel_payment',
+            'is_active_agent'     => true,
+            'onboarding_completed' => true,
+        ]);
+    }
+
+    private function upsertLeadQuota(int $userId, int $packageId, int $monthlyQuota): AgentLeadQuota
+    {
+        $month = now()->format('Y-m');
+
+        $assignedCount = Lead::where('assigned_agent_id', $userId)
+            ->whereMonth('assigned_at', now()->month)
+            ->whereYear('assigned_at', now()->year)
+            ->count();
+
+        return AgentLeadQuota::updateOrCreate(
+            ['user_id' => $userId, 'month' => $month],
+            [
+                'package_id'     => $packageId,
+                'monthly_quota'  => $monthlyQuota,
+                'assigned_count' => $assignedCount,
+                'remaining_count' => $monthlyQuota - $assignedCount,
+                'overdue_count'  => 0,
+            ]
+        );
     }
 
     #[OA\Post(

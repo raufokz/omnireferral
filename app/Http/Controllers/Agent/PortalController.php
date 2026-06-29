@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
+use App\Models\AgentLeadQuota;
+use App\Models\AgentSubscription;
 use App\Models\Contact;
 use App\Models\Lead;
 use App\Models\Package;
@@ -331,6 +333,10 @@ class PortalController extends Controller
                     'closed_leads' => (clone $leadsQuery)->where('status', 'closed')->count(),
                     'messages_received' => $totalMessages,
                 ],
+                'subscription' => $user->activeAgentSubscription,
+                'subscriptions' => AgentSubscription::where('user_id', $user->id)->latest()->get(),
+                'currentMonthQuota' => $user->currentMonthQuota,
+                'quotaHistory' => AgentLeadQuota::where('user_id', $user->id)->latest('month')->take(6)->get(),
             ],
         ];
     }
