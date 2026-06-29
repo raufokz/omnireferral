@@ -31,12 +31,16 @@ class Package extends Model
         'cta_label',
         'duration_days',
         'sort_order',
+        'monthly_lead_quota',
+        'lead_priority',
     ];
 
     protected $casts = [
         'features' => 'array',
         'is_featured' => 'boolean',
         'is_active' => 'boolean',
+        'monthly_lead_quota' => 'integer',
+        'lead_priority' => 'integer',
     ];
 
     public function getRouteKeyName(): string
@@ -57,6 +61,21 @@ class Package extends Model
     public function routeMatches(): HasMany
     {
         return $this->hasMany(LeadMatch::class);
+    }
+
+    public function agentSubscriptions(): HasMany
+    {
+        return $this->hasMany(AgentSubscription::class);
+    }
+
+    public function leadAssignments(): HasMany
+    {
+        return $this->hasMany(LeadAssignment::class);
+    }
+
+    public function agentLeadQuotas(): HasMany
+    {
+        return $this->hasMany(AgentLeadQuota::class);
     }
 
     public function scopeActive($query)

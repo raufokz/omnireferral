@@ -128,6 +128,8 @@
                 'icon' => 'operations',
                 'children' => [
                     ['label' => 'Lead Registry', 'route' => route('admin.leads.index'), 'active' => ['admin.leads.*'], 'icon' => 'leads'],
+                    ['label' => 'Lead Assignments', 'route' => route('admin.lead-assignments.index'), 'active' => ['admin.lead-assignments.*'], 'icon' => 'leads'],
+                    ['label' => 'Agent Lead Quotas', 'route' => route('admin.agent-lead-quotas.index'), 'active' => ['admin.agent-lead-quotas.*'], 'icon' => 'users'],
                     ['label' => 'Agent Profiles', 'route' => route('admin.agents.manage'), 'active' => ['admin.agent-profiles.*', 'admin.agents.*'], 'icon' => 'users'],
                     ['label' => 'Properties', 'route' => route('admin.properties.index'), 'active' => ['admin.properties.*'], 'icon' => 'properties'],
                     ['label' => 'Enquiries', 'route' => route('admin.enquiries.index'), 'active' => ['admin.enquiries.*'], 'icon' => 'enquiries'],
@@ -150,6 +152,9 @@
                         ['label' => 'Properties', 'route' => route('admin.properties.index'), 'active' => ['admin.properties.*'], 'icon' => 'properties'],
                         ['label' => 'Enquiries', 'route' => route('admin.enquiries.index'), 'active' => ['admin.enquiries.*'], 'icon' => 'enquiries'],
                         ['label' => 'Lead Registry', 'route' => route('admin.leads.index'), 'active' => ['admin.leads.*'], 'icon' => 'leads'],
+                        ['label' => 'Lead Assignments', 'route' => route('admin.lead-assignments.index'), 'active' => ['admin.lead-assignments.*'], 'icon' => 'leads'],
+                        ['label' => 'Agent Lead Quotas', 'route' => route('admin.agent-lead-quotas.index'), 'active' => ['admin.agent-lead-quotas.*'], 'icon' => 'users'],
+                        ['label' => 'Package Lead Settings', 'route' => route('admin.package-lead-settings.index'), 'active' => ['admin.package-lead-settings.*'], 'icon' => 'marketplace'],
                     ],
                 ],
                 [

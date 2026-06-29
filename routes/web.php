@@ -18,6 +18,9 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Admin\UserModerationController;
 use App\Http\Controllers\Admin\WebhookEventController as AdminWebhookEventController;
 use App\Http\Controllers\Admin\EmailToolsController as AdminEmailToolsController;
+use App\Http\Controllers\Admin\LeadAssignmentController;
+use App\Http\Controllers\Admin\AgentLeadQuotaController;
+use App\Http\Controllers\Admin\PackageLeadSettingsController;
 use App\Http\Controllers\Admin\MailSettingsController as AdminMailSettingsController;
 use App\Http\Controllers\Admin\SeoLandingPageController as AdminSeoLandingPageController;
 use App\Http\Controllers\Agent\LeadController as AgentLeadController;
@@ -443,5 +446,21 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::post('admin/agent-profiles/{agentProfile}/feature', [StaffAgentProfileController::class, 'feature'])->name('admin.agent-profiles.feature');
         Route::post('admin/agent-profiles/{agentProfile}/publish', [StaffAgentProfileController::class, 'publish'])->name('admin.agent-profiles.publish');
         Route::post('admin/agent-profiles/{agentProfile}/suspend', [StaffAgentProfileController::class, 'suspend'])->name('admin.agent-profiles.suspend');
+
+        // Lead assignment & quota management
+        Route::get('admin/lead-assignments', [LeadAssignmentController::class, 'index'])->name('admin.lead-assignments.index');
+        Route::get('admin/lead-assignments/create', [LeadAssignmentController::class, 'create'])->name('admin.lead-assignments.create');
+        Route::post('admin/lead-assignments', [LeadAssignmentController::class, 'store'])->name('admin.lead-assignments.store');
+        Route::get('admin/lead-assignments/{assignment}', [LeadAssignmentController::class, 'show'])->name('admin.lead-assignments.show');
+        Route::patch('admin/lead-assignments/{assignment}/status', [LeadAssignmentController::class, 'updateStatus'])->name('admin.lead-assignments.update-status');
+        Route::post('admin/lead-assignments/auto-assign', [LeadAssignmentController::class, 'autoAssign'])->name('admin.lead-assignments.auto-assign');
+
+        Route::get('admin/agent-lead-quotas', [AgentLeadQuotaController::class, 'index'])->name('admin.agent-lead-quotas.index');
+        Route::get('admin/agent-lead-quotas/{quota}/edit', [AgentLeadQuotaController::class, 'edit'])->name('admin.agent-lead-quotas.edit');
+        Route::patch('admin/agent-lead-quotas/{quota}', [AgentLeadQuotaController::class, 'update'])->name('admin.agent-lead-quotas.update');
+
+        Route::get('admin/package-lead-settings', [PackageLeadSettingsController::class, 'index'])->name('admin.package-lead-settings.index');
+        Route::get('admin/package-lead-settings/{package}/edit', [PackageLeadSettingsController::class, 'edit'])->name('admin.package-lead-settings.edit');
+        Route::patch('admin/package-lead-settings/{package}', [PackageLeadSettingsController::class, 'update'])->name('admin.package-lead-settings.update');
     });
 });

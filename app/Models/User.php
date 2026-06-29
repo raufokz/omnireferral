@@ -173,6 +173,31 @@ class User extends Authenticatable
         return $this->hasMany(Testimonial::class, 'submitted_by_user_id');
     }
 
+    public function agentSubscription(): HasOne
+    {
+        return $this->hasOne(AgentSubscription::class)->latestOfMany();
+    }
+
+    public function activeAgentSubscription(): HasOne
+    {
+        return $this->hasOne(AgentSubscription::class)->where('is_active', true)->latestOfMany();
+    }
+
+    public function leadAssignments(): HasMany
+    {
+        return $this->hasMany(LeadAssignment::class, 'assigned_to_user_id');
+    }
+
+    public function agentLeadQuotas(): HasMany
+    {
+        return $this->hasMany(AgentLeadQuota::class);
+    }
+
+    public function currentMonthQuota(): HasOne
+    {
+        return $this->hasOne(AgentLeadQuota::class)->where('month', now()->format('Y-m'));
+    }
+
     public function propertyFavorites(): HasMany
     {
         return $this->hasMany(PropertyFavorite::class);

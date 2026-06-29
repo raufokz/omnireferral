@@ -68,11 +68,15 @@ class Lead extends Model
         'assigned_at',
         'contacted_at',
         'closed_at',
+        'is_assignable',
+        'row_color',
+        'lead_quality_score',
     ];
 
     protected $casts = [
         'form_data' => 'array',
         'is_priority' => 'boolean',
+        'is_assignable' => 'boolean',
         'working_with_realtor' => 'boolean',
         'source_timestamp' => 'datetime',
         'reviewed_at' => 'datetime',
