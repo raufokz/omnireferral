@@ -230,7 +230,7 @@
 
         <div class="footer-bottom">
             <span class="footer-bottom__copyright">&copy; 2026 OmniReferral. All Rights Reserved.</span>
-            <span class="footer-powered">Powered by <strong>OmniReferral</strong></span>
+            <span class="footer-powered">Powered by <a href="https://seventechllc.com/" target="_blank" rel="noopener noreferrer"><strong>seventechllc</strong></a></span>
         </div>
     </div>
 </footer>
