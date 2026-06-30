@@ -322,15 +322,15 @@
                                 <template x-if="profile.social_links && Object.keys(profile.social_links).length">
                                     <div>
                                         <template x-for="[name, url] in Object.entries(profile.social_links)" :key="name">
-                                            <a :href="url" target="_blank" rel="noopener" x-text="name.slice(0, 1).toUpperCase()"></a>
+                                            <a :href="url" target="_blank" rel="noopener" :aria-label="socialLabel(name)" :title="socialLabel(name)" x-html="socialIcon(name)"></a>
                                         </template>
                                     </div>
                                 </template>
                                 <template x-if="!profile.social_links || !Object.keys(profile.social_links).length">
                                     <div>
-                                        <span aria-hidden="true">f</span>
-                                        <span aria-hidden="true">ig</span>
-                                        <span aria-hidden="true">in</span>
+                                        <span aria-hidden="true" x-html="socialIcon('facebook')"></span>
+                                        <span aria-hidden="true" x-html="socialIcon('instagram')"></span>
+                                        <span aria-hidden="true" x-html="socialIcon('linkedin')"></span>
                                     </div>
                                 </template>
                             </div>
@@ -513,6 +513,36 @@ function agentDirectoryModal(config = {}) {
             if (!this.profile?.slug) return;
             this.quickSave(this.profile.slug);
             this.successMessage = 'Agent saved to your browser list.';
+        },
+        socialLabel(name) {
+            const labels = {
+                facebook: 'Facebook',
+                instagram: 'Instagram',
+                linkedin: 'LinkedIn',
+                pinterest: 'Pinterest',
+                x: 'X',
+                twitter: 'X',
+                youtube: 'YouTube',
+                tiktok: 'TikTok',
+                website: 'Website',
+            };
+            const key = String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+            return labels[key] || String(name || 'Social link').replace(/[_-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+        },
+        socialIcon(name) {
+            const key = String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+            const icons = {
+                facebook: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 8.5h2.2V5.1c-.38-.05-1.7-.16-3.23-.16-3.2 0-5.38 1.95-5.38 5.54v3.12H4v3.8h3.59V24h4.41v-6.6h3.45l.55-3.8h-4v-2.74c0-1.1.3-2.36 2-2.36Z"></path></svg>',
+                instagram: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"></rect><circle cx="12" cy="12" r="4"></circle><circle cx="17.4" cy="6.6" r="1.2" fill="currentColor" stroke="none"></circle></svg>',
+                linkedin: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5.1 7.5H1.2V22h3.9V7.5ZM3.15 1.5a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5ZM22.8 14.1c0-4.18-2.23-6.12-5.2-6.12-2.4 0-3.47 1.32-4.07 2.25V7.5H9.8V22h3.9v-7.18c0-1.9.36-3.74 2.72-3.74 2.32 0 2.35 2.17 2.35 3.86V22h4.03v-7.9Z"></path></svg>',
+                pinterest: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.1 1.6C6.5 1.6 3.7 5.3 3.7 9.4c0 1.9 1 4.2 2.6 5 .24.1.37.06.43-.17.04-.17.26-1.02.36-1.42.03-.13.02-.25-.09-.38-.53-.64-.96-1.8-.96-2.88 0-2.84 2.15-5.59 5.82-5.59 3.17 0 5.38 2.16 5.38 5.25 0 3.5-1.77 5.93-4.08 5.93-1.27 0-2.22-1.05-1.92-2.34.36-1.54 1.06-3.2 1.06-4.31 0-.99-.53-1.82-1.64-1.82-1.3 0-2.35 1.34-2.35 3.14 0 1.15.39 1.92.39 1.92s-1.29 5.46-1.53 6.48c-.26 1.1-.16 2.65-.05 3.66.05.43.58.52.8.16.34-.56.9-1.57 1.17-2.64.15-.59.76-2.98.76-2.98.4.76 1.55 1.4 2.77 1.4 3.64 0 6.28-3.35 6.28-7.5 0-3.99-3.26-7.05-7.85-7.05Z"></path></svg>',
+                x: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14.4 10.2 22.8 0h-2l-7.3 8.8L7.7 0H1l8.8 13.1L1 24h2l7.7-9.4 6.2 9.4h6.7l-9.2-13.8Zm-2.7 3.3-.9-1.3L3.7 1.6h3l5.7 8.5.9 1.3 7.5 11.1h-3l-6.1-9Z"></path></svg>',
+                twitter: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14.4 10.2 22.8 0h-2l-7.3 8.8L7.7 0H1l8.8 13.1L1 24h2l7.7-9.4 6.2 9.4h6.7l-9.2-13.8Zm-2.7 3.3-.9-1.3L3.7 1.6h3l5.7 8.5.9 1.3 7.5 11.1h-3l-6.1-9Z"></path></svg>',
+                youtube: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31.5 31.5 0 0 0 0 12a31.5 31.5 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.5 31.5 0 0 0 24 12a31.5 31.5 0 0 0-.5-5.8ZM9.6 15.6V8.4l6.3 3.6-6.3 3.6Z"></path></svg>',
+                tiktok: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.2 2c.4 3 2 4.8 4.8 5v4.1a8.4 8.4 0 0 1-4.8-1.5v6.7c0 4.2-2.8 6.7-6.7 6.7-3.6 0-6.5-2.5-6.5-6.1 0-3.9 3-6.2 7.1-6.1v4.1c-1.8-.3-3 .5-3 1.9 0 1.2 1 2.1 2.3 2.1 1.5 0 2.5-.8 2.5-2.8V2h4.3Z"></path></svg>',
+                website: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18"></path><path d="M12 3c2.3 2.5 3.5 5.5 3.5 9S14.3 18.5 12 21c-2.3-2.5-3.5-5.5-3.5-9S9.7 5.5 12 3Z"></path></svg>',
+            };
+            return icons[key] || icons.website;
         },
         async submitInquiry() {
             if (!this.profile?.slug) return;

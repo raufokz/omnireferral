@@ -937,6 +937,12 @@
     font-weight: 900;
 }
 
+.omni-agent-socials svg {
+    display: block;
+    width: 1.05rem;
+    height: 1.05rem;
+}
+
 .omni-agent-modal__main {
     display: grid;
     align-content: start;
