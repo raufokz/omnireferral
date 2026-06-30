@@ -21019,7 +21019,7 @@ iframe {
     align-items: center;
     gap: 0.72rem;
     width: fit-content;
-    min-height: 52px;
+    min-height: 74px;
     margin-bottom: 1rem;
     color: #ffffff;
     text-decoration: none;
@@ -21027,9 +21027,11 @@ iframe {
 
 .footer-brand-panel__logo img {
     display: block;
-    width: 58px;
+    width: clamp(120px, 12vw, 170px);
+    max-height: 74px;
     height: auto;
     flex: 0 0 auto;
+    object-fit: contain;
 }
 
 .footer-brand-panel__wordmark,

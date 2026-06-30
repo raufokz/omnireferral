@@ -109,12 +109,9 @@
         </section>
 
         <div class="footer-main-grid">
-            <section class="footer-brand-panel" aria-labelledby="footer-brand-title">
-                <a href="{{ route('home') }}" class="footer-brand-panel__logo">
-                    <img src="{{ asset('images/omnireferral-logo.png') }}" alt="" aria-hidden="true">
-                    <span id="footer-brand-title" class="footer-brand-panel__wordmark">
-                        <span>Omni</span><strong>Referral</strong>
-                    </span>
+            <section class="footer-brand-panel" aria-label="OmniReferral">
+                <a href="{{ route('home') }}" class="footer-brand-panel__logo" aria-label="OmniReferral home">
+                    <img src="{{ asset('images/omnireferral-logo.png') }}" alt="OmniReferral">
                 </a>
                 <p>The modern lead generation system built around trust, clarity, and faster handoffs for real estate professionals.</p>
 
