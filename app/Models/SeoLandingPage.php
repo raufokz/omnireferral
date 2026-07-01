@@ -11,7 +11,7 @@ class SeoLandingPage extends Model
     protected $fillable = [
         'realtor_profile_id', 'slug', 'city', 'state', 'primary_keyword', 'secondary_keywords',
         'seo_title', 'meta_description', 'canonical_url',
-        'hero_image', 'og_image', 'content', 'is_published',
+        'hero_image', 'og_image', 'realtor_photo', 'content', 'is_published',
     ];
 
     protected $casts = [

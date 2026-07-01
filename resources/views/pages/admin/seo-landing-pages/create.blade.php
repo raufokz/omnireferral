@@ -20,7 +20,7 @@
 
 @section('content')
 <section class="workspace-card">
-    <form method="POST" action="{{ route('admin.seo-landing-pages.store') }}" id="seo-form">
+    <form method="POST" action="{{ route('admin.seo-landing-pages.store') }}" id="seo-form" enctype="multipart/form-data">
         @csrf
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:2rem;">
@@ -67,8 +67,14 @@
                 <input type="url" name="canonical_url" value="{{ old('canonical_url') }}" placeholder="Leave blank to use current URL">
             </label>
             <label class="workspace-field">
-                <span>Hero Image URL</span>
-                <input type="text" name="hero_image" value="{{ old('hero_image') }}" placeholder="e.g. images/seo/austin-hero.jpg">
+                <span>Hero Image</span>
+                <input type="file" name="hero_image" accept="image/jpeg,image/png,image/webp">
+                <small style="color:#64748b;">Upload hero backdrop (JPEG, PNG, WebP, max 5MB)</small>
+            </label>
+            <label class="workspace-field">
+                <span>Realtor Photo</span>
+                <input type="file" name="realtor_photo" accept="image/jpeg,image/png,image/webp">
+                <small style="color:#64748b;">Upload realtor headshot (JPEG, PNG, WebP, max 5MB)</small>
             </label>
             <label class="workspace-field">
                 <span>OG Image URL</span>

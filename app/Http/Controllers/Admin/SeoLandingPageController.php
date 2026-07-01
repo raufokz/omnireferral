@@ -7,6 +7,7 @@ use App\Models\RealtorProfile;
 use App\Models\SeoLandingPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -57,13 +58,17 @@ class SeoLandingPageController extends Controller
             'seo_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'canonical_url' => 'nullable|url|max:500',
-            'hero_image' => 'nullable|string|max:500',
+            'hero_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'og_image' => 'nullable|string|max:500',
+            'realtor_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'is_published' => 'boolean',
             'content' => 'nullable|array',
         ]);
 
         $validated['is_published'] = $request->boolean('is_published');
+
+        $validated['hero_image'] = $this->handleImageUpload($request, 'hero_image', 'seo-landing-pages/hero', null);
+        $validated['realtor_photo'] = $this->handleImageUpload($request, 'realtor_photo', 'seo-landing-pages/realtor', null);
 
         if ($request->has('secondary_keywords')) {
             $validated['secondary_keywords'] = $this->linesToArray($request->input('secondary_keywords'));
@@ -98,13 +103,17 @@ class SeoLandingPageController extends Controller
             'seo_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
             'canonical_url' => 'nullable|url|max:500',
-            'hero_image' => 'nullable|string|max:500',
+            'hero_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'og_image' => 'nullable|string|max:500',
+            'realtor_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'is_published' => 'boolean',
             'content' => 'nullable|array',
         ]);
 
         $validated['is_published'] = $request->boolean('is_published');
+
+        $validated['hero_image'] = $this->handleImageUpload($request, 'hero_image', 'seo-landing-pages/hero', $seoLandingPage->hero_image);
+        $validated['realtor_photo'] = $this->handleImageUpload($request, 'realtor_photo', 'seo-landing-pages/realtor', $seoLandingPage->realtor_photo);
 
         if ($request->has('secondary_keywords')) {
             $validated['secondary_keywords'] = $this->linesToArray($request->input('secondary_keywords'));
@@ -114,14 +123,12 @@ class SeoLandingPageController extends Controller
             $validated['content'] = $this->normalizeContent($validated['content']);
         }
 
-        // Handle slug changes
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug('best-realtor-' . $validated['city'] . '-' . $validated['state']);
         } else {
             $validated['slug'] = Str::slug($validated['slug']);
         }
 
-        // Check if slug already exists (excluding current page)
         $existing = SeoLandingPage::bySlug($validated['slug'])
             ->where('id', '!=', $seoLandingPage->id)
             ->first();
@@ -137,10 +144,42 @@ class SeoLandingPageController extends Controller
 
     public function destroy(SeoLandingPage $seoLandingPage): RedirectResponse
     {
+        $this->deleteStoredImage($seoLandingPage->hero_image);
+        $this->deleteStoredImage($seoLandingPage->realtor_photo);
+
         $seoLandingPage->delete();
 
         return redirect()->route('admin.seo-landing-pages.index')
             ->with('success', 'SEO landing page deleted successfully.');
+    }
+
+    private function handleImageUpload(Request $request, string $field, string $subdirectory, ?string $currentValue): ?string
+    {
+        if ($request->hasFile($field)) {
+            if ($currentValue && str_starts_with((string) $currentValue, 'storage/seo-landing-pages/')) {
+                Storage::disk('public')->delete(str_replace('storage/', '', (string) $currentValue));
+            }
+
+            $path = $request->file($field)->store($subdirectory, 'public');
+
+            return $path ? 'storage/' . $path : $currentValue;
+        }
+
+        if ($request->input($field . '_remove') === '1' && $currentValue) {
+            if (str_starts_with((string) $currentValue, 'storage/seo-landing-pages/')) {
+                Storage::disk('public')->delete(str_replace('storage/', '', (string) $currentValue));
+            }
+            return null;
+        }
+
+        return $currentValue;
+    }
+
+    private function deleteStoredImage(?string $path): void
+    {
+        if ($path && str_starts_with($path, 'storage/seo-landing-pages/')) {
+            Storage::disk('public')->delete(str_replace('storage/', '', $path));
+        }
     }
 
     private function normalizeContent(array $content): array

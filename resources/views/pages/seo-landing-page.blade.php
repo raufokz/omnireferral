@@ -18,9 +18,11 @@
     $agentServiceArea = $assignedProfile?->serviceAreaLabel();
     $agentSpecialties = collect($assignedProfile?->specialtiesList() ?? [])->take(5);
     $heroImage = $page->hero_image ? asset($page->hero_image) : asset('images/home/hero_backdrop_v2.png');
-    $profileImage = $assignedProfile
-        ? $assignedProfile->headshotPublicUrl($assignedUser)
-        : asset('images/realtors/logo-bydefault_agent.png');
+    $profileImage = $page->realtor_photo
+        ? asset($page->realtor_photo)
+        : ($assignedProfile
+            ? $assignedProfile->headshotPublicUrl($assignedUser)
+            : asset('images/realtors/logo-bydefault_agent.png'));
 @endphp
 
 @section('head')

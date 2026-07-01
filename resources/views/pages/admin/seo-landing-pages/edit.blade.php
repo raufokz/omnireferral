@@ -27,7 +27,7 @@
 @endphp
 
 <section class="workspace-card">
-    <form method="POST" action="{{ route('admin.seo-landing-pages.update', $page) }}" id="seo-form">
+    <form method="POST" action="{{ route('admin.seo-landing-pages.update', $page) }}" id="seo-form" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
@@ -80,8 +80,32 @@
                 <input type="url" name="canonical_url" value="{{ old('canonical_url', $page->canonical_url) }}" placeholder="Leave blank to use current URL">
             </label>
             <label class="workspace-field">
-                <span>Hero Image URL</span>
-                <input type="text" name="hero_image" value="{{ old('hero_image', $page->hero_image) }}" placeholder="e.g. images/seo/austin-hero.jpg">
+                <span>Hero Image</span>
+                <input type="file" name="hero_image" accept="image/jpeg,image/png,image/webp">
+                @if($page->hero_image)
+                    <div style="margin-top:.5rem; display:flex; align-items:center; gap:.75rem; flex-wrap:wrap;">
+                        <img src="{{ asset($page->hero_image) }}" alt="Hero preview" style="width:120px; height:auto; border-radius:6px; border:1px solid #e2e8f0;">
+                        <label style="font-size:.8rem; display:flex; align-items:center; gap:.35rem; cursor:pointer;">
+                            <input type="checkbox" name="hero_image_remove" value="1">
+                            Remove current image
+                        </label>
+                    </div>
+                @endif
+                <small style="color:#64748b;">Upload hero backdrop (JPEG, PNG, WebP, max 5MB). Leave empty to keep current.</small>
+            </label>
+            <label class="workspace-field">
+                <span>Realtor Photo</span>
+                <input type="file" name="realtor_photo" accept="image/jpeg,image/png,image/webp">
+                @if($page->realtor_photo)
+                    <div style="margin-top:.5rem; display:flex; align-items:center; gap:.75rem; flex-wrap:wrap;">
+                        <img src="{{ asset($page->realtor_photo) }}" alt="Realtor photo preview" style="width:76px; height:76px; object-fit:cover; border-radius:8px; border:1px solid #e2e8f0;">
+                        <label style="font-size:.8rem; display:flex; align-items:center; gap:.35rem; cursor:pointer;">
+                            <input type="checkbox" name="realtor_photo_remove" value="1">
+                            Remove current photo
+                        </label>
+                    </div>
+                @endif
+                <small style="color:#64748b;">Upload realtor headshot (JPEG, PNG, WebP, max 5MB). Leave empty to keep current.</small>
             </label>
             <label class="workspace-field">
                 <span>OG Image URL</span>
