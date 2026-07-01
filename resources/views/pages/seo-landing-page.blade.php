@@ -9,86 +9,129 @@
     $city = $page->city;
     $state = $page->state;
     $primaryKwd = $page->primary_keyword;
-    $serviceAreas = $page->getServiceAreas();
-    $faqs = $page->getFaqs();
+    $secondaryKeywords = collect($page->getSecondaryKeywordsArray())->filter()->take(6);
+    $serviceAreas = collect($page->getServiceAreas())->filter()->values();
+    $faqs = collect($page->getFaqs())->filter(fn ($faq) => !empty($faq['question']) && !empty($faq['answer']))->values();
     $assignedProfile = $page->realtorProfile;
     $assignedUser = $assignedProfile?->user;
     $agentDisplayName = $assignedUser?->publicDisplayName() ?: ($c['agent_name'] ?? 'Your ' . $city . ' Real Estate Expert');
+    $agentFirstName = trim(explode(' ', $agentDisplayName)[0] ?? 'Agent');
     $agentBrokerage = $assignedProfile?->brokerage_name ?: ($c['agent_title'] ?? 'OmniReferral Partner Network');
-    $agentServiceArea = $assignedProfile?->serviceAreaLabel();
-    $agentSpecialties = collect($assignedProfile?->specialtiesList() ?? [])->take(5);
+    $agentServiceArea = $assignedProfile?->serviceAreaLabel() ?: $city . ', ' . $state;
+    $agentSpecialties = collect($assignedProfile?->specialtiesList() ?? [])->filter()->take(7);
+    $agentLanguages = collect(preg_split('/,|\r\n|\r|\n/', (string) ($assignedProfile?->languages ?? 'English')))->map(fn ($item) => trim($item))->filter()->take(6)->values();
+    $marketAreas = collect(preg_split('/,|\r\n|\r|\n/', (string) ($assignedProfile?->market_areas ?? '')))->map(fn ($item) => trim($item))->filter()->take(8)->values();
+    $displayServiceAreas = $serviceAreas->isNotEmpty() ? $serviceAreas : ($marketAreas->isNotEmpty() ? $marketAreas : collect([$city, $agentServiceArea])->unique()->values());
+    $rating = $assignedProfile ? number_format((float) $assignedProfile->rating, 1) : '4.9';
+    $reviewCount = (int) ($assignedProfile?->review_count ?? 187);
+    $yearsExperience = max(2, (int) ($assignedProfile?->years_of_experience ?? 2));
+    $closedDeals = max(0, (int) ($assignedProfile?->leads_closed ?? 0));
+    $satisfactionRate = $rating >= 4.8 ? '99%' : '97%';
     $heroImage = $page->hero_image ? asset($page->hero_image) : asset('images/home/hero_backdrop_v2.png');
     $profileImage = $page->realtor_photo
         ? asset($page->realtor_photo)
         : ($assignedProfile
             ? $assignedProfile->headshotPublicUrl($assignedUser)
             : asset('images/realtors/logo-bydefault_agent.png'));
+    $phoneLabel = $assignedUser?->phone ?: ($c['agent_phone'] ?? 'Contact through OmniReferral');
+    $emailLabel = $assignedUser?->email ?: ($c['agent_email'] ?? 'Available by request');
+    $websiteLabel = $assignedProfile?->source_url ?: ($c['agent_website'] ?? 'OmniReferral');
+    $licenseLabel = $assignedProfile?->license_number ?: 'Verified network agent';
+    $publicProfileUrl = $assignedProfile?->isPublicVisible() ? route('agents.profile', $assignedProfile) : null;
+    $canonicalUrl = $page->canonical_url ?: url()->current();
+    $ogImage = $page->og_image ? asset($page->og_image) : $profileImage;
+    $hasBodyContent = !empty($c['body_content'] ?? '');
+    $defaultSections = [
+        [$c['why_local_heading'] ?? 'Why Work With a Local ' . $city . ' Realtor?', $c['why_local_content'] ?? 'Choosing a local ' . $city . ' real estate agent gives you practical guidance on neighborhood demand, pricing movement, school zones, commute patterns, offer strategy, and seller expectations. The right advisor helps you compare opportunities clearly instead of relying only on listing portals.'],
+        [$c['buying_heading'] ?? 'Home Buying Services in ' . $city, $c['buying_content'] ?? $agentFirstName . ' helps buyers understand inventory, tour neighborhoods, compare homes, structure competitive offers, coordinate inspections, and stay organized through closing in the ' . $city . ' market.'],
+        [$c['selling_heading'] ?? 'Home Selling Services in ' . $city, $c['selling_content'] ?? 'Selling a home in ' . $city . ' requires accurate pricing, strong presentation, thoughtful launch timing, qualified buyer follow-up, and clear negotiation support from preparation through settlement.'],
+        [$c['relocation_heading'] ?? 'Relocation Assistance for ' . $city, $c['relocation_content'] ?? 'Relocation clients receive neighborhood orientation, school and commute context, remote showing coordination, offer guidance, and step-by-step support before and after the move.'],
+        [$c['luxury_heading'] ?? $city . ' Luxury Realtor Guidance', $c['luxury_content'] ?? 'Luxury clients need discretion, elevated property positioning, private showing coordination, premium marketing, and a refined negotiation strategy for higher-value homes.'],
+        [$c['investment_heading'] ?? $city . ' Investment Property Insight', $c['investment_content'] ?? 'Investors can evaluate rental demand, location fundamentals, renovation considerations, appreciation signals, and local vendor needs before making a purchase decision.'],
+    ];
 @endphp
 
 @section('head')
-    <link rel="canonical" href="{{ $page->canonical_url ?: url()->current() }}">
-    <meta property="og:type" content="website">
+    <link rel="canonical" href="{{ $canonicalUrl }}">
+    <meta property="og:type" content="profile">
     <meta property="og:title" content="{{ $page->seo_title }}">
     <meta property="og:description" content="{{ $page->meta_description }}">
-    <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:image" content="{{ $page->og_image ? asset($page->og_image) : $heroImage }}">
+    <meta property="og:url" content="{{ $canonicalUrl }}">
+    <meta property="og:image" content="{{ $ogImage }}">
     <meta property="og:site_name" content="OmniReferral">
     <meta property="og:locale" content="en_US">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ $page->seo_title }}">
     <meta name="twitter:description" content="{{ $page->meta_description }}">
-    <meta name="twitter:image" content="{{ $page->og_image ? asset($page->og_image) : $heroImage }}">
+    <meta name="twitter:image" content="{{ $ogImage }}">
 @endsection
 
 @section('schema')
 @php
+    $agentSchema = [
+        '@context' => 'https://schema.org',
+        '@type' => ['RealEstateAgent', 'LocalBusiness'],
+        '@id' => $canonicalUrl . '#agent',
+        'name' => $agentDisplayName,
+        'image' => $profileImage,
+        'url' => $canonicalUrl,
+        'telephone' => $assignedUser?->phone ?: null,
+        'email' => $assignedUser?->email ?: null,
+        'priceRange' => '$$',
+        'description' => $page->meta_description,
+        'address' => [
+            '@type' => 'PostalAddress',
+            'addressLocality' => $city,
+            'addressRegion' => $state,
+            'addressCountry' => 'US',
+        ],
+        'aggregateRating' => [
+            '@type' => 'AggregateRating',
+            'ratingValue' => $rating,
+            'reviewCount' => (string) $reviewCount,
+            'bestRating' => '5',
+        ],
+        'areaServed' => $displayServiceAreas->map(fn ($area) => [
+            '@type' => 'Place',
+            'name' => $area,
+        ])->values()->all(),
+        'knowsAbout' => $agentSpecialties->merge($secondaryKeywords)->values()->all(),
+    ];
+
     $schema = [
         [
             '@context' => 'https://schema.org',
             '@type' => 'BreadcrumbList',
+            '@id' => $canonicalUrl . '#breadcrumb',
             'itemListElement' => [
                 ['@type' => 'ListItem', 'position' => 1, 'name' => 'Home', 'item' => url('/')],
-                ['@type' => 'ListItem', 'position' => 2, 'name' => $city . ' Real Estate', 'item' => url()->current()],
+                ['@type' => 'ListItem', 'position' => 2, 'name' => 'Agents', 'item' => route('agents.index')],
+                ['@type' => 'ListItem', 'position' => 3, 'name' => $city . ' Real Estate Agent', 'item' => $canonicalUrl],
             ],
         ],
+        array_filter($agentSchema),
         [
             '@context' => 'https://schema.org',
-            '@type' => 'RealEstateAgent',
-            'name' => $agentDisplayName,
-            'image' => $profileImage,
-            'url' => url()->current(),
-            'telephone' => $assignedUser?->phone ?: '+1-512-555-0100',
-            'priceRange' => '$$',
+            '@type' => 'WebPage',
+            '@id' => $canonicalUrl . '#webpage',
+            'url' => $canonicalUrl,
+            'name' => $page->seo_title,
             'description' => $page->meta_description,
-            'address' => [
-                '@type' => 'PostalAddress',
-                'addressLocality' => $city,
-                'addressRegion' => $state,
-                'addressCountry' => 'US',
-            ],
-            'aggregateRating' => [
-                '@type' => 'AggregateRating',
-                'ratingValue' => $assignedProfile ? number_format((float) $assignedProfile->rating, 1) : '4.9',
-                'reviewCount' => (string) ($assignedProfile?->review_count ?? 187),
-                'bestRating' => '5',
-            ],
-            'areaServed' => [
-                '@type' => 'City',
-                'name' => $city,
-            ],
+            'about' => ['@id' => $canonicalUrl . '#agent'],
+            'breadcrumb' => ['@id' => $canonicalUrl . '#breadcrumb'],
         ],
     ];
 
-    if (count($faqs)) {
+    if ($faqs->isNotEmpty()) {
         $schema[] = [
             '@context' => 'https://schema.org',
             '@type' => 'FAQPage',
-            'mainEntity' => collect($faqs)->map(fn ($faq) => [
+            'mainEntity' => $faqs->map(fn ($faq) => [
                 '@type' => 'Question',
-                'name' => $faq['question'] ?? '',
+                'name' => $faq['question'],
                 'acceptedAnswer' => [
                     '@type' => 'Answer',
-                    'text' => $faq['answer'] ?? '',
+                    'text' => $faq['answer'],
                 ],
             ])->values()->all(),
         ];
@@ -100,169 +143,188 @@
 @endsection
 
 @section('content')
-@php
-    $hasBodyContent = !empty($c['body_content'] ?? '');
-    if (!$hasBodyContent) {
-        $contentSections = [
-            [$c['why_local_heading'] ?? 'Why Work With a Local ' . $city . ' Realtor?', $c['why_local_content'] ?? 'A local real estate agent brings hyper-local expertise that online searches cannot match. From school districts and commute patterns to neighborhood appreciation and pricing strategy, a ' . $city . '-based agent gives you practical insight at every step.'],
-            [$c['buying_heading'] ?? 'Home Buying Services in ' . $city, $c['buying_content'] ?? 'Finding the right home in ' . $city . ' takes more than browsing listings. We help with property searches, neighborhood tours, financing coordination, offer strategy, inspection support, and closing guidance.'],
-            [$c['selling_heading'] ?? 'Home Selling Services in ' . $city, $c['selling_content'] ?? 'Selling your ' . $city . ' home requires pricing clarity, strong marketing, skilled negotiation, and organized transaction management from listing through closing.'],
-            [$c['relocation_heading'] ?? 'Relocation Assistance for ' . $city, $c['relocation_content'] ?? 'Moving to ' . $city . ' is easier with area consultations, neighborhood matching, school research, service setup guidance, and steady support until you are settled.'],
-            [$c['luxury_heading'] ?? $city . ' Luxury Home Expertise', $c['luxury_content'] ?? 'Luxury clients need discretion, stronger presentation, private showing coordination, and elevated market strategy.'],
-            [$c['investment_heading'] ?? $city . ' Investment Property Guidance', $c['investment_content'] ?? 'Investors receive help with market selection, rental demand, cash-flow review, appreciation potential, and local vendor connections.'],
-            [$c['market_heading'] ?? $city . ' Local Market Knowledge', $c['market_content'] ?? 'Stay current on pricing, inventory, seasonal patterns, new construction, and neighborhood-level trends.'],
-        ];
-    }
-@endphp
+<main class="seo-profile-page">
+    <section class="seo-profile-hero" aria-labelledby="seo-page-title">
+        <picture class="seo-profile-hero__bg" aria-hidden="true">
+            <img src="{{ $heroImage }}" alt="" loading="eager" fetchpriority="high" width="1600" height="900">
+        </picture>
 
-<main class="seo-page-shell">
-    <section class="hero hero--premium seo-page-hero" aria-labelledby="seo-page-title">
-        <div class="hero__backdrop">
-            <img src="{{ $heroImage }}" alt="{{ $city }} real estate market" class="hero__backdrop-img" loading="eager">
-            <div class="hero__backdrop-overlay"></div>
-        </div>
+        <div class="container seo-profile-shell">
+            <nav class="seo-breadcrumb" aria-label="Breadcrumb">
+                <a href="{{ url('/') }}">Home</a>
+                <span aria-hidden="true">/</span>
+                <a href="{{ route('agents.index') }}">Agents</a>
+                <span aria-hidden="true">/</span>
+                <span>{{ $city }}, {{ $state }}</span>
+            </nav>
 
-        <div class="container seo-page-hero__layout">
-            <div class="seo-page-hero__copy">
-                <span class="eyebrow">{{ $city }}, {{ $state }} Real Estate</span>
-                <h1 id="seo-page-title">{{ $c['hero_heading'] ?? $primaryKwd . ' in ' . $city . ', ' . $state }}</h1>
-                <p>{{ $c['hero_subheading'] ?? 'Local real estate guidance for buying, selling, relocation, luxury homes, and investment opportunities.' }}</p>
-                <div class="hero__actions hero__actions--spacious">
-                    <a href="#contact-form" class="button button--orange">Contact a {{ $city }} Expert</a>
-                    @if($assignedProfile?->isPublicVisible())
-                        <a href="{{ route('agents.profile', $assignedProfile) }}" class="button button--ghost-light">View Realtor Profile</a>
-                    @endif
+            <article class="seo-profile-panel">
+                <aside class="seo-profile-side" aria-label="{{ $agentDisplayName }} contact details">
+                    <img src="{{ $profileImage }}" alt="{{ $agentDisplayName }} headshot" loading="eager" fetchpriority="high" width="360" height="360" onerror="this.onerror=null;this.src='{{ asset('images/realtors/logo-bydefault_agent.png') }}'">
+
+                    <div class="seo-contact-card">
+                        <div><span>Phone</span><strong>{{ $phoneLabel }}</strong></div>
+                        <div><span>Email</span><strong>{{ $emailLabel }}</strong></div>
+                        <div><span>Website</span><strong>{{ $websiteLabel }}</strong></div>
+                        <div><span>License</span><strong>{{ $licenseLabel }}</strong></div>
+                        <div><span>Service Area</span><strong>{{ $agentServiceArea }}</strong></div>
+                    </div>
+
+                    <div class="seo-profile-pills" aria-label="Specialties">
+                        @forelse($agentSpecialties as $specialty)
+                            <span>{{ $specialty }}</span>
+                        @empty
+                            <span>Residential</span>
+                            <span>Buyer Representation</span>
+                            <span>Listing Strategy</span>
+                        @endforelse
+                    </div>
+                </aside>
+
+                <div class="seo-profile-main">
+                    <header class="seo-profile-head">
+                        <span class="seo-kicker">{{ $city }}, {{ $state }} Real Estate</span>
+                        <div class="seo-profile-title-row">
+                            <h1 id="seo-page-title">{{ $c['hero_heading'] ?? $primaryKwd . ' in ' . $city . ', ' . $state }}</h1>
+                            <span>{{ $assignedProfile?->isFeatured() ? 'Featured Agent' : 'Verified Agent' }}</span>
+                        </div>
+                        <p class="seo-profile-brokerage">{{ $agentDisplayName }} | {{ $agentBrokerage }}</p>
+                        <p class="seo-profile-summary">{{ $c['hero_subheading'] ?? 'Premium local real estate guidance for buyers, sellers, relocation clients, luxury homes, and investment decisions in ' . $city . '.' }}</p>
+
+                        <div class="seo-rating" aria-label="{{ $rating }} out of 5 rating">
+                            <strong>{{ $rating }}</strong>
+                            <span aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                            <small>{{ number_format($reviewCount) }} reviews</small>
+                        </div>
+                    </header>
+
+                    <div class="seo-profile-actions">
+                        <a href="#contact-form" class="seo-btn seo-btn--orange">Contact Agent</a>
+                        <a href="#market-guidance" class="seo-btn seo-btn--blue">Read Market Guide</a>
+                        @if($publicProfileUrl)
+                            <a href="{{ $publicProfileUrl }}" class="seo-btn seo-btn--ghost">View Directory Profile</a>
+                        @endif
+                    </div>
+
+                    <section class="seo-profile-metrics" aria-label="Agent performance metrics">
+                        <div><strong>{{ $yearsExperience }}+</strong><span>Years Experience</span></div>
+                        @if($closedDeals > 0)
+                            <div><strong>{{ number_format($closedDeals) }}+</strong><span>Deals Closed</span></div>
+                        @else
+                            <div><strong>{{ number_format($reviewCount) }}+</strong><span>Client Reviews</span></div>
+                        @endif
+                        <div><strong>{{ $satisfactionRate }}</strong><span>Client Satisfaction</span></div>
+                        <div><strong>{{ $city }}</strong><span>Primary Market</span></div>
+                    </section>
+
+                    <section class="seo-profile-section">
+                        <h2>About {{ $agentFirstName }}</h2>
+                        <div class="seo-rich-copy">
+                            @if($assignedProfile?->bio)
+                                {!! nl2br(e($assignedProfile->bio)) !!}
+                            @elseif(!empty($c['agent_bio']))
+                                {!! $c['agent_bio'] !!}
+                            @else
+                                {{ $agentDisplayName }} provides responsive, market-aware real estate guidance for clients comparing homes, preparing to sell, relocating, or evaluating opportunities across {{ $city }} and surrounding communities.
+                            @endif
+                        </div>
+                    </section>
                 </div>
-            </div>
-
-            <aside class="seo-agent-card">
-                <img src="{{ $profileImage }}" alt="{{ $agentDisplayName }} headshot" loading="lazy">
-                <div>
-                    <span class="eyebrow">Featured Realtor</span>
-                    <h2>{{ $agentDisplayName }}</h2>
-                    <p>{{ $agentBrokerage }}</p>
-                </div>
-                <dl>
-                    <div><dt>Rating</dt><dd>{{ $assignedProfile ? number_format((float) $assignedProfile->rating, 1) : '4.9' }}</dd></div>
-                    <div><dt>Reviews</dt><dd>{{ $assignedProfile?->review_count ?? '187' }}</dd></div>
-                    <div><dt>Area</dt><dd>{{ $agentServiceArea ?: $city . ', ' . $state }}</dd></div>
-                </dl>
-            </aside>
+            </article>
         </div>
     </section>
 
-    <section class="section section--light seo-section">
-        <div class="container seo-agent-feature">
-            <div class="seo-agent-feature__copy">
-                <span class="eyebrow">Local Representation</span>
-                <h2>{{ $agentDisplayName }}</h2>
-                <p class="seo-agent-feature__brokerage">{{ $agentBrokerage }}</p>
+    <section class="seo-profile-content" id="market-guidance">
+        <div class="container seo-profile-content__grid">
+            <div class="seo-content-column">
+                <section class="seo-profile-section seo-profile-section--intro">
+                    <span class="seo-kicker">Local SEO Market Guide</span>
+                    <h2>{{ $c['market_heading'] ?? 'Real Estate Support Built Around ' . $city . ' Decisions' }}</h2>
+                    <p>{{ $c['market_content'] ?? 'The strongest real estate decisions start with local context. This guide explains how ' . $agentDisplayName . ' supports buyers, sellers, relocation clients, luxury clients, and investors who want clear advice in the ' . $city . ' market.' }}</p>
+                </section>
 
-                @if($assignedProfile)
-                    <div class="seo-chip-row">
-                        <span>{{ number_format((float) $assignedProfile->rating, 1) }} rating</span>
-                        <span>{{ $assignedProfile->review_count }} reviews</span>
-                        @if($agentServiceArea)<span>{{ $agentServiceArea }}</span>@endif
-                    </div>
-                    <div class="seo-rich-copy">{!! $assignedProfile->bio ? nl2br(e($assignedProfile->bio)) : ($c['agent_bio'] ?? 'This local OmniReferral partner is ready to support buyers and sellers with responsive, market-aware guidance.') !!}</div>
-                @elseif(!empty($c['agent_bio']))
-                    <div class="seo-rich-copy">{!! $c['agent_bio'] !!}</div>
+                @if($hasBodyContent)
+                    <section class="seo-profile-section seo-rich-body">{!! $c['body_content'] !!}</section>
                 @else
-                    <p>With years of dedicated service in the {{ $city }} metro area, our team brings local market knowledge, negotiation expertise, and a client-first approach to every transaction.</p>
-                @endif
-
-                @if($agentSpecialties->isNotEmpty())
-                    <div class="seo-outline-chip-row">
-                        @foreach($agentSpecialties as $specialty)
-                            <span>{{ $specialty }}</span>
+                    <div class="seo-guide-grid">
+                        @foreach($defaultSections as [$heading, $body])
+                            <section class="seo-guide-card">
+                                <h2>{{ $heading }}</h2>
+                                <div>{!! nl2br(e($body)) !!}</div>
+                            </section>
                         @endforeach
                     </div>
                 @endif
 
-                @if($assignedProfile?->isPublicVisible())
-                    <a href="{{ route('agents.profile', $assignedProfile) }}" class="button button--ghost-blue">View Full Realtor Profile</a>
+                @if($faqs->isNotEmpty())
+                    <section class="seo-profile-section">
+                        <span class="seo-kicker">Questions</span>
+                        <h2>Frequently Asked Questions About {{ $city }} Real Estate</h2>
+                        <div class="seo-faq-stack">
+                            @foreach($faqs as $faq)
+                                <details class="seo-faq-card">
+                                    <summary>{{ $faq['question'] }}</summary>
+                                    <p>{{ $faq['answer'] }}</p>
+                                </details>
+                            @endforeach
+                        </div>
+                    </section>
                 @endif
             </div>
-            <div class="seo-agent-feature__media">
-                <img src="{{ $profileImage }}" alt="{{ $agentDisplayName }} profile image" loading="lazy">
-            </div>
+
+            <aside class="seo-support-column" aria-label="Local agent details">
+                <section class="seo-profile-section">
+                    <span class="seo-kicker">Service Areas</span>
+                    <h2>Serving {{ $city }} and Nearby Communities</h2>
+                    <div class="seo-profile-pills">
+                        @foreach($displayServiceAreas as $area)
+                            <span>{{ $area }}</span>
+                        @endforeach
+                    </div>
+                </section>
+
+                <section class="seo-profile-section">
+                    <span class="seo-kicker">Search Relevance</span>
+                    <h2>Popular Local Searches</h2>
+                    <div class="seo-profile-pills seo-profile-pills--outline">
+                        <span>{{ $primaryKwd }}</span>
+                        @foreach($secondaryKeywords as $keyword)
+                            <span>{{ $keyword }}</span>
+                        @endforeach
+                        <span>Best Real Estate Agent Near Me</span>
+                        <span>{{ $city }} Luxury Realtor</span>
+                    </div>
+                </section>
+
+                <section class="seo-profile-section">
+                    <span class="seo-kicker">Languages</span>
+                    <h2>Client Support</h2>
+                    <div class="seo-profile-pills">
+                        @foreach($agentLanguages as $language)
+                            <span>{{ $language }}</span>
+                        @endforeach
+                    </div>
+                </section>
+            </aside>
         </div>
     </section>
 
-    <section class="section section--gray seo-section">
-        <div class="container">
-            @if($hasBodyContent)
-                <div class="seo-rich-body">{!! $c['body_content'] !!}</div>
-            @else
-                <div class="section-heading seo-section__heading">
-                    <span class="eyebrow">Market Guidance</span>
-                    <h2>Real estate support built around {{ $city }} decisions</h2>
-                    <p>Each section can be edited from the admin portal, while the page keeps the same site-wide visual system.</p>
-                </div>
-                <div class="seo-content-grid">
-                    @foreach($contentSections as [$heading, $body])
-                        <article class="seo-content-card">
-                            <h3>{{ $heading }}</h3>
-                            <div>{!! nl2br(e($body)) !!}</div>
-                        </article>
-                    @endforeach
-                </div>
-            @endif
-        </div>
-    </section>
-
-    @if(count($serviceAreas))
-        <section class="section section--light seo-section">
-            <div class="container">
-                <div class="section-heading seo-section__heading">
-                    <span class="eyebrow">Service Areas</span>
-                    <h2>Serving {{ $city }} and nearby communities</h2>
-                </div>
-                <div class="seo-chip-row seo-chip-row--center">
-                    @foreach($serviceAreas as $area)
-                        <span>{{ $area }}</span>
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
-
-    @if(count($faqs))
-        <section class="section section--gray seo-section">
-            <div class="container container-sm">
-                <div class="section-heading seo-section__heading">
-                    <span class="eyebrow">Questions</span>
-                    <h2>Frequently asked questions about {{ $city }} real estate</h2>
-                </div>
-                <div class="seo-faq-stack">
-                    @foreach($faqs as $faq)
-                        <details class="seo-faq-card">
-                            <summary>{{ $faq['question'] }}</summary>
-                            <p>{{ $faq['answer'] }}</p>
-                        </details>
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
-
-    <section class="section seo-contact-section" id="contact-form">
-        <div class="container seo-contact-grid">
-            <div class="seo-contact-copy">
-                <span class="eyebrow">Next Step</span>
-                <h2>{{ $c['cta_heading'] ?? 'Ready to Find Your Dream Home in ' . $city . '?' }}</h2>
-                <p>{{ $c['cta_subheading'] ?? 'Fill out the form and a local real estate expert will reach out within 24 hours to discuss your goals and help you take the next step.' }}</p>
-                <ul class="feature-list compact">
-                    <li>Personalized home search tailored to you</li>
-                    <li>Expert negotiation and market insights</li>
-                    <li>Dedicated support from start to close</li>
-                    <li>No obligation, just real answers</li>
+    <section class="seo-lead-section" id="contact-form">
+        <div class="container seo-lead-grid">
+            <div class="seo-lead-copy">
+                <span class="seo-kicker">Next Step</span>
+                <h2>{{ $c['cta_heading'] ?? 'Ready to Talk With a ' . $city . ' Real Estate Expert?' }}</h2>
+                <p>{{ $c['cta_subheading'] ?? 'Share your timeline, location, and goals. OmniReferral routes your request so you can get clear local guidance without pressure.' }}</p>
+                <ul>
+                    <li>Personalized buyer, seller, relocation, or investment guidance</li>
+                    <li>Local pricing insight and neighborhood context</li>
+                    <li>Fast follow-up from a verified real estate professional</li>
                 </ul>
             </div>
 
-            <div class="seo-contact-card">
-                <h3>{{ $c['form_heading'] ?? 'Contact a ' . $city . ' Expert' }}</h3>
-                <p>{{ $c['form_subheading'] ?? 'Fill out the form below and we will be in touch shortly.' }}</p>
+            <div class="seo-lead-card">
+                <h2>{{ $c['form_heading'] ?? 'Contact ' . $agentFirstName }}</h2>
+                <p>{{ $c['form_subheading'] ?? 'Tell us what you need help with and we will be in touch shortly.' }}</p>
 
                 @if(session('success'))
                     <div class="seo-form-success">{{ session('success') }}</div>
@@ -297,11 +359,11 @@
                             <option value="other" @selected(old('interest') === 'other')>Other</option>
                         </select>
                     </label>
-                    <label>
+                    <label class="seo-lead-form__full">
                         <span>Message</span>
                         <textarea name="message" rows="4">{{ old('message') }}</textarea>
                     </label>
-                    <button type="submit" class="button button--orange w-full">{{ $c['form_submit_text'] ?? 'Send Message' }}</button>
+                    <button type="submit" class="seo-btn seo-btn--orange seo-lead-form__full">{{ $c['form_submit_text'] ?? 'Send Message' }}</button>
                 </form>
             </div>
         </div>
