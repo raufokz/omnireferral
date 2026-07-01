@@ -185,7 +185,7 @@
                     <header class="seo-profile-head">
                         <span class="seo-kicker">{{ $city }}, {{ $state }} Real Estate</span>
                         <div class="seo-profile-title-row">
-                            <h1 id="seo-page-title">{{ $c['hero_heading'] ?? $primaryKwd . ' in ' . $city . ', ' . $state }}</h1>
+                            <h1 id="seo-page-title" class="visually-hidden">{{ $c['hero_heading'] ?? $primaryKwd . ' in ' . $city . ', ' . $state }}</h1>
                             <span>{{ $assignedProfile?->isFeatured() ? 'Featured Agent' : 'Verified Agent' }}</span>
                         </div>
                         <p class="seo-profile-brokerage">{{ $agentDisplayName }} | {{ $agentBrokerage }}</p>
