@@ -36,6 +36,7 @@
 @php
     $sections = $page->getSections();
     $faqs = $page->getFaqs();
+    $heroImage = $page->content['hero_image'] ?? 'images/home/hero_backdrop_v2.png';
     $primarySections = collect($sections)->take(2);
     $remainingSections = collect($sections)->slice(2)->values();
     $renderRichText = function (?string $content): string {
@@ -56,7 +57,7 @@
 <article class="service-seo">
     <section class="service-seo__hero">
         <div class="service-seo__hero-media" aria-hidden="true">
-            <img src="{{ asset('images/home/hero_backdrop_v2.png') }}" alt="">
+            <img src="{{ asset($heroImage) }}" alt="">
         </div>
         <div class="container service-seo__hero-inner">
             <div class="service-seo__hero-copy">
@@ -127,6 +128,11 @@
                             <span class="service-seo__section-label">Guide</span>
                             <h2>{{ $section['heading'] }}</h2>
                         @endif
+                        @if(! empty($section['image']))
+                            <div class="service-seo__feature-media">
+                                <img src="{{ asset($section['image']) }}" alt="{{ $section['heading'] ?? 'Feature image' }}" loading="lazy">
+                            </div>
+                        @endif
                         <div class="service-seo__rich">
                             {!! $renderRichText($section['body'] ?? '') !!}
                         </div>
@@ -139,6 +145,11 @@
                             <section class="service-seo__info-card">
                                 @if(! empty($section['heading']))
                                     <h2>{{ $section['heading'] }}</h2>
+                                @endif
+                                @if(! empty($section['image']))
+                                    <div class="service-seo__info-media">
+                                        <img src="{{ asset($section['image']) }}" alt="{{ $section['heading'] ?? 'Feature image' }}" loading="lazy">
+                                    </div>
                                 @endif
                                 <div class="service-seo__rich">
                                     {!! $renderRichText($section['body'] ?? '') !!}

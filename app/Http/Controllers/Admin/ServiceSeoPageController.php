@@ -77,7 +77,7 @@ class ServiceSeoPageController extends Controller
             'slug' => 'nullable|string|max:255',
             'seo_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:500',
-            'canonical_url' => 'nullable|url|max:500',
+            'canonical_url' => 'nullable|string|max:500',
             'primary_keyword' => 'nullable|string|max:255',
             'secondary_keywords' => 'nullable|string',
             'hero_title' => 'nullable|string|max:255',
@@ -107,10 +107,13 @@ class ServiceSeoPageController extends Controller
 
     private function normalizeContent(array $content): array
     {
+        $heroImage = trim((string) ($content['hero_image'] ?? ''));
+
         $sections = collect($content['sections'] ?? [])
             ->map(fn ($section) => [
                 'heading' => trim((string) ($section['heading'] ?? '')),
                 'body' => trim((string) ($section['body'] ?? '')),
+                'image' => trim((string) ($section['image'] ?? '')),
             ])
             ->filter(fn ($section) => $section['heading'] !== '' || ! $this->isRichTextEmpty($section['body']))
             ->values()
@@ -125,7 +128,7 @@ class ServiceSeoPageController extends Controller
             ->values()
             ->all();
 
-        return compact('sections', 'faqs');
+        return compact('heroImage', 'sections', 'faqs');
     }
 
     private function isRichTextEmpty(string $value): bool

@@ -413,6 +413,34 @@
     font-size: clamp(1.15rem, 1.7vw, 1.45rem);
 }
 
+.service-seo__feature-media,
+.service-seo__info-media {
+    overflow: hidden;
+    border-radius: 8px;
+    background: #f1f4f9;
+}
+
+.service-seo__feature-media img,
+.service-seo__info-media img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+.service-seo__feature-media {
+    margin: 0.25rem 0;
+}
+
+.service-seo__feature-media img {
+    max-height: 400px;
+}
+
+.service-seo__info-media img {
+    max-height: 240px;
+    border-radius: 6px;
+}
+
 .service-seo__side {
     position: sticky;
     top: 1rem;
@@ -619,5 +647,13 @@
     .service-seo__side-card,
     .service-seo__final-panel {
         padding: 1rem;
+    }
+
+    .service-seo__feature-media img {
+        max-height: 260px;
+    }
+
+    .service-seo__info-media img {
+        max-height: 180px;
     }
 }

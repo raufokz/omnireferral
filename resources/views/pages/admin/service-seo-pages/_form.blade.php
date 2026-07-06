@@ -1,6 +1,7 @@
 @php
-    $sections = old('content.sections', $page->content['sections'] ?? [['heading' => '', 'body' => '']]);
+    $sections = old('content.sections', $page->content['sections'] ?? [['heading' => '', 'body' => '', 'image' => '']]);
     $faqs = old('content.faqs', $page->content['faqs'] ?? [['question' => '', 'answer' => '']]);
+    $heroImage = old('content.hero_image', $page->content['hero_image'] ?? '');
 @endphp
 
 @push('styles')
@@ -95,6 +96,11 @@
         </label>
     </div>
 
+    <label>
+        <span>Hero Image URL</span>
+        <input type="text" name="content[hero_image]" value="{{ $heroImage }}" placeholder="/images/services/hero.jpg">
+    </label>
+
     <label style="display:flex; align-items:center; gap:.5rem;">
         <input type="checkbox" name="is_published" value="1" @checked(old('is_published', $page->is_published))>
         <span>Published</span>
@@ -118,6 +124,10 @@
                     <div data-quill-editor>{!! $section['body'] ?? '' !!}</div>
                     <textarea name="content[sections][{{ $index }}][body]" data-quill-field style="display:none;">{{ $section['body'] ?? '' }}</textarea>
                 </div>
+                <label style="margin-top:0.5rem;">
+                    <span>Image URL (optional)</span>
+                    <input type="text" name="content[sections][{{ $index }}][image]" value="{{ $section['image'] ?? '' }}" placeholder="/images/services/feature.jpg">
+                </label>
                 <button type="button" class="button button--ghost-blue" style="color:#dc2626;" data-remove-item>Remove</button>
             </div>
         @endforeach
@@ -205,6 +215,10 @@
                         <div data-quill-editor></div>
                         <textarea name="content[sections][${index}][body]" data-quill-field style="display:none;"></textarea>
                     </div>
+                    <label style="margin-top:0.5rem;">
+                        <span>Image URL (optional)</span>
+                        <input type="text" name="content[sections][${index}][image]" placeholder="/images/services/feature.jpg">
+                    </label>
                     <button type="button" class="button button--ghost-blue" style="color:#dc2626;" data-remove-item>Remove</button>
                 `;
             } else {
