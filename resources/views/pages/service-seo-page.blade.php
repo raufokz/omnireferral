@@ -60,9 +60,14 @@
             <img src="{{ asset($heroImage) }}" alt="">
         </div>
         <div class="container service-seo__hero-inner">
+            <div class="service-seo__hero-breadcrumbs">
+                <a href="{{ url('/') }}">Home</a>
+                <span aria-hidden="true">/</span>
+                <span>{{ $page->title }}</span>
+            </div>
             <div class="service-seo__hero-copy">
                 <div class="service-seo__hero-keyword">
-                    <span>Main Keyword</span>
+                    <span>{{ $page->primary_keyword ? 'Keyword Focus' : 'Featured' }}</span>
                     <strong>{{ $page->primary_keyword ?: $page->title }}</strong>
                 </div>
                 <h1>{{ $page->hero_title ?: $page->title }}</h1>
@@ -77,21 +82,21 @@
                 </div>
             </div>
 
-            <aside class="service-seo__summary" aria-label="Pay at closing lead model summary">
-                <span>Performance Model</span>
-                <h2>No upfront lead cost. Pay only after a closed transaction.</h2>
+            <aside class="service-seo__summary" aria-label="How it works summary">
+                <span>How It Works</span>
+                <h2>Qualified referrals delivered to your pipeline — with zero upfront cost.</h2>
                 <div class="service-seo__summary-flow">
                     <div>
                         <strong>01</strong>
-                        <p>Lead captured and screened by the OmniReferral team.</p>
+                        <p>Buyer or seller opportunity is captured and verified by our team.</p>
                     </div>
                     <div>
                         <strong>02</strong>
-                        <p>Matched by ZIP code, market fit, and agent capacity.</p>
+                        <p>Matched to your market, ZIP code, and agent capacity preferences.</p>
                     </div>
                     <div>
                         <strong>03</strong>
-                        <p>Referral fee is due only when the deal closes.</p>
+                        <p>You pay a referral fee only after a successful closing.</p>
                     </div>
                 </div>
             </aside>
@@ -125,7 +130,7 @@
                 @foreach($primarySections as $section)
                     <section class="service-seo__feature-section">
                         @if(! empty($section['heading']))
-                            <span class="service-seo__section-label">Guide</span>
+                            <span class="service-seo__section-label">Overview</span>
                             <h2>{{ $section['heading'] }}</h2>
                         @endif
                         @if(! empty($section['image']))
@@ -143,13 +148,13 @@
                     <div class="service-seo__section-grid">
                         @foreach($remainingSections as $section)
                             <section class="service-seo__info-card">
-                                @if(! empty($section['heading']))
-                                    <h2>{{ $section['heading'] }}</h2>
-                                @endif
                                 @if(! empty($section['image']))
                                     <div class="service-seo__info-media">
                                         <img src="{{ asset($section['image']) }}" alt="{{ $section['heading'] ?? 'Feature image' }}" loading="lazy">
                                     </div>
+                                @endif
+                                @if(! empty($section['heading']))
+                                    <h2>{{ $section['heading'] }}</h2>
                                 @endif
                                 <div class="service-seo__rich">
                                     {!! $renderRichText($section['body'] ?? '') !!}
@@ -164,7 +169,7 @@
                         <div class="service-seo__section-head">
                             <span class="service-seo__kicker">Questions</span>
                             <h2>Frequently Asked Questions</h2>
-                            <p>Clear answers for agents comparing pay-at-closing referrals against pay-per-lead models.</p>
+                            <p>Get clear answers about how our referral model works.</p>
                         </div>
                         <div class="service-seo__faq-list">
                             @foreach($faqs as $faq)
@@ -186,7 +191,7 @@
             <aside class="service-seo__side">
                 <div class="service-seo__side-card">
                     <span class="service-seo__kicker">Agent Pipeline</span>
-                    <h2>Built for agents who want qualified demand without prepaid lead spend.</h2>
+                    <h2>Qualified referrals delivered without prepaid lead spend.</h2>
                     <ul>
                         <li>ISA-qualified buyer and seller intent</li>
                         <li>ZIP-based routing by active market</li>
@@ -196,6 +201,12 @@
                     @if($page->cta_label && $page->cta_url)
                         <a class="service-seo__btn service-seo__btn--primary" href="{{ url($page->cta_url) }}">{{ $page->cta_label }}</a>
                     @endif
+                </div>
+                <div class="service-seo__side-card service-seo__side-card--alt">
+                    <span class="service-seo__kicker">Get Started</span>
+                    <h2>Ready to grow your pipeline?</h2>
+                    <p>Talk to our team about your market and get matched with qualified opportunities.</p>
+                    <a class="service-seo__btn service-seo__btn--primary" href="{{ route('contact') }}">Contact Us</a>
                 </div>
             </aside>
         </div>
@@ -207,10 +218,13 @@
                 <div class="service-seo__final-panel">
                     <div>
                         <span class="service-seo__kicker">Ready to Get Started?</span>
-                        <h2>Build your pipeline with verified real estate leads you pay for only when you close.</h2>
+                        <h2>Start receiving qualified real estate referrals — with no upfront cost.</h2>
                         <p>No setup fee, no monthly lead bill, and no payment for opportunities that never turn into a transaction.</p>
                     </div>
-                    <a class="service-seo__btn service-seo__btn--primary" href="{{ url($page->cta_url) }}">{{ $page->cta_label }}</a>
+                    <div class="service-seo__final-actions">
+                        <a class="service-seo__btn service-seo__btn--primary" href="{{ url($page->cta_url) }}">{{ $page->cta_label }}</a>
+                        <a class="service-seo__btn service-seo__btn--outline" href="{{ route('pricing') }}">Compare Packages</a>
+                    </div>
                 </div>
             </div>
         </section>

@@ -66,6 +66,32 @@
     background: linear-gradient(180deg, transparent, #f6f8fb);
 }
 
+.service-seo__hero-breadcrumbs {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.25rem;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.service-seo__hero-breadcrumbs a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.service-seo__hero-breadcrumbs a:hover {
+    color: #ffb77a;
+}
+
+.service-seo__hero-breadcrumbs span[aria-hidden="true"] {
+    color: rgba(255, 255, 255, 0.35);
+}
+
 .service-seo__hero-inner {
     position: relative;
     z-index: 1;
@@ -318,13 +344,25 @@
 }
 
 .service-seo__feature-section,
-.service-seo__info-card,
 .service-seo__faqs,
 .service-seo__side-card {
     border: 1px solid var(--service-line);
     border-radius: 8px;
     background: #ffffff;
     box-shadow: 0 16px 44px rgba(15, 33, 61, 0.07);
+}
+
+.service-seo__info-card {
+    border: 1px solid var(--service-line);
+    border-radius: 8px;
+    background: #ffffff;
+    box-shadow: 0 16px 44px rgba(15, 33, 61, 0.07);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.service-seo__info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 52px rgba(15, 33, 61, 0.12);
 }
 
 .service-seo__feature-section {
@@ -494,6 +532,38 @@
     margin-top: 0.25rem;
 }
 
+.service-seo__side-card--alt {
+    margin-top: 1rem;
+    border-color: rgba(255, 107, 0, 0.2);
+    background:
+        linear-gradient(180deg, rgba(255, 107, 0, 0.08), transparent 10rem),
+        #ffffff;
+}
+
+.service-seo__side-card--alt p {
+    margin: 0;
+    color: var(--service-muted);
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+.service-seo__btn--outline {
+    border-color: rgba(255, 255, 255, 0.45);
+    background: transparent;
+    color: #ffffff;
+}
+
+.service-seo__btn--outline:hover {
+    border-color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.service-seo__final-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.85rem;
+}
+
 .service-seo__section-head {
     display: grid;
     gap: 0.65rem;
@@ -599,6 +669,14 @@
 
     .service-seo__side {
         position: static;
+    }
+
+    .service-seo__final-actions {
+        flex-direction: column;
+    }
+
+    .service-seo__final-actions .service-seo__btn {
+        width: 100%;
     }
 }
 

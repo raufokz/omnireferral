@@ -29,11 +29,14 @@
                         <td data-label="Slug"><code>/services/{{ $page->slug }}</code></td>
                         <td data-label="Primary Keyword">{{ $page->primary_keyword ?: 'Not set' }}</td>
                         <td data-label="Status">
-                            @if($page->is_published)
-                                <span style="background:#d4edda; color:#155724; padding:.2rem .6rem; border-radius:50px; font-size:.8rem;">Published</span>
-                            @else
-                                <span style="background:#f8d7da; color:#721c24; padding:.2rem .6rem; border-radius:50px; font-size:.8rem;">Draft</span>
-                            @endif
+                            <form method="POST" action="{{ route('admin.service-seo-pages.toggle-publish', $page) }}" style="display:inline;">
+                                @csrf
+                                @if($page->is_published)
+                                    <button type="submit" class="button button--ghost-blue" style="background:#d4edda; color:#155724; padding:.2rem .6rem; border-radius:50px; font-size:.8rem; border:none; cursor:pointer;" title="Click to unpublish">Published</button>
+                                @else
+                                    <button type="submit" class="button button--ghost-blue" style="background:#f8d7da; color:#721c24; padding:.2rem .6rem; border-radius:50px; font-size:.8rem; border:none; cursor:pointer;" title="Click to publish">Draft</button>
+                                @endif
+                            </form>
                         </td>
                         <td data-label="Updated">{{ $page->updated_at->format('M d, Y') }}</td>
                         <td data-label="Actions">

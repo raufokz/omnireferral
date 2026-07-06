@@ -382,6 +382,8 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
                 'update' => 'admin.service-seo-pages.update',
                 'destroy' => 'admin.service-seo-pages.destroy',
             ]);
+        Route::post('admin/service-seo-pages/{service_seo_page}/toggle-publish', [AdminServiceSeoPageController::class, 'togglePublish'])
+            ->name('admin.service-seo-pages.toggle-publish');
         Route::resource('admin/testimonials', TestimonialController::class)
             ->except(['show'])
             ->names([

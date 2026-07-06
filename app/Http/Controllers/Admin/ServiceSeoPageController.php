@@ -70,6 +70,16 @@ class ServiceSeoPageController extends Controller
             ->with('success', 'Service SEO page deleted successfully.');
     }
 
+    public function togglePublish(ServiceSeoPage $serviceSeoPage): RedirectResponse
+    {
+        $serviceSeoPage->update(['is_published' => ! $serviceSeoPage->is_published]);
+
+        $status = $serviceSeoPage->is_published ? 'published' : 'unpublished';
+
+        return redirect()->route('admin.service-seo-pages.index')
+            ->with('success', "Service SEO page \"{$serviceSeoPage->title}\" has been {$status}.");
+    }
+
     private function validatedPage(Request $request): array
     {
         return $request->validate([
