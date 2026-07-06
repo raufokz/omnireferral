@@ -182,10 +182,19 @@
         </label>
     </div>
 
-    <label class="workspace-field workspace-field--full" style="margin:0;">
-        <span>Hero Image URL</span>
-        <input type="text" name="content[hero_image]" value="{{ $heroImage }}" placeholder="/images/services/hero.jpg">
-    </label>
+    <div class="workspace-field workspace-field--full" style="margin:0;">
+        <span>Hero Image</span>
+        <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
+            <input type="file" name="upload_hero_image" accept="image/*" style="flex:1; min-width:180px;">
+            @if($heroImage)
+                <span style="font-size:0.78rem; color:#6b7280; word-break:break-all; max-width:300px;">Current: {{ $heroImage }}</span>
+                <label style="display:flex; align-items:center; gap:0.3rem; font-size:0.8rem; color:#dc2626; cursor:pointer;">
+                    <input type="checkbox" name="remove_hero_image" value="1"> Remove
+                </label>
+            @endif
+        </div>
+        <input type="hidden" name="content[hero_image]" value="{{ $heroImage }}">
+    </div>
 
     <label style="display:flex; align-items:center; gap:.5rem; padding-top:0.5rem; border-top:1px solid var(--workspace-border, rgba(11, 54, 104, 0.12));">
         <input type="checkbox" name="is_published" value="1" @checked(old('is_published', $page->is_published))>
@@ -213,8 +222,17 @@
                     <textarea name="content[sections][{{ $index }}][body]" data-quill-field style="display:none;">{{ $section['body'] ?? '' }}</textarea>
                 </div>
                 <label class="workspace-field workspace-field--full" style="margin:0;">
-                    <span>Image URL (optional)</span>
-                    <input type="text" name="content[sections][{{ $index }}][image]" value="{{ $section['image'] ?? '' }}" placeholder="/images/services/feature.jpg">
+                    <span>Image</span>
+                    <div style="display:flex; flex-wrap:wrap; gap:0.4rem; align-items:center;">
+                        <input type="file" name="upload_section_image[{{ $index }}]" accept="image/*" style="flex:1; min-width:160px;">
+                        @if(! empty($section['image']))
+                            <span style="font-size:0.75rem; color:#6b7280; word-break:break-all; max-width:240px;">{{ $section['image'] }}</span>
+                            <label style="display:flex; align-items:center; gap:0.25rem; font-size:0.78rem; color:#dc2626; cursor:pointer;">
+                                <input type="checkbox" name="content[sections][{{ $index }}][remove_image]" value="1"> Remove
+                            </label>
+                        @endif
+                    </div>
+                    <input type="hidden" name="content[sections][{{ $index }}][image]" value="{{ $section['image'] ?? '' }}">
                 </label>
             </div>
         @endforeach
@@ -308,8 +326,11 @@
                         <textarea name="content[sections][${index}][body]" data-quill-field style="display:none;"></textarea>
                     </div>
                     <label class="workspace-field workspace-field--full" style="margin:0;">
-                        <span>Image URL (optional)</span>
-                        <input type="text" name="content[sections][${index}][image]" placeholder="/images/services/feature.jpg">
+                        <span>Image</span>
+                        <div style="display:flex; flex-wrap:wrap; gap:0.4rem; align-items:center;">
+                            <input type="file" name="upload_section_image[${index}]" accept="image/*" style="flex:1; min-width:160px;">
+                        </div>
+                        <input type="hidden" name="content[sections][${index}][image]" value="">
                     </label>
                 `;
             } else {

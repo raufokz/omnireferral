@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ServiceSeoPage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -35,7 +36,7 @@ class ServiceSeoPageController extends Controller
         $validated['slug'] = $this->uniqueSlug($validated['slug'] ?: $validated['title']);
         $validated['is_published'] = $request->boolean('is_published');
         $validated['secondary_keywords'] = $this->linesToArray($request->input('secondary_keywords'));
-        $validated['content'] = $this->normalizeContent($request->input('content', []));
+        $validated['content'] = $this->normalizeContent($request->input('content', []), $request);
 
         $page = ServiceSeoPage::create($validated);
 
@@ -54,7 +55,7 @@ class ServiceSeoPageController extends Controller
         $validated['slug'] = $this->uniqueSlug($validated['slug'] ?: $validated['title'], $serviceSeoPage->id);
         $validated['is_published'] = $request->boolean('is_published');
         $validated['secondary_keywords'] = $this->linesToArray($request->input('secondary_keywords'));
-        $validated['content'] = $this->normalizeContent($request->input('content', []));
+        $validated['content'] = $this->normalizeContent($request->input('content', []), $request, $serviceSeoPage);
 
         $serviceSeoPage->update($validated);
 
@@ -115,16 +116,35 @@ class ServiceSeoPageController extends Controller
         return $slug;
     }
 
-    private function normalizeContent(array $content): array
+    private function normalizeContent(array $content, ?Request $request = null, ?ServiceSeoPage $page = null): array
     {
         $heroImage = trim((string) ($content['hero_image'] ?? ''));
 
+        if ($request) {
+            $heroImage = $this->handleHeroImageUpload($request, $page ? $page->content['hero_image'] ?? '' : '');
+        }
+
         $sections = collect($content['sections'] ?? [])
-            ->map(fn ($section) => [
-                'heading' => trim((string) ($section['heading'] ?? '')),
-                'body' => trim((string) ($section['body'] ?? '')),
-                'image' => trim((string) ($section['image'] ?? '')),
-            ])
+            ->map(function ($section, $index) use ($request) {
+                $image = trim((string) ($section['image'] ?? ''));
+
+                if ($request && ! empty($section['remove_image'])) {
+                    $this->deleteStoredImage($image);
+                    $image = '';
+                }
+
+                if ($request && $request->hasFile("upload_section_image.{$index}")) {
+                    $this->deleteStoredImage($image);
+                    $path = $request->file("upload_section_image.{$index}")->store('service-seo', 'public');
+                    $image = $path ? 'storage/' . $path : '';
+                }
+
+                return [
+                    'heading' => trim((string) ($section['heading'] ?? '')),
+                    'body' => trim((string) ($section['body'] ?? '')),
+                    'image' => $image,
+                ];
+            })
             ->filter(fn ($section) => $section['heading'] !== '' || ! $this->isRichTextEmpty($section['body']))
             ->values()
             ->all();
@@ -139,6 +159,29 @@ class ServiceSeoPageController extends Controller
             ->all();
 
         return compact('heroImage', 'sections', 'faqs');
+    }
+
+    private function handleHeroImageUpload(Request $request, string $currentValue): string
+    {
+        if ($request->boolean('remove_hero_image')) {
+            $this->deleteStoredImage($currentValue);
+            return '';
+        }
+
+        if ($request->hasFile('upload_hero_image')) {
+            $this->deleteStoredImage($currentValue);
+            $path = $request->file('upload_hero_image')->store('service-seo', 'public');
+            return $path ? 'storage/' . $path : $currentValue;
+        }
+
+        return $currentValue;
+    }
+
+    private function deleteStoredImage(?string $path): void
+    {
+        if ($path && str_starts_with((string) $path, 'storage/service-seo/')) {
+            Storage::disk('public')->delete(str_replace('storage/', '', (string) $path));
+        }
     }
 
     private function isRichTextEmpty(string $value): bool

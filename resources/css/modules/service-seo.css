@@ -168,6 +168,15 @@
     text-wrap: balance;
 }
 
+.service-seo__hero-description {
+    max-width: 68ch;
+    margin: 0.25rem 0 0;
+    color: rgba(235, 242, 255, 0.7);
+    font-size: clamp(1rem, 1.4vw, 1.18rem);
+    font-weight: 400;
+    line-height: 1.6;
+}
+
 .service-seo__hero-rich,
 .service-seo__hero-rich p,
 .service-seo__hero-rich li {

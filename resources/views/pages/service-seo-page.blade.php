@@ -71,6 +71,9 @@
                     <strong>{{ $page->primary_keyword ?: $page->title }}</strong>
                 </div>
                 <h1>{{ $page->hero_title ?: $page->title }}</h1>
+                @if($page->meta_description)
+                    <p class="service-seo__hero-description">{{ $page->meta_description }}</p>
+                @endif
                 <div class="service-seo__rich service-seo__hero-rich">
                     {!! $renderRichText($page->hero_body) !!}
                 </div>

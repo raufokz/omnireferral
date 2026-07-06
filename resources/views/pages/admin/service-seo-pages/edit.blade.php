@@ -22,7 +22,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.service-seo-pages.update', $page) }}">
+    <form method="POST" action="{{ route('admin.service-seo-pages.update', $page) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         @include('pages.admin.service-seo-pages._form', ['submitLabel' => 'Save Changes'])

@@ -15,7 +15,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.service-seo-pages.store') }}">
+    <form method="POST" action="{{ route('admin.service-seo-pages.store') }}" enctype="multipart/form-data">
         @csrf
         @include('pages.admin.service-seo-pages._form', ['submitLabel' => 'Create Page'])
     </form>
