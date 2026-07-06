@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\AgentLeadQuotaController;
 use App\Http\Controllers\Admin\PackageLeadSettingsController;
 use App\Http\Controllers\Admin\MailSettingsController as AdminMailSettingsController;
 use App\Http\Controllers\Admin\SeoLandingPageController as AdminSeoLandingPageController;
+use App\Http\Controllers\Admin\ServiceSeoPageController as AdminServiceSeoPageController;
 use App\Http\Controllers\Agent\LeadController as AgentLeadController;
 use App\Http\Controllers\Agent\PortalController as AgentPortalController;
 use App\Http\Controllers\Auth\AuthController;
@@ -42,12 +43,14 @@ use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\RealtorController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SeoLandingPageController;
+use App\Http\Controllers\ServiceSeoPageController;
 use App\Http\Controllers\Webhooks\GoHighLevelWebhookController;
 use App\Http\Controllers\Webhooks\GoHighLevelEventWebhookController;
 use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Models\Property;
 use App\Models\RealtorProfile;
 use App\Models\SeoLandingPage;
+use App\Models\ServiceSeoPage;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -72,11 +75,16 @@ Route::get('/sitemap.xml', function () {
             ->latest('updated_at')
             ->get(['slug', 'updated_at']);
 
+        $serviceSeoPages = ServiceSeoPage::published()
+            ->latest('updated_at')
+            ->get(['slug', 'updated_at']);
+
         return response()
             ->view('sitemap', [
                 'properties' => $properties,
                 'agents' => $agents,
                 'seoPages' => $seoPages,
+                'serviceSeoPages' => $serviceSeoPages,
             ])
             ->header('Content-Type', 'text/xml')
             ->getContent();
@@ -91,6 +99,10 @@ Route::get('/{slug}', [SeoLandingPageController::class, 'show'])
 Route::post('/{slug}/lead', [SeoLandingPageController::class, 'storeLead'])
     ->where('slug', 'best-realtor-[a-z0-9-]+')
     ->name('seo-landing-page.lead');
+
+Route::get('/services/{slug}', [ServiceSeoPageController::class, 'show'])
+    ->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*')
+    ->name('service-seo-pages.show');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/pricing', [PricingController::class, 'index'])->name('pricing');
@@ -359,6 +371,16 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
                 'edit' => 'admin.seo-landing-pages.edit',
                 'update' => 'admin.seo-landing-pages.update',
                 'destroy' => 'admin.seo-landing-pages.destroy',
+            ]);
+        Route::resource('admin/service-seo-pages', AdminServiceSeoPageController::class)
+            ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
+            ->names([
+                'index' => 'admin.service-seo-pages.index',
+                'create' => 'admin.service-seo-pages.create',
+                'store' => 'admin.service-seo-pages.store',
+                'edit' => 'admin.service-seo-pages.edit',
+                'update' => 'admin.service-seo-pages.update',
+                'destroy' => 'admin.service-seo-pages.destroy',
             ]);
         Route::resource('admin/testimonials', TestimonialController::class)
             ->except(['show'])

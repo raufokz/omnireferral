@@ -45,4 +45,13 @@
             <priority>0.8</priority>
         </url>
     @endforeach
+
+    @foreach($serviceSeoPages as $page)
+        <url>
+            <loc>{{ url('services/' . $page->slug) }}</loc>
+            <lastmod>{{ $page->updated_at->toAtomString() }}</lastmod>
+            <changefreq>weekly</changefreq>
+            <priority>0.8</priority>
+        </url>
+    @endforeach
 </urlset>

@@ -41,7 +41,7 @@ class OmniReferralSeeder extends Seeder
                 'hourly_price' => null,
                 'stripe_price_id' => null,
                 'stripe_product_id' => null,
-                'ghl_form_url' => 'https://api.leadconnectorhq.com/widget/survey/6VrZG7vbNueWG6hoqYru',
+                'ghl_form_url' => 'https://api.leadconnectorhq.com/widget/survey/DAYWVBJkNiVLEfoW740d',
                 'ghl_pipeline_stage' => 'cold-calling-isa',
                 'features' => [
                     'Data Scraping & Skip Tracing',
@@ -70,7 +70,7 @@ class OmniReferralSeeder extends Seeder
                 'hourly_price' => null,
                 'stripe_price_id' => null,
                 'stripe_product_id' => null,
-                'ghl_form_url' => 'https://api.leadconnectorhq.com/widget/survey/NmuErgwOkT4c83tl1k12',
+                'ghl_form_url' => 'https://api.leadconnectorhq.com/widget/survey/NiEcLMPWI084aKiAaNsi',
                 'ghl_pipeline_stage' => 'social-media-mgmt',
                 'features' => [
                     'IG, FB, LinkedIn + TikTok',
