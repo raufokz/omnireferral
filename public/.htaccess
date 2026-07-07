@@ -1,3 +1,11 @@
+<IfModule mod_security.c>
+    # Disable mod_security for admin POST/PUT requests (Quill content triggers false positives)
+    <If "%{REQUEST_URI} =~ m#^/admin/#">
+        SecRuleEngine Off
+        SecFilterInheritance Off
+    </If>
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
