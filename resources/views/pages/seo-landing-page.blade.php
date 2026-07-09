@@ -52,6 +52,7 @@
 @endphp
 
 @section('head')
+    <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="{{ $canonicalUrl }}">
     <meta property="og:type" content="profile">
     <meta property="og:title" content="{{ $page->seo_title }}">
@@ -150,14 +151,6 @@
         </picture>
 
         <div class="container seo-profile-shell">
-            <nav class="seo-breadcrumb" aria-label="Breadcrumb">
-                <a href="{{ url('/') }}">Home</a>
-                <span aria-hidden="true">/</span>
-                <a href="{{ route('agents.index') }}">Agents</a>
-                <span aria-hidden="true">/</span>
-                <span>{{ $city }}, {{ $state }}</span>
-            </nav>
-
             <article class="seo-profile-panel">
                 <aside class="seo-profile-side" aria-label="{{ $agentDisplayName }} contact details">
                     <img src="{{ $profileImage }}" alt="{{ $agentDisplayName }} headshot" loading="eager" fetchpriority="high" width="360" height="360" onerror="this.onerror=null;this.src='{{ asset('images/realtors/logo-bydefault_agent.png') }}'">

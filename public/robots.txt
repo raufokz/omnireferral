@@ -3,7 +3,11 @@ Disallow: /dashboard/
 Disallow: /admin/
 Disallow: /buyer/
 Disallow: /seller/
-Disallow: /agent/
+Disallow: /agent/dashboard
+Disallow: /agent/profile
+Disallow: /agent/leads
+Disallow: /agent/listings
+Disallow: /agent/messages
 Disallow: /affiliate/
 Disallow: /client-form-submission7
 

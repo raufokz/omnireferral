@@ -5,11 +5,30 @@
 @endpush
 
 @section('head')
+    <meta name="robots" content="index, follow, max-image-preview:large">
     @if($page->canonical_url)
         <link rel="canonical" href="{{ $page->canonical_url }}">
     @else
         <link rel="canonical" href="{{ route('service-seo-pages.show', $page->slug) }}">
     @endif
+
+    @php
+        $ogUrl = $page->canonical_url ?: route('service-seo-pages.show', $page->slug);
+        $ogImage = asset($page->content['hero_image'] ?? 'images/home/hero_backdrop_v2.png');
+        $ogTitle = $page->seo_title ?: $page->title . ' | OmniReferral';
+        $ogDescription = $page->meta_description ?: '';
+    @endphp
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="{{ $ogTitle }}">
+    <meta property="og:description" content="{{ $ogDescription }}">
+    <meta property="og:url" content="{{ $ogUrl }}">
+    <meta property="og:image" content="{{ $ogImage }}">
+    <meta property="og:site_name" content="OmniReferral">
+    <meta property="og:locale" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $ogTitle }}">
+    <meta name="twitter:description" content="{{ $ogDescription }}">
+    <meta name="twitter:image" content="{{ $ogImage }}">
 @endsection
 
 @section('schema')
@@ -22,14 +41,36 @@
                 'text' => $faq['answer'] ?? '',
             ],
         ])->filter(fn ($faq) => $faq['name'] !== '')->values()->all();
-    @endphp
-    @if(! empty($faqSchema))
-        <script type="application/ld+json">{!! json_encode([
+
+        $pageUrl = $page->canonical_url ?: route('service-seo-pages.show', $page->slug);
+        $schemas = [];
+
+        $schemas[] = [
             '@context' => 'https://schema.org',
-            '@type' => 'FAQPage',
-            'mainEntity' => $faqSchema,
-        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
-    @endif
+            '@type' => 'WebPage',
+            '@id' => $pageUrl . '#webpage',
+            'url' => $pageUrl,
+            'name' => $page->title,
+            'description' => $page->meta_description ?: '',
+            'inLanguage' => 'en-US',
+            'dateModified' => $page->updated_at->toAtomString(),
+            'isPartOf' => [
+                '@type' => 'WebSite',
+                '@id' => url('/') . '#website',
+            ],
+        ];
+
+        if (! empty($faqSchema)) {
+            $schemas[] = [
+                '@context' => 'https://schema.org',
+                '@type' => 'FAQPage',
+                'mainEntity' => $faqSchema,
+            ];
+        }
+    @endphp
+    @foreach($schemas as $schema)
+        <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+    @endforeach
 @endsection
 
 @section('content')
@@ -60,16 +101,7 @@
             <img src="{{ asset($heroImage) }}" alt="">
         </div>
         <div class="container service-seo__hero-inner">
-            <div class="service-seo__hero-breadcrumbs">
-                <a href="{{ url('/') }}">Home</a>
-                <span aria-hidden="true">/</span>
-                <span>{{ $page->title }}</span>
-            </div>
             <div class="service-seo__hero-copy">
-                <div class="service-seo__hero-keyword">
-                    <span>{{ $page->primary_keyword ? 'Keyword Focus' : 'Featured' }}</span>
-                    <strong>{{ $page->primary_keyword ?: $page->title }}</strong>
-                </div>
                 <h1>{{ $page->hero_title ?: $page->title }}</h1>
                 @if($page->meta_description)
                     <p class="service-seo__hero-description">{{ $page->meta_description }}</p>
@@ -84,25 +116,27 @@
                     <a class="service-seo__btn service-seo__btn--secondary" href="{{ route('pricing') }}">View Packages</a>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <aside class="service-seo__summary" aria-label="How it works summary">
-                <span>How It Works</span>
-                <h2>Qualified referrals delivered to your pipeline — with zero upfront cost.</h2>
-                <div class="service-seo__summary-flow">
-                    <div>
-                        <strong>01</strong>
-                        <p>Buyer or seller opportunity is captured and verified by our team.</p>
-                    </div>
-                    <div>
-                        <strong>02</strong>
-                        <p>Matched to your market, ZIP code, and agent capacity preferences.</p>
-                    </div>
-                    <div>
-                        <strong>03</strong>
-                        <p>You pay a referral fee only after a successful closing.</p>
-                    </div>
+    <section class="service-seo__summary" aria-label="How it works summary">
+        <div class="container">
+            <span>How It Works</span>
+            <h2>Qualified referrals delivered to your pipeline — with zero upfront cost.</h2>
+            <div class="service-seo__summary-flow">
+                <div>
+                    <strong>01</strong>
+                    <p>Buyer or seller opportunity is captured and verified by our team.</p>
                 </div>
-            </aside>
+                <div>
+                    <strong>02</strong>
+                    <p>Matched to your market, ZIP code, and agent capacity preferences.</p>
+                </div>
+                <div>
+                    <strong>03</strong>
+                    <p>You pay a referral fee only after a successful closing.</p>
+                </div>
+            </div>
         </div>
     </section>
 

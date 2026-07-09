@@ -4,6 +4,98 @@
     @vite('resources/css/modules/agent-directory.css')
 @endpush
 
+@php
+    $agentName = $card['name'] ?? ($user?->publicDisplayName() ?? 'Agent');
+    $agentSlug = $profile->slug ?? $card['slug'] ?? '';
+    $agentUrl = route('agents.profile', $profile);
+    $agentDescription = $card['service_area'] ?? ($profile->service_city . ', ' . $profile->service_state);
+    $agentHeadshot = $card['headshot_url'] ?? asset('images/realtors/logo-bydefault_agent.png');
+    $agentRating = $card['rating'] ?? $profile->rating ?? '4.9';
+    $agentReviewCount = $card['review_count'] ?? $profile->review_count ?? 0;
+    $agentExperience = $card['years_of_experience'] ?? $profile->years_of_experience ?? 0;
+    $agentSpecialties = $card['specialties'] ?? [];
+    $agentLanguagesList = collect(preg_split('/,|\r\n|\r|\n/', (string) ($profile->languages ?? 'English')))->map(fn ($item) => trim($item))->filter()->values();
+    $agentMarketAreasList = collect(preg_split('/,|\r\n|\r|\n/', (string) ($profile->market_areas ?? '')))->map(fn ($item) => trim($item))->filter()->values();
+@endphp
+
+@section('head')
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="{{ $agentUrl }}">
+    <meta property="og:type" content="profile">
+    <meta property="og:title" content="{{ $agentName }} | {{ $agentDescription }} | OmniReferral">
+    <meta property="og:description" content="{{ Str::limit(strip_tags((string) $profile->bio), 155) }}">
+    <meta property="og:url" content="{{ $agentUrl }}">
+    <meta property="og:image" content="{{ $agentHeadshot }}">
+    <meta property="og:site_name" content="OmniReferral">
+    <meta property="og:locale" content="en_US">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $agentName }} | {{ $agentDescription }} | OmniReferral">
+    <meta name="twitter:description" content="{{ Str::limit(strip_tags((string) $profile->bio), 155) }}">
+    <meta name="twitter:image" content="{{ $agentHeadshot }}">
+    @if($profile->user?->phone)
+        <meta property="profile:username" content="{{ $profile->user->phone }}">
+    @endif
+@endsection
+
+@section('schema')
+    @php
+        $schemas = [];
+
+        $schemas[] = [
+            '@context' => 'https://schema.org',
+            '@type' => ['RealEstateAgent', 'LocalBusiness'],
+            '@id' => $agentUrl . '#agent',
+            'name' => $agentName,
+            'url' => $agentUrl,
+            'image' => $agentHeadshot,
+            'description' => Str::limit(strip_tags((string) $profile->bio), 155),
+            'telephone' => $profile->user?->phone,
+            'email' => $profile->user?->email,
+            'priceRange' => '$$',
+            'address' => [
+                '@type' => 'PostalAddress',
+                'addressLocality' => $profile->service_city,
+                'addressRegion' => $profile->service_state,
+                'addressCountry' => 'US',
+            ],
+            'aggregateRating' => [
+                '@type' => 'AggregateRating',
+                'ratingValue' => (string) $agentRating,
+                'reviewCount' => (string) $agentReviewCount,
+                'bestRating' => '5',
+            ],
+            'areaServed' => $agentMarketAreasList->map(fn ($area) => [
+                '@type' => 'Place',
+                'name' => $area,
+            ])->values()->all(),
+            'knowsAbout' => $agentSpecialties,
+        ];
+
+        $schemas[] = [
+            '@context' => 'https://schema.org',
+            '@type' => 'WebPage',
+            '@id' => $agentUrl . '#webpage',
+            'url' => $agentUrl,
+            'name' => $agentName . ' | ' . $agentDescription . ' | OmniReferral',
+            'description' => Str::limit(strip_tags((string) $profile->bio), 155),
+            'inLanguage' => 'en-US',
+            'dateModified' => $profile->updated_at?->toAtomString() ?? now()->toAtomString(),
+            'about' => ['@id' => $agentUrl . '#agent'],
+            'isPartOf' => [
+                '@type' => 'WebSite',
+                '@id' => url('/') . '#website',
+            ],
+        ];
+
+        if ($agentLanguagesList->isNotEmpty()) {
+            $schemas[0]['knowsLanguage'] = $agentLanguagesList->all();
+        }
+    @endphp
+    @foreach($schemas as $schema)
+        <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+    @endforeach
+@endsection
+
 @section('content')
 <section class="section">
     <div class="container" style="max-width:900px;">
