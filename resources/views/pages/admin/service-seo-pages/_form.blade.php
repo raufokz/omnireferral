@@ -19,6 +19,9 @@
     }
 
     .service-seo-editor .ql-toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
         border-color: rgba(11, 54, 104, 0.14);
         border-radius: 8px 8px 0 0;
         background: #f8fafc;
@@ -26,6 +29,8 @@
 
     .service-seo-editor .ql-container {
         min-height: 180px;
+        max-height: 480px;
+        overflow-y: auto;
         border-color: rgba(11, 54, 104, 0.14);
         border-radius: 0 0 8px 8px;
         background: #fff;
@@ -34,6 +39,7 @@
 
     .service-seo-editor--compact .ql-container {
         min-height: 130px;
+        max-height: 360px;
     }
 
     .seo-section-card {

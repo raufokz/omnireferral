@@ -9,7 +9,8 @@
 <style>
 .quill-wrap { margin-bottom:1.5rem; }
 .quill-wrap label { display:block; font-size:.85rem; font-weight:600; color:#334155; margin-bottom:.4rem; }
-.quill-wrap .ql-container { min-height:150px; font-size:.95rem; }
+.quill-wrap .ql-toolbar { position:sticky; top:0; z-index:10; }
+.quill-wrap .ql-container { min-height:150px; max-height:420px; overflow-y:auto; font-size:.95rem; }
 .ql-editor { min-height:150px; }
 </style>
 @endpush

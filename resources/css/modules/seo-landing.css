@@ -166,15 +166,14 @@
     text-transform: uppercase;
 }
 
-.seo-profile-title-row {
+.seo-profile-head-badges {
     display: flex;
     flex-wrap: wrap;
     gap: 0.55rem;
-    align-items: flex-start;
+    align-items: center;
 }
 
-.seo-profile-title-row h1 {
-    flex: 1 1 28rem;
+.seo-profile-title {
     margin: 0;
     color: var(--seo-navy);
     font-size: clamp(2rem, 4.5vw, 3.85rem);
@@ -183,7 +182,7 @@
     text-wrap: balance;
 }
 
-.seo-profile-title-row > span {
+.seo-profile-badge {
     display: inline-flex;
     min-height: 1.55rem;
     align-items: center;
@@ -629,7 +628,7 @@
         border-radius: 14px;
     }
 
-    .seo-profile-title-row h1 {
+    .seo-profile-title {
         font-size: clamp(1.85rem, 11vw, 2.55rem);
     }
 }

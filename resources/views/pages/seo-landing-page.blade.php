@@ -145,7 +145,7 @@
 
 @section('content')
 <main class="seo-profile-page">
-    <section class="seo-profile-hero" aria-labelledby="seo-page-title">
+    <section class="seo-profile-hero" aria-label="{{ $city }} real estate agent profile">
         <picture class="seo-profile-hero__bg" aria-hidden="true">
             <img src="{{ $heroImage }}" alt="" loading="eager" fetchpriority="high" width="1600" height="900">
         </picture>
@@ -176,11 +176,11 @@
 
                 <div class="seo-profile-main">
                     <header class="seo-profile-head">
-                        <span class="seo-kicker">{{ $city }}, {{ $state }} Real Estate</span>
-                        <div class="seo-profile-title-row">
-                            <h1 id="seo-page-title" class="visually-hidden">{{ $c['hero_heading'] ?? $primaryKwd . ' in ' . $city . ', ' . $state }}</h1>
-                            <span>{{ $assignedProfile?->isFeatured() ? 'Featured Agent' : 'Verified Agent' }}</span>
+                        <div class="seo-profile-head-badges">
+                            <span class="seo-kicker">{{ $city }}, {{ $state }} Real Estate</span>
+                            <span class="seo-profile-badge">{{ $assignedProfile?->isFeatured() ? 'Featured Agent' : 'Verified Agent' }}</span>
                         </div>
+                        <h1 class="seo-profile-title">{{ $c['hero_heading'] ?? $primaryKwd . ' in ' . $city . ', ' . $state }}</h1>
                         <p class="seo-profile-brokerage">{{ $agentDisplayName }} | {{ $agentBrokerage }}</p>
                         <p class="seo-profile-summary">{{ $c['hero_subheading'] ?? 'Premium local real estate guidance for buyers, sellers, relocation clients, luxury homes, and investment decisions in ' . $city . '.' }}</p>
 
