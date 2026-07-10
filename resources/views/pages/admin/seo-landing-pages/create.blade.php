@@ -77,6 +77,11 @@
                 <small style="color:#64748b;">Upload realtor headshot (JPEG, PNG, WebP, max 5MB)</small>
             </label>
             <label class="workspace-field">
+                <span>Agent Info Image</span>
+                <input type="file" name="agent_info_image" accept="image/jpeg,image/png,image/webp">
+                <small style="color:#64748b;">Upload agent info image (JPEG, PNG, WebP, max 5MB)</small>
+            </label>
+            <label class="workspace-field">
                 <span>OG Image URL</span>
                 <input type="text" name="og_image" value="{{ old('og_image') }}" placeholder="e.g. images/seo/og-austin.jpg">
             </label>

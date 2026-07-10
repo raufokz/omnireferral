@@ -108,6 +108,20 @@
                 <small style="color:#64748b;">Upload realtor headshot (JPEG, PNG, WebP, max 5MB). Leave empty to keep current.</small>
             </label>
             <label class="workspace-field">
+                <span>Agent Info Image</span>
+                <input type="file" name="agent_info_image" accept="image/jpeg,image/png,image/webp">
+                @if($page->agent_info_image)
+                    <div style="margin-top:.5rem; display:flex; align-items:center; gap:.75rem; flex-wrap:wrap;">
+                        <img src="{{ asset($page->agent_info_image) }}" alt="Agent info image preview" style="width:76px; height:76px; object-fit:cover; border-radius:8px; border:1px solid #e2e8f0;">
+                        <label style="font-size:.8rem; display:flex; align-items:center; gap:.35rem; cursor:pointer;">
+                            <input type="checkbox" name="agent_info_image_remove" value="1">
+                            Remove current image
+                        </label>
+                    </div>
+                @endif
+                <small style="color:#64748b;">Upload agent info image (JPEG, PNG, WebP, max 5MB). Leave empty to keep current.</small>
+            </label>
+            <label class="workspace-field">
                 <span>OG Image URL</span>
                 <input type="text" name="og_image" value="{{ old('og_image', $page->og_image) }}" placeholder="e.g. images/seo/og-austin.jpg">
             </label>

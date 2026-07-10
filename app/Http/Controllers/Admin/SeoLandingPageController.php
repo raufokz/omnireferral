@@ -61,6 +61,7 @@ class SeoLandingPageController extends Controller
             'hero_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'og_image' => 'nullable|string|max:500',
             'realtor_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'agent_info_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'is_published' => 'boolean',
             'content' => 'nullable|array',
         ]);
@@ -69,6 +70,7 @@ class SeoLandingPageController extends Controller
 
         $validated['hero_image'] = $this->handleImageUpload($request, 'hero_image', 'seo-landing-pages/hero', null);
         $validated['realtor_photo'] = $this->handleImageUpload($request, 'realtor_photo', 'seo-landing-pages/realtor', null);
+        $validated['agent_info_image'] = $this->handleImageUpload($request, 'agent_info_image', 'seo-landing-pages/agent-info', null);
 
         if ($request->has('secondary_keywords')) {
             $validated['secondary_keywords'] = $this->linesToArray($request->input('secondary_keywords'));
@@ -106,6 +108,7 @@ class SeoLandingPageController extends Controller
             'hero_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'og_image' => 'nullable|string|max:500',
             'realtor_photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'agent_info_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'is_published' => 'boolean',
             'content' => 'nullable|array',
         ]);
@@ -114,6 +117,7 @@ class SeoLandingPageController extends Controller
 
         $validated['hero_image'] = $this->handleImageUpload($request, 'hero_image', 'seo-landing-pages/hero', $seoLandingPage->hero_image);
         $validated['realtor_photo'] = $this->handleImageUpload($request, 'realtor_photo', 'seo-landing-pages/realtor', $seoLandingPage->realtor_photo);
+        $validated['agent_info_image'] = $this->handleImageUpload($request, 'agent_info_image', 'seo-landing-pages/agent-info', $seoLandingPage->agent_info_image);
 
         if ($request->has('secondary_keywords')) {
             $validated['secondary_keywords'] = $this->linesToArray($request->input('secondary_keywords'));
@@ -146,6 +150,7 @@ class SeoLandingPageController extends Controller
     {
         $this->deleteStoredImage($seoLandingPage->hero_image);
         $this->deleteStoredImage($seoLandingPage->realtor_photo);
+        $this->deleteStoredImage($seoLandingPage->agent_info_image);
 
         $seoLandingPage->delete();
 
