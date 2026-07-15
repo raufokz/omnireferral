@@ -280,6 +280,10 @@
                             <div class="hero-form__grid hero-form__grid--buyer-home">
                                 <label><span>Preferred contact</span><select name="contact_preference"><option value="">Choose contact method</option><option>Email</option><option>Phone</option><option>Text</option></select></label>
                                 <label class="hero-form__full"><span>Preferences &amp; constraints</span><textarea name="preferences" rows="2" placeholder="Tell us about your ideal home, timing, renovation concerns, and must-haves."></textarea></label>
+                                <label class="hero-form__full consent-checkbox">
+                                    <input type="checkbox" name="consent" value="1" required>
+                                    <span>I consent to receive emails, SMS, and calls (which may be auto-dialed, use artificial or pre-recorded voices, and/or be text messages) from Omni Referral, and their agents/affiliates/partners to the email addresses and telephone number(s) I have provided (even if these numbers are on a government do-not-call registry). I understand that my consent to receive calls is not required in order to purchase any property, goods, or services. Message and data rates may apply. I may revoke my consent to receiving messages at any time. By submitting my information, I confirm that I understand and agree to OmniReferral's <a href="{{ route('terms') }}" target="_blank">Terms of Use</a>, <a href="{{ route('privacy') }}" target="_blank">Privacy Policy</a> and <a href="{{ route('communication.policy') }}" target="_blank">Communication Policy</a>.</span>
+                                </label>
                             </div>
                             <div class="hero-form__footer">
                                 <button type="button" class="button button--ghost" data-form-prev>Back</button>
@@ -371,6 +375,10 @@
                                 <label><span>Preferred contact</span><select name="contact_preference"><option value="">Choose contact method</option><option>Email</option><option>Phone</option><option>Text</option></select></label>
                                 <label class="hero-form__full"><span>Upload property image</span><input type="file" name="property_image" accept="image/*"></label>
                                 <label class="hero-form__full"><span>Property details</span><textarea name="preferences" rows="2" placeholder="Describe the home, your timeline, repair needs, and anything our team should know."></textarea></label>
+                                <label class="hero-form__full consent-checkbox">
+                                    <input type="checkbox" name="consent" value="1" required>
+                                    <span>I consent to receive emails, SMS, and calls (which may be auto-dialed, use artificial or pre-recorded voices, and/or be text messages) from Omni Referral, and their agents/affiliates/partners to the email addresses and telephone number(s) I have provided (even if these numbers are on a government do-not-call registry). I understand that my consent to receive calls is not required in order to purchase any property, goods, or services. Message and data rates may apply. I may revoke my consent to receiving messages at any time. By submitting my information, I confirm that I understand and agree to OmniReferral's <a href="{{ route('terms') }}" target="_blank">Terms of Use</a>, <a href="{{ route('privacy') }}" target="_blank">Privacy Policy</a> and <a href="{{ route('communication.policy') }}" target="_blank">Communication Policy</a>.</span>
+                                </label>
                             </div>
                             <div class="hero-form__footer">
                                 <button type="button" class="button button--ghost" data-form-prev>Back</button>

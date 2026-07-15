@@ -273,6 +273,46 @@
     margin-left: auto;
 }
 
+.consent-checkbox {
+    display: flex !important;
+    gap: 0.65rem;
+    align-items: flex-start;
+    padding: 0.85rem 0.95rem !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(11, 54, 104, 0.1) !important;
+    background: rgba(248, 250, 255, 0.7) !important;
+    cursor: pointer;
+}
+
+.consent-checkbox input[type="checkbox"] {
+    flex: 0 0 auto;
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-top: 0.15rem;
+    min-height: auto !important;
+    border-radius: 4px !important;
+    accent-color: var(--color-brand-orange, #ff6000);
+    cursor: pointer;
+}
+
+.consent-checkbox span {
+    font-size: 0.72rem !important;
+    font-weight: 500 !important;
+    line-height: 1.5;
+    color: #475569 !important;
+}
+
+.consent-checkbox span a {
+    color: var(--color-brand-blue, #0b3668);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 0.12rem;
+}
+
+.consent-checkbox span a:hover {
+    color: var(--color-brand-orange, #ff6000);
+}
+
 .homepage-hero__form .buyer-zip-card {
     display: grid;
     gap: 0.8rem;
