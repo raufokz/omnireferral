@@ -29,10 +29,6 @@ class PropertyController extends Controller
     {
         $viewer = Auth::user();
 
-        if (! $property->isApproved() || $property->status !== 'Active') {
-            $this->authorize('view', $property);
-        }
-
         $property->load(['realtorProfile.user', 'owner', 'listedBy'])
             ->load(['listingComments' => fn ($q) => $q->with('user')->latest()])
             ->loadCount(['favorites as favorites_count']);
