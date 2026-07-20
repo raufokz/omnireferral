@@ -184,32 +184,4 @@
     <script src="https://link.msgsndr.com/js/form_embed.js" defer></script>
 @endif
 
-{{-- Step 2: Stripe payment — shown only when Stripe is wired up and the package has a price --}}
-@if($startingPrice > 0)
-<section class="section package-payment-section" id="payment">
-    <div class="container-sm">
-        <div class="package-payment-cta">
-            <span class="eyebrow">Step 2 — Secure Payment</span>
-            <h2>Complete your purchase</h2>
-            <p>After filling the form above, click the button below to pay securely via Stripe. You will be redirected to your onboarding form immediately after.</p>
-
-            @if(session('error'))
-                <div class="form-alert form-alert--error" role="alert">{{ session('error') }}</div>
-            @endif
-
-            <form action="{{ route('packages.stripe-checkout', $package->slug) }}" method="POST" class="package-payment-form">
-                @csrf
-                <button type="submit" class="button button--orange button--lg">
-                    Pay ${{ number_format($startingPrice) }}
-                    {{ match($package->billing_type) { 'monthly' => '/ Month', 'hourly' => '/ Hour', default => '— One-Time' } }}
-                    &nbsp;&rarr;
-                </button>
-                <p class="package-payment-form__note">
-                    Secure payment powered by Stripe. You will be redirected to complete onboarding after payment.
-                </p>
-            </form>
-        </div>
-    </div>
-</section>
-@endif
 @endsection

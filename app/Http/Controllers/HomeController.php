@@ -11,20 +11,9 @@ use App\Models\TeamMember;
 use App\Models\Testimonial;
 use App\Support\AgentDirectory;
 use App\Support\PricingContent;
-use App\Models\AgentLeadQuota;
-use App\Models\AgentSubscription;
-use App\Models\User;
-use App\Notifications\AgentCredentialsNotification;
-use App\Services\OnboardingSyncService;
-use App\Services\PasswordProvisioningService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class HomeController extends Controller
@@ -253,46 +242,8 @@ class HomeController extends Controller
 
     public function clientFormSubmission(): View
     {
-        $role = request()->string('role')->lower()->value() ?: 'agent';
-        abort_unless(in_array($role, ['buyer', 'seller', 'agent']), 404);
-
-        $sessionId = request()->string('session_id')->value();
-        $packageSlug = request()->string('package')->value();
-
-        $dashboardRoute = match ($role) {
-            'buyer' => route('dashboard.buyer'),
-            'seller' => route('dashboard.seller'),
-            default => route('dashboard.agent'),
-        };
-
-        $baseFormUrl = 'https://api.leadconnectorhq.com/widget/form/K1yKrK1hQrLDUM2Sz0Tz';
-        $onboardingFormSrc = $baseFormUrl;
-
-        if ($packageSlug || $sessionId) {
-            $user = auth()->user();
-            $package = $packageSlug ? Package::where('slug', $packageSlug)->first() : null;
-
-            $params = array_filter([
-                'email'                  => $user?->email,
-                'phone'                  => $user?->phone,
-                'name'                   => $user?->name,
-                'field_user_id'          => $user?->id,
-                'field_package'          => $package?->slug,
-                'field_plan_id'          => $package?->id,
-                'field_role'             => $user?->role ?? 'agent',
-                'field_source'           => 'omnireferral_checkout',
-                'field_checkout_session' => $sessionId ?: null,
-            ], fn ($v) => $v !== null && $v !== '');
-            $separator = str_contains($baseFormUrl, '?') ? '&' : '?';
-            $onboardingFormSrc = $params
-                ? $baseFormUrl.$separator.http_build_query($params)
-                : $baseFormUrl;
-        }
-
         return view('pages.client-submission-form7', [
-            'role' => $role,
-            'dashboardRoute' => $dashboardRoute,
-            'onboardingFormSrc' => $onboardingFormSrc,
+            'onboardingFormSrc' => 'https://api.leadconnectorhq.com/widget/form/K1yKrK1hQrLDUM2Sz0Tz',
             'meta' => [
                 'title' => 'Complete Your Onboarding | OmniReferral',
                 'description' => 'Finish your OmniReferral onboarding after package selection and payment.',
@@ -300,156 +251,16 @@ class HomeController extends Controller
         ]);
     }
 
-    public function formSubmission(Request $request): View|JsonResponse|RedirectResponse
+    public function formSubmission(Request $request): View
     {
-        if ($request->isMethod('post')) {
-            return $this->handleFormSubmission($request);
-        }
-
         $email = $request->string('email')->value();
-        $sessionId = $request->string('session_id')->value();
 
         return view('pages.form-submission', [
             'email' => $email,
-            'sessionId' => $sessionId,
             'meta' => [
                 'title' => 'Thank You | OmniReferral',
                 'description' => 'Your onboarding form has been processed. Your OmniReferral account is ready.',
             ],
         ]);
-    }
-
-    private function handleFormSubmission(Request $request): JsonResponse|RedirectResponse
-    {
-        $payload = $request->all();
-
-        $email = $request->string('email')->value() ?: data_get($payload, 'contact.email');
-        if (! $email) {
-            if ($request->wantsJson()) {
-                return response()->json(['message' => 'Missing email address.'], 422);
-            }
-            return redirect()->route('contact')->with('error', 'Missing email address. Please contact support.');
-        }
-
-        try {
-            $result = DB::transaction(function () use ($request, $payload, $email) {
-                $syncService = app(OnboardingSyncService::class);
-                $result = $syncService->sync($payload);
-
-                $user = $result['user'];
-                $plainPassword = null;
-
-                if ($result['isNewUser']) {
-                    $passwordService = app(PasswordProvisioningService::class);
-                    $plainPassword = $passwordService->provision($user);
-                }
-
-                // Create subscription + lead quota if payment confirmed
-                $subscription = $this->createSubscriptionIfPaid($user);
-
-                return [
-                    'user' => $user,
-                    'plainPassword' => $plainPassword,
-                    'isNewUser' => $result['isNewUser'],
-                    'subscription' => $subscription,
-                    'onboardingLog' => $result['onboardingLog'],
-                ];
-            });
-
-            $user = $result['user'];
-            $plainPassword = $result['plainPassword'];
-
-            if ($result['isNewUser'] && $plainPassword) {
-                try {
-                    $user->notify(new AgentCredentialsNotification($plainPassword));
-                } catch (\Throwable $e) {
-                    Log::warning('Failed to send credentials notification.', ['user_id' => $user->id, 'error' => $e->getMessage()]);
-                }
-            }
-
-            Log::info('Form submission processed successfully.', [
-                'user_id' => $user->id,
-                'email' => $email,
-                'subscription_created' => $result['subscription'] ? true : false,
-            ]);
-
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'message' => 'Onboarding completed successfully.',
-                    'user_id' => $user->id,
-                    'login_url' => route('login'),
-                    'email' => $email,
-                ]);
-            }
-
-            return redirect()->route('form.submission', ['email' => $email]);
-        } catch (\Throwable $e) {
-            Log::error('Form submission failed.', [
-                'email' => $email,
-                'error' => $e->getMessage(),
-                'trace' => mb_substr($e->getTraceAsString(), 0, 2000),
-            ]);
-
-            if ($request->wantsJson()) {
-                return response()->json(['message' => 'Processing failed: '.$e->getMessage()], 500);
-            }
-
-            return redirect()->route('form.submission')->with('error', 'We encountered an issue processing your submission. Please contact support.');
-        }
-    }
-
-    private function createSubscriptionIfPaid(User $user): ?AgentSubscription
-    {
-        if (! $user->current_plan_id || $user->status !== 'active') {
-            return null;
-        }
-
-        $existing = AgentSubscription::where('user_id', $user->id)
-            ->where('is_active', true)
-            ->first();
-
-        if ($existing) {
-            return $existing;
-        }
-
-        $package = Package::find($user->current_plan_id);
-        if (! $package) {
-            return null;
-        }
-
-        $subscription = AgentSubscription::create([
-            'user_id'          => $user->id,
-            'package_id'       => $package->id,
-            'payment_status'   => 'paid',
-            'payment_provider' => 'stripe',
-            'payment_reference' => 'stripe_'.($user->stripe_customer_id ?? 'checkout'),
-            'starts_at'        => now(),
-            'is_active'        => true,
-        ]);
-
-        $this->upsertLeadQuota($user->id, $package->id, $package->monthly_lead_quota ?? 0);
-
-        return $subscription;
-    }
-
-    private function upsertLeadQuota(int $userId, int $packageId, int $monthlyQuota): AgentLeadQuota
-    {
-        $month = now()->format('Y-m');
-
-        $assignedCount = \App\Models\Lead::where('assigned_agent_id', $userId)
-            ->whereMonth('assigned_at', now()->month)
-            ->whereYear('assigned_at', now()->year)
-            ->count();
-
-        return AgentLeadQuota::updateOrCreate(
-            ['user_id' => $userId, 'month' => $month],
-            [
-                'package_id'      => $packageId,
-                'monthly_quota'   => $monthlyQuota,
-                'assigned_count'  => $assignedCount,
-                'remaining_count' => $monthlyQuota - $assignedCount,
-                'overdue_count'   => 0,
-            ]
-        );
     }
 }

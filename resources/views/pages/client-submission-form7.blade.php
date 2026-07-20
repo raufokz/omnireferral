@@ -176,10 +176,6 @@
                     </iframe>
                 </div>
 
-                <div class="package-modal-card__actions client-submission-actions">
-                    <a href="{{ route('form.submission', ['email' => auth()->user()?->email]) }}" class="button">I Completed Form</a>
-                    <a href="{{ route('contact') }}" class="button button--ghost-blue">Need Help?</a>
-                </div>
             </article>
         </div>
     </section>

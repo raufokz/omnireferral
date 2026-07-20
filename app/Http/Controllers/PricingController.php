@@ -3,10 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Package;
-use App\Services\StripeCheckoutService;
 use App\Support\AgentDirectory;
 use App\Support\PricingContent;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -98,48 +96,6 @@ class PricingController extends Controller
                 'description' => 'Review the ' . $packageDisplay['name'] . ' package and complete the secure GoHighLevel form.',
             ],
         ]);
-    }
-
-    public function stripeCheckout(string $packageSlug): RedirectResponse
-    {
-        $package = $this->checkoutPackage($packageSlug);
-        $user = Auth::user();
-        $checkout = app(StripeCheckoutService::class);
-
-        if (! $checkout->configured()) {
-            return redirect()
-                ->route('packages.checkout', $packageSlug)
-                ->with('error', 'Payment processing is currently unavailable. Please contact support.');
-        }
-
-        $successUrl = route('client.form.submission').'?session_id={CHECKOUT_SESSION_ID}&package='.$packageSlug;
-        $cancelUrl = route('packages.checkout', $packageSlug);
-
-        $session = $checkout->createPackageCheckout($package, $user, [
-            'success_url' => $successUrl,
-            'cancel_url' => $cancelUrl,
-            'billing' => $package->billing_type,
-            'customer_email' => $user?->email,
-        ]);
-
-        if (! $session) {
-            return redirect()
-                ->route('packages.checkout', $packageSlug)
-                ->with('error', 'Unable to create payment session. Please try again or contact support.');
-        }
-
-        return redirect()->away($session->url);
-    }
-
-    public function success(string $packageSlug): RedirectResponse
-    {
-        $sessionId = request()->query('session_id');
-        $params = array_filter([
-            'session_id' => $sessionId,
-            'package'    => $packageSlug,
-        ]);
-
-        return redirect()->route('client.form.submission', $params);
     }
 
     private function packageEmbeds(): array

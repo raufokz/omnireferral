@@ -47,7 +47,6 @@ use App\Http\Controllers\SeoLandingPageController;
 use App\Http\Controllers\ServiceSeoPageController;
 use App\Http\Controllers\Webhooks\GoHighLevelWebhookController;
 use App\Http\Controllers\Webhooks\GoHighLevelEventWebhookController;
-use App\Http\Controllers\Webhooks\StripeWebhookController;
 use App\Models\Property;
 use App\Models\RealtorProfile;
 use App\Models\SeoLandingPage;
@@ -119,8 +118,6 @@ Route::redirect('/pricing/power-lead', '/pricing/growth-lead', 301);
 Route::redirect('/pricing/prime-lead', '/pricing/elite-lead', 301);
 
 Route::get('/packages/{packageSlug}/checkout', [PricingController::class, 'checkout'])->name('packages.checkout');
-Route::post('/packages/{packageSlug}/stripe-checkout', [PricingController::class, 'stripeCheckout'])->name('packages.stripe-checkout');
-Route::get('/packages/{packageSlug}/success', [PricingController::class, 'success'])->name('packages.success');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
 Route::get('/faq', [HomeController::class, 'faq'])->name('faq');
 Route::get('/privacy-policy', [HomeController::class, 'privacy'])->name('privacy');
@@ -195,7 +192,7 @@ Route::get('/onboarding/{role}', function (string $role): RedirectResponse {
 
 Route::get('/client-submission-form7', [HomeController::class, 'clientFormSubmission'])->name('client.form.submission');
 Route::get('/client-form-submission7', [HomeController::class, 'clientFormSubmission']);
-Route::match(['get', 'post'], '/form-submission', [HomeController::class, 'formSubmission'])->name('form.submission');
+Route::get('/form-submission', [HomeController::class, 'formSubmission'])->name('form.submission');
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'submit'])->middleware('throttle:contact')->name('contact.submit');
 Route::post('/lead-store', [LeadController::class, 'store'])->middleware('throttle:leads')->name('leads.store');
@@ -248,10 +245,6 @@ Route::post('/webhooks/gohighlevel/purchase', [GoHighLevelWebhookController::cla
 Route::post('/webhooks/gohighlevel/lead-status', [GoHighLevelWebhookController::class, 'leadStatusUpdated'])
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->name('webhooks.gohighlevel.lead-status');
-Route::post('/webhooks/stripe', StripeWebhookController::class)
-    ->withoutMiddleware([VerifyCsrfToken::class])
-    ->name('webhooks.stripe');
-
 Route::post('/webhooks/gohighlevel/events', GoHighLevelEventWebhookController::class)
     ->withoutMiddleware([VerifyCsrfToken::class])
     ->middleware('throttle:30,1')
