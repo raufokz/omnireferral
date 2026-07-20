@@ -112,7 +112,7 @@ class PricingController extends Controller
                 ->with('error', 'Payment processing is currently unavailable. Please contact support.');
         }
 
-        $successUrl = route('packages.success', $packageSlug).'?session_id={CHECKOUT_SESSION_ID}';
+        $successUrl = route('client.form.submission').'?session_id={CHECKOUT_SESSION_ID}&package='.$packageSlug;
         $cancelUrl = route('packages.checkout', $packageSlug);
 
         $session = $checkout->createPackageCheckout($package, $user, [
@@ -131,51 +131,15 @@ class PricingController extends Controller
         return redirect()->away($session->url);
     }
 
-    public function success(string $packageSlug): View
+    public function success(string $packageSlug): RedirectResponse
     {
-        $package = $this->checkoutPackage($packageSlug);
-        $user = Auth::user();
         $sessionId = request()->query('session_id');
-
-        $displaySlug = $this->normalizePackageSlug($package->slug);
-        $embedConfig = $this->packageEmbeds()[$displaySlug] ?? $this->packageEmbeds()[$package->slug] ?? [];
-        $baseFormUrl = $embedConfig['src'] ?? $package->ghl_form_url;
-
-        $onboardingFormUrl = null;
-        if ($baseFormUrl) {
-            $params = array_filter([
-                'email'                  => $user?->email,
-                'phone'                  => $user?->phone,
-                'name'                   => $user?->name,
-                'field_user_id'          => $user?->id,
-                'field_package'          => $package->slug,
-                'field_plan_id'          => $package->id ?: null,
-                'field_role'             => $user?->role ?? 'agent',
-                'field_source'           => 'omnireferral_checkout',
-                'field_checkout_session' => $sessionId ?: null,
-                'field_payment_id'       => $sessionId ?: null,
-            ], fn ($v) => $v !== null && $v !== '');
-            $separator = str_contains($baseFormUrl, '?') ? '&' : '?';
-            $onboardingFormUrl = $params
-                ? $baseFormUrl.$separator.http_build_query($params)
-                : $baseFormUrl;
-        }
-
-        $postPurchaseAction = $this->postPurchaseAction();
-
-        return view('pages.package-success', [
-            'package'                   => $package,
-            'sessionId'                 => $sessionId,
-            'onboardingFormUrl'         => $onboardingFormUrl,
-            'onboardingFormTitle'       => $embedConfig['title'] ?? ($package->displayName().' Onboarding'),
-            'onboardingFormDescription' => $embedConfig['description'] ?? 'Complete the secure form to activate your account and receive your login credentials.',
-            'postPurchaseActionUrl'     => $postPurchaseAction['url'],
-            'postPurchaseActionLabel'   => $postPurchaseAction['label'],
-            'meta'                      => [
-                'title'       => 'Complete Your Onboarding | OmniReferral',
-                'description' => 'Your payment was successful. Complete the onboarding form to activate your OmniReferral portal access.',
-            ],
+        $params = array_filter([
+            'session_id' => $sessionId,
+            'package'    => $packageSlug,
         ]);
+
+        return redirect()->route('client.form.submission', $params);
     }
 
     private function packageEmbeds(): array

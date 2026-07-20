@@ -30,6 +30,50 @@
         gap: 0.75rem;
     }
 
+    .form-submission-credentials {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 12px;
+        padding: 1.25rem 1.5rem;
+        margin: 1.25rem auto;
+        max-width: 480px;
+        text-align: left;
+    }
+
+    .form-submission-credentials dt {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #6b7280;
+        margin-top: 0.75rem;
+    }
+
+    .form-submission-credentials dt:first-child {
+        margin-top: 0;
+    }
+
+    .form-submission-credentials dd {
+        margin: 0.15rem 0 0 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #111827;
+        word-break: break-all;
+    }
+
+    .form-submission-success-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: #bbf7d0;
+        color: #166534;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin: 0 auto 1rem;
+    }
+
     @media (max-width: 640px) {
         .form-submission-actions {
             flex-direction: column;
@@ -43,23 +87,39 @@
 @endpush
 
 @section('content')
-<section class="page-hero">
+<section class="page-hero page-hero--success">
     <div class="container-sm">
         <span class="eyebrow">Form Submitted</span>
-        <h1>Thank You For Your Submission</h1>
-        <p>Your onboarding form has been received successfully.</p>
+        <h1>Thank You For Completing Your Onboarding</h1>
+        <p>Your OmniReferral account has been created. Login details have been sent to your email.</p>
     </div>
 </section>
 
 <section class="section">
     <div class="container form-submission-wrap">
         <article class="card-panel form-submission-card">
-            <h2>We got everything we need</h2>
-            <p>You will receive a confirmation email shortly, and an OmniReferral onboarding specialist will contact you with next steps.</p>
-            <p>If you do not see our email, please check your spam or promotions folder.</p>
+            <div class="form-submission-success-icon">&#10003;</div>
+            <h2>Your account is ready</h2>
+            <p>
+                We have received your onboarding information and your OmniReferral account is now active.
+                You can access your portal immediately using the credentials sent to your email.
+            </p>
+
+            @if($email ?? false)
+            <div class="form-submission-credentials">
+                <dl>
+                    <dt>Portal URL</dt>
+                    <dd><a href="{{ route('login') }}" style="color:#c2410c;text-decoration:underline;">{{ route('login') }}</a></dd>
+                    <dt>Email</dt>
+                    <dd>{{ $email }}</dd>
+                    <dt>Password</dt>
+                    <dd>Check your email for the temporary password</dd>
+                </dl>
+            </div>
+            @endif
 
             <div class="form-submission-actions">
-                <a href="{{ route('home') }}" class="button">Back to Home</a>
+                <a href="{{ route('login') }}" class="button button--orange">Go to Login</a>
                 <a href="{{ route('contact') }}" class="button button--ghost-blue">Contact Support</a>
             </div>
         </article>

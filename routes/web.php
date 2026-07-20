@@ -5,6 +5,7 @@ use App\Http\Controllers\Account\SecurityController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GoHighLevelController as AdminGoHighLevelController;
+use App\Http\Controllers\Admin\GoHighLevelTestController as AdminGoHighLevelTestController;
 use App\Http\Controllers\Admin\EnquiryController as AdminEnquiryController;
 use App\Http\Controllers\Admin\LeadManagementController as AdminLeadManagementController;
 use App\Http\Controllers\Admin\PlatformSearchController;
@@ -194,7 +195,7 @@ Route::get('/onboarding/{role}', function (string $role): RedirectResponse {
 
 Route::get('/client-submission-form7', [HomeController::class, 'clientFormSubmission'])->name('client.form.submission');
 Route::get('/client-form-submission7', [HomeController::class, 'clientFormSubmission']);
-Route::get('/form-submission', [HomeController::class, 'formSubmission'])->name('form.submission');
+Route::match(['get', 'post'], '/form-submission', [HomeController::class, 'formSubmission'])->name('form.submission');
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'submit'])->middleware('throttle:contact')->name('contact.submit');
 Route::post('/lead-store', [LeadController::class, 'store'])->middleware('throttle:leads')->name('leads.store');
@@ -448,6 +449,17 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::post('admin/gohighlevel/test/connection', [AdminGoHighLevelController::class, 'testConnection'])->name('admin.ghl.test.connection');
         Route::post('admin/gohighlevel/test/webhook', [AdminGoHighLevelController::class, 'testWebhook'])->name('admin.ghl.test.webhook');
         Route::post('admin/gohighlevel/test/sync', [AdminGoHighLevelController::class, 'testSync'])->name('admin.ghl.test.sync');
+
+        // GoHighLevel comprehensive testing panel
+        Route::get('admin/gohighlevel/test-panel', [AdminGoHighLevelTestController::class, 'testForm'])->name('admin.ghl.test-panel');
+        Route::post('admin/gohighlevel/test/submit', [AdminGoHighLevelTestController::class, 'submitTest'])->name('admin.ghl.test.submit');
+        Route::get('admin/gohighlevel/test/event-log/{id}', [AdminGoHighLevelTestController::class, 'eventLog'])->name('admin.ghl.test.event-log');
+        Route::post('admin/gohighlevel/test/retry-stage/{id}', [AdminGoHighLevelTestController::class, 'retryStage'])->name('admin.ghl.test.retry-stage');
+        Route::post('admin/gohighlevel/test/resend-email/{id}', [AdminGoHighLevelTestController::class, 'resendEmail'])->name('admin.ghl.test.resend-email');
+        Route::get('admin/gohighlevel/test/history', [AdminGoHighLevelTestController::class, 'history'])->name('admin.ghl.test.history');
+        Route::get('admin/gohighlevel/webhook-debugger', [AdminGoHighLevelTestController::class, 'webhookDebugger'])->name('admin.ghl.webhook-debugger');
+        Route::get('admin/gohighlevel/webhook-debugger/{id}', [AdminGoHighLevelTestController::class, 'webhookDebuggerEvent'])->name('admin.ghl.webhook-debugger.event');
+        Route::post('admin/gohighlevel/test/retry/{id}', [AdminGoHighLevelTestController::class, 'retryStage'])->name('admin.ghl.test.retry');
 
         // Onboarding users tracking
         Route::get('admin/onboarding/users', [AdminGoHighLevelController::class, 'onboardingUsers'])->name('admin.ghl.manage-users');

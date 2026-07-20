@@ -7,6 +7,8 @@
 @section('dashboard_actions')
     <a href="{{ route('admin.ghl.index') }}" class="button button--ghost-blue">Overview</a>
     <a href="{{ route('admin.ghl.logs') }}" class="button button--ghost-blue">Logs</a>
+    <a href="{{ route('admin.ghl.test-panel') }}" class="button">Onboarding Test Panel</a>
+    <a href="{{ route('admin.ghl.webhook-debugger') }}" class="button button--ghost-blue">Webhook Debugger</a>
 @endsection
 
 @push('styles')

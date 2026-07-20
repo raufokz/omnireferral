@@ -10,6 +10,8 @@
     <a href="{{ route('admin.ghl.logs') }}" class="button button--ghost-blue">Logs</a>
     <a href="{{ route('admin.ghl.debug') }}" class="button button--ghost-blue">Debug</a>
     <a href="{{ route('admin.ghl.testing') }}" class="button button--ghost-blue">Test Tools</a>
+    <a href="{{ route('admin.ghl.test-panel') }}" class="button">Onboarding Test Panel</a>
+    <a href="{{ route('admin.ghl.webhook-debugger') }}" class="button button--ghost-blue">Webhook Debugger</a>
     <button type="button" class="button" id="ghlTestConnectionBtn" data-url="{{ $testConnectionUrl }}">Test Connection</button>
 @endsection
 
