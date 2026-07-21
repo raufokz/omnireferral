@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AgentLeadQuota;
+use App\Models\AgentSubscription;
+use App\Models\Package;
 use App\Models\RealtorProfile;
 use App\Models\User;
 use App\Support\AdminAudit;
@@ -24,6 +27,9 @@ class StaffAgentProfileController extends Controller
         $status = array_key_exists($status, ['all' => true] + RealtorProfile::statusOptions()) ? $status : 'all';
         $perPage = (int) $request->integer('per_page', 25);
         $perPage = in_array($perPage, [10, 25, 50, 100], true) ? $perPage : 25;
+        $planFilter = $request->string('plan', 'all')->value();
+        $availablePlans = Package::leadPlans()->active()->orderBy('sort_order')->get();
+
         $filters = [
             'q' => trim((string) $request->query('q', '')),
             'status' => $status,
@@ -31,11 +37,17 @@ class StaffAgentProfileController extends Controller
             'market' => trim((string) $request->query('market', '')),
             'brokerage' => trim((string) $request->query('brokerage', '')),
             'featured' => trim((string) $request->query('featured', '')),
+            'plan' => $planFilter === 'all' || $availablePlans->contains('slug', $planFilter) ? $planFilter : 'all',
             'per_page' => $perPage,
         ];
 
         $query = RealtorProfile::query()
-            ->with(['user:id,name,display_name,email,phone,status', 'createdByUser:id,name'])
+            ->with([
+                'user:id,name,display_name,email,phone,status,current_plan_id',
+                'user.activeAgentSubscription.package:id,name,slug,category',
+                'user.currentPlan:id,name,slug',
+                'createdByUser:id,name',
+            ])
             ->latest();
 
         if ($status !== 'all') {
@@ -85,6 +97,14 @@ class StaffAgentProfileController extends Controller
             $query->where('profile_status', '!=', RealtorProfile::STATUS_FEATURED);
         }
 
+        if ($filters['plan'] !== 'all') {
+            $query->whereHas('user', function ($userQuery) use ($planFilter) {
+                $userQuery->where('current_plan_id', function ($subQuery) use ($planFilter) {
+                    $subQuery->select('id')->from('packages')->where('slug', $planFilter)->limit(1);
+                });
+            });
+        }
+
         return view('pages.admin.agent-profiles.index', [
             'profiles' => $query->paginate($perPage)->withQueryString(),
             'status' => $status,
@@ -118,6 +138,12 @@ class StaffAgentProfileController extends Controller
                 ->orderBy('service_city')
                 ->limit(100)
                 ->pluck('service_city'),
+            'availablePlans' => $availablePlans,
+            'planCounts' => collect($availablePlans->mapWithKeys(fn ($plan) => [
+                $plan->slug => User::where('current_plan_id', $plan->id)->count(),
+            ]))->merge([
+                'none' => User::whereNull('current_plan_id')->count(),
+            ]),
             'meta' => [
                 'title' => 'Agent Profiles | Admin | OmniReferral',
                 'description' => 'Staff workspace for creating and publishing agent directory profiles.',
@@ -216,13 +242,19 @@ class StaffAgentProfileController extends Controller
     public function show(RealtorProfile $agentProfile): View
     {
         $this->authorize('view', $agentProfile);
-        $agentProfile->load(['user', 'createdByUser']);
+        $agentProfile->load([
+            'user',
+            'user.activeAgentSubscription.package',
+            'user.currentPlan',
+            'createdByUser',
+        ]);
 
         return view('pages.admin.agent-profiles.show', [
             'profile' => $agentProfile,
             'user' => $agentProfile->user,
             'statusOptions' => RealtorProfile::statusOptions(),
             'canEdit' => auth()->user()?->can('update', $agentProfile) ?? false,
+            'availablePlans' => Package::leadPlans()->active()->orderBy('sort_order')->get(),
             'meta' => [
                 'title' => ($agentProfile->user?->publicDisplayName() ?: 'Agent').' | Profile',
             ],
@@ -375,6 +407,58 @@ class StaffAgentProfileController extends Controller
         }
 
         return back()->with('success', 'Profile suspended and removed from public directory.');
+    }
+
+    public function changePlan(Request $request, RealtorProfile $agentProfile): RedirectResponse
+    {
+        $this->authorize('update', $agentProfile);
+
+        $user = $agentProfile->user;
+        abort_unless($user, 404);
+
+        $validated = $request->validate([
+            'package_id' => ['required', 'exists:packages,id'],
+        ]);
+
+        $newPackage = Package::findOrFail($validated['package_id']);
+        $oldSubscription = $user->activeAgentSubscription;
+
+        DB::transaction(function () use ($user, $newPackage, $oldSubscription) {
+            if ($oldSubscription) {
+                $oldSubscription->update(['is_active' => false, 'payment_status' => 'cancelled']);
+            }
+
+            $subscription = AgentSubscription::create([
+                'user_id'           => $user->id,
+                'package_id'        => $newPackage->id,
+                'payment_status'    => 'paid',
+                'payment_provider'  => 'admin',
+                'payment_reference' => 'ADMIN-PLAN-CHANGE-' . $user->id . '-' . $newPackage->id . '-' . now()->timestamp,
+                'payment_amount'    => $newPackage->preferredCheckoutAmount(),
+                'starts_at'         => now(),
+                'ends_at'           => $newPackage->billing_type === 'yearly' ? now()->addYear() : null,
+                'is_active'         => true,
+            ]);
+
+            $user->update(['current_plan_id' => $newPackage->id]);
+
+            $month = now()->format('Y-m');
+            AgentLeadQuota::updateOrCreate(
+                ['user_id' => $user->id, 'month' => $month],
+                [
+                    'package_id'      => $newPackage->id,
+                    'monthly_quota'   => $newPackage->monthly_lead_quota ?? 0,
+                    'remaining_count' => $newPackage->monthly_lead_quota ?? 0,
+                    'overdue_count'   => 0,
+                ]
+            );
+        });
+
+        AdminAudit::log($request, 'realtor_profile.plan_changed', 'realtor_profile', $agentProfile->id, [
+            'new_package' => $newPackage->slug,
+        ]);
+
+        return back()->with('success', 'Plan changed to ' . $newPackage->displayName() . '.');
     }
 
     private function validatedProfilePayload(Request $request, ?int $userId = null): array

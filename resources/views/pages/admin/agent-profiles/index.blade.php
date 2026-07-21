@@ -48,6 +48,40 @@
     };
     
     $formatDate = fn ($date) => $date ? $date->format('M j, Y') : '-';
+
+    $planLabelFor = function ($profile): string {
+        $sub = $profile->user?->activeAgentSubscription;
+        if ($sub && $sub->package) {
+            return $sub->package->displayName();
+        }
+        $plan = $profile->user?->currentPlan;
+        return $plan ? $plan->displayName() : 'No Plan';
+    };
+
+    $planBadgeClassFor = function ($profile): string {
+        $sub = $profile->user?->activeAgentSubscription;
+        $slug = $sub?->package?->slug ?? $profile->user?->currentPlan?->slug ?? '';
+        return match ($slug) {
+            'starter-leads', 'quick-leads' => 'agent-admin__plan--starter',
+            'growth-leads', 'power-leads' => 'agent-admin__plan--growth',
+            'elite-leads', 'prime-leads' => 'agent-admin__plan--elite',
+            default => 'agent-admin__plan--none',
+        };
+    };
+
+    $planStatusFor = function ($profile): string {
+        $sub = $profile->user?->activeAgentSubscription;
+        if (! $sub) {
+            return 'No Subscription';
+        }
+        if ($sub->is_active && $sub->payment_status === 'paid') {
+            return 'Active';
+        }
+        if ($sub->ends_at && $sub->ends_at->isPast()) {
+            return 'Expired';
+        }
+        return ucfirst($sub->payment_status ?: 'Pending');
+    };
 @endphp
 
 <div class="agent-admin" data-agent-admin>
@@ -127,6 +161,17 @@
             </label>
 
             <label class="agent-admin__field">
+                <span>Pricing Plan</span>
+                <select name="plan">
+                    <option value="all" @selected(($filters['plan'] ?? 'all') === 'all')>All plans</option>
+                    @foreach($availablePlans as $planOption)
+                        <option value="{{ $planOption->slug }}" @selected(($filters['plan'] ?? 'all') === $planOption->slug)>{{ $planOption->displayName() }}</option>
+                    @endforeach
+                    <option value="none" @selected(($filters['plan'] ?? '') === 'none')">No Plan</option>
+                </select>
+            </label>
+
+            <label class="agent-admin__field">
                 <span>Rows Per Page</span>
                 <select name="per_page">
                     @foreach($perPageOptions as $option)
@@ -165,6 +210,7 @@
                         <th>Brokerage &amp; Active Status</th>
                         <th>Market Location</th>
                         <th>Status</th>
+                        <th>Plan</th>
                         <th>Completion</th>
                         <th>Created / Updated</th>
                         <th>Actions</th>
@@ -184,6 +230,7 @@
                                     <img src="{{ $profile->headshotPublicUrl($user) }}" alt="" width="40" height="40" loading="lazy" onerror="this.onerror=null;this.src='{{ asset('images/realtors/logo-bydefault_agent.png') }}'">
                                     <div>
                                         <strong>{{ $user?->publicDisplayName() ?? 'Unnamed agent' }}</strong>
+                                        <span class="agent-admin__plan {{ $planBadgeClassFor($profile) }}">{{ $planLabelFor($profile) }}</span>
                                         <span>{{ $profile->slug }}</span>
                                     </div>
                                 </div>
@@ -209,6 +256,12 @@
                             </td>
                             <td>
                                 <span class="agent-admin__status agent-admin__status--{{ $profile->profile_status }}">{{ $profile->statusLabel() }}</span>
+                            </td>
+                            <td>
+                                <div class="agent-admin__stack">
+                                    <span class="agent-admin__plan agent-admin__plan--row {{ $planBadgeClassFor($profile) }}">{{ $planLabelFor($profile) }}</span>
+                                    <small>{{ $planStatusFor($profile) }}</small>
+                                </div>
                             </td>
                             <td>
                                 <div class="agent-admin__completion">
@@ -249,7 +302,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8">
+                            <td colspan="9">
                                 <div class="agent-admin__empty">
                                     <h3>No Agent Profiles Found</h3>
                                     <p>Adjust your search filters or add a new agent profile to start.</p>
@@ -276,6 +329,7 @@
                             <img src="{{ $profile->headshotPublicUrl($user) }}" alt="" width="40" height="40" loading="lazy" onerror="this.onerror=null;this.src='{{ asset('images/realtors/logo-bydefault_agent.png') }}'">
                             <div>
                                 <strong>{{ $user?->publicDisplayName() ?? 'Unnamed agent' }}</strong>
+                                <span class="agent-admin__plan {{ $planBadgeClassFor($profile) }}">{{ $planLabelFor($profile) }}</span>
                                 <span>{{ $user?->email ?? '-' }}</span>
                             </div>
                         </div>
@@ -286,6 +340,10 @@
                         <div>
                             <dt>Brokerage</dt>
                             <dd>{{ $profile->brokerage_name ?: '-' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Pricing Plan</dt>
+                            <dd><span class="agent-admin__plan {{ $planBadgeClassFor($profile) }}">{{ $planLabelFor($profile) }}</span></dd>
                         </div>
                         <div>
                             <dt>Market Location</dt>
@@ -366,6 +424,11 @@
                     <div><span>License</span><strong>{{ $profile->license_number ?: '-' }}</strong></div>
                     <div><span>Active Agent</span><strong>{{ ($profile->is_active_agent ?? true) ? 'Yes' : 'No' }}</strong></div>
                     <div><span>Source</span><strong>{{ $profile->submission_source === 'public_agents_page' ? 'Public Agents Page' : ($profile->submission_source ?: 'Admin') }}</strong></div>
+                    <div><span>Pricing Plan</span><strong><span class="agent-admin__plan {{ $planBadgeClassFor($profile) }}">{{ $planLabelFor($profile) }}</span></strong></div>
+                    <div><span>Plan Status</span><strong>{{ $planStatusFor($profile) }}</strong></div>
+                    @if($user?->activeAgentSubscription?->package)
+                        <div><span>Monthly Leads</span><strong>{{ $user->activeAgentSubscription->package->monthly_lead_quota ?? '-' }}/mo</strong></div>
+                    @endif
                     <div><span>Market Area</span><strong>{{ $profile->market_areas ?: $profile->service_city ?: '-' }}</strong></div>
                     <div><span>City / State</span><strong>{{ $profile->service_city ?: '-' }}, {{ $profile->service_state ?: '-' }}</strong></div>
                     <div><span>ZIP Code</span><strong>{{ $profile->service_zip_code ?: '-' }}</strong></div>
@@ -450,6 +513,23 @@
                     <div class="agent-admin__drawer-actions">
                         <button type="button" class="button button--ghost-blue" data-close-dialog>Cancel</button>
                         <button type="submit" class="button button--orange" data-saving-label="Saving...">Save Changes</button>
+                    </div>
+                </form>
+
+                <form method="POST" action="{{ route('admin.agent-profiles.change-plan', $profile) }}" class="agent-admin__plan-change-form">
+                    @csrf
+                    <div class="agent-admin__plan-change">
+                        <span class="agent-admin__plan {{ $planBadgeClassFor($profile) }}">{{ $planLabelFor($profile) }}</span>
+                        <label class="agent-admin__plan-change-select">
+                            <select name="package_id" required>
+                                @foreach($availablePlans as $planOption)
+                                    <option value="{{ $planOption->id }}" @selected($user?->activeAgentSubscription?->package_id === $planOption->id || $user?->current_plan_id === $planOption->id)>
+                                        {{ $planOption->displayName() }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </label>
+                        <button type="submit" class="button button--ghost-blue" onclick="return confirm('Change this agent\'s plan? This will deactivate the current subscription.')">Update Plan</button>
                     </div>
                 </form>
             </div>

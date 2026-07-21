@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\AffiliateProfile;
+use App\Models\AgentSubscription;
 use App\Models\Blog;
 use App\Models\Lead;
 use App\Models\LeadMatch;
@@ -28,6 +29,122 @@ class OmniReferralSeeder extends Seeder
         $defaultHeadshot = \App\Support\AgentAvatar::defaultStorageHeadshot();
 
         $packages = collect([
+            // --- Lead Packages (real estate referral plans) ---
+            [
+                'name' => 'Starter Lead',
+                'slug' => 'starter-leads',
+                'description' => 'Starter-friendly. City-focused.',
+                'category' => 'lead',
+                'billing_type' => 'one_time',
+                'is_featured' => false,
+                'is_active' => true,
+                'one_time_price' => 369,
+                'monthly_price' => null,
+                'hourly_price' => null,
+                'stripe_price_id' => null,
+                'stripe_product_id' => null,
+                'ghl_form_url' => 'https://api.leadconnectorhq.com/widget/survey/q61dioT6A8taz0yLfK93',
+                'ghl_pipeline_stage' => 'starter-leads',
+                'features' => [
+                    'Access to Open Enrollment & 2x Referrals (Q3-Q4, 2026)',
+                    '20% Referral Fee',
+                    '1-2 Exclusive Referrals / Mo',
+                    '15+ Referrals Till Dec, 2026',
+                    'Select up to 2 Cities or ZIP Codes',
+                    '1 Hr / Week of Virtual Assistance',
+                    'Email Support',
+                    '1-Step Verified Prospects',
+                    'AI Powered Verification',
+                    'Basic + Organic Marketing',
+                    'Virtual pre-screening before showings',
+                    'Basic Listings Portal Access',
+                    'Basic Profile Optimization',
+                    'Quarterly Profile Health Update and Tips',
+                ],
+                'cta_label' => 'GO STARTER',
+                'duration_days' => 365,
+                'sort_order' => 1,
+                'monthly_lead_quota' => 5,
+                'lead_priority' => 1,
+            ],
+            [
+                'name' => 'Growth Lead',
+                'slug' => 'growth-leads',
+                'description' => 'Multi-city. Scalable support.',
+                'category' => 'lead',
+                'billing_type' => 'one_time',
+                'is_featured' => true,
+                'is_active' => true,
+                'one_time_price' => 697,
+                'monthly_price' => null,
+                'hourly_price' => null,
+                'stripe_price_id' => null,
+                'stripe_product_id' => null,
+                'ghl_form_url' => 'https://api.leadconnectorhq.com/widget/survey/ENBVclSqwUuX7awfOEM8',
+                'ghl_pipeline_stage' => 'growth-leads',
+                'features' => [
+                    'Access to Open Enrollment & 2x Referrals (Q3-Q4, 2026)',
+                    '15% Referral Fee',
+                    'First FIVE (5) Referrals FREE',
+                    '30+ Referrals Till Dec, 2026',
+                    'Select up to 5 Cities or ZIP Codes',
+                    '3 Hrs / Week of Virtual Assistance',
+                    'Email + Text Support',
+                    '2-Steps Verified Prospects',
+                    'AI + Human Powered Referrals',
+                    'Organic + Business Network Marketing',
+                    'Virtual pre-screening before showings',
+                    'Showcase 5 Listings On Websites',
+                    'Premium Profile Showcase',
+                    'Quarterly Profile Scorecard',
+                    '3 High Revenue Ads / Quarter',
+                ],
+                'cta_label' => 'GO GROWTH',
+                'duration_days' => 365,
+                'sort_order' => 2,
+                'monthly_lead_quota' => 15,
+                'lead_priority' => 2,
+            ],
+            [
+                'name' => 'Elite Lead',
+                'slug' => 'elite-leads',
+                'description' => 'Premium reach. Full-service.',
+                'category' => 'lead',
+                'billing_type' => 'one_time',
+                'is_featured' => false,
+                'is_active' => true,
+                'one_time_price' => 1979,
+                'monthly_price' => null,
+                'hourly_price' => null,
+                'stripe_price_id' => null,
+                'stripe_product_id' => null,
+                'ghl_form_url' => 'https://api.leadconnectorhq.com/widget/survey/z2wUhJG00x4n3MxY616R',
+                'ghl_pipeline_stage' => 'elite-leads',
+                'features' => [
+                    'Priority Access to Open Enrollment & 2x Referrals (Q3-Q4, 2026)',
+                    '10% Referral Fee',
+                    '50+ Referrals Till Dec, 2026',
+                    'Select up to 10 Cities or ZIP Codes',
+                    '15 Hrs / Week of Virtual Assistance',
+                    'Priority Support on Call + Text + Email',
+                    '3-Steps Verified Prospects',
+                    'AI + Human Powered Verification',
+                    'Full Marketing Toolkit + Templates + Premium SEO',
+                    'Virtual pre-screening before showings',
+                    'Premium Listings Portal Access',
+                    'Premium Profile Optimization & SEO',
+                    'Monthly Profile Health Update and Tips',
+                    'Exclusive Lead Pool Portal Access',
+                    'Accept, Nurture, Reject or Re-Verify Referrals in Portal',
+                    'Dedicated Accounts Manager',
+                ],
+                'cta_label' => 'GO ELITE',
+                'duration_days' => 365,
+                'sort_order' => 3,
+                'monthly_lead_quota' => 35,
+                'lead_priority' => 3,
+            ],
+            // --- Virtual Assistance Packages ---
             [
                 'name' => 'Cold Calling / ISA',
                 'slug' => 'cold-calling-isa',
@@ -55,7 +172,9 @@ class OmniReferralSeeder extends Seeder
                 ],
                 'cta_label' => 'Explore Plan',
                 'duration_days' => 30,
-                'sort_order' => 1,
+                'sort_order' => 4,
+                'monthly_lead_quota' => 0,
+                'lead_priority' => 0,
             ],
             [
                 'name' => 'Social Media Mgmt',
@@ -85,7 +204,9 @@ class OmniReferralSeeder extends Seeder
                 ],
                 'cta_label' => 'Explore Plan',
                 'duration_days' => 30,
-                'sort_order' => 2,
+                'sort_order' => 5,
+                'monthly_lead_quota' => 0,
+                'lead_priority' => 0,
             ],
             [
                 'name' => 'Individual VA',
@@ -114,10 +235,15 @@ class OmniReferralSeeder extends Seeder
                 ],
                 'cta_label' => 'Explore Plan',
                 'duration_days' => 30,
-                'sort_order' => 3,
+                'sort_order' => 6,
+                'monthly_lead_quota' => 0,
+                'lead_priority' => 0,
             ],
         ])->map(fn ($plan) => Package::updateOrCreate(['slug' => $plan['slug']], $plan));
 
+        $starterPlan = $packages->firstWhere('slug', 'starter-leads');
+        $growthPlan = $packages->firstWhere('slug', 'growth-leads');
+        $elitePlan = $packages->firstWhere('slug', 'elite-leads');
         $coldCallingPlan = $packages->firstWhere('slug', 'cold-calling-isa');
         $socialMediaPlan = $packages->firstWhere('slug', 'social-media-mgmt');
         $individualVaPlan = $packages->firstWhere('slug', 'individual-va');
@@ -190,12 +316,12 @@ class OmniReferralSeeder extends Seeder
         ]);
 
         $agents = collect([
-            ['name' => 'Mason Reed', 'email' => 'mason@omnireferrals.com', 'city' => 'Dallas', 'state' => 'TX', 'zip' => '75201', 'brokerage' => 'Reed & Co Realty', 'plan' => $coldCallingPlan?->id],
-            ['name' => 'Ava Collins', 'email' => 'ava@omnireferrals.com', 'city' => 'Miami', 'state' => 'FL', 'zip' => '33101', 'brokerage' => 'Collins Coastal Realty', 'plan' => $socialMediaPlan?->id],
-            ['name' => 'Ethan Brooks', 'email' => 'ethan@omnireferrals.com', 'city' => 'Phoenix', 'state' => 'AZ', 'zip' => '85001', 'brokerage' => 'Brooks Property Group', 'plan' => $individualVaPlan?->id],
-            ['name' => 'Sophia Hayes', 'email' => 'sophia@omnireferrals.com', 'city' => 'Atlanta', 'state' => 'GA', 'zip' => '30301', 'brokerage' => 'Hayes Urban Homes', 'plan' => $socialMediaPlan?->id],
-            ['name' => 'Liam Foster', 'email' => 'liam@omnireferrals.com', 'city' => 'Austin', 'state' => 'TX', 'zip' => '73301', 'brokerage' => 'Foster Urban Realty', 'plan' => $coldCallingPlan?->id],
-            ['name' => 'Emma Hart', 'email' => 'emma@omnireferrals.com', 'city' => 'Nashville', 'state' => 'TN', 'zip' => '37201', 'brokerage' => 'Hart & Home Advisors', 'plan' => $individualVaPlan?->id],
+            ['name' => 'Mason Reed', 'email' => 'mason@omnireferrals.com', 'city' => 'Dallas', 'state' => 'TX', 'zip' => '75201', 'brokerage' => 'Reed & Co Realty', 'plan' => $starterPlan?->id],
+            ['name' => 'Ava Collins', 'email' => 'ava@omnireferrals.com', 'city' => 'Miami', 'state' => 'FL', 'zip' => '33101', 'brokerage' => 'Collins Coastal Realty', 'plan' => $growthPlan?->id],
+            ['name' => 'Ethan Brooks', 'email' => 'ethan@omnireferrals.com', 'city' => 'Phoenix', 'state' => 'AZ', 'zip' => '85001', 'brokerage' => 'Brooks Property Group', 'plan' => $elitePlan?->id],
+            ['name' => 'Sophia Hayes', 'email' => 'sophia@omnireferrals.com', 'city' => 'Atlanta', 'state' => 'GA', 'zip' => '30301', 'brokerage' => 'Hayes Urban Homes', 'plan' => $growthPlan?->id],
+            ['name' => 'Liam Foster', 'email' => 'liam@omnireferrals.com', 'city' => 'Austin', 'state' => 'TX', 'zip' => '73301', 'brokerage' => 'Foster Urban Realty', 'plan' => $starterPlan?->id],
+            ['name' => 'Emma Hart', 'email' => 'emma@omnireferrals.com', 'city' => 'Nashville', 'state' => 'TN', 'zip' => '37201', 'brokerage' => 'Hart & Home Advisors', 'plan' => $elitePlan?->id],
         ])->map(function ($agent, $index) use ($realtorImages, $defaultHeadshot, $admin) {
             $user = User::updateOrCreate(['email' => $agent['email']], [
                 'name' => $agent['name'],
@@ -210,6 +336,19 @@ class OmniReferralSeeder extends Seeder
                 'affiliate_code' => strtoupper('AGN'.str_pad((string) ($index + 1), 5, '0', STR_PAD_LEFT)),
                 'onboarding_completed_at' => now()->subDays(10 - $index),
             ]);
+
+            if ($agent['plan']) {
+                AgentSubscription::updateOrCreate(
+                    ['user_id' => $user->id, 'package_id' => $agent['plan']],
+                    [
+                        'payment_status' => 'paid',
+                        'payment_provider' => 'seed',
+                        'payment_reference' => 'SEED-'.$user->id.'-'.$agent['plan'],
+                        'starts_at' => now()->subDays(10 - $index),
+                        'is_active' => true,
+                    ]
+                );
+            }
 
             AffiliateProfile::updateOrCreate(['user_id' => $user->id], [
                 'slug' => Str::slug($agent['name']).'-partner',
@@ -342,9 +481,9 @@ class OmniReferralSeeder extends Seeder
         }
 
         $leads = collect([
-            ['buyer', 'Taylor Morgan', 'taylor@example.com', '8005552001', '75201', 'House', 450000, null, '0-30 days', 'Pre-approved', 'Phone', $coldCallingPlan?->id, 'qualified', optional($agents[0] ?? null)->user_id],
-            ['seller', 'Jamie Carter', 'jamie@example.com', '8005552002', '33101', 'Apartment', null, 625000, '1-3 months', 'Need pricing help', 'Email', $socialMediaPlan?->id, 'assigned', optional($agents[1] ?? null)->user_id],
-            ['buyer', 'Chris Allen', 'chris@example.com', '8005552003', '85001', 'Commercial', 950000, null, 'ASAP', 'Cash buyer', 'Text', $individualVaPlan?->id, 'contacted', optional($agents[2] ?? null)->user_id],
+            ['buyer', 'Taylor Morgan', 'taylor@example.com', '8005552001', '75201', 'House', 450000, null, '0-30 days', 'Pre-approved', 'Phone', $starterPlan?->id, 'qualified', optional($agents[0] ?? null)->user_id],
+            ['seller', 'Jamie Carter', 'jamie@example.com', '8005552002', '33101', 'Apartment', null, 625000, '1-3 months', 'Need pricing help', 'Email', $growthPlan?->id, 'assigned', optional($agents[1] ?? null)->user_id],
+            ['buyer', 'Chris Allen', 'chris@example.com', '8005552003', '85001', 'Commercial', 950000, null, 'ASAP', 'Cash buyer', 'Text', $elitePlan?->id, 'contacted', optional($agents[2] ?? null)->user_id],
         ])->map(function ($leadData, $index) use ($isa, $packages) {
             [$intent, $name, $email, $phone, $zip, $type, $budget, $asking, $timeline, $financingStatus, $contactPreference, $packageId, $status, $assignedAgentId] = $leadData;
             $package = $packages->firstWhere('id', $packageId);
@@ -352,7 +491,7 @@ class OmniReferralSeeder extends Seeder
             return Lead::updateOrCreate(['email' => $email], [
                 'lead_number' => 'OMNI-20260401-'.str_pad((string) ($index + 1), 4, '0', STR_PAD_LEFT),
                 'intent' => $intent,
-                'package_type' => $package ? str($package->slug)->before('-')->toString() : ['cold', 'social', 'individual'][$index],
+                'package_type' => $package ? str($package->slug)->before('-')->toString() : ['starter', 'growth', 'elite'][$index],
                 'package_id' => $packageId,
                 'status' => $status,
                 'source' => 'website',

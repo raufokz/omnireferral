@@ -286,6 +286,7 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::get('/agent/dashboard', [AgentPortalController::class, 'overview'])->name('dashboard.agent');
         Route::get('/agent/profile', [AgentPortalController::class, 'profile'])->name('agent.profile');
         Route::put('/agent/profile', [AgentPortalController::class, 'updateProfile'])->name('agent.profile.update');
+        Route::post('/agent/profile/change-plan', [AgentPortalController::class, 'changePlan'])->name('agent.profile.change-plan');
         Route::get('/agent/leads', [AgentPortalController::class, 'leads'])->name('agent.leads.index');
         Route::post('/agent/leads/{lead}/status', [AgentLeadController::class, 'updateStatus'])->name('agent.leads.status');
         Route::get('/agent/listings', [AgentPortalController::class, 'listings'])->name('agent.listings.index');
@@ -478,6 +479,7 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::post('admin/agent-profiles/{agentProfile}/feature', [StaffAgentProfileController::class, 'feature'])->name('admin.agent-profiles.feature');
         Route::post('admin/agent-profiles/{agentProfile}/publish', [StaffAgentProfileController::class, 'publish'])->name('admin.agent-profiles.publish');
         Route::post('admin/agent-profiles/{agentProfile}/suspend', [StaffAgentProfileController::class, 'suspend'])->name('admin.agent-profiles.suspend');
+        Route::post('admin/agent-profiles/{agentProfile}/change-plan', [StaffAgentProfileController::class, 'changePlan'])->name('admin.agent-profiles.change-plan');
 
         // Lead assignment & quota management
         Route::get('admin/lead-assignments', [LeadAssignmentController::class, 'index'])->name('admin.lead-assignments.index');

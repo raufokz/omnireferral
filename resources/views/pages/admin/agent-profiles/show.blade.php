@@ -23,9 +23,80 @@
 @section('content')
 @php
     $socialLinks = is_array($profile->social_links) ? $profile->social_links : [];
+    $subscription = $user?->activeAgentSubscription;
+    $subPackage = $subscription?->package;
+    $currentPlan = $user?->currentPlan;
+
+    $resolvedPlanName = $subPackage?->displayName() ?? $currentPlan?->displayName() ?? null;
+    $resolvedPlanSlug = $subPackage?->slug ?? $currentPlan?->slug ?? null;
+    $planBadgeClass = match ($resolvedPlanSlug) {
+        'starter-leads', 'quick-leads' => 'agent-admin__plan--starter',
+        'growth-leads', 'power-leads' => 'agent-admin__plan--growth',
+        'elite-leads', 'prime-leads' => 'agent-admin__plan--elite',
+        default => 'agent-admin__plan--none',
+    };
+    $subStatusLabel = match (true) {
+        ! $subscription => 'No Subscription',
+        $subscription->is_active && $subscription->payment_status === 'paid' => 'Active',
+        $subscription->ends_at?->isPast() => 'Expired',
+        default => ucfirst($subscription->payment_status ?: 'Pending'),
+    };
 @endphp
 <div class="workspace-stack">
     @if(session('success'))<div class="workspace-card">{{ session('success') }}</div>@endif
+
+    <section class="workspace-card">
+        <h3 style="margin:0 0 1rem; font-size:1rem; font-weight:700;">Subscription Information</h3>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem;">
+            <div>
+                <span style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:0.03em;">Current Plan</span>
+                @if($resolvedPlanName)
+                    <span class="agent-admin__plan {{ $planBadgeClass }}">{{ $resolvedPlanName }}</span>
+                @else
+                    <span class="agent-admin__plan agent-admin__plan--none">No Plan</span>
+                @endif
+            </div>
+            <div>
+                <span style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:0.03em;">Subscription Status</span>
+                <strong style="font-size:0.875rem;">{{ $subStatusLabel }}</strong>
+            </div>
+            @if($subscription)
+                <div>
+                    <span style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:0.03em;">Payment Status</span>
+                    <strong style="font-size:0.875rem;">{{ ucfirst($subscription->payment_status ?: 'Unknown') }}</strong>
+                </div>
+                <div>
+                    <span style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:0.03em;">Start Date</span>
+                    <strong style="font-size:0.875rem;">{{ $subscription->starts_at?->format('M j, Y') ?? '-' }}</strong>
+                </div>
+                <div>
+                    <span style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:0.03em;">End Date</span>
+                    <strong style="font-size:0.875rem;">{{ $subscription->ends_at?->format('M j, Y') ?? '-' }}</strong>
+                </div>
+            @endif
+            @if($subPackage?->monthly_lead_quota)
+                <div>
+                    <span style="display:block; font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:0.03em;">Monthly Lead Quota</span>
+                    <strong style="font-size:0.875rem;">{{ $subPackage->monthly_lead_quota }}/mo</strong>
+                </div>
+            @endif
+        </div>
+
+        <form method="POST" action="{{ route('admin.agent-profiles.change-plan', $profile) }}" style="margin-top:1.25rem; border-top:1px solid var(--agent-admin-line, #e2e8f0); padding-top:1rem; display:flex; align-items:flex-end; gap:1rem; flex-wrap:wrap;">
+            @csrf
+            <label style="display:flex; flex-direction:column; gap:0.35rem; min-width:220px;">
+                <span style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:0.03em;">Change Plan</span>
+                <select name="package_id" required style="min-height:2.4rem; border:1px solid #e2e8f0; border-radius:8px; padding:0.4rem 0.6rem; font-size:0.85rem;">
+                    @foreach($availablePlans as $planOption)
+                        <option value="{{ $planOption->id }}" @selected($subPackage?->id === $planOption->id)>
+                            {{ $planOption->displayName() }} @if($subPackage?->id === $planOption->id)(current)@endif
+                        </option>
+                    @endforeach
+                </select>
+            </label>
+            <button type="submit" class="button button--orange" onclick="return confirm('This will deactivate the current subscription and activate the new plan. Continue?')" style="min-height:2.4rem;">Change Plan</button>
+        </form>
+    </section>
 
     <section class="workspace-card">
         <form method="POST" action="{{ route('admin.agent-profiles.update', $profile) }}" enctype="multipart/form-data">

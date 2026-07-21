@@ -16,6 +16,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -48,15 +49,68 @@ class PortalController extends Controller
     {
         [$user, $profile, $portal] = $this->portalContext();
 
+        $user->load(['activeAgentSubscription.package', 'currentPlan']);
+
         return view('pages.dashboards.agent-profile', array_merge($portal, [
             'agentUser' => $user,
             'agentProfile' => $profile,
             'activeAgentPage' => 'profile',
+            'availablePlans' => Package::leadPlans()->active()->orderBy('sort_order')->get(),
             'meta' => [
                 'title' => 'Agent Profile | OmniReferral',
                 'description' => 'Manage your OmniReferral agent profile, service area, and public-facing details.',
             ],
         ]));
+    }
+
+    public function changePlan(Request $request): RedirectResponse
+    {
+        [$user] = $this->portalContext();
+
+        $validated = $request->validate([
+            'package_id' => ['required', 'exists:packages,id'],
+        ]);
+
+        $newPackage = Package::findOrFail($validated['package_id']);
+
+        if ($newPackage->category !== 'lead') {
+            return back()->withErrors(['package_id' => 'You can only select a lead package.']);
+        }
+
+        $oldSubscription = $user->activeAgentSubscription;
+
+        DB::transaction(function () use ($user, $newPackage, $oldSubscription) {
+            if ($oldSubscription) {
+                $oldSubscription->update(['is_active' => false, 'payment_status' => 'cancelled']);
+            }
+
+            AgentSubscription::create([
+                'user_id'           => $user->id,
+                'package_id'        => $newPackage->id,
+                'payment_status'    => 'paid',
+                'payment_provider'  => 'self-service',
+                'payment_reference' => 'SELF-' . $user->id . '-' . $newPackage->id . '-' . now()->timestamp,
+                'payment_amount'    => $newPackage->preferredCheckoutAmount(),
+                'starts_at'         => now(),
+                'ends_at'           => $newPackage->billing_type === 'yearly' ? now()->addYear() : null,
+                'is_active'         => true,
+            ]);
+
+            $user->update(['current_plan_id' => $newPackage->id]);
+
+            $month = now()->format('Y-m');
+            AgentLeadQuota::updateOrCreate(
+                ['user_id' => $user->id, 'month' => $month],
+                [
+                    'package_id'      => $newPackage->id,
+                    'monthly_quota'   => $newPackage->monthly_lead_quota ?? 0,
+                    'remaining_count' => $newPackage->monthly_lead_quota ?? 0,
+                    'overdue_count'   => 0,
+                ]
+            );
+        });
+
+        return back()->with('success', 'Your plan has been updated to ' . $newPackage->displayName() . '.');
     }
 
     public function updateProfile(Request $request): RedirectResponse
