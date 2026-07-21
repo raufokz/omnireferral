@@ -150,6 +150,20 @@ class AppServiceProvider extends ServiceProvider
             return (bool) ($user?->isSuperAdmin() ?? false);
         });
 
+        // Plan-driven feature gate: @can('plan-feature', 'portal_access') / can:plan-feature,property_listings.
+        // Staff/admin operate above plan restrictions; agents/buyers follow their active package.
+        Gate::define('plan-feature', function (?User $user, string $feature): bool {
+            if (! $user) {
+                return false;
+            }
+
+            if ($user->isStaff()) {
+                return true;
+            }
+
+            return $user->planAllows($feature);
+        });
+
         Gate::policy(Property::class, PropertyPolicy::class);
         Gate::policy(Enquiry::class, EnquiryPolicy::class);
         Gate::policy(Lead::class, LeadPolicy::class);

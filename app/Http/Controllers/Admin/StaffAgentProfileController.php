@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AgentLeadQuota;
-use App\Models\AgentSubscription;
 use App\Models\Package;
 use App\Models\RealtorProfile;
 use App\Models\User;
+use App\Services\SubscriptionManager;
 use App\Support\AdminAudit;
 use App\Support\AgentAvatar;
+use App\Support\PlanCapabilities;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -162,13 +162,13 @@ class StaffAgentProfileController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, SubscriptionManager $subscriptions): RedirectResponse
     {
         $this->authorize('viewAny', RealtorProfile::class);
 
         $validated = $this->validatedProfilePayload($request);
 
-        $profile = DB::transaction(function () use ($request, $validated) {
+        $profile = DB::transaction(function () use ($request, $validated, $subscriptions) {
             $slug = RealtorProfile::generateUniqueSlug($validated['name']);
             $email = $validated['email'] ?? ('agent+'.$slug.'@directory.omnireferral.local');
 
@@ -199,33 +199,11 @@ class StaffAgentProfileController extends Controller
                     : ($isApproved ? 'active' : 'pending'),
                 'must_reset_password' => true,
                 'email_verified_at' => $isApproved ? now() : null,
-                'current_plan_id' => $newPackageId ?: null,
+                'current_plan_id' => null,
             ]);
 
             if ($newPackageId) {
-                $newPackage = Package::findOrFail($newPackageId);
-                AgentSubscription::create([
-                    'user_id'           => $user->id,
-                    'package_id'        => $newPackage->id,
-                    'payment_status'    => 'paid',
-                    'payment_provider'  => 'admin',
-                    'payment_reference' => 'ADMIN-PLAN-CREATE-' . $user->id . '-' . $newPackage->id . '-' . now()->timestamp,
-                    'payment_amount'    => $newPackage->preferredCheckoutAmount(),
-                    'starts_at'         => now(),
-                    'ends_at'           => $newPackage->billing_type === 'yearly' ? now()->addYear() : null,
-                    'is_active'         => true,
-                ]);
-
-                $month = now()->format('Y-m');
-                AgentLeadQuota::updateOrCreate(
-                    ['user_id' => $user->id, 'month' => $month],
-                    [
-                        'package_id'      => $newPackage->id,
-                        'monthly_quota'   => $newPackage->monthly_lead_quota ?? 0,
-                        'remaining_count' => $newPackage->monthly_lead_quota ?? 0,
-                        'overdue_count'   => 0,
-                    ]
-                );
+                $subscriptions->changePlan($user, Package::findOrFail($newPackageId), 'admin', $request->user());
             }
 
             return RealtorProfile::updateOrCreate(['user_id' => $user->id], [
@@ -278,19 +256,33 @@ class StaffAgentProfileController extends Controller
             'createdByUser',
         ]);
 
+        $user = $agentProfile->user;
+
         return view('pages.admin.agent-profiles.show', [
             'profile' => $agentProfile,
-            'user' => $agentProfile->user,
+            'user' => $user,
             'statusOptions' => RealtorProfile::statusOptions(),
             'canEdit' => auth()->user()?->can('update', $agentProfile) ?? false,
-            'availablePlans' => Package::leadPlans()->active()->orderBy('sort_order')->get(),
+            // All assignable packages (lead + VA) for the searchable dropdown.
+            'availablePlans' => Package::active()
+                ->orderBy('category')
+                ->orderBy('sort_order')
+                ->get(),
+            // Capabilities + checklist for every plan → drives the live JS checklist.
+            'planCatalog' => PlanCapabilities::all(),
+            // Capabilities + checklist for the agent's currently effective plan.
+            'currentCapabilities' => $user ? $user->planCapabilities() : PlanCapabilities::defaults(),
+            'currentChecklist' => $user ? PlanCapabilities::checklist($user->planSlug()) : [],
+            'subscriptionHistory' => $user
+                ? $user->subscriptionHistories()->with(['performedByUser:id,name', 'toPackage:id,slug,name', 'fromPackage:id,slug,name'])->limit(20)->get()
+                : collect(),
             'meta' => [
-                'title' => ($agentProfile->user?->publicDisplayName() ?: 'Agent').' | Profile',
+                'title' => ($user?->publicDisplayName() ?: 'Agent').' | Profile',
             ],
         ]);
     }
 
-    public function update(Request $request, RealtorProfile $agentProfile): RedirectResponse
+    public function update(Request $request, RealtorProfile $agentProfile, SubscriptionManager $subscriptions): RedirectResponse
     {
         $this->authorize('update', $agentProfile);
         $user = $agentProfile->user;
@@ -319,46 +311,19 @@ class StaffAgentProfileController extends Controller
                 : $user->email_verified_at,
         ]);
 
-        $newPackageId = $validated['package_id'] ?? null;
-        $oldSubscription = $user->activeAgentSubscription;
-        $currentPlanId = $user->current_plan_id;
+        // Plan changes are handled by the dedicated Subscription & Package section
+        // (change-plan / cancel-plan / reactivate-plan). Only act here if this form
+        // explicitly submits a package_id, so a normal profile save never alters the plan.
+        if ($request->has('package_id')) {
+            $newPackageId = $validated['package_id'] ?? null;
 
-        if ($newPackageId != $currentPlanId) {
-            DB::transaction(function () use ($user, $newPackageId, $oldSubscription) {
-                if ($oldSubscription) {
-                    $oldSubscription->update(['is_active' => false, 'payment_status' => 'cancelled']);
-                }
-
+            if ((int) $newPackageId !== (int) $user->current_plan_id) {
                 if ($newPackageId) {
-                    $newPackage = Package::findOrFail($newPackageId);
-                    AgentSubscription::create([
-                        'user_id'           => $user->id,
-                        'package_id'        => $newPackage->id,
-                        'payment_status'    => 'paid',
-                        'payment_provider'  => 'admin',
-                        'payment_reference' => 'ADMIN-PLAN-CHANGE-' . $user->id . '-' . $newPackage->id . '-' . now()->timestamp,
-                        'payment_amount'    => $newPackage->preferredCheckoutAmount(),
-                        'starts_at'         => now(),
-                        'ends_at'           => $newPackage->billing_type === 'yearly' ? now()->addYear() : null,
-                        'is_active'         => true,
-                    ]);
-
-                    $user->update(['current_plan_id' => $newPackage->id]);
-
-                    $month = now()->format('Y-m');
-                    AgentLeadQuota::updateOrCreate(
-                        ['user_id' => $user->id, 'month' => $month],
-                        [
-                            'package_id'      => $newPackage->id,
-                            'monthly_quota'   => $newPackage->monthly_lead_quota ?? 0,
-                            'remaining_count' => $newPackage->monthly_lead_quota ?? 0,
-                            'overdue_count'   => 0,
-                        ]
-                    );
+                    $subscriptions->changePlan($user, Package::findOrFail($newPackageId), 'admin', $request->user());
                 } else {
-                    $user->update(['current_plan_id' => null]);
+                    $subscriptions->cancel($user, 'admin', $request->user());
                 }
-            });
+            }
         }
 
         $approvalFields = $this->approvalFieldsForStatus($request, $agentProfile, $validated['profile_status']);
@@ -480,7 +445,10 @@ class StaffAgentProfileController extends Controller
         return back()->with('success', 'Profile suspended and removed from public directory.');
     }
 
-    public function changePlan(Request $request, RealtorProfile $agentProfile): RedirectResponse
+    /**
+     * Assign / change / upgrade / downgrade an agent's package (single entry point).
+     */
+    public function changePlan(Request $request, RealtorProfile $agentProfile, SubscriptionManager $subscriptions): RedirectResponse
     {
         $this->authorize('update', $agentProfile);
 
@@ -492,44 +460,54 @@ class StaffAgentProfileController extends Controller
         ]);
 
         $newPackage = Package::findOrFail($validated['package_id']);
-        $oldSubscription = $user->activeAgentSubscription;
-
-        DB::transaction(function () use ($user, $newPackage, $oldSubscription) {
-            if ($oldSubscription) {
-                $oldSubscription->update(['is_active' => false, 'payment_status' => 'cancelled']);
-            }
-
-            $subscription = AgentSubscription::create([
-                'user_id'           => $user->id,
-                'package_id'        => $newPackage->id,
-                'payment_status'    => 'paid',
-                'payment_provider'  => 'admin',
-                'payment_reference' => 'ADMIN-PLAN-CHANGE-' . $user->id . '-' . $newPackage->id . '-' . now()->timestamp,
-                'payment_amount'    => $newPackage->preferredCheckoutAmount(),
-                'starts_at'         => now(),
-                'ends_at'           => $newPackage->billing_type === 'yearly' ? now()->addYear() : null,
-                'is_active'         => true,
-            ]);
-
-            $user->update(['current_plan_id' => $newPackage->id]);
-
-            $month = now()->format('Y-m');
-            AgentLeadQuota::updateOrCreate(
-                ['user_id' => $user->id, 'month' => $month],
-                [
-                    'package_id'      => $newPackage->id,
-                    'monthly_quota'   => $newPackage->monthly_lead_quota ?? 0,
-                    'remaining_count' => $newPackage->monthly_lead_quota ?? 0,
-                    'overdue_count'   => 0,
-                ]
-            );
-        });
+        $subscriptions->changePlan($user, $newPackage, 'admin', $request->user());
 
         AdminAudit::log($request, 'realtor_profile.plan_changed', 'realtor_profile', $agentProfile->id, [
             'new_package' => $newPackage->slug,
         ]);
 
-        return back()->with('success', 'Plan changed to ' . $newPackage->displayName() . '.');
+        return back()->with('success', 'Plan set to ' . $newPackage->planLabel() . '.');
+    }
+
+    /**
+     * Cancel the agent's active package — removes plan features, keeps history.
+     */
+    public function cancelPlan(Request $request, RealtorProfile $agentProfile, SubscriptionManager $subscriptions): RedirectResponse
+    {
+        $this->authorize('update', $agentProfile);
+
+        $user = $agentProfile->user;
+        abort_unless($user, 404);
+        abort_unless($user->current_plan_id, 400, 'This agent has no active package to cancel.');
+
+        $subscriptions->cancel($user, 'admin', $request->user());
+
+        AdminAudit::log($request, 'realtor_profile.plan_cancelled', 'realtor_profile', $agentProfile->id);
+
+        return back()->with('success', 'Package cancelled. Plan features have been removed.');
+    }
+
+    /**
+     * Reactivate the agent's most recently held package.
+     */
+    public function reactivatePlan(Request $request, RealtorProfile $agentProfile, SubscriptionManager $subscriptions): RedirectResponse
+    {
+        $this->authorize('update', $agentProfile);
+
+        $user = $agentProfile->user;
+        abort_unless($user, 404);
+
+        $subscription = $subscriptions->reactivate($user, null, 'admin', $request->user());
+
+        if (! $subscription) {
+            return back()->with('error', 'No previous package found to reactivate. Assign a plan instead.');
+        }
+
+        AdminAudit::log($request, 'realtor_profile.plan_reactivated', 'realtor_profile', $agentProfile->id, [
+            'package' => $subscription->package?->slug,
+        ]);
+
+        return back()->with('success', 'Package reactivated: ' . PlanCapabilities::label($subscription->package?->slug) . '.');
     }
 
     private function validatedProfilePayload(Request $request, ?int $userId = null): array

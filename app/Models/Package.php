@@ -148,7 +148,39 @@ class Package extends Model
         return $requested === 'monthly' ? 'subscription' : 'payment';
     }
 
+    /**
+     * Full capability map for this package (single source of truth for feature gating).
+     *
+     * @return array<string, mixed>
+     */
+    public function capabilities(): array
+    {
+        return \App\Support\PlanCapabilities::for($this->slug);
+    }
+
+    /**
+     * Admin/agent-facing display label (Quick / Power / Prime naming).
+     */
+    public function planLabel(): string
+    {
+        return \App\Support\PlanCapabilities::label($this->slug);
+    }
+
     public function listingLimit(): int
+    {
+        // Known plans: the capability map is authoritative.
+        if (\App\Support\PlanCapabilities::isKnown($this->slug)) {
+            return \App\Support\PlanCapabilities::limit($this->slug, 'listing_limit');
+        }
+
+        return $this->legacyListingLimit();
+    }
+
+    /**
+     * Legacy pricing-text parsing, retained only for custom packages whose slug
+     * is not part of the defined plan catalogue.
+     */
+    private function legacyListingLimit(): int
     {
         if ($this->category !== 'lead') {
             return 0;

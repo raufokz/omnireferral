@@ -183,6 +183,46 @@ class User extends Authenticatable
         return $this->hasOne(AgentSubscription::class)->where('is_active', true)->latestOfMany();
     }
 
+    public function subscriptionHistories(): HasMany
+    {
+        return $this->hasMany(SubscriptionHistory::class)->latest();
+    }
+
+    /**
+     * The user's effective plan slug (source of truth: current_plan_id).
+     */
+    public function planSlug(): ?string
+    {
+        return $this->currentPlan?->slug;
+    }
+
+    /**
+     * Full capability map for the user's effective plan.
+     *
+     * @return array<string, mixed>
+     */
+    public function planCapabilities(): array
+    {
+        return \App\Support\PlanCapabilities::for($this->currentPlan?->slug);
+    }
+
+    /**
+     * Whether the user's plan enables a boolean feature. Pure plan check —
+     * role bypass (admin/staff) is handled by the plan-feature Gate.
+     */
+    public function planAllows(string $feature): bool
+    {
+        return \App\Support\PlanCapabilities::allows($this->currentPlan?->slug, $feature);
+    }
+
+    /**
+     * Numeric limit for the user's plan (listing_limit, city_limit, referral_fee_pct...).
+     */
+    public function planLimit(string $key): int
+    {
+        return \App\Support\PlanCapabilities::limit($this->currentPlan?->slug, $key);
+    }
+
     public function leadAssignments(): HasMany
     {
         return $this->hasMany(LeadAssignment::class, 'assigned_to_user_id');

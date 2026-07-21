@@ -480,6 +480,8 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::post('admin/agent-profiles/{agentProfile}/publish', [StaffAgentProfileController::class, 'publish'])->name('admin.agent-profiles.publish');
         Route::post('admin/agent-profiles/{agentProfile}/suspend', [StaffAgentProfileController::class, 'suspend'])->name('admin.agent-profiles.suspend');
         Route::post('admin/agent-profiles/{agentProfile}/change-plan', [StaffAgentProfileController::class, 'changePlan'])->name('admin.agent-profiles.change-plan');
+        Route::post('admin/agent-profiles/{agentProfile}/cancel-plan', [StaffAgentProfileController::class, 'cancelPlan'])->name('admin.agent-profiles.cancel-plan');
+        Route::post('admin/agent-profiles/{agentProfile}/reactivate-plan', [StaffAgentProfileController::class, 'reactivatePlan'])->name('admin.agent-profiles.reactivate-plan');
 
         // Lead assignment & quota management
         Route::get('admin/lead-assignments', [LeadAssignmentController::class, 'index'])->name('admin.lead-assignments.index');

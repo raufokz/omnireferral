@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'must_reset_password' => \App\Http\Middleware\MustResetPassword::class,
             'active.account' => \App\Http\Middleware\EnsureActiveAccount::class,
             'swagger.access' => \App\Http\Middleware\SwaggerAccess::class,
+            'plan.feature' => \App\Http\Middleware\EnsurePlanFeature::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
