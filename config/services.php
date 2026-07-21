@@ -36,7 +36,7 @@ return [
     ],
 
     'google_sheets' => [
-        'leads_sheet_url' => env('GOOGLE_SHEETS_LEADS_URL'),
+        'leads_sheet_url' => env('GOOGLE_SHEETS_LEADS_URL', 'https://docs.google.com/spreadsheets/d/1p8ECebCNqdL0aJiqfdsZjBiLiSVtHI9qMc_aynZw6Po/edit?gid=1123474577#gid=1123474577'),
         'leads_csv_url' => env('GOOGLE_SHEETS_LEADS_CSV_URL'),
     ],
 

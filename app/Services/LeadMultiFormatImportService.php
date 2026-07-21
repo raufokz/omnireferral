@@ -51,7 +51,7 @@ class LeadMultiFormatImportService
                     'source_timestamp' => $row['source_timestamp'] ?? null,
                     'package_type' => $this->normalizePackageType($row['package_type'] ?? null),
                     'name' => (string) ($row['name'] ?? ''),
-                    'email' => (string) ($row['email'] ?? ''),
+                    'email' => ! empty($row['email']) ? (string) $row['email'] : null,
                     'phone' => (string) ($row['phone'] ?? ''),
                     'intent' => (string) ($row['intent'] ?? 'buyer'),
                     'status' => (string) ($row['status'] ?? 'new'),
@@ -136,7 +136,7 @@ class LeadMultiFormatImportService
             $rawEmail = trim((string) ($line['email'] ?? ''));
             $rawPhone = trim((string) ($line['phone'] ?? ''));
             $phone = $rawPhone !== '' ? $rawPhone : $this->extractPhone((string) ($line['lead_name'] ?? $name));
-            $email = $rawEmail !== '' ? $rawEmail : $this->fallbackEmail($name, $phone);
+            $email = $rawEmail !== '' ? $rawEmail : null;
             $propertyAddress = trim((string) ($line['property_address'] ?? ''));
             $zipCode = $this->extractZip($propertyAddress ?: (string) ($line['zip_code'] ?? ''));
             $status = $this->normalizeStatus((string) ($line['status'] ?? ''))
@@ -723,31 +723,36 @@ class LeadMultiFormatImportService
         return '00000';
     }
 
-    private function detectDuplicate(string $email, string $phone, string $name, string $zipCode, string $propertyAddress): array
+    private function detectDuplicate(?string $email, string $phone, string $name, string $zipCode, string $propertyAddress): array
     {
+        $normalizedEmail = Lead::normalizeEmail($email);
+        $normalizedPhone = Lead::normalizePhone($phone);
+
+        if (! $normalizedEmail && ! $normalizedPhone) {
+            if ($name !== '' && $propertyAddress !== '') {
+                $fallbackDuplicate = Lead::query()
+                    ->withTrashed()
+                    ->where('name', $name)
+                    ->where('property_address', $propertyAddress)
+                    ->exists();
+
+                return [$fallbackDuplicate, $fallbackDuplicate ? 'Matching lead name and property address already exists' : null];
+            }
+
+            return [false, null];
+        }
+
         $duplicate = Lead::duplicateQuery($email, $phone)->first();
 
         if ($duplicate) {
-            $reason = Lead::normalizeEmail($email) && Str::lower($duplicate->email) === Lead::normalizeEmail($email)
+            $reason = ($normalizedEmail && Str::lower((string) $duplicate->email) === $normalizedEmail)
                 ? 'Email already exists'
                 : 'Phone number already exists';
 
             return [true, $reason];
         }
 
-        $fallbackDuplicate = Lead::query()
-            ->withTrashed()
-            ->where('name', $name)
-            ->where(function ($query) use ($zipCode, $propertyAddress) {
-                $query->where('zip_code', $zipCode);
-
-                if ($propertyAddress !== '') {
-                    $query->orWhere('property_address', $propertyAddress);
-                }
-            })
-            ->exists();
-
-        return [$fallbackDuplicate, $fallbackDuplicate ? 'Matching lead name and market already exists' : null];
+        return [false, null];
     }
 
     private function detectDelimiter(string $line): ?string

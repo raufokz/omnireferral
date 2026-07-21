@@ -10,6 +10,7 @@ use App\Models\RealtorProfile;
 use App\Models\User;
 use App\Services\LeadFilterService;
 use App\Services\LeadMultiFormatImportService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -254,7 +255,116 @@ class LeadManagementController extends Controller
             ->with('success', $message);
     }
 
-    public function syncGoogleSheet(SyncGoogleSheetRequest $request, LeadMultiFormatImportService $importService): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:50'],
+            'intent' => ['required', 'in:buyer,seller,investor,other'],
+            'status' => ['nullable', 'string', 'in:new,contacted,in_progress,qualified,assigned,closed,not_interested'],
+            'property_address' => ['nullable', 'string', 'max:500'],
+            'beds_baths' => ['nullable', 'string', 'max:100'],
+            'budget' => ['nullable', 'numeric', 'min:0'],
+            'asking_price' => ['nullable', 'numeric', 'min:0'],
+            'working_with_realtor' => ['nullable', 'boolean'],
+            'timeline' => ['nullable', 'string', 'max:255'],
+            'dnc_disclaimer' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:2000'],
+            'rep_name' => ['nullable', 'string', 'max:255'],
+            'state' => ['nullable', 'string', 'max:100'],
+            'sent_to' => ['nullable', 'string', 'max:255'],
+            'assignment' => ['nullable', 'string', 'max:255'],
+            'reason_in_house' => ['nullable', 'string', 'max:1000'],
+            'realtor_response' => ['nullable', 'string', 'max:1000'],
+            'assigned_agent_id' => ['nullable', 'exists:users,id'],
+        ]);
+
+        $lead = new Lead();
+        $lead->fill([
+            'lead_number' => Lead::generateLeadNumber(),
+            'source' => $request->user()?->role === 'staff' ? 'staff_entry' : 'admin_entry',
+            'source_timestamp' => now(),
+            'name' => $validated['name'],
+            'email' => ! empty($validated['email']) ? $validated['email'] : null,
+            'phone' => $validated['phone'] ?? '',
+            'intent' => $validated['intent'],
+            'status' => $validated['status'] ?? 'new',
+            'zip_code' => '00000',
+            'property_address' => $validated['property_address'] ?? '',
+            'beds_baths' => $validated['beds_baths'] ?? '',
+            'budget' => $validated['budget'] ?? null,
+            'asking_price' => $validated['asking_price'] ?? null,
+            'working_with_realtor' => isset($validated['working_with_realtor']) ? (bool) $validated['working_with_realtor'] : null,
+            'timeline' => $validated['timeline'] ?? '',
+            'dnc_disclaimer' => $validated['dnc_disclaimer'] ?? '',
+            'notes' => $validated['notes'] ?? '',
+            'rep_name' => $validated['rep_name'] ?? '',
+            'state' => $validated['state'] ?? '',
+            'sent_to' => $validated['sent_to'] ?? '',
+            'assignment' => $validated['assignment'] ?? '',
+            'reason_in_house' => $validated['reason_in_house'] ?? '',
+            'realtor_response' => $validated['realtor_response'] ?? '',
+            'assigned_agent_id' => $validated['assigned_agent_id'] ?? null,
+        ]);
+
+        if (! empty($validated['assigned_agent_id'])) {
+            $lead->assigned_at = now();
+        }
+
+        $lead->save();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Lead {$lead->lead_number} created successfully.",
+                'lead' => $lead,
+            ]);
+        }
+
+        return redirect()
+            ->route('admin.leads.index')
+            ->with('success', "Lead {$lead->lead_number} created successfully.");
+    }
+
+    public function liveData(Request $request): JsonResponse
+    {
+        $filters = app(LeadFilterService::class)->normalizeFromRequest($request);
+        $baseQuery = Lead::query()->with('assignedAgent:id,name');
+        app(LeadFilterService::class)->apply($baseQuery, $filters);
+
+        $leads = (clone $baseQuery)
+            ->orderByRaw('COALESCE(source_timestamp, created_at) DESC')
+            ->orderByDesc('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        $summaryQuery = clone $baseQuery;
+        $summary = [
+            'total' => (clone $summaryQuery)->count(),
+            'qualified' => (clone $summaryQuery)->where('status', 'qualified')->count(),
+            'rejected' => (clone $summaryQuery)->where('status', 'not_interested')->count(),
+            'website' => (clone $summaryQuery)->where('source', 'website')->count(),
+        ];
+
+        $agents = User::where('role', 'agent')->orderBy('name')->get(['id', 'name']);
+        $statuses = ['new', 'contacted', 'in_progress', 'qualified', 'assigned', 'closed', 'not_interested'];
+
+        $html = view('pages.admin.leads.partials.table_rows', [
+            'leads' => $leads,
+            'agents' => $agents,
+            'statuses' => $statuses,
+        ])->render();
+
+        return response()->json([
+            'success' => true,
+            'html' => $html,
+            'summary' => $summary,
+            'total' => $summary['total'],
+        ]);
+    }
+
+    public function syncGoogleSheet(SyncGoogleSheetRequest $request, LeadMultiFormatImportService $importService): RedirectResponse|JsonResponse
     {
         $sheetUrl = trim((string) (
             $request->input('sheet_url')
@@ -264,30 +374,44 @@ class LeadManagementController extends Controller
         ));
 
         if (! $sheetUrl) {
-            return back()->with('error', 'Google Sheets URL is not configured.');
+            $msg = 'Google Sheets URL is not configured.';
+            return $request->expectsJson() || $request->ajax()
+                ? response()->json(['success' => false, 'message' => $msg], 400)
+                : back()->with('error', $msg);
         }
 
         $sheetCsvUrl = $this->resolveGoogleSheetCsvUrl($sheetUrl);
         if (! $sheetCsvUrl) {
-            return back()->with('error', 'Please provide a valid Google Sheets link or CSV export URL.');
+            $msg = 'Please provide a valid Google Sheets link or CSV export URL.';
+            return $request->expectsJson() || $request->ajax()
+                ? response()->json(['success' => false, 'message' => $msg], 422)
+                : back()->with('error', $msg);
         }
 
-        $response = Http::timeout(20)
-            ->withoutRedirecting()
+        $response = Http::timeout(25)
             ->accept('text/csv')
             ->get($sheetCsvUrl);
         if (! $response->successful()) {
-            return back()->with('error', 'Failed to fetch Google Sheets CSV.');
+            $msg = 'Failed to fetch Google Sheets CSV.';
+            return $request->expectsJson() || $request->ajax()
+                ? response()->json(['success' => false, 'message' => $msg], 502)
+                : back()->with('error', $msg);
         }
 
         $body = trim((string) $response->body());
         if ($body === '' || $this->looksLikeHtml($body)) {
-            return back()->with('error', 'Google Sheets could not be read as CSV. Make sure the sheet is shared or published for CSV access.');
+            $msg = 'Google Sheets could not be read as CSV. Make sure the sheet is shared or published for CSV access.';
+            return $request->expectsJson() || $request->ajax()
+                ? response()->json(['success' => false, 'message' => $msg], 422)
+                : back()->with('error', $msg);
         }
 
         $lines = preg_split('/\r\n|\r|\n/', $body);
         if (! $lines || count($lines) < 2) {
-            return back()->with('info', 'Google Sheet has no lead rows to sync.');
+            $msg = 'Google Sheet has no lead rows to sync.';
+            return $request->expectsJson() || $request->ajax()
+                ? response()->json(['success' => true, 'created' => 0, 'skipped' => 0, 'failed' => 0, 'message' => $msg])
+                : back()->with('info', $msg);
         }
 
         $header = str_getcsv(array_shift($lines));
@@ -312,6 +436,17 @@ class LeadManagementController extends Controller
         $message = "Google Sheets sync complete. Added {$result['created']} new leads, skipped {$result['skipped']} duplicate/invalid rows.";
         if (($result['failed'] ?? 0) > 0) {
             $message .= " {$result['failed']} rows failed. Check the logs for details.";
+        }
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'created' => $result['created'],
+                'skipped' => $result['skipped'],
+                'failed' => $result['failed'] ?? 0,
+                'message' => $message,
+                'total_leads' => Lead::count(),
+            ]);
         }
 
         return back()->with('success', $message);

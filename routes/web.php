@@ -332,6 +332,8 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::patch('/admin/enquiries/{enquiry}/status', [AdminEnquiryController::class, 'updateStatus'])->name('admin.enquiries.status');
         Route::get('/admin/activity', [ActivityLogController::class, 'index'])->name('admin.activity.index');
         Route::get('/admin/leads', [AdminLeadManagementController::class, 'index'])->name('admin.leads.index');
+        Route::post('/admin/leads', [AdminLeadManagementController::class, 'store'])->name('admin.leads.store');
+        Route::get('/admin/leads/live-data', [AdminLeadManagementController::class, 'liveData'])->name('admin.leads.live-data');
         Route::get('/admin/leads/export/csv', [AdminLeadManagementController::class, 'exportCsv'])->name('admin.leads.export.csv');
         Route::post('/admin/leads/import/csv', [AdminLeadManagementController::class, 'importCsv'])->name('admin.leads.import.csv');
         Route::get('/admin/leads/import/preview', [AdminLeadManagementController::class, 'previewImport'])->name('admin.leads.import.preview');
