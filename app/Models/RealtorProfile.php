@@ -176,14 +176,13 @@ class RealtorProfile extends Model
 
     public function isPublicVisible(): bool
     {
-        $accountIsActive = $this->relationLoaded('user')
-            ? ($this->user?->status ?? null) === 'active'
-            : $this->user()->where('status', 'active')->exists();
+        $accountIsSuspended = $this->relationLoaded('user')
+            ? ($this->user?->status ?? null) === 'suspended'
+            : $this->user()->where('status', 'suspended')->exists();
 
-        return in_array($this->profile_status, self::publicStatusValues(), true)
-            && (bool) ($this->is_active_agent ?? false)
+        return $this->profile_status !== self::STATUS_SUSPENDED
             && $this->rejected_at === null
-            && $accountIsActive;
+            && ! $accountIsSuspended;
     }
 
     public function isFeatured(): bool

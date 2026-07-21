@@ -258,8 +258,11 @@ class Property extends Model
     public function scopeMarketplaceVisible($query)
     {
         return $query
-            ->where('approval_status', self::APPROVAL_APPROVED)
-            ->where('status', 'Active');
+            ->where(function ($q) {
+                $q->where('approval_status', '!=', self::APPROVAL_REJECTED)
+                  ->orWhereNull('approval_status');
+            })
+            ->whereNotIn('status', ['Off-Market', 'Sold', 'Rejected']);
     }
 
     public function scopeWithFavoriteSummary($query, ?User $user = null, ?string $listingDeviceId = null)

@@ -39,7 +39,7 @@ class RealtorController extends Controller
 
     public function profile(RealtorProfile $agent): View
     {
-        abort_unless($agent->isPublicVisible(), 404);
+        abort_if($agent->profile_status === RealtorProfile::STATUS_SUSPENDED || $agent->rejected_at !== null, 404);
         $agent->load(['user:id,name,display_name,avatar,current_plan_id,status,city,state,zip_code', 'user.currentPlan:id,name,slug']);
 
         return view('pages.agent-profile-seo', [
@@ -55,7 +55,7 @@ class RealtorController extends Controller
 
     public function preview(RealtorProfile $agent): JsonResponse
     {
-        abort_unless($agent->isPublicVisible(), 404);
+        abort_if($agent->profile_status === RealtorProfile::STATUS_SUSPENDED || $agent->rejected_at !== null, 404);
         $agent->load(['user:id,name,display_name,avatar,current_plan_id,status,city,state,zip_code', 'user.currentPlan:id,name,slug']);
 
         return response()->json([
@@ -65,7 +65,7 @@ class RealtorController extends Controller
 
     public function inquiry(Request $request, RealtorProfile $agent): RedirectResponse|JsonResponse
     {
-        abort_unless($agent->isPublicVisible(), 404);
+        abort_if($agent->profile_status === RealtorProfile::STATUS_SUSPENDED || $agent->rejected_at !== null, 404);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],

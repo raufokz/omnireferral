@@ -318,7 +318,7 @@
                 </form>
 
                 @if($property->realtorProfile)
-                    <a href="{{ route('agents.show', $property->realtorProfile) }}" class="pd-agent-profile-link">View Agent Profile →</a>
+                    <a href="{{ route('agents.profile', $property->realtorProfile) }}" class="pd-agent-profile-link">View Agent Profile →</a>
                 @endif
             </section>
         </aside>

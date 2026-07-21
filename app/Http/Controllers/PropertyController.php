@@ -383,7 +383,7 @@ class PropertyController extends Controller
 
     public function toggleFavorite(Request $request, Property $property): RedirectResponse
     {
-        abort_unless($property->isApproved() && $property->status === 'Active', 404);
+        abort_if($property->approval_status === Property::APPROVAL_REJECTED, 404);
 
         $deviceId = $request->attributes->get('listing_device_id');
         abort_unless(is_string($deviceId) && $deviceId !== '', 400);

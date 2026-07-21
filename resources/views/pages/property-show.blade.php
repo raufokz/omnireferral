@@ -38,7 +38,7 @@
                     <div class="hero__actions">
                         <button type="button" class="button" id="enquiry-modal-trigger">Contact Agent</button>
                         @if($property->realtorProfile)
-                            <a href="{{ route('agents.show', $property->realtorProfile) }}" class="button button--ghost-blue">View Agent Profile</a>
+                            <a href="{{ route('agents.profile', $property->realtorProfile) }}" class="button button--ghost-blue">View Agent Profile</a>
                         @else
                             <a href="{{ route('agents.index') }}" class="button button--ghost-blue">Browse Agents</a>
                         @endif
