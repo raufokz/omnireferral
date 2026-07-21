@@ -81,21 +81,6 @@
                 </div>
             @endif
         </div>
-
-        <form method="POST" action="{{ route('admin.agent-profiles.change-plan', $profile) }}" style="margin-top:1.25rem; border-top:1px solid var(--agent-admin-line, #e2e8f0); padding-top:1rem; display:flex; align-items:flex-end; gap:1rem; flex-wrap:wrap;">
-            @csrf
-            <label style="display:flex; flex-direction:column; gap:0.35rem; min-width:220px;">
-                <span style="font-size:0.7rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:0.03em;">Change Plan</span>
-                <select name="package_id" required style="min-height:2.4rem; border:1px solid #e2e8f0; border-radius:8px; padding:0.4rem 0.6rem; font-size:0.85rem;">
-                    @foreach($availablePlans as $planOption)
-                        <option value="{{ $planOption->id }}" @selected($subPackage?->id === $planOption->id)>
-                            {{ $planOption->displayName() }} @if($subPackage?->id === $planOption->id)(current)@endif
-                        </option>
-                    @endforeach
-                </select>
-            </label>
-            <button type="submit" class="button button--orange" onclick="return confirm('This will deactivate the current subscription and activate the new plan. Continue?')" style="min-height:2.4rem;">Change Plan</button>
-        </form>
     </section>
 
     <section class="workspace-card">
@@ -120,6 +105,16 @@
                     <select name="profile_status" required>
                         @foreach($statusOptions as $value => $label)
                             <option value="{{ $value }}" @selected(old('profile_status', $profile->profile_status) === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <label class="workspace-field"><span>Plan</span>
+                    <select name="package_id">
+                        <option value="">— None —</option>
+                        @foreach($availablePlans as $planOption)
+                            <option value="{{ $planOption->id }}" @selected((string) old('package_id', $subPackage?->id ?? $currentPlan?->id) === (string) $planOption->id)>
+                                {{ $planOption->displayName() }}
+                            </option>
                         @endforeach
                     </select>
                 </label>

@@ -1,0 +1,1086 @@
+﻿
+   PASS  Tests\Unit\ExampleTest
+  Γ£ô that true is tΓÇª 0.01s  
+
+   FAIL  Tests\Feature\AffiliateTrackingTest
+  Γ£ô it sets affiliΓÇª 1.02s  
+  Γ¿» it links regisΓÇª 0.22s  
+
+   PASS  Tests\Feature\AgentDirectoryTest
+  Γ£ô agents page liΓÇª 0.14s  
+  Γ£ô inactive or noΓÇª 0.07s  
+  Γ£ô elite tier ageΓÇª 0.07s  
+  Γ£ô draft profilesΓÇª 0.08s  
+  Γ£ô featured agentΓÇª 0.08s  
+  Γ£ô agent seo pageΓÇª 0.07s  
+  Γ£ô agent inquiryΓÇª  0.05s  
+  Γ£ô location pageΓÇª  0.06s  
+  Γ£ô join as agentΓÇª  0.04s  
+
+   PASS  Tests\Feature\AgentPortalTest
+  Γ£ô agent cannot cΓÇª 0.06s  
+  Γ£ô property inquiΓÇª 0.16s  
+  Γ£ô agent can openΓÇª 0.50s  
+  Γ£ô agent cannot cΓÇª 0.09s  
+
+   FAIL  Tests\Feature\AuthRegistrationTest
+  Γ¿» auth pages renΓÇª 0.07s  
+  Γ¿» agent registraΓÇª 0.04s  
+  Γ¿» public agent dΓÇª 0.03s  
+  Γ¿» buyer registraΓÇª 0.03s  
+  Γ¿» workspace seleΓÇª 0.06s  
+  Γ£ô login workspacΓÇª 0.04s  
+  Γ¿» pending user cΓÇª 0.05s  
+  Γ£ô legacy onboardΓÇª 0.05s  
+  Γ£ô onboarding forΓÇª 0.04s  
+  Γ£ô onboarding creΓÇª 0.05s  
+  Γ£ô onboarding reqΓÇª 0.04s  
+  Γ£ô onboarding reqΓÇª 0.04s  
+  Γ£ô onboarding useΓÇª 0.04s  
+  Γ£ô must reset pasΓÇª 0.06s  
+  Γ£ô password changΓÇª 0.04s  
+  Γ£ô password changΓÇª 0.05s  
+  Γ£ô password changΓÇª 0.05s  
+  Γ£ô onboarding welΓÇª 0.04s  
+  Γ£ô forgot passworΓÇª 0.32s  
+  Γ£ô reset passwordΓÇª 0.16s  
+
+   FAIL  Tests\Feature\DashboardNavigationTest
+  Γ£ô admin dashboarΓÇª 0.39s  
+  Γ¿» active submenuΓÇª 0.08s  
+
+   PASS  Tests\Feature\ExampleTest
+  Γ£ô the applicatioΓÇª 0.41s  
+
+   PASS  Tests\Feature\GoHighLevelPaymentWebhookTest
+  Γ£ô ghl onboardingΓÇª 0.10s  
+  Γ£ô ghl onboardingΓÇª 0.06s  
+  Γ£ô ghl onboardingΓÇª 0.09s  
+  Γ£ô ghl onboardingΓÇª 0.06s  
+  Γ£ô duplicate webhΓÇª 0.07s  
+  Γ£ô pending paymenΓÇª 0.09s  
+  Γ£ô missing emailΓÇª  0.07s  
+  Γ£ô invalid webhooΓÇª 0.07s  
+  Γ£ô unmatched packΓÇª 0.10s  
+  Γ£ô existing userΓÇª  0.10s  
+  Γ£ô paid payment aΓÇª 0.11s  
+
+   PASS  Tests\Feature\LeadAssignmentQuotaTest
+  Γ£ô admin can viewΓÇª 0.16s  
+  Γ£ô admin can viewΓÇª 0.08s  
+  Γ£ô admin can assiΓÇª 0.07s  
+  Γ£ô auto assign prΓÇª 0.08s  
+  Γ£ô assign previouΓÇª 0.06s  
+  Γ£ô admin can updaΓÇª 0.06s  
+  Γ£ô rejected assigΓÇª 0.05s  
+  Γ£ô admin can viewΓÇª 0.08s  
+  Γ£ô admin can editΓÇª 0.04s  
+  Γ£ô admin can viewΓÇª 0.07s  
+  Γ£ô admin can updaΓÇª 0.05s  
+  Γ£ô non admin cannΓÇª 0.05s  
+
+   PASS  Tests\Feature\LeadImportTest
+  Γ£ô csv import worΓÇª 0.08s  
+  Γ£ô csv import worΓÇª 0.09s  
+  Γ£ô csv import doeΓÇª 0.08s  
+  Γ£ô csv import accΓÇª 0.10s  
+  Γ£ô one bad row doΓÇª 0.11s  
+  Γ£ô duplicate leadΓÇª 0.08s  
+  Γ£ô admin can impoΓÇª 0.08s  
+  Γ£ô google sheet iΓÇª 0.05s  
+  Γ£ô package type sΓÇª 0.05s  
+  Γ£ô import resultΓÇª  0.04s  
+
+   PASS  Tests\Feature\LeadOperationsWorkflowTest
+  Γ£ô public lead suΓÇª 0.12s  
+  Γ£ô import previewΓÇª 0.09s  
+  Γ£ô admin upload cΓÇª 0.07s  
+  Γ£ô leads remain uΓÇª 0.07s  
+  Γ£ô google sheet eΓÇª 0.08s  
+  Γ£ô admin leads inΓÇª 0.08s  
+
+   PASS  Tests\Feature\LeadRoutingTest
+  Γ£ô it does not auΓÇª 0.05s  
+  Γ£ô it keeps existΓÇª 0.05s  
+
+   FAIL  Tests\Feature\PricingCheckoutRoutingTest
+  Γ¿» pricing page lΓÇª 0.07s  
+  Γ£ô all seeded priΓÇª 0.38s  
+  Γ£ô checkout loadsΓÇª 0.09s  
+  Γ£ô checkout pageΓÇª  0.08s  
+
+   PASS  Tests\Feature\PropertyImageManagementTest
+  Γ£ô agent can creaΓÇª 0.08s  
+  Γ£ô owner can reorΓÇª 0.09s  
+
+   PASS  Tests\Feature\PropertyListingEngagementTest
+  Γ£ô guest can likeΓÇª 0.08s  
+  Γ£ô guest can postΓÇª 0.06s  
+  Γ£ô authenticatedΓÇª  0.05s  
+
+   PASS  Tests\Feature\TestimonialWorkflowTest
+  Γ£ô admin can creaΓÇª 0.06s  
+  Γ£ô public testimoΓÇª 0.05s  
+  Γ£ô public testimoΓÇª 0.04s  
+  Γ£ô public testimoΓÇª 0.07s  
+  Γ£ô testimonial liΓÇª 0.14s  
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\FeaturΓÇª   
+  Expected response status code [201, 301, 302, 303, 307, 308] but received 404.
+Failed asserting that false is true.
+
+  at tests\Feature\AffiliateTrackingTest.php:63
+     59Γûò                  ),
+     60Γûò                  'terms_accepted' => true,
+     61Γûò                  'communication_accepted' => true,
+     62Γûò              ])
+  Γ₧£  63Γûò             ->assertRedirect(route('login'))
+     64Γûò             ->assertSessionHas('success');
+     65Γûò 
+     66Γûò         $this->assertGuest();
+     67Γûò
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\AuthRegistrationTest > auth pages render the workspace selector  RouteNotFoundException   
+  Route [register] not defined.
+
+  at vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+    530Γûò             ! is_null($url = call_user_func($this->missingNamedRouteResolver, $name, $parameters, $absolute))) {
+    531Γûò             return $url;
+    532Γûò         }
+    533Γûò 
+  Γ₧£ 534Γûò         throw new RouteNotFoundException("Route [{$name}] not defined.");
+    535Γûò     }
+    536Γûò 
+    537Γûò     /**
+    538Γûò      * Get the URL for a given route instance.
+
+  1   vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+  2   vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:870
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\AuthRegistrationTest > agent registration requires full profile details and creates a realtor profile  RouteNotFoundException   
+  Route [register] not defined.
+
+  at vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+    530Γûò             ! is_null($url = call_user_func($this->missingNamedRouteResolver, $name, $parameters, $absolute))) {
+    531Γûò             return $url;
+    532Γûò         }
+    533Γûò 
+  Γ₧£ 534Γûò         throw new RouteNotFoundException("Route [{$name}] not defined.");
+    535Γûò     }
+    536Γûò 
+    537Γûò     /**
+    538Γûò      * Get the URL for a given route instance.
+
+  1   vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+  2   vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:870
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\AuthRegistrationTest > public agent directory submission does not require password  RouteNotFoundException   
+  Route [register] not defined.
+
+  at vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+    530Γûò             ! is_null($url = call_user_func($this->missingNamedRouteResolver, $name, $parameters, $absolute))) {
+    531Γûò             return $url;
+    532Γûò         }
+    533Γûò 
+  Γ₧£ 534Γûò         throw new RouteNotFoundException("Route [{$name}] not defined.");
+    535Γûò     }
+    536Γûò 
+    537Γûò     /**
+    538Γûò      * Get the URL for a given route instance.
+
+  1   vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+  2   vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:870
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\AuthRegistrationTest > buyer registration still requires core profile fields but not agent credentials  RouteNotFoundException   
+  Route [register] not defined.
+
+  at vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+    530Γûò             ! is_null($url = call_user_func($this->missingNamedRouteResolver, $name, $parameters, $absolute))) {
+    531Γûò             return $url;
+    532Γûò         }
+    533Γûò 
+  Γ₧£ 534Γûò         throw new RouteNotFoundException("Route [{$name}] not defined.");
+    535Γûò     }
+    536Γûò 
+    537Γûò     /**
+    538Γûò      * Get the URL for a given route instance.
+
+  1   vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+  2   vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:870
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\AuthRegistrationTest > workspace selection is required for login and registration  RouteNotFoundException   
+  Route [register] not defined.
+
+  at vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+    530Γûò             ! is_null($url = call_user_func($this->missingNamedRouteResolver, $name, $parameters, $absolute))) {
+    531Γûò             return $url;
+    532Γûò         }
+    533Γûò 
+  Γ₧£ 534Γûò         throw new RouteNotFoundException("Route [{$name}] not defined.");
+    535Γûò     }
+    536Γûò 
+    537Γûò     /**
+    538Γûò      * Get the URL for a given route instance.
+
+  1   vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+  2   vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:870
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\AuthRegistrationTest > pending user cannot sign in until an admin activates the account  RouteNotFoundException   
+  Route [register] not defined.
+
+  at vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+    530Γûò             ! is_null($url = call_user_func($this->missingNamedRouteResolver, $name, $parameters, $absolute))) {
+    531Γûò             return $url;
+    532Γûò         }
+    533Γûò 
+  Γ₧£ 534Γûò         throw new RouteNotFoundException("Route [{$name}] not defined.");
+    535Γûò     }
+    536Γûò 
+    537Γûò     /**
+    538Γûò      * Get the URL for a given route instance.
+
+  1   vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+  2   vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:870
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\Feature\DashboardNavigationTest > active submenu is expanded for nested routes  RouteNotFoundException   
+  Route [dashboard.seller.listings] not defined.
+
+  at vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+    530Γûò             ! is_null($url = call_user_func($this->missingNamedRouteResolver, $name, $parameters, $absolute))) {
+    531Γûò             return $url;
+    532Γûò         }
+    533Γûò 
+  Γ₧£ 534Γûò         throw new RouteNotFoundException("Route [{$name}] not defined.");
+    535Γûò     }
+    536Γûò 
+    537Γûò     /**
+    538Γûò      * Get the URL for a given route instance.
+
+  1   vendor\laravel\framework\src\Illuminate\Routing\UrlGenerator.php:534
+  2   vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:870
+
+  ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ  
+   FAILED  Tests\FeaturΓÇª   
+  Expected: <!DOCTYPE html>\n
+<html lang="en" class="scroll-smooth">\n
+<head>\n
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-RKHPD82W4K"></script>\n
+    <script>\n
+        window.dataLayer = window.dataLayer || [];\n
+        function gtag(){dataLayer.push(arguments);}\n
+        gtag('js', new Date());\n
+        gtag('config', "G-RKHPD82W4K");\n
+    </script>\n
+\n
+    <script type="text/javascript">\n
+        (function(c,l,a,r,i,t,y){\n
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};\n
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;\n
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);\n
+        })(window, document, "clarity", "script", "xjcaewggyu");\n
+    </script>\n
+    <meta charset="utf-8">\n
+    <meta name="viewport" content="width=device-width, initial-scale=1">\n
+    <meta name="csrf-token" content="zwpEY80rOqtbdYiV849zdSibADUwmlaeEQhelA9b">\n
+    <meta name="theme-color" content="#002366">\n
+    <meta name="google-site-verification" content="_8tmldi5k1EqLZJqCFO79Vbl5jwYuhYSdgVi8AtbSo0" />\n
+\n
+    <title>Pricing | OmniReferral Lead Packages</title>\n
+    <meta name="description" content="Compare OmniReferral Starter Lead, Growth Lead, and Elite Lead packages for real estate teams that want qualified referrals and operational follow-up.">\n
+        \n
+    <link rel="preconnect" href="https://fonts.googleapis.com">\n
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">\n
+    <link rel="icon" href="http://127.0.0.1:8000/favicon.ico" sizes="any">\n
+<link rel="shortcut icon" href="http://127.0.0.1:8000/favicon.ico">\n
+<link rel="icon" type="image/png" sizes="192x192" href="http://127.0.0.1:8000/android-chrome-192x192.png">\n
+<link rel="icon" type="image/png" sizes="32x32" href="http://127.0.0.1:8000/favicon-32x32.png">\n
+<link rel="icon" type="image/png" sizes="16x16" href="http://127.0.0.1:8000/favicon-16x16.png">\n
+<link rel="apple-touch-icon" sizes="180x180" href="http://127.0.0.1:8000/apple-touch-icon.png">\n
+<link rel="manifest" href="http://127.0.0.1:8000/site.webmanifest">\n
+<meta name="msapplication-TileColor" content="#002366">\n
+\n
+    <link rel="preload" as="style" href="http://127.0.0.1:8000/build/assets/app-4bVP3W8X.css" /><link rel="modulepreload" as="script" href="http://127.0.0.1:8000/build/assets/app-lf1aTrkT.js" /><link rel="stylesheet" href="http://127.0.0.1:8000/build/assets/app-4bVP3W8X.css" /><script type="module" src="http://127.0.0.1:8000/build/assets/app-lf1aTrkT.js"></script>        <link rel="preload" as="style" href="http://127.0.0.1:8000/build/assets/pricing-DVbOx7bN.css" /><link rel="stylesheet" href="http://127.0.0.1:8000/build/assets/pricing-DVbOx7bN.css" />    <style>\n
+        /* Guest favourites styles */\n
+        .favourite-btn .heart-filled { display: none; }\n
+        .favourite-btn.is-favourite .heart-outline { display: none; }\n
+        .favourite-btn.is-favourite .heart-filled { display: block; }\n
+\n
+        #fav-toast {\n
+            position: fixed;\n
+            bottom: 20px;\n
+            right: 20px;\n
+            background: #1a202c;\n
+            color: white;\n
+            padding: 10px 18px;\n
+            border-radius: 8px;\n
+            opacity: 0;\n
+            transition: opacity 0.3s;\n
+            pointer-events: none;\n
+            z-index: 9999;\n
+        }\n
+        #fav-toast.show { opacity: 1; }\n
+    </style>\n
+\n
+            <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"OmniReferral","url":"http://127.0.0.1:8000","logo":"http://127.0.0.1:8000/images/logo.png","sameAs":["https://www.facebook.com/profile.php?id=61589808382458","https://www.instagram.com/omni.referral/","https://www.linkedin.com/company/omnireferral/","https://www.pinterest.com/omnireferral/"],"contactPoint":[{"@type":"ContactPoint","contactType":"customer support","email":"support@omnireferrals.com","telephone":"+12312813131","areaServed":"US","availableLanguage":"English"},{"@type":"ContactPoint","contactType":"general information","email":"info@omnireferrals.com","areaServed":"US","availableLanguage":"English"}],"address":{"@type":"PostalAddress","addressLocality":"Salem","addressRegion":"MA","addressCountry":"US"}}</script>\n
+</head>\n
+<body class="antialiased " data-google-maps-api-key="">\n
+    <a href="#main-content" class="skip-link">Skip to content</a>\n
+\n
+    <header class="site-header" data-animate>\n
+    <div class="container nav-shell">\n
+        <a href="http://127.0.0.1:8000" aria-label="OmniReferral home" class="nav-brand">\n
+            <img src="http://127.0.0.1:8000/images/omnireferral-logo.png" width="200" height="48" alt="OmniReferral Logo"\n
+                class="nav-logo" loading="eager" decoding="async">\n
+        </a>\n
+        <div class="nav-offcanvas-slot">\n
+        <nav class="main-nav" id="mainNav" aria-label="Primary navigation">\n
+            <a class="" href="http://127.0.0.1:8000#how-it-works"\n
+                data-nav-section="how-it-works" >How It Works</a>\n
+            <a class=""\n
+                href="http://127.0.0.1:8000/listings" >Featured Listings</a>\n
+\n
+            <a class=""\n
+                href="http://127.0.0.1:8000/agents" >Preferred Agents</a>\n
+                   <a class="is-active"\n
+                href="http://127.0.0.1:8000/pricing"  aria-current="page" >Pricing</a>\n
+            <a class=""\n
+                href="http://127.0.0.1:8000/reviews" >Testimonials</a>\n
+            <div class="nav-dropdown "\n
+                data-nav-dropdown>\n
+                <button type="button"\n
+                    class="nav-submenu-toggle "\n
+                    data-nav-submenu-toggle aria-expanded="false" aria-haspopup="true" aria-controls="mainNavMoreSubmenu">\n
+                    Resources\n
+                    <span class="nav-submenu-toggle__caret" aria-hidden="true"></span>\n
+                </button>\n
+                <div class="nav-submenu" data-nav-submenu id="mainNavMoreSubmenu">\n
+                    <a class=""\n
+                        href="http://127.0.0.1:8000/about">About Us</a>\n
+                    <a class=""\n
+                        href="http://127.0.0.1:8000/blog">Blogs</a>\n
+                    <a class="" href="http://127.0.0.1:8000/faq">FAQ`s</a>\n
+                    <a class=""\n
+                        href="http://127.0.0.1:8000/contact">Contact Us</a>\n
+\n
+                    <!-- <a class="" href="http://127.0.0.1:8000/resources">Resources</a> -->\n
+                    <!-- <a class="" href="http://127.0.0.1:8000/news">News</a> -->\n
+                    <!-- <a class="" href="http://127.0.0.1:8000/careers">Careers</a> -->\n
+                    <!-- <a class="" href="http://127.0.0.1:8000/surveys-campaigns">Campaign Tools</a> -->\n
+                    <!-- <a class="" href="http://127.0.0.1:8000/scam-prevention">Scam Prevention</a> -->\n
+                    <!-- <a class=""\n
+                        href="http://127.0.0.1:8000/communication-policy">Communication Policy</a> -->\n
+                </div>\n
+            </div>\n
+            <!-- <a class="" href="http://127.0.0.1:8000/contact">Contact</a> -->\n
+            \n
+            <div class="mobile-nav-actions">\n
+                <hr class="mobile-nav-divider">\n
+                                    <a href="http://127.0.0.1:8000/login" class="button button--orange nav-auth-cta">Login</a>\n
+                    <a href="http://127.0.0.1:8000/pricing" class="button button--secondary">Get Leads</a>\n
+                            </div>\n
+        </nav>\n
+        </div>\n
+        <div class="nav-actions" id="navActions">\n
+                            <a href="http://127.0.0.1:8000/login" class="button button--blue nav-auth-cta">Login</a>\n
+                <a href="http://127.0.0.1:8000/pricing" class="button button--orange">Get Leads</a>\n
+                    </div>\n
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false"\n
+            aria-controls="mainNav">\n
+            <span></span><span></span><span></span>\n
+        </button>\n
+    </div>\n
+</header>\n
+\n
+    <main id="main-content" tabindex="-1">\n
+                                \n
+        \r\n
+<div class="omni-pricing-page">\r\n
+    <section class="omni-pricing-hero">\r\n
+        <div class="omni-pricing-hero__bg" aria-hidden="true">\r\n
+            <img src="http://127.0.0.1:8000/images/home/hero_backdrop_v2.png" alt="">\r\n
+        </div>\r\n
+        <div class="container omni-pricing-hero__inner">\r\n
+            <div class="omni-pricing-hero__copy" data-animate="left">\r\n
+                <span class="omni-kicker">OmniReferral Pricing</span>\r\n
+                <h1>Packages built to turn verified demand into closed deals</h1>\r\n
+                <p>Choose a growth path for cleaner referral handoffs, stronger agent visibility, and support that keeps every buyer or seller opportunity moving.</p>\r\n
+\r\n
+                <div class="omni-pricing-focus-list" aria-label="Growth platform focus areas">\r\n
+                    <span>Verified buyer and seller referrals</span>\r\n
+                    <span>Featured agent profile options</span>\r\n
+                    <span>Market-matched routing</span>\r\n
+                    <span>Follow-up support</span>\r\n
+                    <span>VA services available</span>\r\n
+                </div>\r\n
+\r\n
+                <div class="omni-pricing-hero__actions">\r\n
+                    <a href="#pricing-packages" class="omni-btn omni-btn--orange">Compare Packages</a>\r\n
+                    <a href="http://127.0.0.1:8000/contact" class="omni-btn omni-btn--outline">Build My Plan</a>\r\n
+                </div>\r\n
+\r\n
+                <div class="omni-pricing-trust" aria-label="OmniReferral trust metrics">\r\n
+                    <div>\r\n
+                        <strong>10,000+</strong>\r\n
+                        <span>Leads Delivered</span>\r\n
+                    </div>\r\n
+                    <div>\r\n
+                        <strong>3,200+</strong>\r\n
+                        <span>Verified Agents</span>\r\n
+                    </div>\r\n
+                    <div>\r\n
+                        <strong>24/7</strong>\r\n
+                        <span>Support</span>\r\n
+                    </div>\r\n
+                    <div>\r\n
+                        <strong>50+</strong>\r\n
+                        <span>Markets Covered</span>\r\n
+                    </div>\r\n
+                </div>\r\n
+            </div>\r\n
+\r\n
+            <aside class="omni-growth-challenge-card" data-animate="right" aria-label="10X Growth Challenge overview">\r\n
+                <span class="omni-growth-challenge-card__ribbon">Premium Growth System</span>\r\n
+                <div class="omni-growth-challenge-card__head">\r\n
+                    <span>10X Growth Challenge</span>\r\n
+                    <h2>One operating layer for referrals, visibility, assistant support, and faster market follow-up.</h2>\r\n
+                </div>\r\n
+                <div class="omni-growth-challenge-card__flow">\r\n
+                    <div>\r\n
+                        <strong>Verified Referral Engine</strong>\r\n
+                        <span>Qualified buyer and seller opportunities routed by market fit.</span>\r\n
+                    </div>\r\n
+                    <div>\r\n
+                        <strong>VA Operations Layer</strong>\r\n
+                        <span>Cold calling, admin support, social media, and response coverage.</span>\r\n
+                    </div>\r\n
+                    <div>\r\n
+                        <strong>Marketplace Visibility</strong>\r\n
+                        <span>Agent placement designed to increase discovery and trust.</span>\r\n
+                    </div>\r\n
+                </div>\r\n
+                <div class="omni-growth-challenge-card__meter" aria-label="Growth workflow stages">\r\n
+                    <span>Route</span>\r\n
+                    <span>Nurture</span>\r\n
+                    <span>Convert</span>\r\n
+                </div>\r\n
+            </aside>\r\n
+        </div>\r\n
+    </section>\r\n
+\r\n
+    <section class="omni-pricing-section" id="pricing-packages">\r\n
+        <div class="container">\r\n
+            <div class="omni-package-switcher" role="tablist" aria-label="Pricing package groups" data-animate="up">\r\n
+                <button class="omni-package-switcher__button is-active" id="pricing-tab-real-estate" type="button" role="tab" aria-selected="true" aria-controls="pricing-panel-real-estate" tabindex="0" data-tab-trigger="real-estate">\r\n
+                    Real Estate Plans\r\n
+                </button>\r\n
+                <button class="omni-package-switcher__button" id="pricing-tab-va-services" type="button" role="tab" aria-selected="false" aria-controls="pricing-panel-va-services" tabindex="-1" data-tab-trigger="va-services">\r\n
+                    VA Services\r\n
+                </button>\r\n
+            </div>\r\n
+\r\n
+            <div class="omni-package-panel is-active" id="pricing-panel-real-estate" role="tabpanel" aria-labelledby="pricing-tab-real-estate" data-tab-panel="real-estate">\r\n
+                <div class="omni-package-panel__intro">\r\n
+                    <h3>Real Estate Lead Packages</h3>\r\n
+                    <p>Verified referral opportunities for agents who want cleaner intake, faster routing, and predictable market coverage.</p>\r\n
+                </div>\r\n
+                <div class="omni-plan-grid omni-plan-grid--primary" data-stagger>\r\n
+                                            <article class="omni-plan-card ">\r\n
+                            <span class="omni-plan-card__badge">Starter</span>\r\n
+                            <h3>Starter Lead</h3>\r\n
+                            <p class="omni-plan-card__subtitle">Starter-friendly. City-focused.</p>\r\n
+                            <div class="omni-plan-card__price">\r\n
+                                <strong>$369</strong>\r\n
+                                <span>/ Yearly</span>\r\n
+                            </div>\r\n
+                            <p class="omni-plan-card__description">Perfect for agents entering new markets who need verified referrals, local visibility, and predictable lead opportunities.</p>\r\n
+                            <a href="http://127.0.0.1:8000/packages/starter-leads/checkout" class="omni-plan-card__button">Explore Plan <span aria-hidden="true">&rarr;</span></a>\r\n
+                        </article>\r\n
+                                            <article class="omni-plan-card omni-plan-card--featured">\r\n
+                            <span class="omni-plan-card__badge">Most Popular</span>\r\n
+                            <h3>Growth Lead</h3>\r\n
+                            <p class="omni-plan-card__subtitle">Multi-city. Scalable support.</p>\r\n
+                            <div class="omni-plan-card__price">\r\n
+                                <strong>$697</strong>\r\n
+                                <span>/ One-Time</span>\r\n
+                            </div>\r\n
+                            <p class="omni-plan-card__description">Designed for growing agents &amp; teams that need more referrals, broader coverage, virtual assistance, and stronger lead qualification.</p>\r\n
+                            <a href="http://127.0.0.1:8000/packages/growth-leads/checkout" class="omni-plan-card__button">Explore Plan <span aria-hidden="true">&rarr;</span></a>\r\n
+                        </article>\r\n
+                                            <article class="omni-plan-card ">\r\n
+                            <span class="omni-plan-card__badge">Elite</span>\r\n
+                            <h3>Elite Lead</h3>\r\n
+                            <p class="omni-plan-card__subtitle">Premium reach. Full-service.</p>\r\n
+                            <div class="omni-plan-card__price">\r\n
+                                <strong>$1,979</strong>\r\n
+                                <span>/ One-Time</span>\r\n
+                            </div>\r\n
+                            <p class="omni-plan-card__description">Built for top-producing agents seeking maximum exposure, priority support, premium placement, and advanced lead qualification.</p>\r\n
+                            <a href="http://127.0.0.1:8000/packages/elite-leads/checkout" class="omni-plan-card__button">Explore Plan <span aria-hidden="true">&rarr;</span></a>\r\n
+                        </article>\r\n
+                                    </div>\r\n
+            </div>\r\n
+\r\n
+            <div class="omni-package-panel" id="pricing-panel-va-services" role="tabpanel" aria-labelledby="pricing-tab-va-services" data-tab-panel="va-services" hidden>\r\n
+                <div class="omni-package-panel__intro">\r\n
+                    <h3>Virtual Assistant Services</h3>\r\n
+                    <p>Dedicated operational support for follow-up, prospecting, content, and daily real estate workflow coverage.</p>\r\n
+                </div>\r\n
+                <div class="omni-plan-grid omni-plan-grid--services" data-stagger>\r\n
+                                            <article class="omni-plan-card omni-plan-card--service ">\r\n
+                            <span class="omni-plan-card__badge">Dedicated ISA</span>\r\n
+                            <h3>Cold Calling / ISA</h3>\r\n
+                            <p class="omni-plan-card__subtitle">Dedicated ISA Sales Agent</p>\r\n
+                            <div class="omni-plan-card__price">\r\n
+                                <strong>$1,999</strong>\r\n
+                                <span>/ Month</span>\r\n
+                            </div>\r\n
+                            <p class="omni-plan-card__description">Professional outbound support focused on appointment setting, lead nurturing, follow-ups, and pipeline growth.</p>\r\n
+                            <a href="http://127.0.0.1:8000/packages/cold-calling-isa/checkout" class="omni-plan-card__button">Explore Plan <span aria-hidden="true">&rarr;</span></a>\r\n
+                        </article>\r\n
+                                            <article class="omni-plan-card omni-plan-card--service omni-plan-card--featured">\r\n
+                            <span class="omni-plan-card__badge">Most Popular</span>\r\n
+                            <h3>Social Media Mgmt</h3>\r\n
+                            <p class="omni-plan-card__subtitle">Daily Long + Short Form Videos</p>\r\n
+                            <div class="omni-plan-card__price">\r\n
+                                <strong>$1,499</strong>\r\n
+                                <span>/ Month</span>\r\n
+                            </div>\r\n
+                            <p class="omni-plan-card__description">Done-for-you content creation, audience growth, engagement management, and brand visibility.</p>\r\n
+                            <a href="http://127.0.0.1:8000/packages/social-media-mgmt/checkout" class="omni-plan-card__button">Explore Plan <span aria-hidden="true">&rarr;</span></a>\r\n
+                        </article>\r\n
+                                            <article class="omni-plan-card omni-plan-card--service ">\r\n
+                            <span class="omni-plan-card__badge">Flexible Support</span>\r\n
+                            <h3>Individual VA</h3>\r\n
+                            <p class="omni-plan-card__subtitle">Flexible Hourly Billing.</p>\r\n
+                            <div class="omni-plan-card__price">\r\n
+                                <strong>$8</strong>\r\n
+                                <span>/ Hour</span>\r\n
+                            </div>\r\n
+                            <p class="omni-plan-card__description">Dedicated virtual support for CRM updates, scheduling, administrative tasks, and daily business operations.</p>\r\n
+                            <a href="http://127.0.0.1:8000/packages/individual-va/checkout" class="omni-plan-card__button">Explore Plan <span aria-hidden="true">&rarr;</span></a>\r\n
+                        </article>\r\n
+                                    </div>\r\n
+            </div>\r\n
+        </div>\r\n
+    </section>\r\n
+\r\n
+<section class="omni-comparison-section" aria-labelledby="pricing-comparison-heading">\r\n
+    <div class="container">\r\n
+        <div class="omni-section-head" data-animate="up">\r\n
+            <span class="omni-kicker">Compare Plans</span>\r\n
+            <h2 id="pricing-comparison-heading">Compare real estate lead packages</h2>\r\n
+            <p>Growth Lead is highlighted for agents who want the strongest balance of lead volume, speed, and support.</p>\r\n
+        </div>\r\n
+\r\n
+    <div class="omni-comparison-card" data-animate="up">\r\n
+        <table class="omni-comparison-table">\r\n
+            <caption class="visually-hidden">Real estate lead package comparison</caption>\r\n
+            <thead>\r\n
+                <tr>\r\n
+                    <th scope="col">Features</th>\r\n
+                    <th scope="col">Starter Lead</th>\r\n
+                    <th scope="col" class="is-featured">\r\n
+                        Growth Lead\r\n
+                        <span class="omni-comparison-plan-badge">Recommended</span>\r\n
+                    </th>\r\n
+                    <th scope="col">Elite Lead</th>\r\n
+                </tr>\r\n
+            </thead>\r\n
+            <tbody>\r\n
+                <tr>\r\n
+                    <th scope="row">Exclusive Leads</th>\r\n
+                    <td>2</td>\r\n
+                    <td class="is-featured">5</td>\r\n
+                    <td>10</td>\r\n
+                </tr>\r\n
+\r\n
+                <tr>\r\n
+                    <th scope="row">Lead Quality</th>\r\n
+                    <td>High</td>\r\n
+                    <td class="is-featured">Very High</td>\r\n
+                    <td>Highest</td>\r\n
+                </tr>\r\n
+\r\n
+                <tr>\r\n
+                    <th scope="row">Response Time</th>\r\n
+                    <td>24-48 hrs</td>\r\n
+                    <td class="is-featured">12-24 hrs</td>\r\n
+                    <td>Within 12 hrs</td>\r\n
+                </tr>\r\n
+\r\n
+                <tr>\r\n
+                    <th scope="row">Follow-up Support</th>\r\n
+                    <td>Email</td>\r\n
+                    <td class="is-featured">Phone + Email</td>\r\n
+                    <td>Priority Phone</td>\r\n
+                </tr>\r\n
+\r\n
+                <tr>\r\n
+                    <th scope="row">Replacement Guarantee</th>\r\n
+                    <td>Basic</td>\r\n
+                    <td class="is-featured">Yes</td>\r\n
+                    <td>Yes</td>\r\n
+                </tr>\r\n
+\r\n
+                <tr>\r\n
+                    <th scope="row">Lead Match Score</th>\r\n
+                    <td>Good</td>\r\n
+                    <td class="is-featured">Better</td>\r\n
+                    <td>Best</td>\r\n
+                </tr>\r\n
+\r\n
+                <tr>\r\n
+                    <th scope="row">Marketplace Exposure</th>\r\n
+                    <td>Standard</td>\r\n
+                    <td class="is-featured">Enhanced</td>\r\n
+                    <td>Premium</td>\r\n
+                </tr>\r\n
+\r\n
+                <tr>\r\n
+                    <th scope="row">Portal Access</th>\r\n
+                    <td>Γ¥î Not Included</td>\r\n
+                    <td class="is-featured">Γ£à Included</td>\r\n
+                    <td>Γ£à Included</td>\r\n
+                </tr>\r\n
+\r\n
+                <tr>\r\n
+                    <th scope="row">Property Listings</th>\r\n
+                    <td>Γ¥î Not Included</td>\r\n
+                    <td class="is-featured">Γ£à Up to 5 Listings / Month</td>\r\n
+                    <td>Γ£à Up to 10 Listings / Month</td>\r\n
+                </tr>\r\n
+            </tbody>\r\n
+        </table>\r\n
+    </div>\r\n
+</div>\r\n
+\r\n
+</section>\r\n
+\r\n
+\r\n
+    <section class="omni-process-section">\r\n
+        <div class="container">\r\n
+            <div class="omni-section-head" data-animate="up">\r\n
+                <span class="omni-kicker">How It Works</span>\r\n
+                <h2>A cleaner path from package to pipeline</h2>\r\n
+                <p>Every plan is designed around quick onboarding, useful lead context, and support that helps agents act while intent is fresh.</p>\r\n
+            </div>\r\n
+            <div class="omni-process-grid" data-stagger>\r\n
+                                    <article class="omni-process-step">\r\n
+                        <span>01</span>\r\n
+                        <h3>Choose Your Plan</h3>\r\n
+                        <p>Pick the lead or VA package that fits your current market, capacity, and growth target.</p>\r\n
+                    </article>\r\n
+                                    <article class="omni-process-step">\r\n
+                        <span>02</span>\r\n
+                        <h3>Confirm Your Market</h3>\r\n
+                        <p>Share your target cities, ZIP codes, buyer profile, and preferred follow-up workflow.</p>\r\n
+                    </article>\r\n
+                                    <article class="omni-process-step">\r\n
+                        <span>03</span>\r\n
+                        <h3>Activate Routing</h3>\r\n
+                        <p>OmniReferral configures the handoff so qualified opportunities reach the right place quickly.</p>\r\n
+                    </article>\r\n
+                                    <article class="omni-process-step">\r\n
+                        <span>04</span>\r\n
+                        <h3>Follow Up Faster</h3>\r\n
+                        <p>Use cleaner context, assistant support, and visibility tools to keep prospects moving.</p>\r\n
+                    </article>\r\n
+                                    <article class="omni-process-step">\r\n
+                        <span>05</span>\r\n
+                        <h3>Scale What Works</h3>\r\n
+                        <p>Add markets, upgrade support, or pair leads with VA services as your pipeline grows.</p>\r\n
+                    </article>\r\n
+                            </div>\r\n
+        </div>\r\n
+    </section>\r\n
+\r\n
+    <section class="omni-success-section">\r\n
+        <div class="container">\r\n
+            <div class="omni-section-head" data-animate="up">\r\n
+                <span class="omni-kicker">Successes</span>\r\n
+                <h2>Success Stories</h2>\r\n
+                <p>Real estate teams use OmniReferral to open new markets, increase response speed, and add operational support without adding complexity.</p>\r\n
+            </div>\r\n
+            <div class="omni-success-grid" data-stagger>\r\n
+                                    <article class="omni-success-card">\r\n
+                        <div class="omni-success-card__avatar">\r\n
+                            <img src="http://127.0.0.1:8000/images/realtors/12.png" alt="Jessica Miller" loading="lazy" width="80" height="80">\r\n
+                        </div>\r\n
+                        <div>\r\n
+                            <h3>Jessica Miller</h3>\r\n
+                            <span>Miami, FL</span>\r\n
+                        </div>\r\n
+                        <strong>Closed 3 referrals in 45 days</strong>\r\n
+                        <p>Growth Lead helped Jessica capture high-intent waterfront buyers without adding another internal assistant.</p>\r\n
+                        <span class="omni-success-card__tag">Verified growth story</span>\r\n
+                    </article>\r\n
+                                    <article class="omni-success-card">\r\n
+                        <div class="omni-success-card__avatar">\r\n
+                            <img src="http://127.0.0.1:8000/images/realtors/10.png" alt="David Martinez" loading="lazy" width="80" height="80">\r\n
+                        </div>\r\n
+                        <div>\r\n
+                            <h3>David Martinez</h3>\r\n
+                            <span>Dallas, TX</span>\r\n
+                        </div>\r\n
+                        <strong>Expanded into 4 new ZIP codes</strong>\r\n
+                        <p>Starter Lead gave David a predictable launch path in a new market with verified referral flow.</p>\r\n
+                        <span class="omni-success-card__tag">Verified growth story</span>\r\n
+                    </article>\r\n
+                                    <article class="omni-success-card">\r\n
+                        <div class="omni-success-card__avatar">\r\n
+                            <img src="http://127.0.0.1:8000/images/realtors/14.png" alt="Amanda Taylor" loading="lazy" width="80" height="80">\r\n
+                        </div>\r\n
+                        <div>\r\n
+                            <h3>Amanda Taylor</h3>\r\n
+                            <span>Nashville, TN</span>\r\n
+                        </div>\r\n
+                        <strong>Reached top local placement</strong>\r\n
+                        <p>Elite Lead paired premium profile visibility with faster routing and stronger follow-up.</p>\r\n
+                        <span class="omni-success-card__tag">Verified growth story</span>\r\n
+                    </article>\r\n
+                            </div>\r\n
+        </div>\r\n
+    </section>\r\n
+\r\n
+    <section class="omni-trust-section">\r\n
+        <div class="container">\r\n
+            <div class="omni-trust-panel" data-animate="up">\r\n
+                <div class="omni-trust-panel__copy">\r\n
+                    <span class="omni-kicker">Trust Layer</span>\r\n
+                    <h2>Built to feel organized before, during, and after every handoff.</h2>\r\n
+                    <p>OmniReferral keeps the experience consistent across lead generation, assistant support, agent visibility, and buyer or seller routing.</p>\r\n
+                </div>\r\n
+                <div class="omni-trust-grid">\r\n
+                                            <article>\r\n
+                            <strong>Verified intake</strong>\r\n
+                            <span>Requests are reviewed for useful context before they move into the agent workflow.</span>\r\n
+                        </article>\r\n
+                                            <article>\r\n
+                            <strong>Human support</strong>\r\n
+                            <span>Sales and support coverage help agents choose the right package and resolve delivery questions.</span>\r\n
+                        </article>\r\n
+                                            <article>\r\n
+                            <strong>Market coverage</strong>\r\n
+                            <span>The platform supports local discovery across growing real estate markets.</span>\r\n
+                        </article>\r\n
+                                    </div>\r\n
+            </div>\r\n
+        </div>\r\n
+    </section>\r\n
+\r\n
+    <section class="omni-faq-section">\r\n
+        <div class="container">\r\n
+            <div class="omni-faq-layout" data-animate="up">\r\n
+                <div class="omni-faq-intro">\r\n
+                    <span class="omni-kicker">FAQ</span>\r\n
+                    <h2>Frequently Asked Questions</h2>\r\n
+                    <p>Clear answers for package fit, onboarding, verification, and support expectations.</p>\r\n
+                    <a href="http://127.0.0.1:8000/contact" class="omni-btn omni-btn--orange">Talk To Sales</a>\r\n
+                </div>\r\n
+                <div class="omni-faq-list">\r\n
+                                            <details class="omni-faq-item">\r\n
+                            <summary>\r\n
+                                <span>Are the leads exclusive?</span>\r\n
+                                <i aria-hidden="true">+</i>\r\n
+                            </summary>\r\n
+                            <p>Lead exclusivity depends on the package selected. Higher tiers receive stronger exclusivity, faster routing, and deeper follow-up support.</p>\r\n
+                        </details>\r\n
+                                            <details class="omni-faq-item">\r\n
+                            <summary>\r\n
+                                <span>How fast will I receive my leads?</span>\r\n
+                                <i aria-hidden="true">+</i>\r\n
+                            </summary>\r\n
+                            <p>Most package onboarding starts immediately after checkout. Routing is configured once your target markets and package details are confirmed.</p>\r\n
+                        </details>\r\n
+                                            <details class="omni-faq-item">\r\n
+                            <summary>\r\n
+                                <span>Can I pair lead packages with VA services?</span>\r\n
+                                <i aria-hidden="true">+</i>\r\n
+                            </summary>\r\n
+                            <p>Yes. Agents can use real estate lead packages and VA services together for prospecting, social media, follow-up, and daily operations.</p>\r\n
+                        </details>\r\n
+                                            <details class="omni-faq-item">\r\n
+                            <summary>\r\n
+                                <span>Can I get a replacement?</span>\r\n
+                                <i aria-hidden="true">+</i>\r\n
+                            </summary>\r\n
+                            <p>Replacement support is available based on lead quality review and the plan selected. Our team will help review fit and delivery details.</p>\r\n
+                        </details>\r\n
+                                            <details class="omni-faq-item">\r\n
+                            <summary>\r\n
+                                <span>Are leads verified?</span>\r\n
+                                <i aria-hidden="true">+</i>\r\n
+                            </summary>\r\n
+                            <p>OmniReferral uses a qualification workflow before handoff so agents receive cleaner referral opportunities with more useful context.</p>\r\n
+                        </details>\r\n
+                                            <details class="omni-faq-item">\r\n
+                            <summary>\r\n
+                                <span>Do you offer refunds?</span>\r\n
+                                <i aria-hidden="true">+</i>\r\n
+                            </summary>\r\n
+                            <p>Package terms are confirmed at checkout, and our team can help resolve fit or delivery questions through support.</p>\r\n
+                        </details>\r\n
+                                    </div>\r\n
+            </div>\r\n
+        </div>\r\n
+    </section>\r\n
+\r\n
+    <section class="omni-final-cta">\r\n
+        <div class="container">\r\n
+            <div class="omni-final-cta__panel" data-animate="up">\r\n
+                <div>\r\n
+                    <span class="omni-kicker">Get Started</span>\r\n
+                    <h2>Ready to grow your referral pipeline?</h2>\r\n
+                    <p>Choose the plan that matches your next stage, or talk to sales for help mapping your market strategy.</p>\r\n
+                </div>\r\n
+                <div class="omni-final-cta__actions">\r\n
+                    <a href="#pricing-packages" class="omni-btn omni-btn--orange">View Packages</a>\r\n
+                    <a href="http://127.0.0.1:8000/contact" class="omni-btn omni-btn--outline">Talk To Sales</a>\r\n
+                </div>\r\n
+            </div>\r\n
+        </div>\r\n
+    </section>\r\n
+</div>\r\n
+    </main>\n
+\n
+    <footer class="site-footer site-footer--premium">\n
+    <div class="container footer-premium">\n
+        <section class="footer-hero-cta" aria-labelledby="footer-cta-title">\n
+            <div class="footer-hero-cta__icon" aria-hidden="true">\n
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">\n
+                    <path d="M4 12a8 8 0 0 1 16 0"></path>\n
+                    <path d="M4 13v3a2 2 0 0 0 2 2h1v-7H6a2 2 0 0 0-2 2Z"></path>\n
+                    <path d="M20 13v3a2 2 0 0 1-2 2h-1v-7h1a2 2 0 0 1 2 2Z"></path>\n
+                    <path d="M15 20h-3"></path>\n
+                </svg>\n
+            </div>\n
+            <div class="footer-hero-cta__copy">\n
+                <span>OmniReferral Concierge</span>\n
+                <h2 id="footer-cta-title">Need help finding the right referral solution?</h2>\n
+                <p>Our team is here to help you generate more leads, close more deals, and grow your real estate business with a cleaner referral system.</p>\n
+            </div>\n
+            <div class="footer-hero-cta__actions">\n
+                <a href="http://127.0.0.1:8000/contact" class="footer-cta-button footer-cta-button--primary">\n
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">\n
+                        <path d="M21.8 3.4 3.5 10.5c-.8.3-.8 1.4 0 1.7l5.2 2 2 5.3c.3.8 1.4.8 1.8.1l8.6-15.4c.3-.6-.2-1.2-.9-.8ZM10.7 14l7.1-7.1-5.7 9.9-1.4-2.8Zm-1-1-2.7-1.1 9.6-3.7L9.7 13Z"></path>\n
+                    </svg>\n
+                    <span>Talk To Our Team</span>\n
+                </a>\n
+                <a href="http://127.0.0.1:8000/pricing" class="footer-cta-button footer-cta-button--secondary">\n
+                    <span>Get Started Free</span>\n
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">\n
+                        <path d="m9 18 6-6-6-6"></path>\n
+                    </svg>\n
+                </a>\n
+            </div>\n
+        </section>\n
+\n
+        <section class="footer-trust-strip" aria-label="OmniReferral trust indicators">\n
+            <article class="footer-trust-card footer-trust-card--response">\n
+                <span class="footer-trust-card__icon" aria-hidden="true">\n
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">\n
+                        <path d="m13 2-8 12h6l-1 8 9-13h-6l1-7Z"></path>\n
+                    </svg>\n
+                </span>\n
+                <div>\n
+                    <strong>24-Hour Response</strong>\n
+                    <p>Fast follow-up for every verified inquiry.</p>\n
+                </div>\n
+            </article>\n
+            <article class="footer-trust-card footer-trust-card--leads">\n
+                <span class="footer-trust-card__icon" aria-hidden="true">\n
+                    <svg viewBox="0 0 24 24" fill="currentColor">\n
+                        <path d="M8.4 11.6a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8Zm7.2 0a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8ZM2.7 19.2c0-3.2 2.5-5.8 5.7-5.8s5.7 2.6 5.7 5.8v.6H2.7v-.6Zm9.9.6h8.7v-.5c0-3.1-2.4-5.6-5.5-5.8a7.1 7.1 0 0 1 2.2 5.2v1.1h-5.4Z"></path>\n
+                    </svg>\n
+                </span>\n
+                <div>\n
+                    <strong>Verified Leads</strong>\n
+                    <p>Every lead is verified and qualified before delivery.</p>\n
+                </div>\n
+            </article>\n
+            <article class="footer-trust-card footer-trust-card--network">\n
+                <span class="footer-trust-card__icon" aria-hidden="true">\n
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">\n
+                        <path d="M12 3 20 7v5c0 5-3.4 8-8 9-4.6-1-8-4-8-9V7l8-4Z"></path>\n
+                        <path d="m9.5 12 1.8 1.8 3.7-4"></path>\n
+                    </svg>\n
+                </span>\n
+                <div>\n
+                    <strong>Licensed Agent Network</strong>\n
+                    <p>Local agents, brokers, and admin support ready to respond.</p>\n
+                </div>\n
+            </article>\n
+            <article class="footer-trust-card footer-trust-card--support">\n
+                <span class="footer-trust-card__icon" aria-hidden="true">\n
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">\n
+                        <path d="M4 12a8 8 0 0 1 16 0"></path>\n
+                        <path d="M4 13v3a2 2 0 0 0 2 2h1v-7H6a2 2 0 0 0-2 2Z"></path>\n
+                        <path d="M20 13v3a2 2 0 0 1-2 2h-1v-7h1a2 2 0 0 1 2 2Z"></path>\n
+                        <path d="M15 20h-3"></path>\n
+                    </svg>\n
+                </span>\n
+                <div>\n
+                    <strong>Live Support Hours</strong>\n
+                    <p>Mon-Fri, 8am-7pm local business time.</p>\n
+                </div>\n
+            </article>\n
+        </section>\n
+\n
+        <div class="footer-main-grid">\n
+            <section class="footer-brand-panel" aria-label="OmniReferral">\n
+                <a href="http://127.0.0.1:8000" class="footer-brand-panel__logo" aria-label="OmniReferral home">\n
+                    <img src="http://127.0.0.1:8000/images/omnireferral-logo.png" alt="OmniReferral">\n
+                </a>\n
+                <p>The modern lead generation system built around trust, clarity, and faster handoffs for real estate professionals.</p>\n
+\n
+                <div class="footer-contact-list" aria-label="Support and information contacts">\n
+                                            <a href="mailto:support@omnireferrals.com" class="footer-contact-item">\n
+                            <span class="footer-contact-item__icon" aria-hidden="true">\n
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">\n
+                                    <rect x="3" y="5" width="18" height="14" rx="2"></rect>\n
+                                    <path d="m3 7 9 6 9-6"></path>\n
+                                </svg>\n
+                            </span>\n
+                            <span>support@omnireferrals.com</span>\n
+                        </a>\n
+                                                                <a href="mailto:info@omnireferrals.com" class="footer-contact-item">\n
+                            <span class="footer-contact-item__icon" aria-hidden="true">\n
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">\n
+                                    <rect x="3" y="5" width="18" height="14" rx="2"></rect>\n
+                                    <path d="m3 7 9 6 9-6"></path>\n
+                                </svg>\n
+                            </span>\n
+                            <span>info@omnireferrals.com</span>\n
+                        </a>\n
+                                                                <a href="tel:+12312813131" class="footer-contact-item">\n
+                            <span class="footer-contact-item__icon" aria-hidden="true">\n
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">\n
+                                    <path d="M22 16.92v2.2a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 3.4 2 2 0 0 1 4.11 1.3h2.2a2 2 0 0 1 2 1.72c.12.9.33 1.78.64 2.62a2 2 0 0 1-.45 2.11L7.6 8.65a16 16 0 0 0 7.75 7.75l.9-.9a2 2 0 0 1 2.11-.45c.84.31 1.72.52 2.62.64A2 2 0 0 1 22 16.92Z"></path>\n
+                                </svg>\n
+                            </span>\n
+                            <span>+1 231-281-3131</span>\n
+                        </a>\n
+                                    </div>\n
+\n
+                                    <div class="footer-social" aria-label="Follow OmniReferral">\n
+                                                    <a\n
+                                href="https://www.facebook.com/profile.php?id=61589808382458"\n
+                                class="footer-social__link footer-social__link--facebook"\n
+                                target="_blank"\n
+                                rel="noopener noreferrer"\n
+                                aria-label="Follow OmniReferral on Facebook"\n
+                            >\n
+                                                                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">\n
+                                            <path d="M14 8.5h2.2V5.1c-.38-.05-1.7-.16-3.23-.16-3.2 0-5.38 1.95-5.38 5.54v3.12H4v3.8h3.59V24h4.41v-6.6h3.45l.55-3.8h-4v-2.74c0-1.1.3-2.36 2-2.36Z"></path>\n
+                                        </svg>\n
+                                                                    </a>\n
+                                                    <a\n
+                                href="https://www.instagram.com/omni.referral/"\n
+                                class="footer-social__link footer-social__link--instagram"\n
+                                target="_blank"\n
+                                rel="noopener noreferrer"\n
+                                aria-label="Follow OmniReferral on Instagram"\n
+                            >\n
+                                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">\n
+                                            <rect x="3" y="3" width="18" height="18" rx="5"></rect>\n
+                                            <circle cx="12" cy="12" r="4"></circle>\n
+                                            <circle cx="17.4" cy="6.6" r="1.2" fill="currentColor" stroke="none"></circle>\n
+                                        </svg>\n
+                                                                    </a>\n
+                                                    <a\n
+                                href="https://www.linkedin.com/company/omnireferral/"\n
+                                class="footer-social__link footer-social__link--linkedin"\n
+                                target="_blank"\n
+                                rel="noopener noreferrer"\n
+                                aria-label="Follow OmniReferral on LinkedIn"\n
+                            >\n
+                                                                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">\n
+                                            <path d="M5.1 7.5H1.2V22h3.9V7.5ZM3.15 1.5a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5ZM22.8 14.1c0-4.18-2.23-6.12-5.2-6.12-2.4 0-3.47 1.32-4.07 2.25V7.5H9.8V22h3.9v-7.18c0-1.9.36-3.74 2.72-3.74 2.32 0 2.35 2.17 2.35 3.86V22h4.03v-7.9Z"></path>\n
+                                        </svg>\n
+                                                                    </a>\n
+                                                    <a\n
+                                href="https://www.pinterest.com/omnireferral/"\n
+                                class="footer-social__link footer-social__link--pinterest"\n
+                                target="_blank"\n
+                                rel="noopener noreferrer"\n
+                                aria-label="Follow OmniReferral on Pinterest"\n
+                            >\n
+                                                                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">\n
+                                            <path d="M12.1 1.6C6.5 1.6 3.7 5.3 3.7 9.4c0 1.9 1 4.2 2.6 5 .24.1.37.06.43-.17.04-.17.26-1.02.36-1.42.03-.13.02-.25-.09-.38-.53-.64-.96-1.8-.96-2.88 0-2.84 2.15-5.59 5.82-5.59 3.17 0 5.38 2.16 5.38 5.25 0 3.5-1.77 5.93-4.08 5.93-1.27 0-2.22-1.05-1.92-2.34.36-1.54 1.06-3.2 1.06-4.31 0-.99-.53-1.82-1.64-1.82-1.3 0-2.35 1.34-2.35 3.14 0 1.15.39 1.92.39 1.92s-1.29 5.46-1.53 6.48c-.26 1.1-.16 2.65-.05 3.66.05.43.58.52.8.16.34-.56.9-1.57 1.17-2.64.15-.59.76-2.98.76-2.98.4.76 1.55 1.4 2.77 1.4 3.64 0 6.28-3.35 6.28-7.5 0-3.99-3.26-7.05-7.85-7.05Z"></path>\n
+                                        </svg>\n
+                                                                    </a>\n
+                                            </div>\n
+                            </section>\n
+\n
+            <nav class="footer-link-group" aria-labelledby="footer-platform-title">\n
+                <h3 id="footer-platform-title">Platform</h3>\n
+                <a href="http://127.0.0.1:8000/about">About Us</a>\n
+                <a href="http://127.0.0.1:8000/pricing">Pricing</a>\n
+                <a href="http://127.0.0.1:8000/agents">Agent Directory</a>\n
+                <a href="http://127.0.0.1:8000/blog">Blog</a>\n
+            </nav>\n
+\n
+            <nav class="footer-link-group" aria-labelledby="footer-agents-title">\n
+                <h3 id="footer-agents-title">For Agents</h3>\n
+                <a href="http://127.0.0.1:8000/agents">Find Agents</a>\n
+                <a href="http://127.0.0.1:8000/pricing">Packages</a>\n
+                <a href="http://127.0.0.1:8000/contact">Agent Support</a>\n
+                <a href="http://127.0.0.1:8000/surveys-campaigns">Campaign Tools</a>\n
+            </nav>\n
+\n
+            <nav class="footer-link-group" aria-labelledby="footer-consumers-title">\n
+                <h3 id="footer-consumers-title">For Buyers &amp; Sellers</h3>\n
+                <a href="http://127.0.0.1:8000/listings">Listings</a>\n
+                <a href="http://127.0.0.1:8000/contact">Request Match</a>\n
+                <a href="http://127.0.0.1:8000/reviews">Testimonials</a>\n
+                <a href="http://127.0.0.1:8000/faq">FAQ</a>\n
+            </nav>\n
+\n
+            <nav class="footer-link-group" aria-labelledby="footer-legal-title">\n
+                <h3 id="footer-legal-title">Legal</h3>\n
+                <a href="http://127.0.0.1:8000/privacy-policy">Privacy Policy</a>\n
+                <a href="http://127.0.0.1:8000/terms-of-service">Terms of Service</a>\n
+                <a href="http://127.0.0.1:8000/payment-refund-cancellation-policy">Payment &amp; Cancellation</a>\n
+                <a href="http://127.0.0.1:8000/scam-prevention">Scam Prevention</a>\n
+                <a href="http://127.0.0.1:8000/privacy-policy#accessibility">Accessibility</a>\n
+                <a href="http://127.0.0.1:8000/sitemap.xml">Sitemap</a>\n
+            </nav>\n
+        </div>\n
+\n
+        <div class="footer-bottom">\n
+            <span class="footer-bottom__copyright">&copy; 2026 OmniReferral. All Rights Reserved.</span>\n
+            <span class="footer-powered">Powered by <a href="https://seventechllc.com/" target="_blank" rel="noopener noreferrer"><strong>seventechllc</strong></a></span>\n
+        </div>\n
+    </div>\n
+</footer>\n
+\n
+        <script src="http://127.0.0.1:8000/js/favourites.js"></script>\n
+</body>\n
+</html>\n
+
+
+  To contain: Designed for growing teams that need more referrals, broader coverage, virtual assistance, and stronger lead qualification.
+
+  at tests\Feature\PricingCheckoutRoutingTest.php:50
+     46Γûò             $response->assertSee('/packages/'.$slug.'/checkout', false);
+     47Γûò         }
+     48Γûò 
+     49Γûò         $response->assertSee('Perfect for agents entering new markets who need verified referrals, local visibility, and predictable lead opportunities.');
+  Γ₧£  50Γûò         $response->assertSee('Designed for growing teams that need more referrals, broader coverage, virtual assistance, and stronger lead qualification.');
+     51Γûò         $response->assertSee('Dedicated virtual support for CRM updates, scheduling, administrative tasks, and daily business operations.');
+     52Γûò         $response->assertDontSee(route('contact', ['plan' => 'Individual VA']), false);
+     53Γûò         $response->assertDontSee('First FIVE (5) Referrals FREE');
+     54Γûò         $response->assertDontSee('Dedicated Accounts Manager');
+
+
+  Tests:    9 failed, 85 passed (475 assertions)
+  Duration: 9.82s
+

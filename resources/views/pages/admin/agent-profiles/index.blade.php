@@ -454,20 +454,44 @@
         {{-- Sliding Right Drawer for Edit --}}
         <dialog class="agent-admin__dialog agent-admin__drawer" id="edit-{{ $profile->id }}">
             <div class="agent-admin__drawer-panel">
-                <form method="POST" action="{{ route('admin.agent-profiles.update', $profile) }}" enctype="multipart/form-data" class="agent-admin__edit-form" style="display:flex; flex-direction:column; height:100%; margin:0;">
-                    @csrf
-                    @method('PUT')
-                    
-                    <div class="agent-admin__drawer-head">
-                        <div>
-                            <span class="eyebrow" style="text-transform:uppercase; font-size:0.75rem; font-weight:700; color:var(--agent-admin-muted);">Modify Profile</span>
-                            <h2>{{ $user?->publicDisplayName() ?? 'Unnamed agent' }}</h2>
-                            <p>All updates take effect in the public directory immediately after saving.</p>
+                <div class="agent-admin__drawer-head">
+                    <div>
+                        <span class="eyebrow" style="text-transform:uppercase; font-size:0.75rem; font-weight:700; color:var(--agent-admin-muted);">Modify Profile</span>
+                        <h2>{{ $user?->publicDisplayName() ?? 'Unnamed agent' }}</h2>
+                        <p>All updates take effect in the public directory immediately after saving.</p>
+                    </div>
+                    <button type="button" class="agent-admin__dialog-close" data-close-dialog aria-label="Close">&times;</button>
+                </div>
+
+                <div class="agent-admin__drawer-scroll">
+                    {{-- Plan Change Section --}}
+                    <div class="agent-admin__plan-section">
+                        <div class="agent-admin__plan-section-head">
+                            <span class="agent-admin__plan {{ $planBadgeClassFor($profile) }}">{{ $planLabelFor($profile) }}</span>
+                            <span class="agent-admin__plan-section-label">{{ $planStatusFor($profile) }}</span>
                         </div>
-                        <button type="button" class="agent-admin__dialog-close" data-close-dialog aria-label="Close">&times;</button>
+                        <form method="POST" action="{{ route('admin.agent-profiles.change-plan', $profile) }}" class="agent-admin__plan-change-form">
+                            @csrf
+                            <div class="agent-admin__plan-change">
+                                <label class="agent-admin__plan-change-select">
+                                    <select name="package_id" required>
+                                        @foreach($availablePlans as $planOption)
+                                            <option value="{{ $planOption->id }}" @selected($user?->activeAgentSubscription?->package_id === $planOption->id || $user?->current_plan_id === $planOption->id)>
+                                                {{ $planOption->displayName() }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </label>
+                                <button type="submit" class="button button--ghost-blue" onclick="return confirm('Change this agent\'s plan? This will deactivate the current subscription.')">Update Plan</button>
+                            </div>
+                        </form>
                     </div>
 
-                    <div class="agent-admin__drawer-scroll">
+                    {{-- Edit Profile Form --}}
+                    <form id="edit-form-{{ $profile->id }}" method="POST" action="{{ route('admin.agent-profiles.update', $profile) }}" enctype="multipart/form-data" class="agent-admin__edit-form">
+                        @csrf
+                        @method('PUT')
+
                         <div class="agent-admin__edit-grid">
                             <label><span>Name</span><input type="text" name="name" value="{{ old('name', $user?->name) }}" required></label>
                             <label><span>Display name</span><input type="text" name="display_name" value="{{ old('display_name', $user?->display_name) }}"></label>
@@ -508,30 +532,13 @@
                             <input type="hidden" name="submission_source" value="{{ old('submission_source', $profile->submission_source) }}">
                             <label class="agent-admin__field-full"><span>Bio</span><textarea name="bio" rows="6" required>{{ old('bio', $profile->bio) }}</textarea></label>
                         </div>
-                    </div>
+                    </form>
+                </div>
 
-                    <div class="agent-admin__drawer-actions">
-                        <button type="button" class="button button--ghost-blue" data-close-dialog>Cancel</button>
-                        <button type="submit" class="button button--orange" data-saving-label="Saving...">Save Changes</button>
-                    </div>
-                </form>
-
-                <form method="POST" action="{{ route('admin.agent-profiles.change-plan', $profile) }}" class="agent-admin__plan-change-form">
-                    @csrf
-                    <div class="agent-admin__plan-change">
-                        <span class="agent-admin__plan {{ $planBadgeClassFor($profile) }}">{{ $planLabelFor($profile) }}</span>
-                        <label class="agent-admin__plan-change-select">
-                            <select name="package_id" required>
-                                @foreach($availablePlans as $planOption)
-                                    <option value="{{ $planOption->id }}" @selected($user?->activeAgentSubscription?->package_id === $planOption->id || $user?->current_plan_id === $planOption->id)>
-                                        {{ $planOption->displayName() }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </label>
-                        <button type="submit" class="button button--ghost-blue" onclick="return confirm('Change this agent\'s plan? This will deactivate the current subscription.')">Update Plan</button>
-                    </div>
-                </form>
+                <div class="agent-admin__drawer-actions">
+                    <button type="button" class="button button--ghost-blue" data-close-dialog>Cancel</button>
+                    <button type="submit" form="edit-form-{{ $profile->id }}" class="button button--orange" data-saving-label="Saving...">Save Changes</button>
+                </div>
             </div>
         </dialog>
     @endforeach
@@ -607,7 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Form saving loading state
     document.querySelectorAll('.agent-admin__edit-form').forEach((form) => {
         form.addEventListener('submit', () => {
-            const button = form.querySelector('[data-saving-label]');
+            const button = form.querySelector('[data-saving-label]') || document.querySelector(`[form="${form.id}"][data-saving-label]`);
             if (!button) return;
             button.disabled = true;
             button.textContent = button.dataset.savingLabel || 'Saving...';

@@ -397,39 +397,6 @@
     font-size: 0.7rem;
 }
 
-/* Plan Change Form (Edit Drawer) */
-.agent-admin__plan-change-form {
-    margin: 0;
-    padding: 0.85rem 1.5rem;
-    border-top: 1px solid var(--agent-admin-line);
-    background: #f8fafc;
-}
-
-.agent-admin__plan-change {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    flex-wrap: wrap;
-}
-
-.agent-admin__plan-change-select {
-    flex: 1;
-    min-width: 140px;
-}
-
-.agent-admin__plan-change-select select {
-    width: 100%;
-    min-height: 2.2rem;
-    border: 1px solid var(--agent-admin-line);
-    border-radius: 8px;
-    background: #fff;
-    color: var(--agent-admin-ink);
-    font: inherit;
-    font-size: 0.8rem;
-    padding: 0.35rem 0.6rem;
-    outline: none;
-}
-
 /* Completion Bar */
 .agent-admin__completion {
     display: flex;
@@ -750,6 +717,9 @@
     flex: 1;
     overflow-y: auto;
     padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
 }
 
 .agent-admin__drawer-actions {
@@ -760,6 +730,7 @@
     justify-content: flex-end;
     gap: 0.75rem;
     flex-shrink: 0;
+    margin-top: auto;
 }
 
 /* Edit Drawer Grid */
@@ -767,6 +738,64 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
+}
+
+/* Plan Section (top of drawer) */
+.agent-admin__plan-section {
+    border: 1px solid rgba(11, 54, 104, 0.1);
+    border-radius: 12px;
+    background: #f8fafc;
+    padding: 1rem 1.15rem;
+}
+
+.agent-admin__plan-section-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.85rem;
+}
+
+.agent-admin__plan-section-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--agent-admin-muted);
+}
+
+.agent-admin__plan-change-form {
+    margin: 0;
+}
+
+.agent-admin__plan-change {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.agent-admin__plan-change-select {
+    flex: 1;
+    min-width: 0;
+}
+
+.agent-admin__plan-change-select select {
+    width: 100%;
+    min-height: 2.4rem;
+    border: 1px solid var(--agent-admin-line);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--agent-admin-ink);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.4rem 0.75rem;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.agent-admin__plan-change-select select:focus {
+    border-color: rgba(255, 107, 0, 0.4);
+    box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.08);
 }
 
 /* Action Dialog (Approve Confirmation) */
@@ -1058,6 +1087,15 @@
     .agent-admin__drawer-scroll,
     .agent-admin__drawer-actions {
         padding: 1rem;
+    }
+
+    .agent-admin__plan-section {
+        padding: 0.85rem;
+    }
+
+    .agent-admin__plan-change {
+        flex-direction: column;
+        align-items: stretch;
     }
 
     .agent-admin__drawer-actions {

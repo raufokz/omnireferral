@@ -242,4 +242,38 @@ class AgentPortalTest extends TestCase
         $this->actingAs($agent)->get(route('agent.listings.index'))->assertOk();
         $this->actingAs($agent)->get(route('agent.messages.index'))->assertOk();
     }
+
+    public function test_agent_cannot_change_plan_directly(): void
+    {
+        $package = Package::create([
+            'name' => 'Starter Lead',
+            'description' => 'Entry plan',
+            'slug' => 'starter-leads',
+            'category' => 'lead',
+            'billing_type' => 'one_time',
+            'is_featured' => false,
+            'is_active' => true,
+            'one_time_price' => 499,
+            'monthly_price' => null,
+            'features' => ['5 active listings'],
+            'cta_label' => 'Get Started',
+            'duration_days' => 365,
+            'sort_order' => 1,
+        ]);
+
+        $agent = User::factory()->create([
+            'role' => 'agent',
+            'status' => 'active',
+            'current_plan_id' => $package->id,
+            'city' => 'Dallas',
+            'state' => 'TX',
+            'zip_code' => '75201',
+        ]);
+
+        $this->actingAs($agent)
+            ->post(route('agent.profile.change-plan'), [
+                'package_id' => $package->id,
+            ])
+            ->assertStatus(403);
+    }
 }

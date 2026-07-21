@@ -64,7 +64,7 @@ class OmniReferralSeeder extends Seeder
                 'cta_label' => 'GO STARTER',
                 'duration_days' => 365,
                 'sort_order' => 1,
-                'monthly_lead_quota' => 5,
+                'monthly_lead_quota' => 2,
                 'lead_priority' => 1,
             ],
             [
@@ -102,7 +102,7 @@ class OmniReferralSeeder extends Seeder
                 'cta_label' => 'GO GROWTH',
                 'duration_days' => 365,
                 'sort_order' => 2,
-                'monthly_lead_quota' => 15,
+                'monthly_lead_quota' => 5,
                 'lead_priority' => 2,
             ],
             [
@@ -141,7 +141,7 @@ class OmniReferralSeeder extends Seeder
                 'cta_label' => 'GO ELITE',
                 'duration_days' => 365,
                 'sort_order' => 3,
-                'monthly_lead_quota' => 35,
+                'monthly_lead_quota' => 10,
                 'lead_priority' => 3,
             ],
             // --- Virtual Assistance Packages ---

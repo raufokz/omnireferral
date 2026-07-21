@@ -36,6 +36,16 @@
                     @endforeach
                 </select>
             </label>
+            <label class="workspace-field"><span>Plan</span>
+                <select name="package_id">
+                    <option value="">— None —</option>
+                    @foreach($availablePlans as $planOption)
+                        <option value="{{ $planOption->id }}" @selected((string) old('package_id') === (string) $planOption->id)>
+                            {{ $planOption->displayName() }} — {{ $planOption->monthly_lead_quota ?? 0 }} leads/mo
+                        </option>
+                    @endforeach
+                </select>
+            </label>
             <label class="workspace-field workspace-field--full"><span>Source URL</span><input type="url" name="source_url" value="{{ old('source_url') }}" placeholder="https://zillow.com/..."></label>
             <label class="workspace-field workspace-field--full"><span>Specialties (comma separated)</span><input type="text" name="specialties_text" value="{{ old('specialties_text') }}"></label>
             <label class="workspace-field workspace-field--full"><span>Market areas</span><input type="text" name="market_areas" value="{{ old('market_areas') }}"></label>

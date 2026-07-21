@@ -65,6 +65,8 @@ class PortalController extends Controller
 
     public function changePlan(Request $request): RedirectResponse
     {
+        abort(403, 'Only administrators can update subscription plans.');
+
         [$user] = $this->portalContext();
 
         $validated = $request->validate([

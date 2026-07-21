@@ -157,6 +157,7 @@ class StaffAgentProfileController extends Controller
 
         return view('pages.admin.agent-profiles.create', [
             'statusOptions' => RealtorProfile::statusOptions(),
+            'availablePlans' => Package::leadPlans()->active()->orderBy('sort_order')->get(),
             'meta' => ['title' => 'Add Agent Profile | OmniReferral'],
         ]);
     }
@@ -181,6 +182,7 @@ class StaffAgentProfileController extends Controller
 
             $profileStatus = $validated['profile_status'];
             $isApproved = in_array($profileStatus, RealtorProfile::publicStatusValues(), true);
+            $newPackageId = $validated['package_id'] ?? null;
 
             $user = User::create([
                 'name' => $validated['name'],
@@ -197,7 +199,34 @@ class StaffAgentProfileController extends Controller
                     : ($isApproved ? 'active' : 'pending'),
                 'must_reset_password' => true,
                 'email_verified_at' => $isApproved ? now() : null,
+                'current_plan_id' => $newPackageId ?: null,
             ]);
+
+            if ($newPackageId) {
+                $newPackage = Package::findOrFail($newPackageId);
+                AgentSubscription::create([
+                    'user_id'           => $user->id,
+                    'package_id'        => $newPackage->id,
+                    'payment_status'    => 'paid',
+                    'payment_provider'  => 'admin',
+                    'payment_reference' => 'ADMIN-PLAN-CREATE-' . $user->id . '-' . $newPackage->id . '-' . now()->timestamp,
+                    'payment_amount'    => $newPackage->preferredCheckoutAmount(),
+                    'starts_at'         => now(),
+                    'ends_at'           => $newPackage->billing_type === 'yearly' ? now()->addYear() : null,
+                    'is_active'         => true,
+                ]);
+
+                $month = now()->format('Y-m');
+                AgentLeadQuota::updateOrCreate(
+                    ['user_id' => $user->id, 'month' => $month],
+                    [
+                        'package_id'      => $newPackage->id,
+                        'monthly_quota'   => $newPackage->monthly_lead_quota ?? 0,
+                        'remaining_count' => $newPackage->monthly_lead_quota ?? 0,
+                        'overdue_count'   => 0,
+                    ]
+                );
+            }
 
             return RealtorProfile::updateOrCreate(['user_id' => $user->id], [
                 'user_id' => $user->id,
@@ -289,6 +318,48 @@ class StaffAgentProfileController extends Controller
                 ? ($user->email_verified_at ?: now())
                 : $user->email_verified_at,
         ]);
+
+        $newPackageId = $validated['package_id'] ?? null;
+        $oldSubscription = $user->activeAgentSubscription;
+        $currentPlanId = $user->current_plan_id;
+
+        if ($newPackageId != $currentPlanId) {
+            DB::transaction(function () use ($user, $newPackageId, $oldSubscription) {
+                if ($oldSubscription) {
+                    $oldSubscription->update(['is_active' => false, 'payment_status' => 'cancelled']);
+                }
+
+                if ($newPackageId) {
+                    $newPackage = Package::findOrFail($newPackageId);
+                    AgentSubscription::create([
+                        'user_id'           => $user->id,
+                        'package_id'        => $newPackage->id,
+                        'payment_status'    => 'paid',
+                        'payment_provider'  => 'admin',
+                        'payment_reference' => 'ADMIN-PLAN-CHANGE-' . $user->id . '-' . $newPackage->id . '-' . now()->timestamp,
+                        'payment_amount'    => $newPackage->preferredCheckoutAmount(),
+                        'starts_at'         => now(),
+                        'ends_at'           => $newPackage->billing_type === 'yearly' ? now()->addYear() : null,
+                        'is_active'         => true,
+                    ]);
+
+                    $user->update(['current_plan_id' => $newPackage->id]);
+
+                    $month = now()->format('Y-m');
+                    AgentLeadQuota::updateOrCreate(
+                        ['user_id' => $user->id, 'month' => $month],
+                        [
+                            'package_id'      => $newPackage->id,
+                            'monthly_quota'   => $newPackage->monthly_lead_quota ?? 0,
+                            'remaining_count' => $newPackage->monthly_lead_quota ?? 0,
+                            'overdue_count'   => 0,
+                        ]
+                    );
+                } else {
+                    $user->update(['current_plan_id' => null]);
+                }
+            });
+        }
 
         $approvalFields = $this->approvalFieldsForStatus($request, $agentProfile, $validated['profile_status']);
 
@@ -493,6 +564,7 @@ class StaffAgentProfileController extends Controller
             'submission_source' => ['nullable', 'string', 'max:80'],
             'headshot' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'headshot_url' => ['nullable', 'string', 'max:500'],
+            'package_id' => ['nullable', 'exists:packages,id'],
         ]);
     }
 

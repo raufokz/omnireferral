@@ -77,22 +77,6 @@
 }
 .profile-checklist li.done { border-color: #86efac; background: #f0fdf4; color: #15803d; }
 .profile-checklist li svg { width: 0.95rem; height: 0.95rem; flex-shrink: 0; }
-
-.profile-plan {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    border: 1px solid transparent;
-}
-.profile-plan--starter { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
-.profile-plan--growth  { background: #fff7ed; border-color: #fed7aa; color: #c2410c; }
-.profile-plan--elite   { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
-.profile-plan--none    { background: #f8fafc; border-color: #e2e8f0; color: #94a3b8; }
 </style>
 @endpush
 
@@ -120,26 +104,15 @@
         'draft'   => 'Your profile is not published yet. Complete the fields below and the admin team will review it for the directory.',
         'suspend' => 'Your profile has been suspended. Contact support for assistance.',
     ];
-
-    $subscription = $agentUser->activeAgentSubscription;
-    $subPackage = $subscription?->package;
-    $currentPlan = $agentUser->currentPlan;
-    $resolvedPlanName = $subPackage?->displayName() ?? $currentPlan?->displayName() ?? null;
-    $resolvedPlanSlug = $subPackage?->slug ?? $currentPlan?->slug ?? null;
-    $planBadgeClass = match ($resolvedPlanSlug) {
-        'starter-leads', 'quick-leads' => 'profile-plan--starter',
-        'growth-leads', 'power-leads' => 'profile-plan--growth',
-        'elite-leads', 'prime-leads' => 'profile-plan--elite',
-        default => 'profile-plan--none',
-    };
 @endphp
 
 <div class="workspace-grid workspace-grid--2" style="align-items:start;">
 
     {{-- Profile Form --}}
-    <section class="workspace-card">
-        <span class="eyebrow">Edit Profile</span>
-        <h2>Update Agent Details</h2>
+    <div style="display:grid; gap:1.5rem;">
+        <section class="workspace-card">
+            <span class="eyebrow">Edit Profile</span>
+            <h2>Update Agent Details</h2>
 
         {{-- Completeness --}}
         <div style="margin: 0.9rem 0;">
@@ -171,45 +144,8 @@
                         <span>Phone Number <abbr title="required">*</abbr></span>
                         <input type="text" name="phone" value="{{ old('phone', $agentUser->phone) }}" placeholder="e.g. (555) 000-0000" required>
                     </label>
-                </div>
             </div>
-
-            <div class="profile-form-section">
-                <h3>Your Plan</h3>
-                <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; margin-bottom:0.5rem;">
-                    @if($resolvedPlanName)
-                        <span class="profile-plan {{ $planBadgeClass }}">{{ $resolvedPlanName }}</span>
-                        @if($subscription)
-                            <span style="font-size:0.8rem; color:var(--dash-shell-muted);">
-                                @if($subscription->is_active && $subscription->payment_status === 'paid')
-                                    Active
-                                @elseif($subscription->ends_at?->isPast())
-                                    Expired
-                                @else
-                                    {{ ucfirst($subscription->payment_status ?: 'Pending') }}
-                                @endif
-                            </span>
-                        @endif
-                    @else
-                        <span class="profile-plan profile-plan--none">No Plan</span>
-                        <span style="font-size:0.8rem; color:var(--dash-shell-muted);">Choose a plan to start receiving leads.</span>
-                    @endif
-                </div>
-                <form action="{{ route('agent.profile.change-plan') }}" method="POST" style="display:flex; align-items:flex-end; gap:0.75rem; flex-wrap:wrap;">
-                    @csrf
-                    <label class="workspace-field" style="min-width:200px; flex:1;">
-                        <span>Change Plan</span>
-                        <select name="package_id" required>
-                            @foreach($availablePlans as $planOption)
-                                <option value="{{ $planOption->id }}" @selected($subPackage?->id === $planOption->id || $currentPlan?->id === $planOption->id)>
-                                    {{ $planOption->displayName() }} — {{ $planOption->monthly_lead_quota ?? 0 }} leads/mo
-                                </option>
-                            @endforeach
-                        </select>
-                    </label>
-                    <button type="submit" class="button" onclick="return confirm('Change your plan? This will deactivate your current subscription and activate the new one.')" style="min-height:2.6rem;">Update Plan</button>
-                </form>
-            </div>
+        </div>
 
             <div class="profile-form-section">
                 <h3>Professional Details</h3>
@@ -277,6 +213,7 @@
             </div>
         </form>
     </section>
+</div>
 
     {{-- Right Column: Snapshot + Status --}}
     <div style="display:grid; gap:1rem;">
