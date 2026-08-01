@@ -74,15 +74,20 @@ abstract class Controller
     protected function revenueTrendForQuery($query, array $revenueMap, string $period): Collection
     {
         $trend = $this->dashboardTrendWindows($period)->map(function (array $window) use ($query, $revenueMap) {
-            $leads = (clone $query)
+            $packageCounts = (clone $query)
                 ->whereBetween('created_at', [$window['start'], $window['end']])
-                ->get(['package_type']);
+                ->select('package_type', DB::raw('COUNT(*) as total'))
+                ->groupBy('package_type')
+                ->pluck('total', 'package_type');
+
+            $amount = 0;
+            foreach ($packageCounts as $packageType => $count) {
+                $amount += ($revenueMap[strtolower((string) $packageType)] ?? 0) * (int) $count;
+            }
 
             return [
                 'label' => $window['label'],
-                'amount' => (int) $leads->sum(function ($lead) use ($revenueMap) {
-                    return $revenueMap[strtolower((string) $lead->package_type)] ?? 0;
-                }),
+                'amount' => $amount,
             ];
         });
 

@@ -149,8 +149,13 @@ class DashboardController extends Controller
             ->get();
 
         $leadPipelineValue = 0;
-        foreach (Lead::query()->select(['id', 'package_type'])->cursor() as $lead) {
-            $leadPipelineValue += $revenueMap[strtolower((string) $lead->package_type)] ?? 0;
+        $packageCounts = Lead::query()
+            ->select('package_type', DB::raw('COUNT(*) as total'))
+            ->groupBy('package_type')
+            ->pluck('total', 'package_type');
+
+        foreach ($packageCounts as $packageType => $count) {
+            $leadPipelineValue += ($revenueMap[strtolower((string) $packageType)] ?? 0) * (int) $count;
         }
 
         $mrrEstimate = (float) User::query()
@@ -296,13 +301,20 @@ class DashboardController extends Controller
     private function revenueTrendFor(string $period, array $revenueMap): Collection
     {
         $trend = $this->dashboardTrendWindows($period)->map(function (array $window) use ($revenueMap) {
-            $leads = Lead::query()
+            $packageCounts = Lead::query()
                 ->whereBetween('created_at', [$window['start'], $window['end']])
-                ->get(['package_type']);
+                ->select('package_type', DB::raw('COUNT(*) as total'))
+                ->groupBy('package_type')
+                ->pluck('total', 'package_type');
+
+            $amount = 0;
+            foreach ($packageCounts as $packageType => $count) {
+                $amount += ($revenueMap[strtolower((string) $packageType)] ?? 0) * (int) $count;
+            }
 
             return [
                 'label' => $window['label'],
-                'amount' => (int) $leads->sum(fn (Lead $lead) => $revenueMap[strtolower((string) $lead->package_type)] ?? 0),
+                'amount' => $amount,
             ];
         });
 
