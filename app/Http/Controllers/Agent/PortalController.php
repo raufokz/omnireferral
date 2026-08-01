@@ -295,7 +295,7 @@ class PortalController extends Controller
                     'users' => $this->countTrendForQuery(User::query()->where('id', $user->id), $period)->values(),
                     'enquiries' => $this->countTrendForQuery((clone $messagesQuery), $period)->values(),
                 ],
-            ]);
+            ])->toArray();
 
         return [
             $user,
@@ -334,6 +334,10 @@ class PortalController extends Controller
                     'usersTotal' => 1,
                     'usersActive' => $user->status === 'active' ? 1 : 0,
                     'usersSuspended' => $user->status === 'suspended' ? 1 : 0,
+                    'myLeads' => $totalLeads,
+                    'newLeads' => (clone $leadsQuery)->whereIn('status', ['new', 'assigned'])->count(),
+                    'activeLeads' => (clone $leadsQuery)->whereIn('status', ['contacted', 'in_progress'])->count(),
+                    'closedLeads' => (clone $leadsQuery)->where('status', 'closed')->count(),
                 ],
                 'recentLeads' => (clone $leadsQuery)->latest()->take(6)->get(),
                 'pendingAccounts' => collect(),
@@ -371,10 +375,10 @@ class PortalController extends Controller
                     ],
                 ]),
                 'leadTrend' => $this->countTrendForQuery((clone $leadsQuery), 'monthly'),
-                'enquiryTrend' => collect($analyticsTrends['monthly']['enquiries']),
-                'userGrowthTrend' => collect($analyticsTrends['monthly']['users']),
-                'revenueTrend' => collect($analyticsTrends['monthly']['revenue']),
-                'analyticsTrends' => $analyticsTrends->toArray(),
+                'enquiryTrend' => collect($analyticsTrends['monthly']['enquiries'] ?? []),
+                'userGrowthTrend' => collect($analyticsTrends['monthly']['users'] ?? []),
+                'revenueTrend' => collect($analyticsTrends['monthly']['revenue'] ?? []),
+                'analyticsTrends' => $analyticsTrends,
                 'propertyTypeDistribution' => $this->propertyTypeDistributionForQuery((clone $propertiesQuery)),
                 'recentAudit' => collect(),
                 'canViewFullAudit' => false,

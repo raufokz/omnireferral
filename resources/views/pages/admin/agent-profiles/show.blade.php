@@ -255,6 +255,98 @@
         </section>
     @endif
 
+    {{-- ============ ASSIGNED LEADS ============ --}}
+    @if($user)
+    <section class="workspace-card subpkg-card">
+        <h3 class="subpkg-section-title">🔗 Assigned Leads</h3>
+
+        <div class="subpkg-grid" style="margin-bottom:1.25rem;">
+            <div class="subpkg-field">
+                <span>Currently Assigned</span>
+                <strong>{{ number_format($assignedLeadsStats['current']) }}</strong>
+            </div>
+            <div class="subpkg-field">
+                <span>Open Assignments</span>
+                <strong>{{ number_format($assignedLeadsStats['open']) }}</strong>
+            </div>
+            <div class="subpkg-field">
+                <span>Accepted</span>
+                <strong>{{ number_format($assignedLeadsStats['accepted']) }}</strong>
+            </div>
+            <div class="subpkg-field">
+                <span>Rejected</span>
+                <strong>{{ number_format($assignedLeadsStats['rejected']) }}</strong>
+            </div>
+            <div class="subpkg-field">
+                <span>Closed</span>
+                <strong>{{ number_format($assignedLeadsStats['closed']) }}</strong>
+            </div>
+            <div class="subpkg-field">
+                <span>Lifetime Assignments</span>
+                <strong>{{ number_format($assignedLeadsStats['total']) }}</strong>
+            </div>
+        </div>
+
+        @if($assignedLeads->isNotEmpty())
+            <h4 style="margin:0 0 0.5rem; font-size:0.9rem; font-weight:800;">Currently assigned to this agent</h4>
+            <div style="overflow-x:auto; margin-bottom:1.25rem;">
+                <table class="subpkg-hist">
+                    <thead>
+                        <tr><th>Lead</th><th>Intent</th><th>Status</th><th>Assigned At</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach($assignedLeads as $lead)
+                            <tr>
+                                <td>
+                                    <strong>{{ $lead->name }}</strong>
+                                    <div style="font-size:0.74rem; color:#64748b;">{{ $lead->email ?: 'no email' }} · {{ $lead->lead_number }}</div>
+                                </td>
+                                <td>{{ $lead->intent ? ucfirst($lead->intent) : '—' }}</td>
+                                <td><span class="subpkg-pill subpkg-pill--warn">{{ $lead->statusLabel() }}</span></td>
+                                <td>{{ $lead->assigned_at?->format('M j, Y') ?? '—' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+
+        <h4 style="margin:0 0 0.5rem; font-size:0.9rem; font-weight:800;">Assignment history</h4>
+        @if($leadAssignments->isNotEmpty())
+            <div style="overflow-x:auto;">
+                <table class="subpkg-hist">
+                    <thead>
+                        <tr><th>#</th><th>Lead</th><th>Month</th><th>Status</th><th>Package</th><th>Assigned By</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach($leadAssignments as $entry)
+                            <tr>
+                                <td>#{{ $entry->id }}</td>
+                                <td>
+                                    <strong>{{ $entry->lead?->name ?? 'Lead #'.$entry->lead_id }}</strong>
+                                    <div style="font-size:0.74rem; color:#64748b;">{{ $entry->lead?->email }}</div>
+                                </td>
+                                <td>{{ $entry->assignment_month }}</td>
+                                <td><span class="subpkg-pill subpkg-pill--{{ in_array($entry->assignment_status, ['rejected', 'removed', 'closed']) ? 'danger' : ($entry->assignment_status === 'accepted' ? 'ok' : 'warn') }}">
+                                    {{ str_replace('_', ' ', ucfirst($entry->assignment_status)) }}
+                                </span></td>
+                                <td>{{ $entry->package?->name ?? 'N/A' }}</td>
+                                <td>{{ $entry->assignedBy?->name ?? 'System' }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="workspace-empty" style="padding:1.25rem;">No lead assignments for this agent yet.</div>
+        @endif
+
+        <div class="subpkg-actions">
+            <a href="{{ route('admin.lead-assignments.index', ['agent_id' => $user->id]) }}" class="button button--ghost-blue">View all in Lead Assignments</a>
+        </div>
+    </section>
+    @endif
+
     {{-- ============ PROFILE DETAILS ============ --}}
     <section class="workspace-card">
         <h3 class="subpkg-section-title">📝 Profile Details</h3>

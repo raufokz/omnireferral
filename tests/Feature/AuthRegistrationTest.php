@@ -2,15 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Jobs\SyncUserToGoHighLevel;
 use App\Models\RealtorProfile;
 use App\Models\User;
 use App\Notifications\AgentCredentialsNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -35,37 +32,33 @@ class AuthRegistrationTest extends TestCase
             ->assertSee('<select id="login-workspace"', false)
             ->assertDontSee('workspace-option');
 
-        $this->get(route('register'))
+        $this->get(route('onboarding.form'))
             ->assertOk()
-            ->assertSee('Choose a user type')
-            ->assertSee('Select Workspace')
-            ->assertSee('Seller')
-            ->assertSee('<select id="register-workspace"', false)
-            ->assertDontSee('workspace-option');
+            ->assertSee('Complete Your Onboarding')
+            ->assertSee('full_name')
+            ->assertSee('email')
+            ->assertSee('upload_picture');
+
+        $this->get('/register')->assertNotFound();
     }
 
     public function test_agent_registration_requires_full_profile_details_and_creates_a_realtor_profile(): void
     {
         Storage::fake('public');
-        Queue::fake();
+        Notification::fake();
 
-        $this->post(route('register'), [
-            'role' => 'agent',
-            'name' => 'Taylor Morgan',
+        $this->post(route('onboarding.submit'), [
+            'full_name' => 'Taylor Morgan',
             'email' => 'taylor@example.com',
             'phone' => '(555) 111-2222',
-            'address_line_1' => '123 Main Street',
-            'address_line_2' => 'Suite 400',
+            'office_address' => '123 Main Street',
             'city' => 'Dallas',
-            'state' => 'tx',
-            'zip_code' => '75201',
+            'state' => 'TX',
+            'postal_code' => '75201',
             'brokerage_name' => 'Premier Realty Group',
             'license_number' => 'TX-1234567',
-            'password' => 'super-secret-password',
-            'password_confirmation' => 'super-secret-password',
-            'profile_image' => $this->fakePngUpload('agent-profile.png'),
-            'terms_accepted' => true,
-            'communication_accepted' => true,
+            'upload_picture' => $this->fakePngUpload('agent-profile.png'),
+            'terms' => true,
         ])
             ->assertRedirect(route('login'))
             ->assertSessionHas('success');
@@ -78,7 +71,6 @@ class AuthRegistrationTest extends TestCase
         $this->assertSame('agent', $user->role);
         $this->assertSame('(555) 111-2222', $user->phone);
         $this->assertSame('123 Main Street', $user->address_line_1);
-        $this->assertSame('Suite 400', $user->address_line_2);
         $this->assertSame('Dallas', $user->city);
         $this->assertSame('TX', $user->state);
         $this->assertSame('75201', $user->zip_code);
@@ -94,29 +86,26 @@ class AuthRegistrationTest extends TestCase
         $this->assertSame('TX', $profile->service_state);
         $this->assertSame('75201', $profile->service_zip_code);
 
-        Queue::assertPushed(SyncUserToGoHighLevel::class);
+        Notification::assertSentTo($user, AgentCredentialsNotification::class);
     }
 
     public function test_public_agent_directory_submission_does_not_require_password(): void
     {
         Storage::fake('public');
-        Queue::fake();
 
-        $this->post(route('register'), [
+        $this->post(route('agents.submit'), [
             'role' => 'agent',
             'agent_directory_submission' => '1',
             'name' => 'Morgan Reyes',
             'email' => 'morgan-agent@example.com',
             'phone' => '(555) 777-1212',
-            'address_line_1' => '45 Referral Avenue',
-            'city' => 'Austin',
-            'state' => 'tx',
-            'zip_code' => '73301',
             'brokerage_name' => 'Omni Realty Partners',
-            'license_number' => 'TX-7654321',
+            'is_active_agent' => '1',
+            'city' => 'Austin',
+            'state' => 'TX',
             'profile_image' => $this->fakePngUpload('directory-agent.png'),
-            'terms_accepted' => true,
-            'communication_accepted' => true,
+            'terms_accepted' => '1',
+            'communication_accepted' => '1',
         ])
             ->assertRedirect(route('agents.index'))
             ->assertSessionHas('success');
@@ -124,7 +113,7 @@ class AuthRegistrationTest extends TestCase
         $user = User::where('email', 'morgan-agent@example.com')->firstOrFail();
 
         $this->assertSame('agent', $user->role);
-        $this->assertSame('pending', $user->status);
+        $this->assertSame('active', $user->status);
         $this->assertTrue((bool) $user->must_reset_password);
         $this->assertNotEmpty($user->password);
 
@@ -132,33 +121,25 @@ class AuthRegistrationTest extends TestCase
 
         $this->assertNotNull($profile);
         $this->assertSame('Omni Realty Partners', $profile->brokerage_name);
-        $this->assertSame('TX-7654321', $profile->license_number);
-
-        Queue::assertPushed(SyncUserToGoHighLevel::class);
+        $this->assertSame(RealtorProfile::STATUS_APPROVED, $profile->profile_status);
+        $this->assertSame('public_agents_page', $profile->submission_source);
     }
 
-    public function test_buyer_registration_still_requires_core_profile_fields_but_not_agent_credentials(): void
+    public function test_agent_onboarding_requires_core_profile_fields_but_not_agent_credentials(): void
     {
         Storage::fake('public');
-        Queue::fake();
+        Notification::fake();
 
-        $this->post(route('register'), [
-            'role' => 'buyer',
-            'name' => 'Jamie Carter',
+        $this->post(route('onboarding.submit'), [
+            'full_name' => 'Jamie Carter',
             'email' => 'jamie@example.com',
             'phone' => '(555) 333-4444',
-            'address_line_1' => '80 Market Street',
             'city' => 'Miami',
             'state' => 'FL',
-            'zip_code' => '33101',
-            'password' => 'super-secret-password',
-            'password_confirmation' => 'super-secret-password',
-            'profile_image' => $this->fakePngUpload('buyer-profile.png'),
-            'terms_accepted' => true,
-            'communication_accepted' => true,
+            'postal_code' => '33101',
+            'terms' => true,
         ])
             ->assertRedirect(route('login'))
-            ->assertSessionHas('selected_workspace', 'buyer')
             ->assertSessionHas('success');
 
         $this->assertGuest();
@@ -166,34 +147,26 @@ class AuthRegistrationTest extends TestCase
         $user = User::where('email', 'jamie@example.com')->firstOrFail();
 
         $this->assertSame('pending', $user->status);
-        $this->assertSame('buyer', $user->role);
-        $this->assertNull($user->realtorProfile);
-        Queue::assertPushed(SyncUserToGoHighLevel::class);
+        $this->assertSame('agent', $user->role);
+        $this->assertNull($user->realtorProfile->license_number);
+        $this->assertNull($user->realtorProfile->brokerage_name);
     }
 
-    public function test_workspace_selection_is_required_for_login_and_registration(): void
+    public function test_login_workspace_selection_is_required(): void
     {
-        Storage::fake('public');
-
         $this->post(route('login'), [
             'email' => 'missing-workspace@example.com',
             'password' => 'super-secret-password',
         ])->assertSessionHasErrors('role');
 
-        $this->post(route('register'), [
-            'name' => 'Workspace Missing',
+        $this->post(route('onboarding.submit'), [
+            'full_name' => 'Workspace Missing',
             'email' => 'workspace-missing@example.com',
             'phone' => '(555) 222-3333',
-            'address_line_1' => '100 Main Street',
             'city' => 'Dallas',
             'state' => 'TX',
-            'zip_code' => '75201',
-            'password' => 'super-secret-password',
-            'password_confirmation' => 'super-secret-password',
-            'profile_image' => $this->fakePngUpload('workspace-missing.png'),
-            'terms_accepted' => true,
-            'communication_accepted' => true,
-        ])->assertSessionHasErrors('role');
+            'postal_code' => '75201',
+        ])->assertSessionHasErrors('terms');
     }
 
     public function test_login_workspace_selection_is_remembered_during_the_session(): void
@@ -210,29 +183,23 @@ class AuthRegistrationTest extends TestCase
     public function test_pending_user_cannot_sign_in_until_an_admin_activates_the_account(): void
     {
         Storage::fake('public');
-        Queue::fake();
+        Notification::fake();
 
-        $this->post(route('register'), [
-            'role' => 'buyer',
-            'name' => 'Pending Pat',
+        $this->post(route('onboarding.submit'), [
+            'full_name' => 'Pending Pat',
             'email' => 'pending-pat@example.com',
             'phone' => '(555) 999-0000',
-            'address_line_1' => '9 Wait Street',
             'city' => 'Austin',
             'state' => 'TX',
-            'zip_code' => '73301',
-            'password' => 'super-secret-password',
-            'password_confirmation' => 'super-secret-password',
-            'profile_image' => $this->fakePngUpload('pat.png'),
-            'terms_accepted' => true,
-            'communication_accepted' => true,
+            'postal_code' => '73301',
+            'terms' => true,
         ])->assertRedirect(route('login'));
 
         $user = User::where('email', 'pending-pat@example.com')->firstOrFail();
         $this->assertSame('pending', $user->status);
 
         $this->post(route('login'), [
-            'role' => 'buyer',
+            'role' => 'agent',
             'email' => 'pending-pat@example.com',
             'password' => 'super-secret-password',
         ])->assertSessionHasErrors('email');
@@ -250,11 +217,14 @@ class AuthRegistrationTest extends TestCase
 
         $this->assertSame('active', $user->fresh()->status);
 
+        $user->password = bcrypt('super-secret-password');
+        $user->save();
+
         $this->post(route('login'), [
-            'role' => 'buyer',
+            'role' => 'agent',
             'email' => 'pending-pat@example.com',
             'password' => 'super-secret-password',
-        ])->assertRedirect(route('dashboard.buyer'));
+        ])->assertRedirect(route('dashboard.agent'));
 
         $this->assertAuthenticated();
     }

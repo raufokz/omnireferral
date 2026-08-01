@@ -15,6 +15,7 @@ class LeadAssignment extends Model
         'assignment_month',
         'assignment_status',
         'sent_at',
+        'assigned_at',
         'accepted_at',
         'rejected_at',
         'response_from_realtor',
@@ -23,6 +24,7 @@ class LeadAssignment extends Model
 
     protected $casts = [
         'sent_at' => 'datetime',
+        'assigned_at' => 'datetime',
         'accepted_at' => 'datetime',
         'rejected_at' => 'datetime',
     ];
@@ -45,5 +47,37 @@ class LeadAssignment extends Model
     public function package(): BelongsTo
     {
         return $this->belongsTo(Package::class);
+    }
+
+    public function realtorProfile()
+    {
+        return $this->hasOneThrough(
+            RealtorProfile::class,
+            User::class,
+            'id',
+            'user_id',
+            'assigned_to_user_id',
+            'id'
+        );
+    }
+
+    public function getRealtorIdAttribute()
+    {
+        return $this->assigned_to_user_id;
+    }
+
+    public function setRealtorIdAttribute($value)
+    {
+        $this->assigned_to_user_id = $value;
+    }
+
+    public function getNotesAttribute()
+    {
+        return $this->admin_notes;
+    }
+
+    public function setNotesAttribute($value)
+    {
+        $this->admin_notes = $value;
     }
 }

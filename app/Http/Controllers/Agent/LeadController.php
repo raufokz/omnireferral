@@ -31,15 +31,15 @@ class LeadController extends Controller
         $lead->status = $validated['status'];
 
         if ($lead->status === 'contacted' && ! $lead->contacted_at) {
-            $lead->contacted_at = now();
+            $lead->contacted_at = \Illuminate\Support\Carbon::now();
         }
 
         if ($lead->status === 'closed' && ! $lead->closed_at) {
-            $lead->closed_at = now();
+            $lead->closed_at = \Illuminate\Support\Carbon::now();
         }
 
         if ($lead->status === 'qualified' && ! $lead->reviewed_at) {
-            $lead->reviewed_at = now();
+            $lead->reviewed_at = \Illuminate\Support\Carbon::now();
         }
 
         $lead->save();
@@ -47,5 +47,22 @@ class LeadController extends Controller
         $this->leadCustomerNotifier->notifyStatusChangeIfNeeded($lead->fresh(), $previousStatus);
 
         return back()->with('success', 'Lead status updated to ' . $lead->statusLabel() . '.');
+    }
+
+    public function updateNotes(Request $request, Lead $lead): RedirectResponse
+    {
+        $user = $request->user();
+        abort_unless($user, 401);
+
+        abort_unless((int) $lead->assigned_agent_id === (int) $user->id, 403, 'You can only update leads assigned to you.');
+
+        $validated = $request->validate([
+            'notes' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $lead->notes = $validated['notes'];
+        $lead->save();
+
+        return back()->with('success', 'Lead notes updated.');
     }
 }

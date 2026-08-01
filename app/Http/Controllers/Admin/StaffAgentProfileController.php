@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Lead;
+use App\Models\LeadAssignment;
 use App\Models\Package;
 use App\Models\RealtorProfile;
 use App\Models\User;
@@ -258,6 +260,32 @@ class StaffAgentProfileController extends Controller
 
         $user = $agentProfile->user;
 
+        $leadAssignments = $user
+            ? LeadAssignment::query()
+                ->with(['lead:id,name,email,lead_number,status,intent,package_type', 'assignedBy:id,name', 'package:id,name'])
+                ->where('assigned_to_user_id', $user->id)
+                ->latest()
+                ->get()
+            : collect();
+
+        $assignedLeads = $user
+            ? Lead::query()
+                ->where('assigned_agent_id', $user->id)
+                ->latest()
+                ->take(10)
+                ->get(['id', 'lead_number', 'name', 'email', 'phone', 'status', 'intent', 'assigned_at'])
+            : collect();
+
+        $assignedLeadsStats = [
+            'total' => $leadAssignments->count(),
+            'current' => $assignedLeads->count(),
+            'open' => $leadAssignments->whereIn('assignment_status', ['assigned', 'sent'])->count(),
+            'accepted' => $leadAssignments->where('assignment_status', 'accepted')->count(),
+            'rejected' => $leadAssignments->where('assignment_status', 'rejected')->count(),
+            'closed' => $leadAssignments->where('assignment_status', 'closed')->count(),
+            'removed' => $leadAssignments->where('assignment_status', 'removed')->count(),
+        ];
+
         return view('pages.admin.agent-profiles.show', [
             'profile' => $agentProfile,
             'user' => $user,
@@ -276,6 +304,9 @@ class StaffAgentProfileController extends Controller
             'subscriptionHistory' => $user
                 ? $user->subscriptionHistories()->with(['performedByUser:id,name', 'toPackage:id,slug,name', 'fromPackage:id,slug,name'])->limit(20)->get()
                 : collect(),
+            'leadAssignments' => $leadAssignments,
+            'assignedLeads' => $assignedLeads,
+            'assignedLeadsStats' => $assignedLeadsStats,
             'meta' => [
                 'title' => ($user?->publicDisplayName() ?: 'Agent').' | Profile',
             ],

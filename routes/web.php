@@ -271,6 +271,18 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/affiliate', [DashboardController::class, 'affiliate'])->name('dashboard.affiliate');
 
+    Route::middleware(['role:buyer'])->group(function () {
+        Route::get('/buyer/dashboard', [DashboardController::class, 'buyer'])->name('dashboard.buyer');
+        Route::get('/buyer/dashboard/saved', [DashboardController::class, 'buyerSavedHomes'])->name('dashboard.buyer.saved');
+        Route::get('/buyer/dashboard/requests', [DashboardController::class, 'buyerRequests'])->name('dashboard.buyer.requests');
+    });
+
+    Route::middleware(['role:seller'])->group(function () {
+        Route::get('/seller/dashboard', [DashboardController::class, 'seller'])->name('dashboard.seller');
+        Route::get('/seller/dashboard/listings', [DashboardController::class, 'sellerListings'])->name('dashboard.seller.listings');
+        Route::get('/seller/dashboard/requests', [DashboardController::class, 'sellerRequests'])->name('dashboard.seller.requests');
+    });
+
     Route::middleware(['role:agent'])->group(function () {
         Route::get('/dashboard/enquiries', [DashboardEnquiryController::class, 'index'])->name('dashboard.enquiries.index');
         Route::get('/dashboard/enquiries/{enquiry}', [DashboardEnquiryController::class, 'show'])->name('dashboard.enquiries.show');
@@ -289,6 +301,7 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::post('/agent/profile/change-plan', [AgentPortalController::class, 'changePlan'])->name('agent.profile.change-plan');
         Route::get('/agent/leads', [AgentPortalController::class, 'leads'])->name('agent.leads.index');
         Route::post('/agent/leads/{lead}/status', [AgentLeadController::class, 'updateStatus'])->name('agent.leads.status');
+        Route::post('/agent/leads/{lead}/notes', [AgentLeadController::class, 'updateNotes'])->name('agent.leads.notes');
         Route::get('/agent/listings', [AgentPortalController::class, 'listings'])->name('agent.listings.index');
         Route::post('/agent/listings', [PropertyController::class, 'store'])->name('agent.listings.store');
         Route::get('/agent/messages', [AgentPortalController::class, 'messages'])->name('agent.messages.index');
@@ -296,6 +309,7 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
     });
 
     Route::middleware(['role:seller,agent'])->group(function () {
+        Route::post('/properties', [PropertyController::class, 'store'])->name('properties.store');
         Route::get('/properties/{property}/edit', [PropertyController::class, 'edit'])->name('properties.edit');
         Route::put('/properties/{property}', [PropertyController::class, 'update'])->name('properties.update');
         Route::delete('/properties/{property}', [PropertyController::class, 'destroy'])->name('properties.destroy');
@@ -491,6 +505,8 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::post('admin/lead-assignments', [LeadAssignmentController::class, 'store'])->name('admin.lead-assignments.store');
         Route::get('admin/lead-assignments/{assignment}', [LeadAssignmentController::class, 'show'])->name('admin.lead-assignments.show');
         Route::patch('admin/lead-assignments/{assignment}/status', [LeadAssignmentController::class, 'updateStatus'])->name('admin.lead-assignments.update-status');
+        Route::post('admin/lead-assignments/{assignment}/reassign', [LeadAssignmentController::class, 'reassign'])->name('admin.lead-assignments.reassign');
+        Route::post('admin/lead-assignments/{assignment}/remove', [LeadAssignmentController::class, 'remove'])->name('admin.lead-assignments.remove');
         Route::post('admin/lead-assignments/auto-assign', [LeadAssignmentController::class, 'autoAssign'])->name('admin.lead-assignments.auto-assign');
 
         Route::get('admin/agent-lead-quotas', [AgentLeadQuotaController::class, 'index'])->name('admin.agent-lead-quotas.index');

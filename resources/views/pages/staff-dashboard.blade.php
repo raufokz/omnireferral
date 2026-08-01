@@ -6,6 +6,7 @@
 
 @section('dashboard_actions')
     <a href="{{ route('admin.search') }}" class="button button--ghost-blue">Platform Search</a>
+    <a href="{{ route('admin.lead-assignments.index') }}" class="button button--ghost-blue">Lead Assignments</a>
     <a href="{{ route('admin.leads.index') }}" class="button button--ghost-blue">Lead Registry</a>
     <a href="{{ route('admin.users.index') }}" class="button">Team Users</a>
 @endsection
@@ -142,6 +143,42 @@
             <span>Properties</span>
             <strong>{{ number_format($stats['properties']) }}</strong>
             <span>{{ number_format($stats['pendingListings']) }} pending review</span>
+        </article>
+
+        <article class="workspace-card workspace-kpi" data-trend="Assigned today" style="border-top: 3px solid #3b82f6;">
+            <div class="staff-kpi-icon staff-kpi-icon--blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <span>Assigned Today</span>
+            <strong>{{ number_format($stats['staffLeadsAssignedToday'] ?? 0) }}</strong>
+            <span>Leads you assigned today</span>
+        </article>
+
+        <article class="workspace-card workspace-kpi workspace-kpi--warm" data-trend="Assigned this month" style="border-top: 3px solid #ff6b00;">
+            <div class="staff-kpi-icon staff-kpi-icon--orange">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <span>Assigned This Month</span>
+            <strong>{{ number_format($stats['staffLeadsAssignedThisMonth'] ?? 0) }}</strong>
+            <span>Leads you assigned this month</span>
+        </article>
+
+        <article class="workspace-card workspace-kpi" data-trend="Active management" style="border-top: 3px solid #0369a1;">
+            <div class="staff-kpi-icon staff-kpi-icon--teal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <span>Realtors Managed</span>
+            <strong>{{ number_format($stats['staffRealtorsManaged'] ?? 0) }}</strong>
+            <span>Realtors you assigned to this month</span>
+        </article>
+
+        <article class="workspace-card workspace-kpi workspace-kpi--violet" data-trend="Awaiting response" style="border-top: 3px solid #5145cd;">
+            <div class="staff-kpi-icon staff-kpi-icon--violet">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <span>Pending Agent Response</span>
+            <strong>{{ number_format($stats['staffPendingAssignments'] ?? 0) }}</strong>
+            <span>Awaiting realtor acceptance</span>
         </article>
 
     </section>

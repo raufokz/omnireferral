@@ -1,0 +1,113 @@
+LEAD COLUMNS:
+Array
+(
+    [0] => id
+    [1] => lead_number
+    [2] => type
+    [3] => intent
+    [4] => package_type
+    [5] => package_id
+    [6] => status
+    [7] => source
+    [8] => source_timestamp
+    [9] => name
+    [10] => email
+    [11] => email_normalized
+    [12] => phone
+    [13] => phone_normalized
+    [14] => zip_code
+    [15] => property_address
+    [16] => beds_baths
+    [17] => working_with_realtor
+    [18] => dnc_disclaimer
+    [19] => property_type
+    [20] => budget
+    [21] => asking_price
+    [22] => timeline
+    [23] => financing_status
+    [24] => contact_preference
+    [25] => lead_score
+    [26] => is_priority
+    [27] => property_image
+    [28] => property_id
+    [29] => ghl_contact_id
+    [30] => preferences
+    [31] => notes
+    [32] => rep_name
+    [33] => state
+    [34] => sent_to
+    [35] => assignment
+    [36] => reason_in_house
+    [37] => realtor_response
+    [38] => form_data
+    [39] => route_notes
+    [40] => reviewed_at
+    [41] => assigned_at
+    [42] => is_assignable
+    [43] => row_color
+    [44] => lead_quality_score
+    [45] => contacted_at
+    [46] => closed_at
+    [47] => assigned_agent_id
+    [48] => reviewed_by_id
+    [49] => created_at
+    [50] => updated_at
+    [51] => deleted_at
+    [52] => listing_id
+    [53] => enquiry_type
+    [54] => budget_range
+    [55] => estimated_value
+    [56] => area_of_interest
+)
+REALTOR PROFILE COLUMNS:
+Array
+(
+    [0] => id
+    [1] => user_id
+    [2] => slug
+    [3] => service_city
+    [4] => service_state
+    [5] => service_zip_code
+    [6] => brokerage_name
+    [7] => license_number
+    [8] => years_of_experience
+    [9] => languages
+    [10] => market_areas
+    [11] => social_links
+    [12] => rating
+    [13] => review_count
+    [14] => leads_closed
+    [15] => specialties
+    [16] => bio
+    [17] => headshot
+    [18] => profile_status
+    [19] => is_active_agent
+    [20] => created_by_user_id
+    [21] => source_url
+    [22] => submission_source
+    [23] => approved_at
+    [24] => approved_by_user_id
+    [25] => rejected_at
+    [26] => rejected_by_user_id
+    [27] => approval_notes
+    [28] => created_at
+    [29] => updated_at
+)
+LEAD ASSIGNMENT COLUMNS:
+Array
+(
+    [0] => id
+    [1] => lead_id
+    [2] => assigned_to_user_id
+    [3] => assigned_by_user_id
+    [4] => package_id
+    [5] => assignment_month
+    [6] => assignment_status
+    [7] => sent_at
+    [8] => accepted_at
+    [9] => rejected_at
+    [10] => response_from_realtor
+    [11] => admin_notes
+    [12] => created_at
+    [13] => updated_at
+)

@@ -55,6 +55,30 @@ class DashboardController extends Controller
         $workspaceUser = auth()->user();
         $isStaffView = $workspaceUser?->role === 'staff';
         $isSuperAdminView = (bool) ($workspaceUser?->is_super_admin);
+
+        $todayAssignmentsCount = \App\Models\LeadAssignment::whereDate('created_at', today())->count();
+        $monthAssignmentsCount = \App\Models\LeadAssignment::where('assignment_month', now()->format('Y-m'))->count();
+
+        $staffLeadsAssignedToday = 0;
+        $staffLeadsAssignedThisMonth = 0;
+        $staffRealtorsManaged = 0;
+        $staffPendingAssignments = 0;
+
+        if ($workspaceUser) {
+            $staffLeadsAssignedToday = \App\Models\LeadAssignment::where('assigned_by_user_id', $workspaceUser->id)
+                ->whereDate('created_at', today())
+                ->count();
+            $staffLeadsAssignedThisMonth = \App\Models\LeadAssignment::where('assigned_by_user_id', $workspaceUser->id)
+                ->where('assignment_month', now()->format('Y-m'))
+                ->count();
+            $staffRealtorsManaged = \App\Models\LeadAssignment::where('assigned_by_user_id', $workspaceUser->id)
+                ->where('assignment_month', now()->format('Y-m'))
+                ->distinct('assigned_to_user_id')
+                ->count('assigned_to_user_id');
+            $staffPendingAssignments = \App\Models\LeadAssignment::where('assigned_by_user_id', $workspaceUser->id)
+                ->whereIn('assignment_status', ['assigned', 'sent'])
+                ->count();
+        }
         $revenueMap = [
             'starter' => 199,
             'growth' => 349,
@@ -206,6 +230,14 @@ class DashboardController extends Controller
                 'paidAgents' => $paidAgentCount,
                 'pendingPaymentAgents' => $pendingPaymentCount,
                 'ghlPaidAgents' => $ghlPaidAgentCount,
+                'assignedLeads' => Lead::whereNotNull('assigned_agent_id')->count(),
+                'unassignedLeads' => Lead::whereNull('assigned_agent_id')->count(),
+                'todayAssignments' => $todayAssignmentsCount,
+                'thisMonthAssignments' => $monthAssignmentsCount,
+                'staffLeadsAssignedToday' => $staffLeadsAssignedToday,
+                'staffLeadsAssignedThisMonth' => $staffLeadsAssignedThisMonth,
+                'staffRealtorsManaged' => $staffRealtorsManaged,
+                'staffPendingAssignments' => $staffPendingAssignments,
             ],
             'recentLeads' => $recentLeads,
             'pendingAccounts' => $pendingAccounts,

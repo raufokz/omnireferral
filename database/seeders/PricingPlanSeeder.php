@@ -16,7 +16,7 @@ class PricingPlanSeeder extends Seeder
                 'name' => 'Starter Lead',
                 'tier' => 'Starter',
                 'value_price' => null,
-                'price' => 499,
+                'price' => 369,
                 'price_note' => '/ Yearly',
                 'summary' => 'Starter-friendly. City-focused.',
                 'features' => [
@@ -42,7 +42,7 @@ class PricingPlanSeeder extends Seeder
                 'name' => 'Growth Lead',
                 'tier' => 'Growth',
                 'value_price' => null,
-                'price' => 797,
+                'price' => 697,
                 'price_note' => '/ One-Time',
                 'summary' => 'Multi-city. Scalable support.',
                 'features' => [
@@ -73,7 +73,7 @@ class PricingPlanSeeder extends Seeder
                 'name' => 'Elite Lead',
                 'tier' => 'Elite',
                 'value_price' => null,
-                'price' => 2299,
+                'price' => 1979,
                 'price_note' => '/ One-Time',
                 'summary' => 'Premium reach. Full-service.',
                 'features' => [

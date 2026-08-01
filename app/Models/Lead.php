@@ -37,6 +37,7 @@ class Lead extends Model
         'phone',
         'phone_normalized',
         'zip_code',
+        'city',
         'property_address',
         'beds_baths',
         'working_with_realtor',
@@ -110,6 +111,11 @@ class Lead extends Model
     public function matches(): HasMany
     {
         return $this->hasMany(LeadMatch::class);
+    }
+
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(LeadAssignment::class);
     }
 
     public function activities(): HasMany

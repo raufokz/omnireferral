@@ -82,7 +82,7 @@
                     <span>Status</span>
                     <select name="assignment_status" required>
                         <option value="">Select status...</option>
-                        @foreach(['assigned', 'sent', 'accepted', 'rejected', 'no_response', 'reassigned', 'closed'] as $s)
+                        @foreach(['assigned', 'sent', 'accepted', 'rejected', 'no_response', 'reassigned', 'removed', 'closed'] as $s)
                             <option value="{{ $s }}" {{ $assignment->assignment_status === $s ? 'selected' : '' }}>
                                 {{ ucfirst(str_replace('_', ' ', $s)) }}
                             </option>
@@ -102,6 +102,100 @@
                 </div>
             </div>
         </form>
+    </section>
+
+    @if(! in_array($assignment->assignment_status, ['reassigned', 'removed', 'closed']))
+        <section class="workspace-card">
+            <span class="eyebrow">Reassign</span>
+            <h2>Move this lead to another agent</h2>
+            <form method="POST" action="{{ route('admin.lead-assignments.reassign', $assignment) }}">
+                @csrf
+                <div class="workspace-form-grid">
+                    <label class="workspace-field workspace-field--full">
+                        <span>New agent</span>
+                        <select name="agent_id" required>
+                            <option value="">Select an agent...</option>
+                            @foreach($reassignableAgents as $agent)
+                                <option value="{{ $agent->id }}" {{ (int) $agent->id === (int) $assignment->assigned_to_user_id ? 'disabled' : '' }}>
+                                    {{ $agent->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('agent_id') <small class="field-error">{{ $message }}</small> @enderror
+                    </label>
+                    <label class="workspace-field workspace-field--full">
+                        <span>Admin notes</span>
+                        <textarea name="admin_notes" rows="3" placeholder="Reason for reassignment...">{{ old('admin_notes') }}</textarea>
+                    </label>
+                    <label class="workspace-field workspace-field--full">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="override_quota" value="1" {{ old('override_quota') ? 'checked' : '' }}>
+                            <span>Override quota limit</span>
+                        </label>
+                    </label>
+                    <div class="workspace-field workspace-field--full workspace-field--actions">
+                        <button type="submit" class="button">Reassign Lead</button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <section class="workspace-card">
+            <span class="eyebrow">Remove</span>
+            <h2>Return lead to unassigned pool</h2>
+            <form method="POST" action="{{ route('admin.lead-assignments.remove', $assignment) }}"
+                  onsubmit="return confirm('Remove this assignment and return the lead to the unassigned pool?');">
+                @csrf
+                <div class="workspace-form-grid">
+                    <label class="workspace-field workspace-field--full">
+                        <span>Admin notes (optional)</span>
+                        <textarea name="admin_notes" rows="2" placeholder="Reason for removal...">{{ old('admin_notes') }}</textarea>
+                    </label>
+                    <div class="workspace-field workspace-field--full workspace-field--actions">
+                        <button type="submit" class="button button--ghost-blue" style="color:#b91c1c;">Remove Assignment</button>
+                    </div>
+                </div>
+            </form>
+        </section>
+    @endif
+
+    <section class="workspace-card">
+        <span class="eyebrow">History</span>
+        <h2>Assignment history for this lead</h2>
+        <div class="table-scroll">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Agent</th>
+                        <th>Assigned by</th>
+                        <th>Month</th>
+                        <th>Status</th>
+                        <th>Sent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($history as $entry)
+                        <tr>
+                            <td>#{{ $entry->id }}</td>
+                            <td>{{ $entry->assignedTo?->name ?? 'N/A' }}</td>
+                            <td>{{ $entry->assignedBy?->name ?? 'System' }}</td>
+                            <td>{{ $entry->assignment_month }}</td>
+                            <td>
+                                <span class="badge badge--{{ $entry->assignment_status }}">
+                                    {{ str_replace('_', ' ', ucfirst($entry->assignment_status)) }}
+                                </span>
+                            </td>
+                            <td>{{ $entry->sent_at?->format('M j, Y') ?? '—' }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center muted">No other assignments for this lead.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </section>
 
     <p><a href="{{ route('admin.lead-assignments.index') }}" class="link">&larr; Back to assignments</a></p>

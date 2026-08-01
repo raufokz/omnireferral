@@ -6,6 +6,7 @@
 
 @section('dashboard_actions')
     <a href="{{ route('admin.search') }}" class="button button--ghost-blue">Platform search</a>
+    <a href="{{ route('admin.lead-assignments.index') }}" class="button button--ghost-blue">Lead assignments</a>
     <a href="{{ route('admin.users.index') }}" class="button button--ghost-blue">Users</a>
     <a href="{{ route('admin.agent-profiles.index') }}" class="button button--ghost-blue">Agent profiles</a>
     <a href="{{ route('admin.enquiries.index') }}" class="button button--ghost-blue">Enquiries</a>
@@ -131,6 +132,30 @@
             <span>Paid Agents (GHL)</span>
             <strong>{{ number_format($stats['ghlPaidAgents'] ?? 0) }}</strong>
             <span>{{ number_format($stats['paidAgents'] ?? 0) }} total active, {{ number_format($stats['pendingPaymentAgents'] ?? 0) }} pending payment</span>
+        </article>
+        <article class="workspace-card workspace-kpi" data-trend="Assigned leads">
+            <div class="admin-kpi-icon admin-kpi-icon--blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="16" y1="11" x2="22" y2="11"/><line x1="19" y1="8" x2="19" y2="14"/></svg></div>
+            <span>Assigned Leads</span>
+            <strong>{{ number_format($stats['assignedLeads'] ?? 0) }}</strong>
+            <span>Active assignments in registry</span>
+        </article>
+        <article class="workspace-card workspace-kpi" data-trend="Unassigned leads">
+            <div class="admin-kpi-icon admin-kpi-icon--orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+            <span>Unassigned Leads</span>
+            <strong>{{ number_format($stats['unassignedLeads'] ?? 0) }}</strong>
+            <span>Leads waiting for assignment</span>
+        </article>
+        <article class="workspace-card workspace-kpi" data-trend="Today's speed">
+            <div class="admin-kpi-icon admin-kpi-icon--teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <span>Today's Assignments</span>
+            <strong>{{ number_format($stats['todayAssignments'] ?? 0) }}</strong>
+            <span>Lead transitions made today</span>
+        </article>
+        <article class="workspace-card workspace-kpi workspace-kpi--violet" data-trend="Monthly total">
+            <div class="admin-kpi-icon admin-kpi-icon--violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <span>This Month Assignments</span>
+            <strong>{{ number_format($stats['thisMonthAssignments'] ?? 0) }}</strong>
+            <span>Lead transitions this month</span>
         </article>
     </section>
 

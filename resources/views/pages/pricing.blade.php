@@ -38,7 +38,7 @@
             'price' => 697,
             'billing' => '/ One-Time',
             'subtitle' => 'Multi-city. Scalable support.',
-            'description' => 'Designed for growing teams that need more referrals, broader coverage, virtual assistance, and stronger lead qualification.',
+            'description' => 'Designed for growing agents & teams that need more referrals, broader coverage, virtual assistance, and stronger lead qualification.',
             'featured' => true,
         ],
         [

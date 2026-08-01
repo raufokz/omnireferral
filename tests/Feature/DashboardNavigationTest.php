@@ -37,7 +37,7 @@ class DashboardNavigationTest extends TestCase
         $this->actingAs($seller)
             ->get(route('dashboard.seller.listings'))
             ->assertOk()
-            ->assertSee('Listing Management')
+            ->assertSee('Listings Management')
             ->assertSee('aria-expanded="true"', false)
             ->assertSee('aria-current="page"', false);
     }

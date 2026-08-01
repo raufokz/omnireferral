@@ -47,7 +47,7 @@ class PricingCheckoutRoutingTest extends TestCase
         }
 
         $response->assertSee('Perfect for agents entering new markets who need verified referrals, local visibility, and predictable lead opportunities.');
-        $response->assertSee('Designed for growing teams that need more referrals, broader coverage, virtual assistance, and stronger lead qualification.');
+        $response->assertSee('Designed for growing agents & teams that need more referrals, broader coverage, virtual assistance, and stronger lead qualification.');
         $response->assertSee('Dedicated virtual support for CRM updates, scheduling, administrative tasks, and daily business operations.');
         $response->assertDontSee(route('contact', ['plan' => 'Individual VA']), false);
         $response->assertDontSee('First FIVE (5) Referrals FREE');
