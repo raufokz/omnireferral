@@ -322,37 +322,12 @@
                         </div>
                     @endif
                 </div>
-            @elseif($activePlan)
-                <div style="padding-top:0.6rem; border-top:1px solid var(--dash-shell-border);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
-                        <strong style="font-size:0.82rem;">Subscription</strong>
-                        <span class="status-pill status-pill--green">Active</span>
-                    </div>
-                    <div style="font-size:0.82rem; color:var(--dash-shell-muted);">
-                        {{ $activePlan->displayName() }}
-                    </div>
-                    @if($currentMonthQuota ?? null)
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.82rem; margin-top:0.3rem;">
-                            <span>Monthly Leads: {{ $currentMonthQuota->assigned_count }}/{{ $currentMonthQuota->monthly_quota }}</span>
-                            <span style="color:var(--dash-shell-muted);">{{ $currentMonthQuota->remaining_count }} remaining</span>
-                        </div>
-                    @endif
-                </div>
-            @else
-                <div style="padding-top:0.6rem; border-top:1px solid var(--dash-shell-border);">
-                    <div style="display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; color:#dc2626;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        Your subscription is not active. Please contact support or complete your payment.
-                    </div>
-                </div>
             @endif
 
             <div class="workspace-actions">
                 <a href="{{ route('agent.profile') }}" class="button button--ghost-blue">Edit Profile</a>
                 @if($activePlan)
                     <span class="workspace-pill workspace-pill--accent">{{ $activePlan->displayName() }}</span>
-                @else
-                    <a href="{{ route('pricing') }}" class="button button--ghost-blue">Upgrade Plan</a>
                 @endif
             </div>
         </article>
