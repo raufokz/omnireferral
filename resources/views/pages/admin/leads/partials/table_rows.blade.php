@@ -33,7 +33,6 @@
         </td>
         <td data-label="Ops">
             <strong>{{ $lead->rep_name ?: 'No rep' }}</strong>
-            <div class="workspace-property__meta">Sent: {{ $lead->sent_to ?: 'N/A' }}</div>
             <div class="workspace-property__meta">{{ \Illuminate\Support\Str::limit($lead->reason_in_house ?: 'No reason', 42) }}</div>
         </td>
         <td data-label="Assignment">
