@@ -322,6 +322,22 @@
                         </div>
                     @endif
                 </div>
+            @elseif($activePlan)
+                <div style="padding-top:0.6rem; border-top:1px solid var(--dash-shell-border);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem;">
+                        <strong style="font-size:0.82rem;">Subscription</strong>
+                        <span class="status-pill status-pill--green">Active</span>
+                    </div>
+                    <div style="font-size:0.82rem; color:var(--dash-shell-muted);">
+                        {{ $activePlan->displayName() }}
+                    </div>
+                    @if($currentMonthQuota ?? null)
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.82rem; margin-top:0.3rem;">
+                            <span>Monthly Leads: {{ $currentMonthQuota->assigned_count }}/{{ $currentMonthQuota->monthly_quota }}</span>
+                            <span style="color:var(--dash-shell-muted);">{{ $currentMonthQuota->remaining_count }} remaining</span>
+                        </div>
+                    @endif
+                </div>
             @else
                 <div style="padding-top:0.6rem; border-top:1px solid var(--dash-shell-border);">
                     <div style="display:flex; align-items:center; gap:0.4rem; font-size:0.82rem; color:#dc2626;">
