@@ -353,13 +353,16 @@
                             <th>Lead</th>
                             <th>Intent</th>
                             <th>Status</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($recentLeads as $lead)
                             <tr>
                                 <td data-label="Lead">
-                                    <strong>{{ $lead->name }}</strong>
+                                    <a href="{{ route('agent.leads.show', $lead) }}" style="color:var(--dash-shell-text); font-weight:700; text-decoration:none;" onmouseover="this.style.color='#0b3668'" onmouseout="this.style.color='var(--dash-shell-text)'">
+                                        {{ $lead->name }}
+                                    </a>
                                     <div class="workspace-property__meta">
                                         {{ $lead->phone ?: 'Phone pending' }}
                                         @if($lead->zip_code)
@@ -375,10 +378,15 @@
                                 <td data-label="Status">
                                     <span class="status-pill status-pill--{{ $lead->statusTone() }}">{{ $lead->statusLabel() }}</span>
                                 </td>
+                                <td data-label="Action">
+                                    <a href="{{ route('agent.leads.show', $lead) }}" style="font-size:0.75rem; color:#0b3668; font-weight:600; text-decoration:none;">
+                                        View &rarr;
+                                    </a>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3">
+                                <td colspan="4">
                                     <div class="workspace-empty" style="padding:1.4rem;">
                                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#cbd5e1; margin:0 auto 0.5rem; display:block;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                                         No leads assigned yet.<br>

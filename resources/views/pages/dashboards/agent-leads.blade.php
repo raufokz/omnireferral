@@ -172,18 +172,19 @@
                             <th>Assigned</th>
                             <th>Status</th>
                             <th>Update</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($leads as $lead)
                             <tr>
                                 <td data-label="Lead">
-                                    <strong>
+                                    <a href="{{ route('agent.leads.show', $lead) }}" style="color:var(--dash-shell-text); font-weight:700; text-decoration:none;" onmouseover="this.style.color='#0b3668'" onmouseout="this.style.color='var(--dash-shell-text)'">
                                         @if($lead->is_priority)
                                             <span class="lead-priority-dot" title="Priority lead"></span>
                                         @endif
                                         {{ $lead->name }}
-                                    </strong>
+                                    </a>
                                     <div class="workspace-property__meta">
                                         {{ $lead->phone ?: 'No phone' }}
                                         @if($lead->email)
@@ -229,6 +230,11 @@
                                             @endforeach
                                         </select>
                                     </form>
+                                </td>
+                                <td data-label="Action">
+                                    <a href="{{ route('agent.leads.show', $lead) }}" class="button button--ghost-blue" style="font-size:0.75rem; padding:0.3rem 0.6rem;">
+                                        View Details &rarr;
+                                    </a>
                                 </td>
                             </tr>
                         @endforeach

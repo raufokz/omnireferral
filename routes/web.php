@@ -300,8 +300,11 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::put('/agent/profile', [AgentPortalController::class, 'updateProfile'])->name('agent.profile.update');
         Route::post('/agent/profile/change-plan', [AgentPortalController::class, 'changePlan'])->name('agent.profile.change-plan');
         Route::get('/agent/leads', [AgentPortalController::class, 'leads'])->name('agent.leads.index');
+        Route::get('/agent/leads/{lead}', [AgentLeadController::class, 'show'])->name('agent.leads.show');
+        Route::put('/agent/leads/{lead}', [AgentLeadController::class, 'update'])->name('agent.leads.update');
         Route::post('/agent/leads/{lead}/status', [AgentLeadController::class, 'updateStatus'])->name('agent.leads.status');
         Route::post('/agent/leads/{lead}/notes', [AgentLeadController::class, 'updateNotes'])->name('agent.leads.notes');
+        Route::post('/agent/leads/{lead}/activity', [AgentLeadController::class, 'storeActivity'])->name('agent.leads.activity');
         Route::get('/agent/listings', [AgentPortalController::class, 'listings'])->name('agent.listings.index');
         Route::post('/agent/listings', [PropertyController::class, 'store'])->name('agent.listings.store');
         Route::get('/agent/messages', [AgentPortalController::class, 'messages'])->name('agent.messages.index');
