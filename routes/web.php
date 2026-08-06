@@ -42,6 +42,7 @@ use App\Http\Controllers\PricingController;
 use App\Http\Controllers\PropertyCommentController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\RealtorController;
+use App\Http\Controllers\RealtorProfileController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SeoLandingPageController;
 use App\Http\Controllers\ServiceSeoPageController;
@@ -211,6 +212,8 @@ Route::get('/agents/{location}', [RealtorController::class, 'location'])
 Route::get('/agent/{agent}', [RealtorController::class, 'profile'])
     ->where('agent', '(?!dashboard|profile|leads|listings|messages)[a-z0-9]+(?:-[a-z0-9]+)*')
     ->name('agents.profile');
+Route::get('/realtors/{slug}', [RealtorProfileController::class, 'show'])
+    ->name('realtors.show');
 Route::get('/agent/{agent}/preview', [RealtorController::class, 'preview'])
     ->where('agent', '(?!dashboard|profile|leads|listings|messages)[a-z0-9]+(?:-[a-z0-9]+)*')
     ->name('agents.preview');

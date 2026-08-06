@@ -20,6 +20,7 @@ export default defineConfig({
                 'resources/css/modules/seo-landing.css',
                 'resources/css/modules/service-seo.css',
                 'resources/css/modules/admin-agent-profiles.css',
+                'resources/css/modules/realtor-profile.css',
             ],
             refresh: true,
         }),

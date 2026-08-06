@@ -355,8 +355,11 @@
                             </div>
 
                             <div class="omni-agent-modal__actions">
-                                <button type="button" class="agent-btn agent-btn--orange" x-on:click="startInquiry('contact')">Contact Agent</button>
-                                <button type="button" class="agent-btn agent-btn--blue" x-on:click="startInquiry('referral')">Request Referral</button>
+                                <template x-if="profile.has_active_plan">
+                                    <a :href="'/realtors/' + profile.slug" class="agent-btn agent-btn--orange" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">View Complete Profile</a>
+                                </template>
+                                <button type="button" class="agent-btn agent-btn--blue" x-on:click="startInquiry('contact')">Contact Agent</button>
+                                <button type="button" class="agent-btn agent-btn--ghost" x-on:click="startInquiry('referral')">Request Referral</button>
                                 <button type="button" class="agent-btn agent-btn--ghost" x-on:click="saveAgent()">Save Agent</button>
                             </div>
                             <p class="omni-agent-modal__notice" x-show="successMessage" x-text="successMessage"></p>

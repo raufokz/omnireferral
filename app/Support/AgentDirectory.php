@@ -201,16 +201,14 @@ class AgentDirectory
             'is_featured' => $profile->isFeatured(),
             'is_active_agent' => (bool) ($profile->is_active_agent ?? true),
             'active_agent_label' => ($profile->is_active_agent ?? true) ? 'Active Agent' : 'Not Active',
-            // True when the owning account has an active plan. Used to gate (blur) the lower
-            // profile sections for agents who have not purchased/activated a plan yet.
-            'has_active_plan' => $user !== null && filled($user->current_plan_id),
+            'has_active_plan' => $profile->hasActiveSubscription(),
             'is_elite' => $user?->relationLoaded('currentPlan')
                 ? self::isElitePackage($user->currentPlan)
                 : false,
 
             'headshot_url' => $profile->headshotPublicUrl($user),
-            'profile_url' => route('agents.profile', $profile),
-            'contact_url' => route('agents.profile', $profile).'#contact',
+            'profile_url' => route('realtors.show', ['slug' => $profile->slug]),
+            'contact_url' => route('realtors.show', ['slug' => $profile->slug]).'#contact',
             'phone_label' => 'Routed by OmniReferral',
             'email_label' => 'Protected referral contact',
             'website_label' => 'Public profile',

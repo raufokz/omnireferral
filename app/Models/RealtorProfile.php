@@ -185,6 +185,24 @@ class RealtorProfile extends Model
             && ! $accountIsSuspended;
     }
 
+    public function hasActiveSubscription(): bool
+    {
+        $user = $this->relationLoaded('user') ? $this->user : $this->user()->first();
+        if (! $user) {
+            return false;
+        }
+
+        if (filled($user->current_plan_id)) {
+            return true;
+        }
+
+        if ($user->relationLoaded('activeAgentSubscription')) {
+            return $user->activeAgentSubscription !== null && (bool) $user->activeAgentSubscription->is_active;
+        }
+
+        return $user->activeAgentSubscription()->where('is_active', true)->exists();
+    }
+
     public function isFeatured(): bool
     {
         return $this->profile_status === self::STATUS_FEATURED;
