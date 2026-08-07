@@ -130,11 +130,92 @@
         </form>
     </section>
 
+    {{-- ═══════════════════════════════════════════════════════════════
+         Bulk Actions Toolbar — slides in when ≥ 1 row is checked
+    ═══════════════════════════════════════════════════════════════ --}}
+    <section id="bulkToolbar" class="workspace-card" style="
+        display: none;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: linear-gradient(135deg, #0b3668, #1e4a8a);
+        color: #fff;
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 32px rgba(11, 54, 104, 0.25);
+        animation: bulkSlideIn 0.25s ease-out;
+    ">
+        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <strong id="bulkCount" style="font-size: 1rem; white-space: nowrap;">0 selected</strong>
+            <button type="button" id="bulkDeselectAll" style="
+                background: none; border: 1px solid rgba(255,255,255,0.35); color: #fff;
+                padding: 0.3rem 0.75rem; border-radius: 0.375rem; cursor: pointer; font-size: 0.8rem;
+            ">Deselect All</button>
+
+            <span style="flex: 1;"></span>
+
+            {{-- Bulk Status Update --}}
+            <form method="POST" action="{{ route('admin.lead-assignments.bulk-status') }}" id="bulkStatusForm" style="display: flex; gap: 0.4rem; align-items: center;">
+                @csrf
+                <div id="bulkStatusIds"></div>
+                <select name="assignment_status" required style="
+                    padding: 0.35rem 0.6rem; border-radius: 0.375rem; border: 1px solid rgba(255,255,255,0.3);
+                    background: rgba(255,255,255,0.15); color: #fff; font-size: 0.8rem; min-width: 130px;
+                ">
+                    <option value="" style="color:#333;">Set status…</option>
+                    @foreach($statuses as $s)
+                        <option value="{{ $s }}" style="color:#333;">{{ ucfirst(str_replace('_', ' ', $s)) }}</option>
+                    @endforeach
+                </select>
+                <button type="submit" style="
+                    background: #38bdf8; color: #0c2d52; border: none; padding: 0.35rem 0.75rem;
+                    border-radius: 0.375rem; font-weight: 600; cursor: pointer; font-size: 0.8rem; white-space: nowrap;
+                ">Update Status</button>
+            </form>
+
+            {{-- Bulk Reassign --}}
+            <form method="POST" action="{{ route('admin.lead-assignments.bulk-reassign') }}" id="bulkReassignForm" style="display: flex; gap: 0.4rem; align-items: center;">
+                @csrf
+                <div id="bulkReassignIds"></div>
+                <select name="agent_id" required style="
+                    padding: 0.35rem 0.6rem; border-radius: 0.375rem; border: 1px solid rgba(255,255,255,0.3);
+                    background: rgba(255,255,255,0.15); color: #fff; font-size: 0.8rem; min-width: 130px;
+                ">
+                    <option value="" style="color:#333;">Reassign to…</option>
+                    @foreach($agents as $agent)
+                        <option value="{{ $agent->id }}" style="color:#333;">{{ $agent->name }}</option>
+                    @endforeach
+                </select>
+                <button type="submit" style="
+                    background: #a5f3fc; color: #0c2d52; border: none; padding: 0.35rem 0.75rem;
+                    border-radius: 0.375rem; font-weight: 600; cursor: pointer; font-size: 0.8rem; white-space: nowrap;
+                ">Reassign</button>
+            </form>
+
+            {{-- Bulk Remove --}}
+            <form method="POST" action="{{ route('admin.lead-assignments.bulk-remove') }}" id="bulkRemoveForm"
+                  onsubmit="return confirm('Remove selected assignments and return leads to the unassigned pool?');"
+                  style="display: inline;">
+                @csrf
+                <div id="bulkRemoveIds"></div>
+                <button type="submit" style="
+                    background: rgba(239, 68, 68, 0.85); color: #fff; border: none; padding: 0.35rem 0.75rem;
+                    border-radius: 0.375rem; font-weight: 600; cursor: pointer; font-size: 0.8rem; white-space: nowrap;
+                ">Remove Selected</button>
+            </form>
+        </div>
+    </section>
+
     <section class="workspace-card">
         <div class="table-scroll">
-            <table class="table" style="width:100%; border-collapse: collapse; font-size: 0.875rem;">
+            <table class="table" id="assignmentsTable" style="width:100%; border-collapse: collapse; font-size: 0.875rem;">
                 <thead>
                     <tr style="border-bottom: 2px solid #cbd5e1; text-align: left;">
+                        <th style="padding: 10px; width: 40px;">
+                            <label style="cursor:pointer; display:flex; align-items:center; gap:0.3rem;" title="Select all on this page">
+                                <input type="checkbox" id="selectAllCheckbox" style="width:16px; height:16px; accent-color: #0b3668; cursor:pointer;">
+                            </label>
+                        </th>
                         <th style="padding: 10px;">Lead ID</th>
                         <th style="padding: 10px;">Lead Name</th>
                         <th style="padding: 10px;">Buyer/Seller</th>
@@ -154,7 +235,11 @@
                 </thead>
                 <tbody>
                     @forelse($assignments as $assignment)
-                        <tr style="border-bottom: 1px solid #e2e8f0; vertical-align: middle;">
+                        <tr style="border-bottom: 1px solid #e2e8f0; vertical-align: middle;" data-assignment-id="{{ $assignment->id }}">
+                            <td style="padding: 12px 10px;">
+                                <input type="checkbox" class="bulk-checkbox" value="{{ $assignment->id }}"
+                                       style="width:16px; height:16px; accent-color: #0b3668; cursor:pointer;">
+                            </td>
                             <td style="padding: 12px 10px;">
                                 <span style="font-family: monospace; font-weight:600; color: #475569;">#{{ $assignment->lead->id ?? $assignment->lead_id }}</span>
                                 @if($assignment->lead?->lead_number)
@@ -246,7 +331,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="15" class="text-center muted" style="padding: 20px; color:#64748b;">No assignments found.</td>
+                            <td colspan="16" class="text-center muted" style="padding: 20px; color:#64748b;">No assignments found.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -257,4 +342,120 @@
         </div>
     </section>
 </div>
+
+<style>
+    @keyframes bulkSlideIn {
+        from { opacity: 0; transform: translateY(-12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    tr[data-assignment-id] {
+        transition: background-color 0.15s ease;
+    }
+    tr[data-assignment-id].bulk-selected {
+        background-color: #eff6ff !important;
+    }
+    tr[data-assignment-id].bulk-selected td:first-child {
+        position: relative;
+    }
+    tr[data-assignment-id].bulk-selected td:first-child::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: #0b3668;
+        border-radius: 0 3px 3px 0;
+    }
+
+    #bulkToolbar select option {
+        background: #fff;
+        color: #1e293b;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const selectAll = document.getElementById('selectAllCheckbox');
+    const toolbar   = document.getElementById('bulkToolbar');
+    const countEl   = document.getElementById('bulkCount');
+    const deselectBtn = document.getElementById('bulkDeselectAll');
+    const checkboxes = () => document.querySelectorAll('.bulk-checkbox');
+
+    function getCheckedIds() {
+        return Array.from(checkboxes()).filter(cb => cb.checked).map(cb => cb.value);
+    }
+
+    function syncToolbar() {
+        const ids = getCheckedIds();
+        const count = ids.length;
+
+        toolbar.style.display = count > 0 ? 'block' : 'none';
+        countEl.textContent = count + ' selected';
+
+        // Sync select-all visual state
+        const all = checkboxes();
+        const allChecked = all.length > 0 && Array.from(all).every(cb => cb.checked);
+        const someChecked = count > 0 && !allChecked;
+        selectAll.checked = allChecked;
+        selectAll.indeterminate = someChecked;
+
+        // Populate hidden inputs for each bulk form
+        ['bulkStatusIds', 'bulkReassignIds', 'bulkRemoveIds'].forEach(containerId => {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            ids.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'assignment_ids[]';
+                input.value = id;
+                container.appendChild(input);
+            });
+        });
+
+        // Highlight selected rows
+        document.querySelectorAll('tr[data-assignment-id]').forEach(row => {
+            const cb = row.querySelector('.bulk-checkbox');
+            row.classList.toggle('bulk-selected', cb && cb.checked);
+        });
+    }
+
+    // Individual checkbox change
+    document.addEventListener('change', function (e) {
+        if (e.target.classList.contains('bulk-checkbox') || e.target === selectAll) {
+            if (e.target === selectAll) {
+                checkboxes().forEach(cb => { cb.checked = selectAll.checked; });
+            }
+            syncToolbar();
+        }
+    });
+
+    // Deselect all button
+    deselectBtn.addEventListener('click', function () {
+        selectAll.checked = false;
+        checkboxes().forEach(cb => { cb.checked = false; });
+        syncToolbar();
+    });
+
+    // Shift+click range selection
+    let lastChecked = null;
+    document.addEventListener('click', function (e) {
+        if (!e.target.classList.contains('bulk-checkbox')) return;
+
+        if (e.shiftKey && lastChecked) {
+            const boxes = Array.from(checkboxes());
+            const start = boxes.indexOf(lastChecked);
+            const end = boxes.indexOf(e.target);
+            const [from, to] = start < end ? [start, end] : [end, start];
+            for (let i = from; i <= to; i++) {
+                boxes[i].checked = e.target.checked;
+            }
+            syncToolbar();
+        }
+
+        lastChecked = e.target;
+    });
+});
+</script>
 @endsection

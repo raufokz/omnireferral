@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Notifications\NewLeadAssignedNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class LeadAssignmentController extends Controller
@@ -481,4 +482,206 @@ class LeadAssignmentController extends Controller
             ->with('success', "Auto-assigned {$count} lead(s).");
     }
 
+    /**
+     * Bulk update assignment status for multiple assignments at once.
+     */
+    public function bulkUpdateStatus(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'assignment_ids' => ['required', 'array', 'min:1'],
+            'assignment_ids.*' => ['required', 'integer', 'exists:lead_assignments,id'],
+            'assignment_status' => ['required', 'in:' . implode(',', self::STATUSES)],
+        ]);
+
+        $workspaceUser = $request->user();
+        $isStaff = $workspaceUser?->role === 'staff';
+
+        $query = LeadAssignment::whereIn('id', $validated['assignment_ids']);
+        if ($isStaff) {
+            $query->where('assigned_by_user_id', $workspaceUser->id);
+        }
+
+        $assignments = $query->with('lead')->get();
+
+        if ($assignments->isEmpty()) {
+            return back()->with('error', 'No matching assignments found.');
+        }
+
+        $newStatus = $validated['assignment_status'];
+        $updated = 0;
+
+        DB::transaction(function () use ($assignments, $newStatus, &$updated) {
+            foreach ($assignments as $assignment) {
+                $timestamps = [];
+                if ($newStatus === 'sent' && ! $assignment->sent_at) {
+                    $timestamps['sent_at'] = now();
+                }
+                if ($newStatus === 'accepted' && ! $assignment->accepted_at) {
+                    $timestamps['accepted_at'] = now();
+                }
+                if ($newStatus === 'rejected' && ! $assignment->rejected_at) {
+                    $timestamps['rejected_at'] = now();
+                }
+
+                $assignment->update([
+                    'assignment_status' => $newStatus,
+                    ...$timestamps,
+                ]);
+
+                if (in_array($newStatus, ['rejected', 'removed', 'closed'])) {
+                    $assignment->lead?->update([
+                        'assigned_agent_id' => null,
+                        'assigned_at' => null,
+                        'assignment' => null,
+                    ]);
+                }
+
+                $updated++;
+            }
+        });
+
+        return back()->with('success', "Bulk status updated to '{$newStatus}' for {$updated} assignment(s).");
+    }
+
+    /**
+     * Bulk reassign multiple assignments to a single new agent.
+     */
+    public function bulkReassign(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'assignment_ids' => ['required', 'array', 'min:1'],
+            'assignment_ids.*' => ['required', 'integer', 'exists:lead_assignments,id'],
+            'agent_id' => ['required', 'exists:users,id'],
+        ]);
+
+        $agent = User::findOrFail($validated['agent_id']);
+        if ($agent->role !== 'agent') {
+            return back()->withErrors(['agent_id' => 'Selected user is not a valid agent.']);
+        }
+
+        $package = $agent->activeAgentSubscription?->package;
+        if (! $package) {
+            return back()->withErrors(['agent_id' => 'Selected agent has no active subscription package.']);
+        }
+
+        $workspaceUser = $request->user();
+        $isStaff = $workspaceUser?->role === 'staff';
+
+        $query = LeadAssignment::whereIn('id', $validated['assignment_ids'])
+            ->whereNotIn('assignment_status', ['reassigned', 'removed', 'closed']);
+        if ($isStaff) {
+            $query->where('assigned_by_user_id', $workspaceUser->id);
+        }
+
+        $assignments = $query->with('lead')->get()
+            ->filter(fn ($a) => (int) $a->assigned_to_user_id !== (int) $agent->id);
+
+        if ($assignments->isEmpty()) {
+            return back()->with('error', 'No eligible assignments found for reassignment.');
+        }
+
+        $month = now()->format('Y-m');
+        $quota = AgentLeadQuota::firstOrCreate(
+            ['user_id' => $agent->id, 'month' => $month],
+            [
+                'package_id' => $package->id,
+                'monthly_quota' => $package->monthly_lead_quota,
+                'assigned_count' => 0,
+                'remaining_count' => $package->monthly_lead_quota,
+                'overdue_count' => 0,
+            ]
+        );
+
+        $reassigned = 0;
+
+        DB::transaction(function () use ($assignments, $agent, $package, $month, $quota, $workspaceUser, &$reassigned) {
+            foreach ($assignments as $assignment) {
+                $lead = $assignment->lead;
+                if (! $lead) {
+                    continue;
+                }
+
+                $previousAgentId = $lead->assigned_agent_id;
+
+                $assignment->update(['assignment_status' => 'reassigned']);
+
+                $lead->update([
+                    'assigned_agent_id' => $agent->id,
+                    'status' => 'assigned',
+                    'assigned_at' => now(),
+                    'assignment' => 'Assigned to ' . $agent->name,
+                ]);
+
+                LeadAssignment::create([
+                    'lead_id' => $lead->id,
+                    'assigned_to_user_id' => $agent->id,
+                    'assigned_by_user_id' => $workspaceUser?->id,
+                    'previous_agent_id' => $previousAgentId,
+                    'package_id' => $package->id,
+                    'assignment_month' => $month,
+                    'assignment_status' => 'assigned',
+                    'sent_at' => now(),
+                    'assigned_at' => now(),
+                    'admin_notes' => 'Bulk reassignment',
+                ]);
+
+                $quota->increment('assigned_count');
+                $quota->decrement('remaining_count');
+                $reassigned++;
+
+                $agent->notify(new NewLeadAssignedNotification($lead->fresh()));
+            }
+        });
+
+        return back()->with('success', "Bulk reassigned {$reassigned} lead(s) to {$agent->name}.");
+    }
+
+    /**
+     * Bulk remove multiple assignments at once.
+     */
+    public function bulkRemove(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'assignment_ids' => ['required', 'array', 'min:1'],
+            'assignment_ids.*' => ['required', 'integer', 'exists:lead_assignments,id'],
+        ]);
+
+        $workspaceUser = $request->user();
+        $isStaff = $workspaceUser?->role === 'staff';
+
+        $query = LeadAssignment::whereIn('id', $validated['assignment_ids'])
+            ->whereNotIn('assignment_status', ['reassigned', 'removed', 'closed']);
+        if ($isStaff) {
+            $query->where('assigned_by_user_id', $workspaceUser->id);
+        }
+
+        $assignments = $query->with('lead')->get();
+
+        if ($assignments->isEmpty()) {
+            return back()->with('error', 'No eligible assignments found for removal.');
+        }
+
+        $removed = 0;
+        $adminName = $workspaceUser?->name ?? 'admin';
+
+        DB::transaction(function () use ($assignments, $adminName, &$removed) {
+            foreach ($assignments as $assignment) {
+                $assignment->update([
+                    'assignment_status' => 'removed',
+                    'admin_notes' => 'Bulk removed by ' . $adminName,
+                ]);
+
+                $assignment->lead?->update([
+                    'assigned_agent_id' => null,
+                    'assigned_at' => null,
+                    'assignment' => null,
+                ]);
+
+                $removed++;
+            }
+        });
+
+        return redirect()->route('admin.lead-assignments.index')
+            ->with('success', "Bulk removed {$removed} assignment(s). Leads returned to unassigned pool.");
+    }
 }

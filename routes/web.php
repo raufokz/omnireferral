@@ -528,6 +528,9 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::post('admin/lead-assignments/{assignment}/reassign', [LeadAssignmentController::class, 'reassign'])->name('admin.lead-assignments.reassign');
         Route::post('admin/lead-assignments/{assignment}/remove', [LeadAssignmentController::class, 'remove'])->name('admin.lead-assignments.remove');
         Route::post('admin/lead-assignments/auto-assign', [LeadAssignmentController::class, 'autoAssign'])->name('admin.lead-assignments.auto-assign');
+        Route::post('admin/lead-assignments/bulk-status', [LeadAssignmentController::class, 'bulkUpdateStatus'])->name('admin.lead-assignments.bulk-status');
+        Route::post('admin/lead-assignments/bulk-reassign', [LeadAssignmentController::class, 'bulkReassign'])->name('admin.lead-assignments.bulk-reassign');
+        Route::post('admin/lead-assignments/bulk-remove', [LeadAssignmentController::class, 'bulkRemove'])->name('admin.lead-assignments.bulk-remove');
 
         Route::get('admin/agent-lead-quotas', [AgentLeadQuotaController::class, 'index'])->name('admin.agent-lead-quotas.index');
         Route::get('admin/agent-lead-quotas/{quota}/edit', [AgentLeadQuotaController::class, 'edit'])->name('admin.agent-lead-quotas.edit');
