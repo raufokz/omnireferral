@@ -83,20 +83,24 @@
 @section('content')
 @php
     $agentImage = $agentProfile->headshotPublicUrl($agentUser);
+    $agentStatusSummary = $agentProfile->agentStatusSummary();
     $profileFields = [
-        'Brokerage name'  => filled($agentProfile->brokerage_name),
-        'License number'  => filled($agentProfile->license_number),
-        'Profile bio'     => filled($agentProfile->bio),
-        'Specialties'     => filled($agentProfile->specialties),
-        'Service city'    => filled($agentProfile->service_city),
-        'Headshot / photo' => filled($agentProfile->headshot),
+        'Brokerage name'  => $agentStatusSummary['profile_fields']['brokerage'],
+        'License number'  => $agentStatusSummary['profile_fields']['license'],
+        'Profile bio'     => $agentStatusSummary['profile_fields']['bio'],
+        'Specialties'     => $agentStatusSummary['profile_fields']['specialty'],
+        'Service city'    => $agentStatusSummary['profile_fields']['city'],
+        'Headshot / photo' => $agentStatusSummary['profile_fields']['headshot'],
     ];
-    $profileComplete = (int) round(collect($profileFields)->filter()->count() / count($profileFields) * 100);
+    $profileComplete = $agentStatusSummary['profile_completion_pct'];
 
-    $statusVis = match($agentProfile->profile_status ?? 'draft') {
-        'published', 'featured' => 'live',
-        'suspended' => 'suspend',
-        default     => 'draft',
+    // Honest visibility status: an account-level suspension always overrides a
+    // published profile_status (previously ignored — a suspended user could
+    // still see "live" here).
+    $statusVis = match(true) {
+        ! $agentProfile->isPublicVisible() && ($agentProfile->profile_status === 'suspended' || $agentUser->status === 'suspended') => 'suspend',
+        $agentProfile->isPublicVisible() => 'live',
+        default => 'draft',
     };
 
     $visMessages = [

@@ -223,6 +223,55 @@ class User extends Authenticatable
         return \App\Support\PlanCapabilities::limit($this->currentPlan?->slug, $key);
     }
 
+    /**
+     * Has this user ever purchased/been assigned a package? Pure capability
+     * signal — independent of account login status (see agentStatusSummary()
+     * on RealtorProfile for the combined picture).
+     */
+    public function hasAnyPackage(): bool
+    {
+        return filled($this->current_plan_id);
+    }
+
+    /**
+     * The user's active lead-category package, or null if they have none /
+     * their package is a VA-only plan. Single source of truth for "does this
+     * agent currently have listing/portal access" — replaces the same
+     * expression that used to be duplicated in PortalController and
+     * PropertyController.
+     */
+    public function activeLeadPlan(): ?Package
+    {
+        return $this->currentPlan && $this->currentPlan->category === 'lead'
+            ? $this->currentPlan
+            : null;
+    }
+
+    /**
+     * Listing capacity for this agent against a given profile's current active
+     * listings — the one place limit/used/remaining is computed, so the
+     * dashboard banner and the actual POST-time enforcement can never disagree.
+     *
+     * @return array{limit: int, used: int, remaining: int, can_create: bool}
+     */
+    public function listingCapacity(RealtorProfile $profile): array
+    {
+        $limit = $this->activeLeadPlan()?->listingLimit() ?? 0;
+
+        $used = Property::query()
+            ->where('realtor_profile_id', $profile->id)
+            ->where('approval_status', '!=', Property::APPROVAL_REJECTED)
+            ->whereNotIn('status', ['Sold', 'Off-Market'])
+            ->count();
+
+        return [
+            'limit' => $limit,
+            'used' => $used,
+            'remaining' => max($limit - $used, 0),
+            'can_create' => $limit > 0 && $used < $limit,
+        ];
+    }
+
     public function leadAssignments(): HasMany
     {
         return $this->hasMany(LeadAssignment::class, 'assigned_to_user_id');

@@ -239,4 +239,49 @@ class GoHighLevelPaymentWebhookTest extends TestCase
         $user = User::where('email', 'agent@example.com')->firstOrFail();
         $this->assertSame('active', $user->status);
     }
+
+    public function test_package_purchased_webhook_activates_account_immediately(): void
+    {
+        $this->postJson(
+            route('webhooks.gohighlevel.purchase'),
+            [
+                'email' => 'newagent@example.com',
+                'name' => 'New Agent',
+                'phone' => '555-987-6543',
+                'role' => 'agent',
+                'package_slug' => 'starter-leads',
+                'city' => 'Dallas',
+                'state' => 'TX',
+            ],
+            $this->webhookHeaders()
+        )->assertOk();
+
+        $user = User::where('email', 'newagent@example.com')->firstOrFail();
+
+        // A paying customer must never be blocked from logging in as "pending".
+        $this->assertSame('active', $user->status);
+        $this->assertSame($this->package->id, $user->current_plan_id);
+    }
+
+    public function test_package_purchased_webhook_does_not_reactivate_a_suspended_account(): void
+    {
+        User::factory()->create([
+            'email' => 'suspended-agent@example.com',
+            'role' => 'agent',
+            'status' => 'suspended',
+        ]);
+
+        $this->postJson(
+            route('webhooks.gohighlevel.purchase'),
+            [
+                'email' => 'suspended-agent@example.com',
+                'name' => 'Suspended Agent',
+                'package_slug' => 'starter-leads',
+            ],
+            $this->webhookHeaders()
+        )->assertOk();
+
+        $user = User::where('email', 'suspended-agent@example.com')->firstOrFail();
+        $this->assertSame('suspended', $user->status);
+    }
 }

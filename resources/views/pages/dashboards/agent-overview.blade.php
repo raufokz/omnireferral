@@ -5,23 +5,22 @@
     $greeting = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Good evening');
     $firstName = explode(' ', trim($agentUser->name))[0] ?? $agentUser->name;
 
+    $agentStatusSummary = $agentProfile->agentStatusSummary();
+
     $statusColors = [
         'featured'  => ['pill' => 'status-pill--qualified', 'label' => 'Featured'],
         'published' => ['pill' => 'status-pill--new',       'label' => 'Published'],
         'draft'     => ['pill' => 'status-pill--neutral',   'label' => 'Draft'],
         'suspended' => ['pill' => 'status-pill--critical',  'label' => 'Suspended'],
     ];
-    $profileStatus = $statusColors[$agentProfile->profile_status ?? 'draft'] ?? $statusColors['draft'];
+    // Account-level suspension always overrides a published profile_status.
+    $effectiveProfileStatus = ($agentProfile->profile_status === 'suspended' || $agentUser->status === 'suspended')
+        ? 'suspended'
+        : ($agentProfile->profile_status ?? 'draft');
+    $profileStatus = $statusColors[$effectiveProfileStatus] ?? $statusColors['draft'];
 
-    $profileFields = [
-        'brokerage' => filled($agentProfile->brokerage_name),
-        'license'   => filled($agentProfile->license_number),
-        'bio'       => filled($agentProfile->bio),
-        'specialty' => filled($agentProfile->specialties),
-        'city'      => filled($agentProfile->service_city),
-        'headshot'  => filled($agentProfile->headshot),
-    ];
-    $profileComplete = (int) round(collect($profileFields)->filter()->count() / count($profileFields) * 100);
+    $profileFields = $agentStatusSummary['profile_fields'];
+    $profileComplete = $agentStatusSummary['profile_completion_pct'];
 
     $pipelineMax = max(1, collect($pipeline)->max('count'));
     $pipelineColors = ['#0b3668', '#1d5fa0', '#5145cd', '#ff6b00', '#16a34a', '#dc2626'];
@@ -137,6 +136,25 @@
 
 @section('content')
 <div class="workspace-stack">
+
+    {{-- Agent Status Summary --}}
+    <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+        @if($agentStatusSummary['is_active_agent'])
+            <span class="status-pill status-pill--qualified">&#9989; Active Agent</span>
+        @else
+            <span class="status-pill status-pill--neutral">
+                @if(! $agentStatusSummary['package_purchased'])
+                    No Active Package
+                @elseif(! $agentStatusSummary['approved'])
+                    Profile Pending Approval
+                @elseif(! $agentStatusSummary['profile_completed'])
+                    Profile {{ $agentStatusSummary['profile_completion_pct'] }}% Complete
+                @else
+                    Setup In Progress
+                @endif
+            </span>
+        @endif
+    </div>
 
     {{-- KPI Row --}}
     <section class="workspace-grid workspace-grid--4">

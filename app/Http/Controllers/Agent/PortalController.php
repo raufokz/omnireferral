@@ -298,9 +298,7 @@ class PortalController extends Controller
         abort_unless($user instanceof User && $user->isAgent(), 403);
 
         $profile = $this->ensureAgentProfile($user);
-        $activePlan = $user->currentPlan && $user->currentPlan->category === 'lead'
-            ? $user->currentPlan
-            : null;
+        $activePlan = $user->activeLeadPlan();
 
         $leadsQuery = Lead::query()->where('assigned_agent_id', $user->id);
         $messagesQuery = Contact::query()
@@ -308,13 +306,12 @@ class PortalController extends Controller
             ->where('recipient_user_id', $user->id);
         $propertiesQuery = Property::query()->where('realtor_profile_id', $profile->id);
 
-        $listingLimit = $activePlan?->listingLimit() ?? 0;
+        $listingCapacity = $user->listingCapacity($profile);
+        $listingLimit = $listingCapacity['limit'];
+        $slotUsageCount = $listingCapacity['used'];
+        $remainingListingSlots = $listingCapacity['remaining'];
         $activeListingCount = (clone $propertiesQuery)
             ->marketplaceVisible()
-            ->count();
-        $slotUsageCount = (clone $propertiesQuery)
-            ->where('approval_status', '!=', Property::APPROVAL_REJECTED)
-            ->whereNotIn('status', ['Sold', 'Off-Market'])
             ->count();
         $pendingReviewCount = (clone $propertiesQuery)
             ->where('approval_status', Property::APPROVAL_PENDING)
@@ -322,7 +319,6 @@ class PortalController extends Controller
         $rejectedListingCount = (clone $propertiesQuery)
             ->where('approval_status', Property::APPROVAL_REJECTED)
             ->count();
-        $remainingListingSlots = max($listingLimit - $slotUsageCount, 0);
         $totalLeads = (clone $leadsQuery)->count();
         $contactedLeads = (clone $leadsQuery)->whereIn('status', ['contacted', 'qualified', 'closed'])->count();
         $totalMessages = (clone $messagesQuery)->count();

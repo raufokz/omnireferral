@@ -123,27 +123,18 @@ class PropertyController extends Controller
 
         if ($user?->isAgent()) {
             $profile = $this->ensureAgentProfile($user);
-            $activePlan = $user->currentPlan && $user->currentPlan->category === 'lead'
-                ? $user->currentPlan
-                : null;
-            $listingLimit = $activePlan?->listingLimit() ?? 0;
+            $capacity = $user->listingCapacity($profile);
 
-            if ($listingLimit < 1) {
+            if ($capacity['limit'] < 1) {
                 return redirect()
                     ->route('agent.listings.index')
                     ->with('error', 'Your current package does not include listing access yet. Upgrade your plan to publish listings.');
             }
 
-            $activeListingCount = Property::query()
-                ->where('realtor_profile_id', $profile->id)
-                ->where('approval_status', '!=', Property::APPROVAL_REJECTED)
-                ->whereNotIn('status', ['Sold', 'Off-Market'])
-                ->count();
-
-            if ($activeListingCount >= $listingLimit) {
+            if (! $capacity['can_create']) {
                 return redirect()
                     ->route('agent.listings.index')
-                    ->with('error', 'You have reached the active listing limit for your '.$activePlan->name.' package.');
+                    ->with('error', 'You have reached your monthly listing limit for your current package.');
             }
 
             $validated['source'] = 'Agent Dashboard Upload';

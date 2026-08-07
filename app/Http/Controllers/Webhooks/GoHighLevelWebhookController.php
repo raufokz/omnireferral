@@ -121,7 +121,13 @@ class GoHighLevelWebhookController extends Controller
                     'name'                => $name,
                     'phone'               => $phone,
                     'role'                => $this->syncService->normalizeRole($request->string('role')->value() ?: 'agent'),
-                    'status'              => 'pending',
+                    // By the time this webhook fires, the package has already been
+                    // selected, the GHL onboarding survey completed, and payment
+                    // confirmed — the account is active immediately. A paying
+                    // customer must never be blocked from logging in. Any remaining
+                    // onboarding tasks (photo, brokerage, license) surface as a
+                    // "Complete Your Profile" checklist inside the dashboard instead.
+                    'status'              => $user->status === 'suspended' ? 'suspended' : 'active',
                     'ghl_contact_id'      => $request->string('contact_id')->value() ?: data_get($request->all(), 'contact.id'),
                     'onboarding_completed_at' => null,
                     'must_reset_password' => $isNewUser ? true : (bool) $user->must_reset_password,

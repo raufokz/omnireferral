@@ -38,6 +38,8 @@ class PropertyImageManagementTest extends TestCase
             'cta_label' => 'Get Started',
             'duration_days' => 365,
             'sort_order' => 1,
+            'property_listings' => true,
+            'listing_limit' => 15,
         ]);
 
         $agent = User::factory()->create([

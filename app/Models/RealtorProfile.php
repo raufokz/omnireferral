@@ -203,6 +203,49 @@ class RealtorProfile extends Model
         return $user->activeAgentSubscription()->where('is_active', true)->exists();
     }
 
+    /**
+     * Single source of truth for "is this agent active," combining the four
+     * conditions that were previously checked ad-hoc (and inconsistently) in
+     * half a dozen different places: Approved / Package Purchased /
+     * Subscription Active / Profile Completed. Used to drive one honest
+     * "Active Agent" badge everywhere instead of disagreeing local checks.
+     *
+     * Note: `profile_completed` is a *display* signal only (drives a "Complete
+     * Your Profile" checklist) — it never blocks dashboard/login access, which
+     * is a pure account-status + package-purchased concern handled elsewhere.
+     *
+     * @return array{approved: bool, package_purchased: bool, subscription_active: bool, profile_completed: bool, profile_completion_pct: int, is_active_agent: bool}
+     */
+    public function agentStatusSummary(): array
+    {
+        $user = $this->relationLoaded('user') ? $this->user : $this->user()->first();
+
+        $approved = $this->isApproved() && $this->rejected_at === null;
+        $packagePurchased = $user?->hasAnyPackage() ?? false;
+        $subscriptionActive = $this->hasActiveSubscription();
+
+        $profileFields = [
+            'brokerage' => filled($this->brokerage_name),
+            'license' => filled($this->license_number),
+            'bio' => filled($this->bio),
+            'specialty' => filled($this->specialties),
+            'city' => filled($this->service_city),
+            'headshot' => filled($this->headshot),
+        ];
+        $completionPct = (int) round(collect($profileFields)->filter()->count() / count($profileFields) * 100);
+        $profileCompleted = $completionPct >= 100;
+
+        return [
+            'approved' => $approved,
+            'package_purchased' => $packagePurchased,
+            'subscription_active' => $subscriptionActive,
+            'profile_completed' => $profileCompleted,
+            'profile_completion_pct' => $completionPct,
+            'profile_fields' => $profileFields,
+            'is_active_agent' => $approved && $packagePurchased && $subscriptionActive && $profileCompleted,
+        ];
+    }
+
     public function isFeatured(): bool
     {
         return $this->profile_status === self::STATUS_FEATURED;

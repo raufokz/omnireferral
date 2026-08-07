@@ -27,6 +27,15 @@ class PackageFactory extends Factory
             'sort_order' => 0,
             'monthly_lead_quota' => 5,
             'lead_priority' => 1,
+            'portal_access' => true,
+            'property_listings' => true,
+            'listing_limit' => 5,
+            'dashboard_access' => true,
+            'verified_referral_access' => true,
+            'support_tier' => 'email',
+            'profile_tier' => 'basic',
+            'marketing_tier' => 'basic',
+            'analytics_level' => 'basic',
         ];
     }
 }
