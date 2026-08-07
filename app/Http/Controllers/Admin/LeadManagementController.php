@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreManualLeadRequest;
 use App\Http\Requests\SyncGoogleSheetRequest;
 use App\Models\Lead;
+use App\Models\LeadImportRun;
 use App\Models\Property;
 use App\Models\RealtorProfile;
 use App\Models\User;
@@ -228,7 +229,21 @@ class LeadManagementController extends Controller
 
         $mode = (string) $request->input('mode', 'import');
         if ($mode !== 'preview') {
+            $startedAt = now();
             $result = $importService->importPreparedRows($rows);
+
+            LeadImportRun::create([
+                'source' => 'file_import',
+                'triggered_by_user_id' => $request->user()?->id,
+                'status' => 'completed',
+                'created_count' => $result['created'],
+                'skipped_count' => $result['skipped'],
+                'failed_count' => $result['failed'] ?? 0,
+                'warnings' => ! empty($result['failed_rows']) ? $result['failed_rows'] : null,
+                'file_name' => $file->getClientOriginalName(),
+                'started_at' => $startedAt,
+                'finished_at' => now(),
+            ]);
 
             $message = "Import complete. Added {$result['created']} new leads, skipped {$result['skipped']} duplicate/invalid rows.";
             if (($result['failed'] ?? 0) > 0) {
@@ -241,7 +256,10 @@ class LeadManagementController extends Controller
         }
 
         $previewKey = 'lead_import_preview_' . Str::uuid();
-        Cache::put($previewKey, $rows, now()->addMinutes(30));
+        Cache::put($previewKey, [
+            'rows' => $rows,
+            'file_name' => $file->getClientOriginalName(),
+        ], now()->addMinutes(30));
 
         return redirect()->route('admin.leads.import.preview', ['key' => $previewKey]);
     }
@@ -249,8 +267,16 @@ class LeadManagementController extends Controller
     public function previewImport(Request $request): View|RedirectResponse
     {
         $key = (string) $request->string('key')->value();
-        $rows = Cache::get($key);
-        if (! is_array($rows)) {
+        $cached = Cache::get($key);
+
+        // Support both old format (array of rows) and new format (array with 'rows' key)
+        if (is_array($cached) && isset($cached['rows'])) {
+            $rows = $cached['rows'];
+            $fileName = $cached['file_name'] ?? null;
+        } elseif (is_array($cached)) {
+            $rows = $cached;
+            $fileName = null;
+        } else {
             return redirect()->route('admin.leads.index')->with('error', 'Import preview expired. Please upload again.');
         }
 
@@ -277,13 +303,35 @@ class LeadManagementController extends Controller
         ]);
 
         $key = $request->string('preview_key')->value();
-        $rows = Cache::get($key);
-        if (! is_array($rows)) {
+        $cached = Cache::get($key);
+
+        // Support both old format (array of rows) and new format (array with 'rows' key)
+        if (is_array($cached) && isset($cached['rows'])) {
+            $rows = $cached['rows'];
+            $fileName = $cached['file_name'] ?? null;
+        } elseif (is_array($cached)) {
+            $rows = $cached;
+            $fileName = null;
+        } else {
             return redirect()->route('admin.leads.index')->with('error', 'Import preview expired. Please upload again.');
         }
 
+        $startedAt = now();
         $result = $importService->importPreparedRows($rows);
         Cache::forget($key);
+
+        LeadImportRun::create([
+            'source' => 'file_import',
+            'triggered_by_user_id' => $request->user()?->id,
+            'status' => 'completed',
+            'created_count' => $result['created'],
+            'skipped_count' => $result['skipped'],
+            'failed_count' => $result['failed'] ?? 0,
+            'warnings' => ! empty($result['failed_rows']) ? $result['failed_rows'] : null,
+            'file_name' => $fileName,
+            'started_at' => $startedAt,
+            'finished_at' => now(),
+        ]);
 
         $message = "Import complete. Added {$result['created']} new leads, skipped {$result['skipped']} duplicate/invalid rows.";
         if (($result['failed'] ?? 0) > 0) {
@@ -293,6 +341,26 @@ class LeadManagementController extends Controller
         return redirect()
             ->route('admin.leads.index')
             ->with('success', $message);
+    }
+
+    /**
+     * Show import/sync run history.
+     */
+    public function importHistory(): View
+    {
+        $runs = LeadImportRun::query()
+            ->with('triggeredBy:id,name')
+            ->latest()
+            ->paginate(25)
+            ->withQueryString();
+
+        return view('pages.admin.leads.import-history', [
+            'runs' => $runs,
+            'meta' => [
+                'title' => 'Import & Sync History | OmniReferral',
+                'description' => 'Review past lead imports and Google Sheets syncs.',
+            ],
+        ]);
     }
 
     public function store(StoreManualLeadRequest $request): RedirectResponse|JsonResponse
@@ -397,7 +465,7 @@ class LeadManagementController extends Controller
         ));
 
         if (! $sheetUrl) {
-            $msg = 'Google Sheets URL is not configured.';
+            $msg = 'Google Sheets URL is not configured. Provide a URL below or set the GOOGLE_SHEETS_LEADS_URL env variable.';
             return $request->expectsJson() || $request->ajax()
                 ? response()->json(['success' => false, 'message' => $msg], 400)
                 : back()->with('error', $msg);
@@ -411,10 +479,13 @@ class LeadManagementController extends Controller
                 : back()->with('error', $msg);
         }
 
+        $startedAt = now();
+
         $response = Http::timeout(25)
             ->accept('text/csv')
             ->get($sheetCsvUrl);
         if (! $response->successful()) {
+            $this->logImportRun('google_sheets', $request->user()?->id, 'failed', 0, 0, 0, $startedAt, ['HTTP fetch failed with status ' . $response->status()]);
             $msg = 'Failed to fetch Google Sheets CSV.';
             return $request->expectsJson() || $request->ajax()
                 ? response()->json(['success' => false, 'message' => $msg], 502)
@@ -423,6 +494,7 @@ class LeadManagementController extends Controller
 
         $body = trim((string) $response->body());
         if ($body === '' || $this->looksLikeHtml($body)) {
+            $this->logImportRun('google_sheets', $request->user()?->id, 'failed', 0, 0, 0, $startedAt, ['Response was HTML instead of CSV — sheet not shared?']);
             $msg = 'Google Sheets could not be read as CSV. Make sure the sheet is shared or published for CSV access.';
             return $request->expectsJson() || $request->ajax()
                 ? response()->json(['success' => false, 'message' => $msg], 422)
@@ -431,6 +503,7 @@ class LeadManagementController extends Controller
 
         $lines = preg_split('/\r\n|\r|\n/', $body);
         if (! $lines || count($lines) < 2) {
+            $this->logImportRun('google_sheets', $request->user()?->id, 'completed', 0, 0, 0, $startedAt);
             $msg = 'Google Sheet has no lead rows to sync.';
             return $request->expectsJson() || $request->ajax()
                 ? response()->json(['success' => true, 'created' => 0, 'skipped' => 0, 'failed' => 0, 'message' => $msg])
@@ -456,6 +529,17 @@ class LeadManagementController extends Controller
 
         $result = $importService->importRawRows($rawRows, 'google_sheets');
 
+        $this->logImportRun(
+            'google_sheets',
+            $request->user()?->id,
+            'completed',
+            $result['created'],
+            $result['skipped'],
+            $result['failed'] ?? 0,
+            $startedAt,
+            ! empty($result['failed_rows']) ? $result['failed_rows'] : null,
+        );
+
         $message = "Google Sheets sync complete. Added {$result['created']} new leads, skipped {$result['skipped']} duplicate/invalid rows.";
         if (($result['failed'] ?? 0) > 0) {
             $message .= " {$result['failed']} rows failed. Check the logs for details.";
@@ -473,6 +557,22 @@ class LeadManagementController extends Controller
         }
 
         return back()->with('success', $message);
+    }
+
+    private function logImportRun(string $source, ?int $userId, string $status, int $created, int $skipped, int $failed, $startedAt, ?array $warnings = null, ?string $fileName = null): void
+    {
+        LeadImportRun::create([
+            'source' => $source,
+            'triggered_by_user_id' => $userId,
+            'status' => $status,
+            'created_count' => $created,
+            'skipped_count' => $skipped,
+            'failed_count' => $failed,
+            'warnings' => $warnings,
+            'file_name' => $fileName,
+            'started_at' => $startedAt,
+            'finished_at' => now(),
+        ]);
     }
 
     private function normalizeLeadFilters(Request $request): array

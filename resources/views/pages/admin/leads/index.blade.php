@@ -148,12 +148,28 @@
                     <button type="submit" name="mode" value="preview" class="button button--ghost-blue js-loading-btn">Preview</button>
                 </div>
             </form>
+
+            <div style="margin-top: 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1rem;">
+                <span class="eyebrow" style="font-size: 0.7rem; color: #94a3b8; margin-bottom: 0.5rem; display: block;">Google Sheet URL (optional override)</span>
+                <form method="POST" action="{{ route('admin.leads.sync.google-sheets') }}" class="js-loading-form" id="sheetSyncForm">
+                    @csrf
+                    <div class="workspace-form-grid">
+                        <label class="workspace-field workspace-field--full">
+                            <input type="url" name="sheet_url" id="sheetUrlInput"
+                                   placeholder="https://docs.google.com/spreadsheets/d/...  (leave blank for default)"
+                                   value="{{ old('sheet_url') }}"
+                                   style="font-size: 0.8rem;">
+                        </label>
+                    </div>
+                    <div class="workspace-actions" style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+                        <button type="submit" class="button button--ghost-blue js-loading-btn" style="flex: 1;">Sync Sheet (Full Reload)</button>
+                    </div>
+                </form>
+            </div>
+
             <div class="workspace-actions" style="margin-top: 0.85rem; display: flex; gap: 0.5rem;">
                 <button type="button" class="button button--ghost-blue" onclick="openAddLeadModal()" style="flex: 1;">+ Add Lead Manually</button>
-                <form method="POST" action="{{ route('admin.leads.sync.google-sheets') }}" class="js-loading-form" style="flex: 1;">
-                    @csrf
-                    <button type="submit" class="button button--ghost-blue js-loading-btn" style="width: 100%;">Sync Sheet (Full Reload)</button>
-                </form>
+                <a href="{{ route('admin.leads.import.history') }}" class="button button--ghost-blue" style="flex: 1; text-align: center;">Import History</a>
             </div>
         </article>
     </section>

@@ -373,6 +373,7 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::get('/admin/leads/import/preview', [AdminLeadManagementController::class, 'previewImport'])->name('admin.leads.import.preview');
         Route::post('/admin/leads/import/commit', [AdminLeadManagementController::class, 'commitImport'])->name('admin.leads.import.commit');
         Route::post('/admin/leads/sync/google-sheets', [AdminLeadManagementController::class, 'syncGoogleSheet'])->name('admin.leads.sync.google-sheets');
+        Route::get('/admin/leads/import/history', [AdminLeadManagementController::class, 'importHistory'])->name('admin.leads.import.history');
         Route::resource('admin/properties', AdminPropertyManagementController::class)
             ->except(['show'])
             ->names([

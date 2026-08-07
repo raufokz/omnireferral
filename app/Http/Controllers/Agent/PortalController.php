@@ -172,18 +172,70 @@ class PortalController extends Controller
             ->with('success', 'Your profile has been updated successfully.');
     }
 
-    public function leads(): View
+    public function leads(Request $request): View
     {
         [$user, $profile, $portal] = $this->portalContext();
+
+        $leadsQuery = clone $portal['leadsQuery'];
+
+        if ($search = trim((string) $request->input('search'))) {
+            $leadsQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('city', 'like', "%{$search}%")
+                  ->orWhere('property_address', 'like', "%{$search}%");
+            });
+        }
+
+        if ($status = $request->input('status')) {
+            $leadsQuery->where('status', $status);
+        }
+
+        if ($intent = $request->input('intent')) {
+            $leadsQuery->where('intent', $intent);
+        }
+
+        $sort = (string) $request->input('sort', 'latest');
+        match ($sort) {
+            'oldest' => $leadsQuery->oldest(),
+            'priority' => $leadsQuery->orderByDesc('is_priority')->latest(),
+            'status' => $leadsQuery->orderBy('status')->latest(),
+            default => $leadsQuery->latest(),
+        };
+
+        // Monthly Quota Metrics
+        $quota = $user->currentMonthQuota;
+        $monthlyQuota = $quota?->monthly_quota ?? $user->currentPlan?->monthly_lead_quota ?? 0;
+        $assignedCount = $quota?->assigned_count ?? Lead::where('assigned_agent_id', $user->id)
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->count();
+        $remainingCount = max(0, $monthlyQuota - $assignedCount);
+        $quotaPercentage = $monthlyQuota > 0 ? min(100, (int) round(($assignedCount / $monthlyQuota) * 100)) : 0;
 
         return view('pages.dashboards.agent-leads', array_merge($portal, [
             'agentUser' => $user,
             'agentProfile' => $profile,
             'activeAgentPage' => 'leads',
-            'leads' => (clone $portal['leadsQuery'])->latest()->paginate(12),
+            'leads' => $leadsQuery->paginate(12)->withQueryString(),
+            'filters' => [
+                'search' => $request->input('search', ''),
+                'status' => $request->input('status', ''),
+                'intent' => $request->input('intent', ''),
+                'sort' => $sort,
+            ],
+            'quotaStats' => [
+                'monthName' => now()->format('F Y'),
+                'monthlyQuota' => $monthlyQuota,
+                'assignedCount' => $assignedCount,
+                'remainingCount' => $remainingCount,
+                'percentage' => $quotaPercentage,
+                'packageName' => $user->currentPlan?->name ?? 'Lead Subscription',
+            ],
             'meta' => [
                 'title' => 'Agent Leads | OmniReferral',
-                'description' => 'Manage all leads assigned to your OmniReferral agent workspace.',
+                'description' => 'Manage all leads assigned to your OmniReferral agent workspace with search, filtering, and quota tracking.',
             ],
         ]));
     }
