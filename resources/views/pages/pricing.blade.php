@@ -327,7 +327,7 @@
 
                 <tr>
                     <th scope="row">Property Listings</th>
-                    <td>❌ Not Included</td>
+                    <td>✅ Up to 2 Listings / Month</td>
                     <td class="is-featured">✅ Up to 5 Listings / Month</td>
                     <td>✅ Up to 10 Listings / Month</td>
                 </tr>

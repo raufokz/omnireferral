@@ -79,6 +79,7 @@ class AgentDirectoryTest extends TestCase
             'category' => 'lead',
             'is_active' => true,
             'features' => [],
+            'featured_placement' => true,
         ]);
 
         $this->createPublishedAgent([

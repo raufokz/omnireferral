@@ -40,11 +40,12 @@ class AgentDirectory
 
     public static function applyFeaturedSort(Builder $query): Builder
     {
+        // `packages` is already left-joined by publicQuery() on
+        // users.current_plan_id — sort by the agent's actual, live
+        // featured_placement capability instead of a fixed slug/name match
+        // (the old 'elite-tier' slug never existed, so this was dead code).
         return $query
-            ->orderByRaw(
-                "CASE WHEN packages.slug = ? OR LOWER(packages.name) = ? THEN 0 ELSE 1 END",
-                ['elite-tier', 'elite tier']
-            )
+            ->orderByRaw('CASE WHEN packages.featured_placement = 1 THEN 0 ELSE 1 END')
             ->orderByDesc('realtor_profiles.created_at');
     }
 
@@ -223,8 +224,7 @@ class AgentDirectory
             return false;
         }
 
-        return ($package->slug ?? null) === 'elite-tier'
-            || mb_strtolower((string) ($package->name ?? '')) === 'elite tier';
+        return \App\Support\PlanCapabilities::allows($package->slug ?? null, 'featured_placement');
     }
 
     /**
