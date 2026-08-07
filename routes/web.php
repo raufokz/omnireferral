@@ -72,6 +72,19 @@ Route::get('/sitemap.xml', function () {
             ->take(500)
             ->get(['slug', 'updated_at']);
 
+        $realtorProfilePages = RealtorProfile::query()
+            ->publicEligible()
+            ->whereHas('user', function ($query) {
+                $query->where('status', '!=', 'suspended')
+                    ->where(function ($planQuery) {
+                        $planQuery->whereNotNull('current_plan_id')
+                            ->orWhereHas('activeAgentSubscription', fn ($q) => $q->where('is_active', true));
+                    });
+            })
+            ->latest('updated_at')
+            ->take(500)
+            ->get(['id', 'slug', 'updated_at']);
+
         $seoPages = SeoLandingPage::published()
             ->latest('updated_at')
             ->get(['slug', 'updated_at']);
@@ -84,6 +97,7 @@ Route::get('/sitemap.xml', function () {
             ->view('sitemap', [
                 'properties' => $properties,
                 'agents' => $agents,
+                'realtorProfilePages' => $realtorProfilePages,
                 'seoPages' => $seoPages,
                 'serviceSeoPages' => $serviceSeoPages,
             ])

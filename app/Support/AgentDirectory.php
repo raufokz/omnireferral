@@ -207,8 +207,8 @@ class AgentDirectory
                 : false,
 
             'headshot_url' => $profile->headshotPublicUrl($user),
-            'profile_url' => route('realtors.show', ['slug' => $profile->slug]),
-            'contact_url' => route('realtors.show', ['slug' => $profile->slug]).'#contact',
+            'profile_url' => route('realtors.show', ['slug' => $profile->slug.'-realtor']),
+            'contact_url' => route('realtors.show', ['slug' => $profile->slug.'-realtor']).'#contact',
             'phone_label' => 'Routed by OmniReferral',
             'email_label' => 'Protected referral contact',
             'website_label' => 'Public profile',

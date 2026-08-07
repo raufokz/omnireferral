@@ -172,6 +172,7 @@ class LeadAssignmentController extends Controller
             return back()->withErrors(['lead_id' => 'This lead is already assigned.']);
         }
 
+        $previousAgentId = $lead->assigned_agent_id;
         $month = now()->format('Y-m');
 
         $quota = AgentLeadQuota::firstOrCreate(
@@ -200,6 +201,7 @@ class LeadAssignmentController extends Controller
             'lead_id' => $lead->id,
             'assigned_to_user_id' => $agent->id,
             'assigned_by_user_id' => $request->user()->id,
+            'previous_agent_id' => $previousAgentId,
             'package_id' => $package->id,
             'assignment_month' => $month,
             'assignment_status' => 'assigned',
@@ -311,6 +313,7 @@ class LeadAssignmentController extends Controller
         }
 
         $lead = $assignment->lead;
+        $previousAgentId = $lead->assigned_agent_id;
         $package = $assignment->package ?? $agent->activeAgentSubscription?->package;
         if (! $package) {
             return back()->withErrors(['agent_id' => 'Selected agent has no active subscription package.']);
@@ -350,6 +353,7 @@ class LeadAssignmentController extends Controller
             'lead_id' => $lead->id,
             'assigned_to_user_id' => $agent->id,
             'assigned_by_user_id' => $request->user()?->id,
+            'previous_agent_id' => $previousAgentId,
             'package_id' => $package->id,
             'assignment_month' => $month,
             'assignment_status' => 'assigned',
@@ -450,6 +454,7 @@ class LeadAssignmentController extends Controller
                     'lead_id' => $lead->id,
                     'assigned_to_user_id' => $agent->id,
                     'assigned_by_user_id' => $adminUser?->id,
+                    'previous_agent_id' => null,
                     'package_id' => $package->id,
                     'assignment_month' => $month,
                     'assignment_status' => 'assigned',

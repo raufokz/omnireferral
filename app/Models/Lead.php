@@ -44,9 +44,11 @@ class Lead extends Model
         'dnc_disclaimer',
         'property_type',
         'budget',
+        'dop',
         'asking_price',
         'timeline',
         'financing_status',
+        'credit_score',
         'contact_preference',
         'lead_score',
         'is_priority',
@@ -84,7 +86,32 @@ class Lead extends Model
         'assigned_at' => 'datetime',
         'contacted_at' => 'datetime',
         'closed_at' => 'datetime',
+        'dop' => 'date',
     ];
+
+    /**
+     * Shared status-change side effects (timestamp stamping), used by both the
+     * single-lead status endpoint and bulk status updates so the behavior stays
+     * identical regardless of entry point.
+     *
+     * @return array<string, mixed>
+     */
+    public static function applyStatusTimestamps(array $updates, string $status): array
+    {
+        if ($status === 'contacted') {
+            $updates['contacted_at'] = $updates['contacted_at'] ?? now();
+        }
+
+        if ($status === 'closed') {
+            $updates['closed_at'] = now();
+        }
+
+        if ($status === 'qualified') {
+            $updates['reviewed_at'] = now();
+        }
+
+        return $updates;
+    }
 
     protected $appends = ['property_image_url'];
 
@@ -228,13 +255,42 @@ class Lead extends Model
             });
     }
 
-    public function statusLabel(): string
+    /**
+     * Canonical status list in display order, used everywhere a status dropdown
+     * or per-status stat block is built (Lead Registry, manual entry, agent
+     * dashboard, bulk actions) so the set of valid values only lives in one place.
+     *
+     * @return array<int, string>
+     */
+    public static function statusList(): array
     {
-        return match ($this->status) {
+        return [
+            'new',
+            'contacted',
+            'in_progress',
+            'qualified',
+            'assigned',
+            'appointment_scheduled',
+            'closed',
+            'not_interested',
+            'lost',
+            'duplicate',
+            'spam',
+        ];
+    }
+
+    public static function statusLabels(): array
+    {
+        return [
             'not_interested' => 'Rejected',
             'in_progress' => 'In Progress',
-            default => Str::headline((string) $this->status),
-        };
+            'appointment_scheduled' => 'Appointment Scheduled',
+        ];
+    }
+
+    public function statusLabel(): string
+    {
+        return self::statusLabels()[$this->status] ?? Str::headline((string) $this->status);
     }
 
     public function statusTone(): string
@@ -242,8 +298,27 @@ class Lead extends Model
         return match ($this->status) {
             'qualified' => 'qualified',
             'not_interested' => 'rejected',
+            'lost', 'spam' => 'rejected',
+            'duplicate' => 'duplicate',
+            'appointment_scheduled' => 'assigned',
             default => (string) $this->status,
         };
+    }
+
+    /**
+     * Human-friendly budget display. Budget is free text ("300K", "$350,000",
+     * "Above 1M", "Luxury", a raw number, etc.) — format as currency only when
+     * the stored value is purely numeric, otherwise show it as entered.
+     */
+    public function budgetLabel(): ?string
+    {
+        $budget = trim((string) $this->budget);
+
+        if ($budget === '') {
+            return null;
+        }
+
+        return is_numeric($budget) ? '$' . number_format((float) $budget) : $budget;
     }
 
     public function locationSummary(): string

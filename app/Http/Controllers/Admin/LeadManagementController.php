@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreManualLeadRequest;
 use App\Http\Requests\SyncGoogleSheetRequest;
 use App\Models\Lead;
 use App\Models\Property;
@@ -45,11 +46,19 @@ class LeadManagementController extends Controller
 
         $workspaceUser = auth()->user();
         $isStaffView = $workspaceUser?->role === 'staff';
+        $agents = User::where('role', 'agent')->orderBy('name')->get(['id', 'name']);
+
+        $realtorStats = null;
+        if ($filters['agent_id']) {
+            $realtorStats = $this->buildRealtorStats((int) $filters['agent_id']);
+            $realtorStats['agent_name'] = $agents->firstWhere('id', $filters['agent_id'])?->name ?? 'Selected Realtor';
+        }
 
         return view('pages.admin.leads.index', [
             'leads' => $leads,
             'filters' => $filters,
-            'agents' => User::where('role', 'agent')->orderBy('name')->get(['id', 'name']),
+            'agents' => $agents,
+            'realtorStats' => $realtorStats,
             'repNames' => Lead::query()
                 ->whereNotNull('rep_name')
                 ->where('rep_name', '!=', '')
@@ -63,7 +72,7 @@ class LeadManagementController extends Controller
                 ->orderBy('source')
                 ->pluck('source'),
             'intents' => ['buyer', 'seller', 'investor', 'other'],
-            'statuses' => ['new', 'contacted', 'in_progress', 'qualified', 'assigned', 'closed', 'not_interested'],
+            'statuses' => Lead::statusList(),
             'summary' => $summary,
             'workspaceUser' => $workspaceUser,
             'isStaffView' => $isStaffView,
@@ -81,6 +90,37 @@ class LeadManagementController extends Controller
                 'description' => 'Filter, assign, import, sync, and export leads for admin and staff teams.',
             ],
         ]);
+    }
+
+    /**
+     * Per-realtor lead counts + percentages across every status, for the Lead
+     * Registry's "Assigned Realtor" filter panel.
+     *
+     * @return array{total: int, by_status: array<string, array{count: int, percent: float}>}
+     */
+    private function buildRealtorStats(int $agentId): array
+    {
+        $counts = Lead::query()
+            ->where('assigned_agent_id', $agentId)
+            ->selectRaw('status, count(*) as c')
+            ->groupBy('status')
+            ->pluck('c', 'status');
+
+        $total = (int) $counts->sum();
+
+        $byStatus = collect(Lead::statusList())->mapWithKeys(function (string $status) use ($counts, $total) {
+            $count = (int) ($counts[$status] ?? 0);
+
+            return [$status => [
+                'count' => $count,
+                'percent' => $total > 0 ? round(($count / $total) * 100, 1) : 0.0,
+            ]];
+        })->all();
+
+        return [
+            'total' => $total,
+            'by_status' => $byStatus,
+        ];
     }
 
     public function exportCsv(Request $request): StreamedResponse
@@ -255,30 +295,9 @@ class LeadManagementController extends Controller
             ->with('success', $message);
     }
 
-    public function store(Request $request): RedirectResponse|JsonResponse
+    public function store(StoreManualLeadRequest $request): RedirectResponse|JsonResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:50'],
-            'intent' => ['required', 'in:buyer,seller,investor,other'],
-            'status' => ['nullable', 'string', 'in:new,contacted,in_progress,qualified,assigned,closed,not_interested'],
-            'property_address' => ['nullable', 'string', 'max:500'],
-            'beds_baths' => ['nullable', 'string', 'max:100'],
-            'budget' => ['nullable', 'numeric', 'min:0'],
-            'asking_price' => ['nullable', 'numeric', 'min:0'],
-            'working_with_realtor' => ['nullable', 'boolean'],
-            'timeline' => ['nullable', 'string', 'max:255'],
-            'dnc_disclaimer' => ['nullable', 'string', 'max:255'],
-            'notes' => ['nullable', 'string', 'max:2000'],
-            'rep_name' => ['nullable', 'string', 'max:255'],
-            'state' => ['nullable', 'string', 'max:100'],
-            'sent_to' => ['nullable', 'string', 'max:255'],
-            'assignment' => ['nullable', 'string', 'max:255'],
-            'reason_in_house' => ['nullable', 'string', 'max:1000'],
-            'realtor_response' => ['nullable', 'string', 'max:1000'],
-            'assigned_agent_id' => ['nullable', 'exists:users,id'],
-        ]);
+        $validated = $request->validated();
 
         $lead = new Lead();
         $lead->fill([
@@ -288,13 +307,17 @@ class LeadManagementController extends Controller
             'name' => $validated['name'],
             'email' => ! empty($validated['email']) ? $validated['email'] : null,
             'phone' => $validated['phone'] ?? '',
-            'intent' => $validated['intent'],
+            'city' => $validated['city'] ?? '',
+            'intent' => $validated['intent'] ?? 'buyer',
             'status' => $validated['status'] ?? 'new',
             'zip_code' => '00000',
             'property_address' => $validated['property_address'] ?? '',
             'beds_baths' => $validated['beds_baths'] ?? '',
             'budget' => $validated['budget'] ?? null,
+            'dop' => $validated['dop'] ?? null,
             'asking_price' => $validated['asking_price'] ?? null,
+            'financing_status' => $validated['financing_status'] ?? '',
+            'credit_score' => $validated['credit_score'] ?? null,
             'working_with_realtor' => isset($validated['working_with_realtor']) ? (bool) $validated['working_with_realtor'] : null,
             'timeline' => $validated['timeline'] ?? '',
             'dnc_disclaimer' => $validated['dnc_disclaimer'] ?? '',
@@ -348,7 +371,7 @@ class LeadManagementController extends Controller
         ];
 
         $agents = User::where('role', 'agent')->orderBy('name')->get(['id', 'name']);
-        $statuses = ['new', 'contacted', 'in_progress', 'qualified', 'assigned', 'closed', 'not_interested'];
+        $statuses = Lead::statusList();
 
         $html = view('pages.admin.leads.partials.table_rows', [
             'leads' => $leads,

@@ -3,7 +3,7 @@
         $statusTone = $lead->statusTone();
         $statusLabel = $lead->statusLabel();
         $priceSummary = $lead->budget
-            ? 'Budget $' . number_format($lead->budget)
+            ? 'Budget ' . $lead->budgetLabel()
             : ($lead->asking_price ? 'Ask $' . number_format($lead->asking_price) : 'N/A');
     @endphp
     <tr data-lead-id="{{ $lead->id }}">
@@ -20,7 +20,7 @@
                 <select name="status" onchange="this.form.submit()">
                     @foreach($statuses as $status)
                         <option value="{{ $status }}" {{ $lead->status === $status ? 'selected' : '' }}>
-                            {{ $status === 'not_interested' ? 'Rejected' : ucfirst(str_replace('_',' ', $status)) }}
+                            {{ \App\Models\Lead::statusLabels()[$status] ?? \Illuminate\Support\Str::headline($status) }}
                         </option>
                     @endforeach
                 </select>

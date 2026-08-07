@@ -69,6 +69,10 @@ class LeadController extends Controller
         abort_unless($user, 401);
         abort_unless((int) $lead->assigned_agent_id === (int) $user->id || $user->isAdmin(), 403, 'You can only edit leads assigned to you.');
 
+        if ($request->has('budget') && $request->input('budget') !== null) {
+            $request->merge(['budget' => (string) $request->input('budget')]);
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
@@ -78,12 +82,14 @@ class LeadController extends Controller
             'city' => ['nullable', 'string', 'max:100'],
             'state' => ['nullable', 'string', 'max:50'],
             'zip_code' => ['nullable', 'string', 'max:20'],
-            'budget' => ['nullable', 'numeric', 'min:0'],
+            'budget' => ['nullable', 'string', 'max:100'],
             'asking_price' => ['nullable', 'numeric', 'min:0'],
             'beds_baths' => ['nullable', 'string', 'max:50'],
             'property_type' => ['nullable', 'string', 'max:100'],
             'timeline' => ['nullable', 'string', 'max:100'],
             'financing_status' => ['nullable', 'string', 'max:100'],
+            'credit_score' => ['nullable', 'string', 'max:50'],
+            'dop' => ['nullable', 'date'],
             'contact_preference' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:5000'],
         ]);
@@ -108,7 +114,7 @@ class LeadController extends Controller
         abort_unless((int) $lead->assigned_agent_id === (int) $user->id || $user->isAdmin(), 403, 'You can only update leads assigned to you.');
 
         $validated = $request->validate([
-            'status' => ['required', 'in:new,contacted,in_progress,qualified,closed,not_interested'],
+            'status' => ['required', Rule::in(array_diff(Lead::statusList(), ['assigned']))],
         ]);
 
         $previousStatus = $lead->status;

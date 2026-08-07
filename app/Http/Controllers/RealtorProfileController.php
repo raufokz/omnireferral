@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Property;
 use App\Models\RealtorProfile;
 use App\Support\AgentDirectory;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -12,18 +13,43 @@ use Illuminate\View\View;
 
 class RealtorProfileController extends Controller
 {
+    private const SLUG_SUFFIX = '-realtor';
+
     /**
      * Show dedicated SEO-friendly realtor profile page.
      */
-    public function show(string $slug): View
+    public function show(string $slug): View|RedirectResponse
     {
-        $profile = RealtorProfile::where('slug', $slug)
+        if (! Str::endsWith($slug, self::SLUG_SUFFIX)) {
+            // Legacy URL format (no "-realtor" suffix) — 301 redirect to the new SEO URL
+            // to preserve rankings on links/bookmarks pointing at the old format.
+            $legacyProfile = RealtorProfile::where('slug', $slug)->first();
+            abort_unless($legacyProfile, 404);
+
+            return redirect()->route('realtors.show', ['slug' => $legacyProfile->slug.self::SLUG_SUFFIX], 301);
+        }
+
+        $baseSlug = Str::beforeLast($slug, self::SLUG_SUFFIX);
+
+        $profile = RealtorProfile::where('slug', $baseSlug)
             ->with([
                 'user:id,name,display_name,email,phone,avatar,current_plan_id,status,city,state,zip_code,social_facebook_url,social_linkedin_url',
                 'user.currentPlan:id,name,slug',
                 'user.activeAgentSubscription',
             ])
-            ->firstOrFail();
+            ->first();
+
+        if (! $profile) {
+            // Edge case: the profile's real slug already ends in "-realtor" (e.g. "john-realtor"),
+            // so stripping the suffix over-trimmed it. Retry with the full slug as-is.
+            $profile = RealtorProfile::where('slug', $slug)
+                ->with([
+                    'user:id,name,display_name,email,phone,avatar,current_plan_id,status,city,state,zip_code,social_facebook_url,social_linkedin_url',
+                    'user.currentPlan:id,name,slug',
+                    'user.activeAgentSubscription',
+                ])
+                ->firstOrFail();
+        }
 
         // 1. Visibility Check: Abort 404 if profile is suspended or rejected
         if (! $profile->isPublicVisible()) {
@@ -52,7 +78,7 @@ class RealtorProfileController extends Controller
         $card = AgentDirectory::publicCardPayload($profile);
         $agentName = $profile->user?->publicDisplayName() ?: 'Real Estate Agent';
         $location = $profile->serviceAreaLabel() ?: 'United States';
-        $canonicalUrl = route('realtors.show', ['slug' => $profile->slug]);
+        $canonicalUrl = route('realtors.show', ['slug' => $profile->slug.self::SLUG_SUFFIX]);
 
         // SEO Meta Information
         $metaTitle = sprintf('%s | Realtor in %s | OmniReferral', $agentName, $location);

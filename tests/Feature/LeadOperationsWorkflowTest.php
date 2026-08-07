@@ -300,4 +300,53 @@ CSV;
                     && $summary['website'] === 2;
             });
     }
+
+    public function test_admin_leads_index_realtor_filter_shows_per_status_stats(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'must_reset_password' => false]);
+        $agent = User::factory()->create(['role' => 'agent', 'status' => 'active']);
+        $otherAgent = User::factory()->create(['role' => 'agent', 'status' => 'active']);
+
+        Lead::create([
+            'lead_number' => 'OMNI-TEST-0201',
+            'intent' => 'buyer',
+            'package_type' => 'quick',
+            'status' => 'new',
+            'name' => 'Realtor Lead One',
+            'phone' => '8005557201',
+            'assigned_agent_id' => $agent->id,
+        ]);
+
+        Lead::create([
+            'lead_number' => 'OMNI-TEST-0202',
+            'intent' => 'buyer',
+            'package_type' => 'quick',
+            'status' => 'qualified',
+            'name' => 'Realtor Lead Two',
+            'phone' => '8005557202',
+            'assigned_agent_id' => $agent->id,
+        ]);
+
+        Lead::create([
+            'lead_number' => 'OMNI-TEST-0203',
+            'intent' => 'buyer',
+            'package_type' => 'quick',
+            'status' => 'new',
+            'name' => 'Other Realtor Lead',
+            'phone' => '8005557203',
+            'assigned_agent_id' => $otherAgent->id,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.leads.index', ['agent_id' => $agent->id]));
+
+        $response->assertOk();
+        $response->assertViewHas('realtorStats', function (array $stats) use ($agent) {
+            return $stats['total'] === 2
+                && $stats['by_status']['new']['count'] === 1
+                && $stats['by_status']['qualified']['count'] === 1
+                && $stats['by_status']['new']['percent'] === 50.0
+                && $stats['agent_name'] === $agent->name;
+        });
+    }
 }

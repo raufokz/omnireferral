@@ -13,6 +13,16 @@ class StoreLeadRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        // Budget is free text ("300K", "$350,000", "Luxury", etc.) but clients may still
+        // submit a plain number (JS forms, JSON payloads) — normalize to string so the
+        // "string" validation rule below doesn't reject a legitimately numeric budget.
+        if ($this->has('budget') && $this->input('budget') !== null) {
+            $this->merge(['budget' => (string) $this->input('budget')]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -34,7 +44,7 @@ class StoreLeadRequest extends FormRequest
                 'max:255',
             ],
             'property_type' => ['nullable', 'string', 'max:100'],
-            'budget' => ['nullable', 'integer'],
+            'budget' => ['nullable', 'string', 'max:100'],
             'asking_price' => ['nullable', 'integer'],
             'timeline' => ['nullable', 'string', 'max:100'],
             'financing_status' => ['nullable', 'string', 'max:100'],

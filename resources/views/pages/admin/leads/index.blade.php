@@ -82,7 +82,7 @@
                             <option value="">All statuses</option>
                             @foreach($statuses as $status)
                                 <option value="{{ $status }}" {{ $filters['status'] === $status ? 'selected' : '' }}>
-                                    {{ $status === 'not_interested' ? 'Rejected' : ucfirst(str_replace('_', ' ', $status)) }}
+                                    {{ \App\Models\Lead::statusLabels()[$status] ?? \Illuminate\Support\Str::headline($status) }}
                                 </option>
                             @endforeach
                         </select>
@@ -106,6 +106,14 @@
                         </select>
                     </label>
                     <label class="workspace-field">
+                        <span>City</span>
+                        <input type="text" name="city" value="{{ $filters['city'] ?? '' }}" placeholder="e.g. Miami">
+                    </label>
+                    <label class="workspace-field">
+                        <span>ZIP</span>
+                        <input type="text" name="zip" value="{{ $filters['zip'] ?? '' }}" placeholder="e.g. 33101">
+                    </label>
+                    <label class="workspace-field">
                         <span>Date From</span>
                         <input type="date" name="date_from" value="{{ $filters['date_from'] }}">
                     </label>
@@ -113,9 +121,13 @@
                         <span>Date To</span>
                         <input type="date" name="date_to" value="{{ $filters['date_to'] }}">
                     </label>
+                    @include('pages.admin.leads.partials.realtor_filter')
                 </div>
                 <div class="workspace-actions" style="margin-top: 0.8rem;">
                     <button type="submit" class="button">Apply Filters</button>
+                    @if($filters['agent_id'])
+                        <a href="{{ route('admin.leads.index', collect(request()->query())->except('agent_id')->all()) }}" class="button button--ghost-blue">Clear Realtor Filter</a>
+                    @endif
                 </div>
             </form>
         </article>
@@ -145,6 +157,10 @@
             </div>
         </article>
     </section>
+
+    @if($realtorStats)
+        @include('pages.admin.leads.partials.realtor_stats')
+    @endif
 
     <section class="workspace-card">
         <div class="workspace-table-wrap">
@@ -200,8 +216,13 @@
                 </label>
 
                 <label class="workspace-field">
-                    <span>Intent <strong style="color: #ef4444;">*</strong></span>
-                    <select name="intent" required>
+                    <span>City</span>
+                    <input type="text" name="city" placeholder="Miami">
+                </label>
+
+                <label class="workspace-field">
+                    <span>Intent</span>
+                    <select name="intent">
                         <option value="buyer">Buyer</option>
                         <option value="seller">Seller</option>
                         <option value="investor">Investor</option>
@@ -212,13 +233,11 @@
                 <label class="workspace-field">
                     <span>Status</span>
                     <select name="status">
-                        <option value="new">New</option>
-                        <option value="contacted">Contacted</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="qualified">Qualified</option>
-                        <option value="assigned">Assigned</option>
-                        <option value="closed">Closed</option>
-                        <option value="not_interested">Rejected / Not Interested</option>
+                        @foreach($statuses as $status)
+                            <option value="{{ $status }}" {{ $status === 'new' ? 'selected' : '' }}>
+                                {{ \App\Models\Lead::statusLabels()[$status] ?? \Illuminate\Support\Str::headline($status) }}
+                            </option>
+                        @endforeach
                     </select>
                 </label>
 
@@ -233,13 +252,34 @@
                 </label>
 
                 <label class="workspace-field">
-                    <span>Budget ($)</span>
-                    <input type="number" name="budget" step="1000" placeholder="450000">
+                    <span>Budget</span>
+                    <input type="text" name="budget" placeholder="e.g. 300K, $350,000, 250000-350000, Luxury">
+                </label>
+
+                <label class="workspace-field">
+                    <span>DOP (Date of Purchase)</span>
+                    <input type="date" name="dop">
                 </label>
 
                 <label class="workspace-field">
                     <span>Asking Price ($)</span>
                     <input type="number" name="asking_price" step="1000" placeholder="500000">
+                </label>
+
+                <label class="workspace-field">
+                    <span>Finance / Cash</span>
+                    <select name="financing_status">
+                        <option value="">Select status</option>
+                        <option value="Cash buyer">Cash buyer</option>
+                        <option value="Pre-approved">Pre-approved</option>
+                        <option value="Need financing guidance">Need financing guidance</option>
+                        <option value="Just exploring">Just exploring</option>
+                    </select>
+                </label>
+
+                <label class="workspace-field">
+                    <span>Credit Score</span>
+                    <input type="text" name="credit_score" placeholder="e.g. 720, 700-750">
                 </label>
 
                 <label class="workspace-field">

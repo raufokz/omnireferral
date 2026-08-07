@@ -16,6 +16,8 @@ class LeadFilterService
             'agent_id' => $request->integer('agent_id') ?: null,
             'rep_name' => trim((string) $request->string('rep_name')->value()),
             'source' => trim((string) $request->string('source')->value()),
+            'city' => trim((string) $request->string('city')->value()),
+            'zip' => trim((string) $request->string('zip')->value()),
             'date_from' => $this->normalizeFilterDate((string) $request->string('date_from')->value()),
             'date_to' => $this->normalizeFilterDate((string) $request->string('date_to')->value()),
         ];
@@ -32,6 +34,8 @@ class LeadFilterService
             'agent_id' => isset($input['agent_id']) && is_numeric($input['agent_id']) ? (int) $input['agent_id'] : null,
             'rep_name' => $value('rep_name'),
             'source' => $value('source'),
+            'city' => $value('city'),
+            'zip' => $value('zip'),
             'date_from' => $this->normalizeFilterDate($value('date_from')),
             'date_to' => $this->normalizeFilterDate($value('date_to')),
         ];
@@ -59,6 +63,8 @@ class LeadFilterService
             ->when($filters['agent_id'], fn ($builder, int $agentId) => $builder->where('assigned_agent_id', $agentId))
             ->when($filters['rep_name'], fn ($builder, string $repName) => $builder->where('rep_name', $repName))
             ->when($filters['source'], fn ($builder, string $source) => $builder->where('source', $source))
+            ->when($filters['city'] ?? null, fn ($builder, string $city) => $builder->where('city', 'like', "%{$city}%"))
+            ->when($filters['zip'] ?? null, fn ($builder, string $zip) => $builder->where('zip_code', 'like', "%{$zip}%"))
             ->when($filters['date_from'] || $filters['date_to'], function ($builder) use ($filters) {
                 $from = $filters['date_from'] ? Carbon::parse($filters['date_from'])->startOfDay() : null;
                 $to = $filters['date_to'] ? Carbon::parse($filters['date_to'])->endOfDay() : null;

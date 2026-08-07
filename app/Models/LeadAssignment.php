@@ -11,6 +11,7 @@ class LeadAssignment extends Model
         'lead_id',
         'assigned_to_user_id',
         'assigned_by_user_id',
+        'previous_agent_id',
         'package_id',
         'assignment_month',
         'assignment_status',
@@ -42,6 +43,11 @@ class LeadAssignment extends Model
     public function assignedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_by_user_id');
+    }
+
+    public function previousAgent(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'previous_agent_id');
     }
 
     public function package(): BelongsTo

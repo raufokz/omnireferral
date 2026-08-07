@@ -6,14 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Lead;
 use App\Models\User;
 use App\Notifications\NewLeadAssignedNotification;
+use App\Services\LeadAssignmentService;
 use App\Services\LeadCustomerNotifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class LeadController extends Controller
 {
     public function __construct(
         protected LeadCustomerNotifier $leadCustomerNotifier,
+        protected LeadAssignmentService $leadAssignmentService,
     ) {
     }
 
@@ -22,23 +25,20 @@ class LeadController extends Controller
         $this->authorize('updateStatus', $lead);
 
         $validated = $request->validate([
-            'status' => ['required', 'in:new,contacted,in_progress,qualified,assigned,closed,not_interested'],
+            'status' => ['required', Rule::in(Lead::statusList())],
         ]);
 
         $previousStatus = $lead->status;
 
-        $updates = ['status' => $validated['status']];
+        $updates = Lead::applyStatusTimestamps(
+            ['status' => $validated['status']],
+            $validated['status'],
+        );
 
-        if ($validated['status'] === 'contacted' && ! $lead->contacted_at) {
-            $updates['contacted_at'] = now();
-        }
-
-        if ($validated['status'] === 'closed') {
-            $updates['closed_at'] = now();
-        }
-
-        if ($validated['status'] === 'qualified') {
-            $updates['reviewed_at'] = now();
+        // Preserve the "only stamp contacted_at if unset" nuance of the original
+        // single-lead endpoint (bulk updates always stamp on transition instead).
+        if ($validated['status'] === 'contacted' && $lead->contacted_at) {
+            unset($updates['contacted_at']);
         }
 
         $lead->update($updates);
@@ -63,12 +63,7 @@ class LeadController extends Controller
 
         $previousStatus = $lead->status;
 
-        $lead->update([
-            'assigned_agent_id' => $agent->id,
-            'status' => 'assigned',
-            'assigned_at' => now(),
-            'assignment' => 'Assigned to ' . $agent->name,
-        ]);
+        $this->leadAssignmentService->assign($lead, $agent, $request->user());
 
         $agent->notify(new NewLeadAssignedNotification($lead));
 

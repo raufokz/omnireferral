@@ -31,7 +31,7 @@ class NewLeadCreatedNotification extends Notification
             ->line($this->lead->locationLabel() . ': ' . $this->lead->locationSummary())
             ->line(($this->lead->intent === 'seller' ? 'Asking price' : 'Budget') . ': ' . ($this->lead->intent === 'seller'
                 ? ($this->lead->asking_price ? '$' . number_format($this->lead->asking_price) : 'N/A')
-                : ($this->lead->budget ? '$' . number_format($this->lead->budget) : 'N/A')))
+                : ($this->lead->budgetLabel() ?? 'N/A')))
             ->line('Timeline: ' . ($this->lead->timeline ?: 'N/A'))
             ->line('Status: ' . ucfirst($this->lead->status))
             ->action('View Lead', route('admin.dashboard'))

@@ -45,11 +45,13 @@
                         @php
                             $status = $row['status'] ?? 'new';
                             $statusTone = $status === 'qualified' ? 'qualified' : ($status === 'not_interested' ? 'rejected' : $status);
-                            $statusLabel = $status === 'not_interested' ? 'Rejected' : ucfirst(str_replace('_', ' ', $status));
+                            $statusLabel = \App\Models\Lead::statusLabels()[$status] ?? \Illuminate\Support\Str::headline($status);
                             $resultLabel = !empty($row['_duplicate']) ? 'Duplicate → Skip' : 'New → Insert';
                             $resultTone = !empty($row['_duplicate']) ? 'rejected' : 'qualified';
-                            $priceSummary = !empty($row['budget'])
-                                ? 'Budget $' . number_format((int) $row['budget'])
+                            $rawBudget = trim((string) ($row['budget'] ?? ''));
+                            $budgetDisplay = $rawBudget !== '' ? (is_numeric($rawBudget) ? '$' . number_format((float) $rawBudget) : $rawBudget) : null;
+                            $priceSummary = $budgetDisplay
+                                ? 'Budget ' . $budgetDisplay
                                 : (!empty($row['asking_price']) ? 'Ask $' . number_format((int) $row['asking_price']) : 'No budget or ask');
                         @endphp
                         <tr>

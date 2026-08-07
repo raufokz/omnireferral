@@ -400,7 +400,7 @@
                     <span class="details-box__label">Budget / Property Value</span>
                     <span class="details-box__value">
                         @if($lead->budget)
-                            ${{ number_format($lead->budget) }}
+                            {{ $lead->budgetLabel() }}
                         @elseif($lead->asking_price)
                             ${{ number_format($lead->asking_price) }} (Asking)
                         @else
@@ -642,8 +642,16 @@
                     <input type="text" name="zip_code" value="{{ old('zip_code', $lead->zip_code) }}">
                 </label>
                 <label class="workspace-field">
-                    <span>Budget / Value ($)</span>
-                    <input type="number" name="budget" value="{{ old('budget', $lead->budget) }}" min="0">
+                    <span>Budget / Value</span>
+                    <input type="text" name="budget" value="{{ old('budget', $lead->budget) }}" placeholder="e.g. 300K, $350,000, Luxury">
+                </label>
+                <label class="workspace-field">
+                    <span>Credit Score</span>
+                    <input type="text" name="credit_score" value="{{ old('credit_score', $lead->credit_score) }}" placeholder="e.g. 720, 700-750">
+                </label>
+                <label class="workspace-field">
+                    <span>DOP (Date of Purchase)</span>
+                    <input type="date" name="dop" value="{{ old('dop', optional($lead->dop)->format('Y-m-d')) }}">
                 </label>
                 <label class="workspace-field">
                     <span>Beds / Baths</span>

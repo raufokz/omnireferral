@@ -115,6 +115,15 @@
         </url>
     @endforeach
 
+    @foreach ($realtorProfilePages as $realtorProfilePage)
+        <url>
+            <loc>{{ url('realtors/' . $realtorProfilePage->slug . '-realtor') }}</loc>
+            <lastmod>{{ $realtorProfilePage->updated_at->toAtomString() }}</lastmod>
+            <changefreq>monthly</changefreq>
+            <priority>0.7</priority>
+        </url>
+    @endforeach
+
     @foreach($seoPages as $seo)
         <url>
             <loc>{{ url($seo->slug) }}</loc>
