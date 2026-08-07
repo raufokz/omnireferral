@@ -30,6 +30,8 @@ class LeadAssignmentService
             'assigned_to_user_id' => $agent->id,
             'assigned_by_user_id' => $actor->id,
             'previous_agent_id' => $previousAgentId,
+            'package_id' => $agent->activeAgentSubscription?->package_id,
+            'assignment_month' => now()->format('Y-m'),
             'assignment_status' => 'assigned',
             'sent_at' => now(),
             'assigned_at' => now(),

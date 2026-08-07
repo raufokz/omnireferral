@@ -94,7 +94,7 @@
                                             @foreach(array_slice($run->warnings, 0, 10) as $warning)
                                                 <li>
                                                     @if(is_array($warning))
-                                                        Row {{ $warning['row'] ?? '?' }}: {{ $warning['reason'] ?? 'Unknown' }}
+                                                        Row {{ $warning['row'] ?? '?' }}: {{ $warning['reason'] ?? $warning['message'] ?? 'Unknown' }}
                                                         @if(!empty($warning['name'])) ({{ $warning['name'] }}) @endif
                                                     @else
                                                         {{ $warning }}

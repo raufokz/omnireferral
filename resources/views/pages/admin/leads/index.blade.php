@@ -178,11 +178,89 @@
         @include('pages.admin.leads.partials.realtor_stats')
     @endif
 
+    {{-- Bulk Actions Toolbar — appears once a row is checked --}}
+    <section id="leadBulkToolbar" class="workspace-card" style="
+        display: none;
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: linear-gradient(135deg, #0b3668, #1e4a8a);
+        color: #fff;
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem;
+        box-shadow: 0 8px 32px rgba(11, 54, 104, 0.25);
+    ">
+        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <strong id="leadBulkCount" style="font-size: 1rem; white-space: nowrap;">0 selected</strong>
+            <button type="button" id="leadBulkDeselectAll" style="
+                background: none; border: 1px solid rgba(255,255,255,0.35); color: #fff;
+                padding: 0.3rem 0.75rem; border-radius: 0.375rem; cursor: pointer; font-size: 0.8rem;
+            ">Deselect All</button>
+
+            <span style="flex: 1;"></span>
+
+            <form method="POST" action="{{ route('admin.leads.bulk-assign') }}" id="leadBulkAssignForm" style="display: flex; gap: 0.4rem; align-items: center;">
+                @csrf
+                <div id="leadBulkAssignIds"></div>
+                <select name="agent_id" required style="
+                    padding: 0.35rem 0.6rem; border-radius: 0.375rem; border: 1px solid rgba(255,255,255,0.3);
+                    background: rgba(255,255,255,0.15); color: #fff; font-size: 0.8rem; min-width: 130px;
+                ">
+                    <option value="" style="color:#333;">Assign realtor…</option>
+                    @foreach($agents as $agent)
+                        <option value="{{ $agent->id }}" style="color:#333;">{{ $agent->name }}</option>
+                    @endforeach
+                </select>
+                <button type="submit" style="
+                    background: #a5f3fc; color: #0c2d52; border: none; padding: 0.35rem 0.75rem;
+                    border-radius: 0.375rem; font-weight: 600; cursor: pointer; font-size: 0.8rem; white-space: nowrap;
+                ">Assign</button>
+            </form>
+
+            <form method="POST" action="{{ route('admin.leads.bulk-status') }}" id="leadBulkStatusForm" style="display: flex; gap: 0.4rem; align-items: center;">
+                @csrf
+                <div id="leadBulkStatusIds"></div>
+                <select name="status" required style="
+                    padding: 0.35rem 0.6rem; border-radius: 0.375rem; border: 1px solid rgba(255,255,255,0.3);
+                    background: rgba(255,255,255,0.15); color: #fff; font-size: 0.8rem; min-width: 130px;
+                ">
+                    <option value="" style="color:#333;">Set status…</option>
+                    @foreach($statuses as $status)
+                        <option value="{{ $status }}" style="color:#333;">{{ \App\Models\Lead::statusLabels()[$status] ?? \Illuminate\Support\Str::headline($status) }}</option>
+                    @endforeach
+                </select>
+                <button type="submit" style="
+                    background: #38bdf8; color: #0c2d52; border: none; padding: 0.35rem 0.75rem;
+                    border-radius: 0.375rem; font-weight: 600; cursor: pointer; font-size: 0.8rem; white-space: nowrap;
+                ">Update Status</button>
+            </form>
+
+            <form method="POST" action="{{ route('admin.leads.bulk-delete') }}" id="leadBulkDeleteForm"
+                  onsubmit="return confirm('Delete the selected leads? This can be restored by an admin from the database if needed, but not from this screen.');"
+                  style="display: inline;">
+                @csrf
+                <div id="leadBulkDeleteIds"></div>
+                <button type="submit" style="
+                    background: rgba(239, 68, 68, 0.85); color: #fff; border: none; padding: 0.35rem 0.75rem;
+                    border-radius: 0.375rem; font-weight: 600; cursor: pointer; font-size: 0.8rem; white-space: nowrap;
+                ">Delete Selected</button>
+            </form>
+
+            <button type="button" id="leadBulkExportBtn" style="
+                background: #a5f3fc; color: #0c2d52; border: none; padding: 0.35rem 0.75rem;
+                border-radius: 0.375rem; font-weight: 600; cursor: pointer; font-size: 0.8rem; white-space: nowrap;
+            ">Export Selected</button>
+        </div>
+    </section>
+
     <section class="workspace-card">
         <div class="workspace-table-wrap">
             <table class="workspace-table">
                 <thead>
                     <tr>
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="leadSelectAllCheckbox" style="width:16px; height:16px; cursor:pointer;" title="Select all on this page">
+                        </th>
                         <th>Lead</th>
                         <th>Stage</th>
                         <th>Market</th>
@@ -456,6 +534,7 @@ function fetchLiveData() {
         if (data.success && data.html) {
             const tbody = document.querySelector('.workspace-table tbody');
             if (tbody) tbody.innerHTML = data.html;
+            syncLeadBulkToolbar();
             if (data.summary) {
                 const totalEl = document.getElementById('kpiTotal');
                 const qualEl = document.getElementById('kpiQualified');
@@ -535,6 +614,87 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }, 30000);
 });
+
+// Bulk selection toolbar — check a row, a floating action bar appears with
+// Assign Realtor / Update Status / Delete buttons for everything selected.
+(function () {
+    const selectAll = document.getElementById('leadSelectAllCheckbox');
+    const toolbar = document.getElementById('leadBulkToolbar');
+    const countEl = document.getElementById('leadBulkCount');
+    const deselectBtn = document.getElementById('leadBulkDeselectAll');
+    const checkboxes = () => document.querySelectorAll('.lead-bulk-checkbox');
+
+    window.syncLeadBulkToolbar = function () {
+        const ids = Array.from(checkboxes()).filter(cb => cb.checked).map(cb => cb.value);
+        const count = ids.length;
+
+        if (toolbar) toolbar.style.display = count > 0 ? 'block' : 'none';
+        if (countEl) countEl.textContent = count + ' selected';
+
+        const all = checkboxes();
+        if (selectAll) {
+            const allChecked = all.length > 0 && Array.from(all).every(cb => cb.checked);
+            selectAll.checked = allChecked;
+            selectAll.indeterminate = count > 0 && !allChecked;
+        }
+
+        ['leadBulkAssignIds', 'leadBulkStatusIds', 'leadBulkDeleteIds'].forEach(containerId => {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            ids.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'lead_ids[]';
+                input.value = id;
+                container.appendChild(input);
+            });
+        });
+    };
+
+    document.addEventListener('change', function (e) {
+        if (e.target.classList.contains('lead-bulk-checkbox') || e.target === selectAll) {
+            if (e.target === selectAll) {
+                checkboxes().forEach(cb => { cb.checked = selectAll.checked; });
+            }
+            window.syncLeadBulkToolbar();
+        }
+    });
+
+    if (deselectBtn) {
+        deselectBtn.addEventListener('click', function () {
+            if (selectAll) selectAll.checked = false;
+            checkboxes().forEach(cb => { cb.checked = false; });
+            window.syncLeadBulkToolbar();
+        });
+    }
+
+    const exportBtn = document.getElementById('leadBulkExportBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function () {
+            const ids = Array.from(checkboxes()).filter(cb => cb.checked).map(cb => cb.value);
+            if (ids.length === 0) {
+                showToast('Select at least one lead first.', 'error');
+                return;
+            }
+            const params = new URLSearchParams();
+            ids.forEach(id => params.append('ids[]', id));
+            window.location.href = '{{ route("admin.leads.export.csv") }}?' + params.toString();
+        });
+    }
+
+    ['leadBulkAssignForm', 'leadBulkStatusForm'].forEach(formId => {
+        const form = document.getElementById(formId);
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                if (checkboxes().length === 0 || Array.from(checkboxes()).every(cb => !cb.checked)) {
+                    e.preventDefault();
+                    showToast('Select at least one lead first.', 'error');
+                }
+            });
+        }
+    });
+})();
 </script>
 @endpush
 @endsection

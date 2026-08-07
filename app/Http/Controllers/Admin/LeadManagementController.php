@@ -10,6 +10,7 @@ use App\Models\LeadImportRun;
 use App\Models\Property;
 use App\Models\RealtorProfile;
 use App\Models\User;
+use App\Services\LeadAssignmentService;
 use App\Services\LeadFilterService;
 use App\Services\LeadMultiFormatImportService;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -25,6 +27,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LeadManagementController extends Controller
 {
+    public function __construct(
+        protected LeadAssignmentService $leadAssignmentService,
+    ) {
+    }
+
     public function index(Request $request): View
     {
         $filters = app(LeadFilterService::class)->normalizeFromRequest($request);
@@ -124,6 +131,104 @@ class LeadManagementController extends Controller
         ];
     }
 
+    /**
+     * Merge hard row failures with soft field-level warnings into one list for
+     * the persisted LeadImportRun report — empty rows collapse to null.
+     */
+    private function combineImportWarnings(array $result): ?array
+    {
+        $combined = array_merge($result['failed_rows'] ?? [], $result['warnings'] ?? []);
+
+        return $combined !== [] ? $combined : null;
+    }
+
+    /**
+     * Bulk-assign the selected leads to one realtor. Skips leads that are
+     * already assigned (use the per-row Assignment control / Lead Assignments
+     * workspace to reassign one at a time) and reports how many were skipped.
+     */
+    public function bulkAssign(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'lead_ids' => ['required', 'array', 'min:1'],
+            'lead_ids.*' => ['required', 'integer', 'exists:leads,id'],
+            'agent_id' => ['required', 'exists:users,id'],
+        ]);
+
+        $agent = User::findOrFail($validated['agent_id']);
+        if ($agent->role !== 'agent') {
+            return back()->withErrors(['agent_id' => 'Selected user is not a valid agent.']);
+        }
+
+        $leads = Lead::whereIn('id', $validated['lead_ids'])->get();
+        $assigned = 0;
+        $skipped = 0;
+
+        foreach ($leads as $lead) {
+            if ($lead->assigned_agent_id) {
+                $skipped++;
+                continue;
+            }
+
+            $this->leadAssignmentService->assign($lead, $agent, $request->user());
+            $agent->notify(new \App\Notifications\NewLeadAssignedNotification($lead->fresh()));
+            $assigned++;
+        }
+
+        $message = "Assigned {$assigned} lead(s) to {$agent->name}.";
+        if ($skipped > 0) {
+            $message .= " {$skipped} already-assigned lead(s) were skipped.";
+        }
+
+        return back()->with('success', $message);
+    }
+
+    /**
+     * Bulk-update status for the selected leads, applying the same
+     * contacted/closed/qualified timestamp side-effects as the single-lead endpoint.
+     */
+    public function bulkStatus(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'lead_ids' => ['required', 'array', 'min:1'],
+            'lead_ids.*' => ['required', 'integer', 'exists:leads,id'],
+            'status' => ['required', \Illuminate\Validation\Rule::in(Lead::statusList())],
+        ]);
+
+        $updated = DB::transaction(function () use ($validated) {
+            $count = 0;
+            foreach (Lead::whereIn('id', $validated['lead_ids'])->get() as $lead) {
+                $updates = Lead::applyStatusTimestamps(['status' => $validated['status']], $validated['status']);
+                if ($validated['status'] === 'contacted' && $lead->contacted_at) {
+                    unset($updates['contacted_at']);
+                }
+                $lead->update($updates);
+                $count++;
+            }
+
+            return $count;
+        });
+
+        $label = \App\Models\Lead::statusLabels()[$validated['status']] ?? Str::headline($validated['status']);
+
+        return back()->with('success', "Updated {$updated} lead(s) to status '{$label}'.");
+    }
+
+    /**
+     * Bulk soft-delete the selected leads.
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'lead_ids' => ['required', 'array', 'min:1'],
+            'lead_ids.*' => ['required', 'integer', 'exists:leads,id'],
+        ]);
+
+        $deleted = Lead::whereIn('id', $validated['lead_ids'])->delete();
+
+        return back()->with('success', "Deleted {$deleted} lead(s).");
+    }
+
     public function exportCsv(Request $request): StreamedResponse
     {
         if ($request->boolean('async')) {
@@ -143,7 +248,15 @@ class LeadManagementController extends Controller
 
         $filename = 'leads-export-' . now()->format('Ymd-His') . '.csv';
         $query = Lead::query()->with('assignedAgent:id,name');
-        app(LeadFilterService::class)->apply($query, app(LeadFilterService::class)->normalizeFromRequest($request));
+
+        // "Export Selected" from the bulk toolbar passes explicit IDs — takes
+        // priority over the standard filters so a checked selection always wins.
+        $ids = array_filter((array) $request->query('ids', []));
+        if (! empty($ids)) {
+            $query->whereIn('id', $ids);
+        } else {
+            app(LeadFilterService::class)->apply($query, app(LeadFilterService::class)->normalizeFromRequest($request));
+        }
 
         return response()->streamDownload(function () use ($query) {
             $handle = fopen('php://output', 'w');
@@ -239,7 +352,7 @@ class LeadManagementController extends Controller
                 'created_count' => $result['created'],
                 'skipped_count' => $result['skipped'],
                 'failed_count' => $result['failed'] ?? 0,
-                'warnings' => ! empty($result['failed_rows']) ? $result['failed_rows'] : null,
+                'warnings' => $this->combineImportWarnings($result),
                 'file_name' => $file->getClientOriginalName(),
                 'started_at' => $startedAt,
                 'finished_at' => now(),
@@ -537,7 +650,7 @@ class LeadManagementController extends Controller
             $result['skipped'],
             $result['failed'] ?? 0,
             $startedAt,
-            ! empty($result['failed_rows']) ? $result['failed_rows'] : null,
+            $this->combineImportWarnings($result),
         );
 
         $message = "Google Sheets sync complete. Added {$result['created']} new leads, skipped {$result['skipped']} duplicate/invalid rows.";

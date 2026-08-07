@@ -243,6 +243,69 @@ class AgentPortalTest extends TestCase
         $this->actingAs($agent)->get(route('agent.messages.index'))->assertOk();
     }
 
+    public function test_agent_overview_shows_full_pipeline_conversion_rate_and_recent_activity(): void
+    {
+        $package = Package::create([
+            'name' => 'Starter Lead',
+            'description' => 'Entry plan',
+            'slug' => 'starter-leads-overview',
+            'category' => 'lead',
+            'billing_type' => 'one_time',
+            'is_featured' => false,
+            'is_active' => true,
+            'one_time_price' => 499,
+            'monthly_price' => null,
+            'features' => ['5 active listings'],
+            'cta_label' => 'Get Started',
+            'duration_days' => 365,
+            'sort_order' => 1,
+        ]);
+
+        $agent = User::factory()->create([
+            'role' => 'agent',
+            'status' => 'active',
+            'current_plan_id' => $package->id,
+            'city' => 'Dallas',
+            'state' => 'TX',
+            'zip_code' => '75201',
+        ]);
+
+        $closedLead = \App\Models\Lead::create([
+            'lead_number' => 'OMNI-TEST-0401',
+            'intent' => 'buyer',
+            'package_type' => 'quick',
+            'status' => 'closed',
+            'name' => 'Closed Deal',
+            'phone' => '8005557401',
+            'assigned_agent_id' => $agent->id,
+        ]);
+
+        \App\Models\Lead::create([
+            'lead_number' => 'OMNI-TEST-0402',
+            'intent' => 'buyer',
+            'package_type' => 'quick',
+            'status' => 'not_interested',
+            'name' => 'Rejected Lead',
+            'phone' => '8005557402',
+            'assigned_agent_id' => $agent->id,
+        ]);
+
+        $closedLead->activities()->create([
+            'user_id' => $agent->id,
+            'type' => 'status_change',
+            'value' => 'Closed',
+            'content' => 'Deal closed successfully.',
+        ]);
+
+        $response = $this->actingAs($agent)->get(route('dashboard.agent'));
+
+        $response->assertOk();
+        $response->assertSee('Rejected');
+        $response->assertSee('Conversion Rate');
+        $response->assertSee('50%'); // 1 closed of 2 total
+        $response->assertSee('Deal closed successfully.');
+    }
+
     public function test_agent_cannot_change_plan_directly(): void
     {
         $package = Package::create([

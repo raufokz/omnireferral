@@ -167,17 +167,20 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Agent</th>
+                        <th>Previous Realtor</th>
+                        <th>Current Realtor</th>
                         <th>Assigned by</th>
                         <th>Month</th>
                         <th>Status</th>
                         <th>Sent</th>
+                        <th>Notes</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($history as $entry)
                         <tr>
                             <td>#{{ $entry->id }}</td>
+                            <td>{{ $entry->previousAgent?->name ?? '— (first assignment)' }}</td>
                             <td>{{ $entry->assignedTo?->name ?? 'N/A' }}</td>
                             <td>{{ $entry->assignedBy?->name ?? 'System' }}</td>
                             <td>{{ $entry->assignment_month }}</td>
@@ -187,10 +190,11 @@
                                 </span>
                             </td>
                             <td>{{ $entry->sent_at?->format('M j, Y') ?? '—' }}</td>
+                            <td>{{ $entry->admin_notes ?: '—' }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center muted">No other assignments for this lead.</td>
+                            <td colspan="8" class="text-center muted">No other assignments for this lead.</td>
                         </tr>
                     @endforelse
                 </tbody>

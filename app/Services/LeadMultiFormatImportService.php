@@ -36,11 +36,16 @@ class LeadMultiFormatImportService
         $skipped = 0;
         $failed = 0;
         $failedRows = [];
+        $warnings = [];
 
         foreach ($rows as $index => $row) {
             if (! is_array($row) || ($row['_duplicate'] ?? false) || ($row['_invalid'] ?? false)) {
                 $skipped++;
                 continue;
+            }
+
+            if (! empty($row['_warnings'])) {
+                $warnings = array_merge($warnings, $row['_warnings']);
             }
 
             try {
@@ -62,7 +67,10 @@ class LeadMultiFormatImportService
                     'dnc_disclaimer' => (string) ($row['dnc_disclaimer'] ?? ''),
                     'property_type' => (string) ($row['property_type'] ?? ''),
                     'budget' => $row['budget'] ?? null,
+                    'dop' => $row['dop'] ?? null,
                     'asking_price' => $row['asking_price'] ?? null,
+                    'financing_status' => (string) ($row['financing_status'] ?? ''),
+                    'credit_score' => $row['credit_score'] ?? null,
                     'timeline' => (string) ($row['timeline'] ?? ''),
                     'preferences' => (string) ($row['preferences'] ?? ''),
                     'notes' => (string) ($row['notes'] ?? ''),
@@ -100,6 +108,7 @@ class LeadMultiFormatImportService
             'skipped' => $skipped,
             'failed' => $failed,
             'failed_rows' => $failedRows,
+            'warnings' => $warnings,
         ];
     }
 
@@ -120,8 +129,11 @@ class LeadMultiFormatImportService
     private function prepareRows(array $rawRows, string $source): array
     {
         $prepared = [];
+        $rowNum = 0;
 
         foreach ($rawRows as $rawRow) {
+            $rowNum++;
+
             if (! is_array($rawRow)) {
                 continue;
             }
@@ -133,11 +145,18 @@ class LeadMultiFormatImportService
                 continue;
             }
 
+            $rowWarnings = [];
+
             $rawEmail = trim((string) ($line['email'] ?? ''));
+            if ($rawEmail !== '' && filter_var($rawEmail, FILTER_VALIDATE_EMAIL) === false) {
+                $rowWarnings[] = ['row' => $rowNum, 'field' => 'email', 'message' => "Invalid email \"{$rawEmail}\" was skipped for {$name}"];
+                $rawEmail = '';
+            }
+
             $rawPhone = trim((string) ($line['phone'] ?? ''));
             $phone = $rawPhone !== '' ? $rawPhone : $this->extractPhone((string) ($line['lead_name'] ?? $name));
             $email = $rawEmail !== '' ? $rawEmail : null;
-            $propertyAddress = trim((string) ($line['property_address'] ?? ''));
+            $propertyAddress = $this->capField(trim((string) ($line['property_address'] ?? '')), 500, 'property_address', $rowNum, $rowWarnings);
             $zipCode = $this->extractZip($propertyAddress ?: (string) ($line['zip_code'] ?? ''));
             $status = $this->normalizeStatus((string) ($line['status'] ?? ''))
                 ?? $this->mapColorToStatus((string) ($line['status_color'] ?? $line['color'] ?? ''))
@@ -151,7 +170,7 @@ class LeadMultiFormatImportService
             [$isDuplicate, $duplicateReason] = $this->detectDuplicate($rawEmail, $phone, $name, $zipCode, $propertyAddress);
 
             $prepared[] = [
-                'name' => $name,
+                'name' => $this->capField($name, 255, 'name', $rowNum, $rowWarnings),
                 'email' => $email,
                 'phone' => $phone ?: 'N/A',
                 'intent' => $this->normalizeIntent((string) ($line['intent'] ?? 'buyer')),
@@ -164,11 +183,14 @@ class LeadMultiFormatImportService
                 'working_with_realtor' => $this->parseYesNo($line['working_with_realtor'] ?? null),
                 'dnc_disclaimer' => trim((string) ($line['dnc_disclaimer'] ?? '')),
                 'property_type' => trim((string) ($line['property_type'] ?? '')),
-                'budget' => $this->parseAmount($line['budget'] ?? null),
+                'budget' => $this->normalizeBudgetText($line['budget'] ?? null),
+                'dop' => $this->parseTimestamp($line['dop'] ?? null)?->toDateString(),
                 'asking_price' => $this->parseAmount($line['asking_price'] ?? null),
+                'financing_status' => trim((string) ($line['financing_status'] ?? '')),
+                'credit_score' => trim((string) ($line['credit_score'] ?? '')) ?: null,
                 'timeline' => trim((string) ($line['timeline'] ?? '')),
                 'preferences' => trim((string) ($line['notes'] ?? '')),
-                'notes' => trim((string) ($line['notes'] ?? '')),
+                'notes' => $this->capField(trim((string) ($line['notes'] ?? '')), 2000, 'notes', $rowNum, $rowWarnings),
                 'rep_name' => trim((string) ($line['rep_name'] ?? '')),
                 'state' => trim((string) ($line['state'] ?? '')),
                 'sent_to' => trim((string) ($line['sent_to'] ?? '')),
@@ -188,10 +210,26 @@ class LeadMultiFormatImportService
                 '_duplicate_reason' => $duplicateReason,
                 '_invalid' => false,
                 '_source' => $resolvedSource,
+                '_warnings' => $rowWarnings,
             ];
         }
 
         return $prepared;
+    }
+
+    /**
+     * Truncate a field to fit its DB column instead of letting a long value blow
+     * up the whole row with a DB truncation exception — records a warning instead.
+     */
+    private function capField(string $value, int $max, string $field, int $rowNum, array &$warnings): string
+    {
+        if (mb_strlen($value) <= $max) {
+            return $value;
+        }
+
+        $warnings[] = ['row' => $rowNum, 'field' => $field, 'message' => "\"{$field}\" was longer than {$max} characters and was trimmed"];
+
+        return mb_substr($value, 0, $max);
     }
 
     private function rowsFromDelimitedFile(string $path): array
@@ -485,8 +523,32 @@ class LeadMultiFormatImportService
                 'how_many_beds_n_baths',
                 'bed_bath',
             ]),
-            'budget' => $this->valueFromAliases($line, ['budget', 'buyer_budget']) ?? $budgetOrAsking,
+            'budget' => $this->valueFromAliases($line, [
+                'budget',
+                'buyer_budget',
+                'budget_range',
+                'budget_$',
+                'price',
+                'purchase_budget',
+            ]) ?? $budgetOrAsking,
             'asking_price' => $this->valueFromAliases($line, ['asking_price', 'listing_price', 'seller_price']) ?? $budgetOrAsking,
+            'dop' => $this->valueFromAliases($line, [
+                'dop',
+                'date_of_purchase',
+                'purchase_date',
+            ]),
+            'financing_status' => $this->valueFromAliases($line, [
+                'financing_status',
+                'finance_cash',
+                'finance_or_cash',
+                'financing',
+                'cash_or_finance',
+            ]),
+            'credit_score' => $this->valueFromAliases($line, [
+                'credit_score',
+                'credit',
+                'fico_score',
+            ]),
             'working_with_realtor' => $this->valueFromAliases($line, [
                 'working_with_realtor',
                 'working_with_realtor_yes_no',
@@ -663,6 +725,22 @@ class LeadMultiFormatImportService
         } catch (\Throwable) {
             return null;
         }
+    }
+
+    /**
+     * Budget is free text ("300K", "$350,000", "250000-350000", "Above 1M",
+     * "Luxury", a plain number, etc.) — preserve it as-is (cleaned up and length
+     * capped) rather than force-parsing it into an integer like parseAmount() does.
+     */
+    private function normalizeBudgetText(mixed $raw): ?string
+    {
+        if ($raw === null) {
+            return null;
+        }
+
+        $value = trim(preg_replace('/\s+/', ' ', (string) $raw) ?? '');
+
+        return $value !== '' ? mb_substr($value, 0, 100) : null;
     }
 
     private function parseAmount(mixed $raw): ?int

@@ -53,7 +53,9 @@ class GoogleSheetSyncAndLeadAddTest extends \Tests\TestCase
         $this->assertEquals('investor', $lead->intent);
         $this->assertEquals('789 Ocean Drive, Miami FL', $lead->property_address);
         $this->assertEquals('4 Beds / 3 Baths', $lead->beds_baths);
-        $this->assertEquals(750000, $lead->budget);
+        // Budget is preserved as free text (not force-parsed to an integer) so
+        // ranges/qualitative values like "300K-350K" or "Luxury" survive import.
+        $this->assertEquals('$750,000', $lead->budget);
         $this->assertFalse($lead->working_with_realtor);
         $this->assertEquals('YES', $lead->dnc_disclaimer);
         $this->assertEquals('Sarah Representative', $lead->rep_name);
@@ -61,6 +63,30 @@ class GoogleSheetSyncAndLeadAddTest extends \Tests\TestCase
         $this->assertEquals('In-House Desk', $lead->sent_to);
         $this->assertEquals('VIP Lead', $lead->reason_in_house);
         $this->assertEquals('Pending review', $lead->realtor_response);
+    }
+
+    public function test_google_sheet_import_skips_invalid_email_but_keeps_the_row_and_records_a_warning()
+    {
+        $rawRows = [
+            [
+                'Lead Name:' => 'Bad Email Lead',
+                'Email:' => 'not-an-email',
+                'Number:' => '3055550100',
+                'Budget OR Asking price?' => 'Above 1M',
+            ],
+        ];
+
+        $service = app(LeadMultiFormatImportService::class);
+        $result = $service->importRawRows($rawRows, 'google_sheets');
+
+        $this->assertEquals(1, $result['created']);
+        $this->assertEquals(0, $result['failed']);
+        $this->assertNotEmpty($result['warnings']);
+        $this->assertSame('email', $result['warnings'][0]['field']);
+
+        $lead = Lead::where('name', 'Bad Email Lead')->firstOrFail();
+        $this->assertNull($lead->email);
+        $this->assertEquals('Above 1M', $lead->budget);
     }
 
     public function test_staff_and_admin_can_add_lead_without_email()

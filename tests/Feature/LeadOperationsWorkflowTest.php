@@ -89,7 +89,7 @@ CSV;
 
         $result = $service->importPreparedRows($preview);
 
-        $this->assertSame(['created' => 1, 'skipped' => 1, 'failed' => 0, 'failed_rows' => []], $result);
+        $this->assertSame(['created' => 1, 'skipped' => 1, 'failed' => 0, 'failed_rows' => [], 'warnings' => []], $result);
         $this->assertSame(2, Lead::count());
 
         $importedLead = Lead::where('email', 'casey@example.com')->firstOrFail();
@@ -348,5 +348,79 @@ CSV;
                 && $stats['by_status']['new']['percent'] === 50.0
                 && $stats['agent_name'] === $agent->name;
         });
+    }
+
+    public function test_admin_can_bulk_assign_bulk_update_status_and_bulk_delete_leads(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'must_reset_password' => false]);
+        $agent = User::factory()->create(['role' => 'agent', 'status' => 'active']);
+
+        $leadOne = Lead::create([
+            'lead_number' => 'OMNI-TEST-0301',
+            'intent' => 'buyer',
+            'package_type' => 'quick',
+            'status' => 'new',
+            'name' => 'Bulk Lead One',
+            'phone' => '8005557301',
+        ]);
+
+        $leadTwo = Lead::create([
+            'lead_number' => 'OMNI-TEST-0302',
+            'intent' => 'buyer',
+            'package_type' => 'quick',
+            'status' => 'new',
+            'name' => 'Bulk Lead Two',
+            'phone' => '8005557302',
+        ]);
+
+        $leadThree = Lead::create([
+            'lead_number' => 'OMNI-TEST-0303',
+            'intent' => 'buyer',
+            'package_type' => 'quick',
+            'status' => 'new',
+            'name' => 'Bulk Lead Three',
+            'phone' => '8005557303',
+        ]);
+
+        // Bulk assign
+        $this->actingAs($admin)
+            ->post(route('admin.leads.bulk-assign'), [
+                'lead_ids' => [$leadOne->id, $leadTwo->id],
+                'agent_id' => $agent->id,
+            ])
+            ->assertRedirect();
+
+        $leadOne->refresh();
+        $leadTwo->refresh();
+        $this->assertSame($agent->id, $leadOne->assigned_agent_id);
+        $this->assertSame($agent->id, $leadTwo->assigned_agent_id);
+        $this->assertSame('assigned', $leadOne->status);
+        $this->assertDatabaseHas('lead_assignments', [
+            'lead_id' => $leadOne->id,
+            'assigned_to_user_id' => $agent->id,
+            'previous_agent_id' => null,
+        ]);
+
+        // Bulk status update
+        $this->actingAs($admin)
+            ->post(route('admin.leads.bulk-status'), [
+                'lead_ids' => [$leadOne->id, $leadTwo->id, $leadThree->id],
+                'status' => 'qualified',
+            ])
+            ->assertRedirect();
+
+        $this->assertSame('qualified', $leadOne->fresh()->status);
+        $this->assertSame('qualified', $leadThree->fresh()->status);
+        $this->assertNotNull($leadThree->fresh()->reviewed_at);
+
+        // Bulk delete (soft delete)
+        $this->actingAs($admin)
+            ->post(route('admin.leads.bulk-delete'), [
+                'lead_ids' => [$leadThree->id],
+            ])
+            ->assertRedirect();
+
+        $this->assertSoftDeleted('leads', ['id' => $leadThree->id]);
+        $this->assertDatabaseHas('leads', ['id' => $leadOne->id]);
     }
 }

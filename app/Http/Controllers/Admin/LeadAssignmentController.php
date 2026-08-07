@@ -231,7 +231,7 @@ class LeadAssignmentController extends Controller
 
         $history = LeadAssignment::query()
             ->where('lead_id', $assignment->lead_id)
-            ->with(['assignedTo.realtorProfile', 'assignedBy', 'package'])
+            ->with(['assignedTo.realtorProfile', 'assignedBy', 'previousAgent', 'package'])
             ->latest()
             ->get();
 

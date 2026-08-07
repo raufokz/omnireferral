@@ -374,6 +374,9 @@ Route::middleware(['auth', 'active.account', 'must_reset_password'])->group(func
         Route::post('/admin/leads/import/commit', [AdminLeadManagementController::class, 'commitImport'])->name('admin.leads.import.commit');
         Route::post('/admin/leads/sync/google-sheets', [AdminLeadManagementController::class, 'syncGoogleSheet'])->name('admin.leads.sync.google-sheets');
         Route::get('/admin/leads/import/history', [AdminLeadManagementController::class, 'importHistory'])->name('admin.leads.import.history');
+        Route::post('/admin/leads/bulk/assign', [AdminLeadManagementController::class, 'bulkAssign'])->name('admin.leads.bulk-assign');
+        Route::post('/admin/leads/bulk/status', [AdminLeadManagementController::class, 'bulkStatus'])->name('admin.leads.bulk-status');
+        Route::post('/admin/leads/bulk/delete', [AdminLeadManagementController::class, 'bulkDestroy'])->name('admin.leads.bulk-delete');
         Route::resource('admin/properties', AdminPropertyManagementController::class)
             ->except(['show'])
             ->names([

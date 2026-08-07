@@ -333,9 +333,25 @@ class PortalController extends Controller
         $pipeline = [
             ['label' => 'New', 'count' => (clone $leadsQuery)->where('status', 'new')->count()],
             ['label' => 'Contacted', 'count' => (clone $leadsQuery)->where('status', 'contacted')->count()],
+            ['label' => 'In Progress', 'count' => (clone $leadsQuery)->where('status', 'in_progress')->count()],
             ['label' => 'Qualified', 'count' => (clone $leadsQuery)->where('status', 'qualified')->count()],
             ['label' => 'Closed', 'count' => (clone $leadsQuery)->where('status', 'closed')->count()],
+            ['label' => 'Rejected', 'count' => (clone $leadsQuery)->where('status', 'not_interested')->count()],
         ];
+
+        $closedLeadsCount = (clone $leadsQuery)->where('status', 'closed')->count();
+        $conversionRate = $totalLeads > 0 ? round(($closedLeadsCount / $totalLeads) * 100, 1) : 0.0;
+        $monthlyLeadsCount = (clone $leadsQuery)
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+
+        $recentActivity = \App\Models\LeadActivity::query()
+            ->whereIn('lead_id', (clone $leadsQuery)->pluck('id'))
+            ->with('lead:id,name,lead_number')
+            ->latest()
+            ->take(10)
+            ->get();
 
         $revenueMap = $this->dashboardRevenueMap();
         $leadPipelineValue = (clone $leadsQuery)->get(['package_type'])->sum(fn ($lead) => $revenueMap[strtolower((string) $lead->package_type)] ?? 0);
@@ -389,8 +405,16 @@ class PortalController extends Controller
                     'myLeads' => $totalLeads,
                     'newLeads' => (clone $leadsQuery)->whereIn('status', ['new', 'assigned'])->count(),
                     'activeLeads' => (clone $leadsQuery)->whereIn('status', ['contacted', 'in_progress'])->count(),
-                    'closedLeads' => (clone $leadsQuery)->where('status', 'closed')->count(),
+                    'closedLeads' => $closedLeadsCount,
+                    'myNewLeads' => (clone $leadsQuery)->where('status', 'new')->count(),
+                    'myContactedLeads' => (clone $leadsQuery)->where('status', 'contacted')->count(),
+                    'myInProgressLeads' => (clone $leadsQuery)->where('status', 'in_progress')->count(),
+                    'myClosedLeads' => $closedLeadsCount,
+                    'myRejectedLeads' => (clone $leadsQuery)->where('status', 'not_interested')->count(),
+                    'conversionRate' => $conversionRate,
+                    'monthlyLeads' => $monthlyLeadsCount,
                 ],
+                'recentActivity' => $recentActivity,
                 'recentLeads' => (clone $leadsQuery)->latest()->take(6)->get(),
                 'pendingAccounts' => collect(),
                 'userSubmittedListings' => (clone $propertiesQuery)
@@ -442,8 +466,10 @@ class PortalController extends Controller
                     'score' => number_format((float) ($profile->rating ?? 4.9), 1),
                     'leads_received' => $totalLeads,
                     'response_rate' => $totalLeads > 0 ? round(($contactedLeads / $totalLeads) * 100) . '%' : '0%',
-                    'closed_leads' => (clone $leadsQuery)->where('status', 'closed')->count(),
+                    'closed_leads' => $closedLeadsCount,
                     'messages_received' => $totalMessages,
+                    'conversion_rate' => $conversionRate,
+                    'monthly_leads' => $monthlyLeadsCount,
                 ],
                 'subscription' => $user->activeAgentSubscription,
                 'subscriptions' => AgentSubscription::where('user_id', $user->id)->latest()->get(),

@@ -24,7 +24,7 @@
     $profileComplete = (int) round(collect($profileFields)->filter()->count() / count($profileFields) * 100);
 
     $pipelineMax = max(1, collect($pipeline)->max('count'));
-    $pipelineColors = ['#0b3668', '#1d5fa0', '#ff6b00', '#16a34a'];
+    $pipelineColors = ['#0b3668', '#1d5fa0', '#5145cd', '#ff6b00', '#16a34a', '#dc2626'];
 @endphp
 
 @section('dashboard_eyebrow', 'Agent Workspace')
@@ -177,6 +177,27 @@
             <span>{{ $listingLimitLabel }}</span>
         </article>
 
+    </section>
+
+    {{-- Conversion + Monthly Volume --}}
+    <section class="workspace-grid workspace-grid--2">
+        <article class="workspace-card workspace-kpi">
+            <div class="agent-kpi-icon agent-kpi-icon--green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <span>Conversion Rate</span>
+            <strong>{{ $agentStats['conversion_rate'] }}%</strong>
+            <span>Closed leads &divide; assigned leads</span>
+        </article>
+
+        <article class="workspace-card workspace-kpi">
+            <div class="agent-kpi-icon agent-kpi-icon--blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <span>Leads This Month</span>
+            <strong>{{ number_format($agentStats['monthly_leads']) }}</strong>
+            <span>{{ now()->format('F Y') }}</span>
+        </article>
     </section>
 
     {{-- Pipeline + Profile Health --}}
@@ -447,6 +468,25 @@
         </article>
 
     </section>
+
+    {{-- Recent Activity --}}
+    <article class="workspace-card">
+        <span class="eyebrow">Recent Activity</span>
+        <h2>Latest Notes &amp; Status Changes</h2>
+        <div style="display:grid; gap:0.6rem; margin-top:0.75rem;">
+            @forelse($recentActivity as $activity)
+                <div class="workspace-property__meta" style="display:flex; justify-content:space-between; gap:1rem; padding:0.6rem 0; border-bottom:1px solid var(--dash-shell-border, #e8edf4);">
+                    <div>
+                        <strong style="color:var(--dash-shell-text); font-size:0.85rem;">{{ $activity->lead?->name ?? 'Lead #'.$activity->lead_id }}</strong>
+                        <span style="display:block; font-size:0.8rem;">{{ $activity->content ?: ($activity->value ?: ucfirst(str_replace('_', ' ', $activity->type))) }}</span>
+                    </div>
+                    <span style="font-size:0.73rem; white-space:nowrap;">{{ $activity->created_at?->diffForHumans() }}</span>
+                </div>
+            @empty
+                <div class="workspace-empty" style="padding:1.4rem;">No activity recorded yet. Status changes and notes on your leads will show up here.</div>
+            @endforelse
+        </div>
+    </article>
 
     {{-- Quick Actions --}}
     <article class="workspace-card">

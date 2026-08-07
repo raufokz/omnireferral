@@ -7,6 +7,9 @@
             : ($lead->asking_price ? 'Ask $' . number_format($lead->asking_price) : 'N/A');
     @endphp
     <tr data-lead-id="{{ $lead->id }}">
+        <td data-label="Select">
+            <input type="checkbox" class="lead-bulk-checkbox" value="{{ $lead->id }}" style="width:16px; height:16px; cursor:pointer;">
+        </td>
         <td data-label="Lead">
             <strong>{{ $lead->name }}</strong>
             <div class="workspace-property__meta">{{ $lead->email ?: 'No email' }}</div>
@@ -50,11 +53,12 @@
                     <button type="submit" class="button button--ghost-blue js-loading-btn">Set</button>
                 </div>
             </form>
+            <a href="{{ route('admin.lead-assignments.index', ['search' => $lead->lead_number]) }}" style="font-size: 0.75rem; display: inline-block; margin-top: 0.35rem;">View assignment history →</a>
         </td>
     </tr>
 @empty
     <tr>
-        <td colspan="5">
+        <td colspan="6">
             <div class="workspace-empty">No registry records found for the current filter.</div>
         </td>
     </tr>
