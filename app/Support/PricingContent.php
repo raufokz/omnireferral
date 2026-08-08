@@ -287,9 +287,9 @@ class PricingContent
     private static function enhancementSlug(string $slug): string
     {
         return match ($slug) {
-            'starter-leads', 'quick-leads' => 'starter-leads',
-            'growth-leads', 'power-leads' => 'growth-leads',
-            'elite-leads', 'prime-leads' => 'elite-leads',
+            'starter-leads', 'starter-lead', 'quick-leads', 'quick-lead', 'starter' => 'starter-leads',
+            'growth-leads', 'growth-lead', 'power-leads', 'power-lead', 'growth' => 'growth-leads',
+            'elite-leads', 'elite-lead', 'elite-tier', 'prime-leads', 'prime-lead', 'elite' => 'elite-leads',
             'va-calling', 'va-starter', 'cold-calling-isa' => 'cold-calling-isa',
             'va-social', 'va-growth', 'social-media-mgmt' => 'social-media-mgmt',
             'va-individual', 'individual-va' => 'individual-va',

@@ -202,7 +202,9 @@ class Package extends Model
      */
     public function planLabel(): string
     {
-        return \App\Support\PlanCapabilities::label($this->slug);
+        $label = \App\Support\PlanCapabilities::label($this->slug);
+
+        return $label !== 'No Plan' ? $label : $this->displayName();
     }
 
     public function listingLimit(): int
@@ -221,7 +223,7 @@ class Package extends Model
      */
     private function legacyListingLimit(): int
     {
-        if ($this->category !== 'lead') {
+        if ($this->category === 'virtual_assistant') {
             return 0;
         }
 
@@ -241,7 +243,7 @@ class Package extends Model
             }
         }
 
-        return match ($this->slug) {
+        return match (\App\Support\PlanCapabilities::canonicalize($this->slug)) {
             'starter-leads', 'quick-leads' => 2,
             'growth-leads', 'power-leads' => 5,
             'elite-leads', 'prime-leads' => 10,

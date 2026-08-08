@@ -242,7 +242,7 @@ class User extends Authenticatable
      */
     public function activeLeadPlan(): ?Package
     {
-        return $this->currentPlan && $this->currentPlan->category === 'lead'
+        return $this->currentPlan && $this->currentPlan->category !== 'virtual_assistant'
             ? $this->currentPlan
             : null;
     }

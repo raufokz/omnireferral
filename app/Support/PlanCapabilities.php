@@ -67,9 +67,9 @@ class PlanCapabilities
         $slug = strtolower(trim((string) $slug));
 
         return match ($slug) {
-            'starter-leads', 'quick-leads', 'quick-lead' => 'starter-leads',
-            'growth-leads', 'power-leads', 'power-lead' => 'growth-leads',
-            'elite-leads', 'prime-leads', 'prime-lead' => 'elite-leads',
+            'starter-leads', 'starter-lead', 'quick-leads', 'quick-lead', 'starter' => 'starter-leads',
+            'growth-leads', 'growth-lead', 'power-leads', 'power-lead', 'growth' => 'growth-leads',
+            'elite-leads', 'elite-lead', 'elite-tier', 'prime-leads', 'prime-lead', 'elite' => 'elite-leads',
             'cold-calling-isa', 'va-calling', 'va-starter', 'cold-calling', 'isa' => 'cold-calling-isa',
             'social-media-mgmt', 'va-social', 'va-growth', 'social-media-management' => 'social-media-mgmt',
             'individual-va', 'va-individual', 'individual' => 'individual-va',
@@ -117,9 +117,9 @@ class PlanCapabilities
     public static function label(?string $slug): string
     {
         return match (self::canonicalize($slug)) {
-            'starter-leads' => 'Quick Lead',
-            'growth-leads' => 'Power Lead',
-            'elite-leads' => 'Prime Lead',
+            'starter-leads' => 'Starter Lead',
+            'growth-leads' => 'Growth Lead',
+            'elite-leads' => 'Elite Lead',
             'cold-calling-isa' => 'Cold Calling / ISA',
             'social-media-mgmt' => 'Social Media Management',
             'individual-va' => 'Individual VA',
