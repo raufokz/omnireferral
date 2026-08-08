@@ -125,16 +125,10 @@ class PropertyController extends Controller
             $profile = $this->ensureAgentProfile($user);
             $capacity = $user->listingCapacity($profile);
 
-            if ($capacity['limit'] < 1) {
-                return redirect()
-                    ->route('agent.listings.index')
-                    ->with('error', 'Your current package does not include listing access yet. Upgrade your plan to publish listings.');
-            }
-
             if (! $capacity['can_create']) {
                 return redirect()
                     ->route('agent.listings.index')
-                    ->with('error', 'You have reached your monthly listing limit for your current package.');
+                    ->with('error', 'You have reached your listing limit of ' . $capacity['limit'] . ' for your current package. Mark a listing as Sold or Off-Market to free a slot, or upgrade your plan.');
             }
 
             $validated['source'] = 'Agent Dashboard Upload';

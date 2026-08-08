@@ -370,7 +370,7 @@ class PortalController extends Controller
                 'messagesQuery' => $messagesQuery,
                 'propertiesQuery' => $propertiesQuery,
                 'listingLimit' => $listingLimit,
-                'listingLimitLabel' => $activePlan?->listingLimitLabel() ?? 'No listing access',
+                'listingLimitLabel' => $activePlan?->listingLimitLabel() ?? ($listingLimit . ' active listings / month'),
                 'activeListingCount' => $activeListingCount,
                 'slotUsageCount' => $slotUsageCount,
                 'pendingReviewCount' => $pendingReviewCount,

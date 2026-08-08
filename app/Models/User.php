@@ -256,7 +256,7 @@ class User extends Authenticatable
      */
     public function listingCapacity(RealtorProfile $profile): array
     {
-        $limit = $this->activeLeadPlan()?->listingLimit() ?? 0;
+        $limit = max(2, $this->activeLeadPlan()?->listingLimit() ?? 2);
 
         $used = Property::query()
             ->where('realtor_profile_id', $profile->id)
@@ -268,7 +268,7 @@ class User extends Authenticatable
             'limit' => $limit,
             'used' => $used,
             'remaining' => max($limit - $used, 0),
-            'can_create' => $limit > 0 && $used < $limit,
+            'can_create' => $used < $limit,
         ];
     }
 

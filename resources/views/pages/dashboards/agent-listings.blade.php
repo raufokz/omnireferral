@@ -153,12 +153,7 @@
         <span class="eyebrow">Publish Property</span>
         <h2>Add a New Listing</h2>
 
-        @if(! $activePlan || $listingLimit < 1)
-            <div class="capacity-notice capacity-notice--info" style="margin-top:0.75rem;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <span>Your current package does not include listing access. <a href="{{ route('pricing') }}" style="font-weight:700; color:inherit;">Upgrade your plan</a> to start publishing properties to the marketplace.</span>
-            </div>
-        @elseif(! $canCreateListings)
+        @if(! $canCreateListings)
             <div class="capacity-notice capacity-notice--warning" style="margin-top:0.75rem;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 <span>You've reached your listing limit of {{ $listingLimit }}. Mark a listing as <em>Sold</em> or <em>Off-Market</em> to free a slot. <a href="{{ route('pricing') }}" style="font-weight:700; color:inherit;">Or upgrade your plan.</a></span>
@@ -166,7 +161,7 @@
         @else
             <div class="capacity-notice capacity-notice--success" style="margin-top:0.75rem;">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>You have <strong>{{ $remainingListingSlots }}</strong> listing {{ Str::plural('slot', $remainingListingSlots) }} available. Listings go to admin review before appearing in the marketplace.</span>
+                <span>You have <strong>{{ $remainingListingSlots }}</strong> listing {{ Str::plural('slot', $remainingListingSlots) }} available (limit: {{ $listingLimit }} per month). Listings go to admin review before appearing in the marketplace.</span>
             </div>
         @endif
 

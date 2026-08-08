@@ -31,9 +31,9 @@ class PlanCapabilities
     {
         return [
             'category' => 'lead',
-            'portal_access' => false,
-            'property_listings' => false,
-            'listing_limit' => 0,
+            'portal_access' => true,
+            'property_listings' => true,
+            'listing_limit' => 2,
             'virtual_assistant' => false,
             'priority_routing' => false,
             'featured_placement' => false,

@@ -242,17 +242,17 @@ class Package extends Model
         }
 
         return match ($this->slug) {
-            'starter-leads', 'quick-leads' => 0,
+            'starter-leads', 'quick-leads' => 2,
             'growth-leads', 'power-leads' => 5,
             'elite-leads', 'prime-leads' => 10,
-            default => 0,
+            default => 2,
         };
     }
 
     public function listingLimitLabel(): string
     {
-        $limit = $this->listingLimit();
+        $limit = max(2, $this->listingLimit());
 
-        return $limit > 0 ? $limit . ' active listings' : 'No listing access';
+        return $limit . ' active listings / month';
     }
 }
