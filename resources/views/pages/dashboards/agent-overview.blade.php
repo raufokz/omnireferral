@@ -506,66 +506,7 @@
         </div>
     </article>
 
-    {{-- Plan Features — every feature depends on the purchased package, driven
-         live from PlanCapabilities (backed by the packages table). --}}
-    @php
-        $planChecklist = \App\Support\PlanCapabilities::checklist($agentUser->planSlug());
-        $enabledFeatures = collect($planChecklist)->where('enabled', true);
-        $lockedFeatures = collect($planChecklist)->where('enabled', false);
 
-        // Which lead plan (if any) is the cheapest one that unlocks a given
-        // locked feature — used for the "Available in X" upgrade hint.
-        $leadPlansByTier = \App\Models\Package::query()->active()->where('category', 'lead')->orderBy('sort_order')->get();
-        $nextPlanFor = function (string $label) use ($leadPlansByTier) {
-            foreach ($leadPlansByTier as $plan) {
-                $candidateChecklist = \App\Support\PlanCapabilities::checklist($plan->slug);
-                $match = collect($candidateChecklist)->firstWhere('label', $label);
-                if ($match && $match['enabled']) {
-                    return \App\Support\PlanCapabilities::label($plan->slug);
-                }
-            }
-
-            return null;
-        };
-    @endphp
-
-    <article class="workspace-card">
-        <span class="eyebrow">Plan Features</span>
-        <h2>{{ $activePlan?->displayName() ?: 'No Active Plan' }} — What's Included</h2>
-
-        <div class="workspace-grid workspace-grid--2" style="margin-top:0.75rem; gap:0.5rem 1.5rem;">
-            <div>
-                @foreach($enabledFeatures as $feature)
-                    <div style="display:flex; align-items:center; gap:0.5rem; padding:0.3rem 0; font-size:0.85rem;">
-                        <span style="color:#15803d;">&#9989;</span> {{ $feature['label'] }}
-                    </div>
-                @endforeach
-            </div>
-            <div>
-                @foreach($lockedFeatures as $feature)
-                    <div style="display:flex; align-items:center; gap:0.5rem; padding:0.3rem 0; font-size:0.85rem; color:var(--dash-shell-muted);">
-                        <span>&#10060;</span> {{ $feature['label'] }}
-                    </div>
-                @endforeach
-            </div>
-        </div>
-
-        @if($lockedFeatures->isNotEmpty())
-            @php
-                $topLockedLabels = ['Virtual Assistant', 'Priority Routing', 'Featured Placement'];
-                $topLocked = $lockedFeatures->whereIn('label', $topLockedLabels)->first();
-            @endphp
-            @if($topLocked)
-                <div style="margin-top:1rem;">
-                    <x-plan-locked-card
-                        :title="'Unlock more with an upgrade'"
-                        :description="'Features like ' . $lockedFeatures->whereIn('label', $topLockedLabels)->pluck('label')->implode(', ') . ' are available on higher plans.'"
-                        :required-plan-label="$nextPlanFor($topLocked['label'])"
-                    />
-                </div>
-            @endif
-        @endif
-    </article>
 
     {{-- Quick Actions --}}
     <article class="workspace-card">
